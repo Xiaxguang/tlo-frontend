@@ -2351,14 +2351,106 @@ function showCollectionHistory() {
       });
     }
 
-    function getNpcImageUrl(name) {
-      const key = String(name || '').trim();
-      const aliasMap = { "葉書宏": "書宏", "書宏": "葉書宏", "蔡蔡子": "菜菜子", "菜菜子": "蔡蔡子", "夣璃": "夢璃", "夢璃": "夣璃" };
-      if (window && window.NPC_IMAGES && window.NPC_IMAGES[key]) return window.NPC_IMAGES[key];
-      const alt = aliasMap[key];
-      if (alt && window && window.NPC_IMAGES && window.NPC_IMAGES[alt]) return window.NPC_IMAGES[alt];
-      return '';
-    }
+    window.TLO_CARD_IMAGE_MAP = window.TLO_CARD_IMAGE_MAP || {};
+
+function tloNormalizeImageUrl(url) {
+  return String(url || '').trim();
+}
+
+function tloGetCardName(cardOrName) {
+  if (typeof cardOrName === 'string') return String(cardOrName || '').trim();
+  if (!cardOrName) return '';
+  return String(
+    cardOrName.name ||
+    cardOrName.cardName ||
+    cardOrName.npcName ||
+    cardOrName.bossCardName ||
+    cardOrName.card_name ||
+    ''
+  ).trim();
+}
+
+function registerCardImages(source) {
+  if (!source) return;
+
+  if (source.imageMap && typeof source.imageMap === 'object') {
+    Object.keys(source.imageMap).forEach(function(name) {
+      var url = tloNormalizeImageUrl(source.imageMap[name]);
+      if (name && url) window.TLO_CARD_IMAGE_MAP[String(name).trim()] = url;
+    });
+  }
+
+  var lists = [];
+  if (Array.isArray(source.cards)) lists.push(source.cards);
+  if (Array.isArray(source.results)) lists.push(source.results);
+  if (Array.isArray(source.rows)) lists.push(source.rows);
+  if (Array.isArray(source.collection)) lists.push(source.collection);
+  if (Array.isArray(source.party)) lists.push(source.party);
+  if (Array.isArray(source.playerTeam)) lists.push(source.playerTeam);
+  if (Array.isArray(source.enemyTeam)) lists.push(source.enemyTeam);
+
+  lists.forEach(function(list) {
+    list.forEach(function(card) {
+      if (!card) return;
+      var name = tloGetCardName(card);
+      var url = tloNormalizeImageUrl(
+        card.imageUrl || card.image_url || card.img || card.image || card.url || ''
+      );
+      if (name && url) window.TLO_CARD_IMAGE_MAP[name] = url;
+    });
+  });
+
+  var singleName = tloGetCardName(source);
+  var singleUrl = tloNormalizeImageUrl(
+    source.imageUrl || source.image_url || source.img || source.image || source.url || ''
+  );
+  if (singleName && singleUrl) window.TLO_CARD_IMAGE_MAP[singleName] = singleUrl;
+}
+
+function getRawCardImageUrl(cardOrName) {
+  var name = tloGetCardName(cardOrName);
+
+  if (cardOrName && typeof cardOrName === 'object') {
+    var directUrl = tloNormalizeImageUrl(
+      cardOrName.imageUrl || cardOrName.image_url || cardOrName.img || cardOrName.image || cardOrName.url || ''
+    );
+    if (directUrl) return directUrl;
+  }
+
+  if (name && window.TLO_CARD_IMAGE_MAP && window.TLO_CARD_IMAGE_MAP[name]) {
+    return window.TLO_CARD_IMAGE_MAP[name];
+  }
+
+  var aliasMap = {};
+
+  if (name && window.NPC_IMAGES && window.NPC_IMAGES[name]) {
+    return window.NPC_IMAGES[name];
+  }
+
+  var alt = aliasMap[name];
+  if (alt && window.TLO_CARD_IMAGE_MAP && window.TLO_CARD_IMAGE_MAP[alt]) {
+    return window.TLO_CARD_IMAGE_MAP[alt];
+  }
+
+  if (alt && window.NPC_IMAGES && window.NPC_IMAGES[alt]) {
+    return window.NPC_IMAGES[alt];
+  }
+
+  return '';
+}
+
+function getCardImageUrl(cardOrName) {
+  var name = tloGetCardName(cardOrName);
+  return getRawCardImageUrl(cardOrName) ||
+    ('https://placehold.co/150x200/333/fff?text=' + encodeURIComponent(name || 'NO IMAGE'));
+}
+
+// 保留舊函式名稱，避免原本其他功能壞掉。
+// 注意：這個函式找不到圖時回傳空字串，讓原本的 fallback 邏輯可以繼續生效。
+function getNpcImageUrl(name) {
+  return getRawCardImageUrl(name);
+}
+
 
     function safeFileName(text) {
       return String(text || '').replace(/[\\/:*?"<>|\s]+/g, '_');
