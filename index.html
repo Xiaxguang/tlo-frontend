@@ -2772,16 +2772,27 @@ function showCollectionHistory() {
   <script>
     // === T-LO 分畫面切換：只控制前台 UI，不改任何後端功能 ===
     window.showGameScreen = function(screenName) {
-      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen' };
-      var targetId = map[screenName] || map.home;
-      document.querySelectorAll('.game-screen').forEach(function(el) {
-        el.classList.toggle('active', el.id === targetId);
-      });
-      document.querySelectorAll('.game-bottom-nav [data-screen-target]').forEach(function(btn) {
-        btn.classList.toggle('active', btn.getAttribute('data-screen-target') === screenName);
-      });
-      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
-    };
+  var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen' };
+  var targetId = map[screenName] || map.home;
+
+  document.querySelectorAll('.game-screen').forEach(function(el) {
+    el.classList.toggle('active', el.id === targetId);
+  });
+
+  document.querySelectorAll('.game-bottom-nav [data-screen-target]').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-screen-target') === screenName);
+  });
+
+  if (window.TLOAudio && typeof window.TLOAudio.playBgmForScreen === "function") {
+    window.TLOAudio.playBgmForScreen(screenName);
+  }
+
+  try { 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  } catch (_) { 
+    window.scrollTo(0, 0); 
+  }
+};
   </script>
 
 </body>
