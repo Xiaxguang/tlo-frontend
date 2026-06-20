@@ -79,6 +79,7 @@
       <div class="tabs">
         <button class="tab active" onclick="showTab('players', this)">玩家管理</button>
         <button class="tab" onclick="showTab('cards', this); loadCards();">卡池權重</button>
+        <button class="tab" onclick="showTab('stages', this); loadStageAdmin();">關卡管理</button>
         <button class="tab" onclick="showTab('redeem', this); loadRedeemCodes();">兌換碼</button>
         <button class="tab" onclick="showTab('backup', this);">備份匯出</button>
         <button class="tab" onclick="showTab('settings', this); loadOpsSettings();">公告/維護</button>
@@ -164,7 +165,53 @@
         <div id="cardsTable"></div>
       </div>
 
-      <div id="tab-redeem" class="hide panel">
+      
+      <div id="tab-stages" class="hide panel">
+        <h2>🗺️ 關卡管理</h2>
+        <div class="muted">可新增 / 修改潮流爭霸戰與遠征異世界關卡，調整難度、獎勵，並指定 Boss 卡片。</div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>👑 潮流爭霸戰關卡</h3>
+            <div class="row3">
+              <div><label>關卡編號</label><input id="bossStageId" type="number" min="1" value="51"></div>
+              <div><label>Boss 戰力</label><input id="bossStagePower" type="number" min="1" value="10000"></div>
+              <div><label>抽卡獎勵</label><input id="bossRewardDraw" type="number" min="0" value="0"></div>
+            </div>
+            <label>關卡名稱</label><input id="bossStageName" placeholder="例如 第 51 關｜終焉潮流王">
+            <label>指定 BOSS 卡片</label><select id="bossStageCard"></select>
+            <button class="primary" onclick="saveBossStage()" style="width:100%;margin-top:10px">新增 / 儲存爭霸戰關卡</button>
+            <div id="bossStageMsg" class="msg"></div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>🌌 遠征異世界關卡</h3>
+            <div class="row">
+              <div><label>關卡 Key，英文/數字，可空白自動產生</label><input id="rpgKey" placeholder="例如 world_05"></div>
+              <div><label>排序</label><input id="rpgSort" type="number" min="0" value="5"></div>
+            </div>
+            <label>關卡名稱</label><input id="rpgName" placeholder="例如 異世界裂縫第五層">
+            <label>關卡說明</label><input id="rpgDesc" placeholder="顯示給玩家看的簡短說明">
+            <label>指定 BOSS 卡片</label><select id="rpgBossCard"></select>
+            <div class="row3">
+              <div><label>需求戰力</label><input id="rpgPower" type="number" min="0" value="5000"></div>
+              <div><label>獎勵分數</label><input id="rpgScore" type="number" min="0" value="500"></div>
+              <div><label>獎勵能量</label><input id="rpgEnergy" type="number" min="0" value="250"></div>
+            </div>
+            <div class="row3">
+              <div><label>抽卡掉落率 %</label><input id="rpgDrawChance" type="number" min="0" max="100" value="10"></div>
+              <div><label>固定抽卡獎勵</label><input id="rpgDrawTimes" type="number" min="0" value="0"></div>
+              <div><label>狀態</label><select id="rpgActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
+            </div>
+            <button class="primary" onclick="saveRpgDungeon()" style="width:100%;margin-top:10px">新增 / 儲存遠征關卡</button>
+            <div id="rpgStageMsg" class="msg"></div>
+          </div>
+        </div>
+        <h3>目前潮流爭霸戰關卡</h3>
+        <div id="bossStagesTable"></div>
+        <h3>目前遠征異世界關卡</h3>
+        <div id="rpgDungeonsTable"></div>
+      </div>
+
+<div id="tab-redeem" class="hide panel">
         <h2>🎟️ 兌換碼 / 補償碼</h2>
         <div class="muted">可建立活動碼、補償碼。玩家前台輸入後可領抽卡次數、指定卡片、排行榜分數或潮流能量。</div>
         <div class="split">
@@ -213,6 +260,8 @@
             <option value="redeem_codes">redeem_codes 兌換碼</option>
             <option value="redeem_redemptions">redeem_redemptions 兌換紀錄</option>
             <option value="rpg_party">rpg_party RPG隊伍</option>
+            <option value="boss_stages">boss_stages 爭霸戰關卡</option>
+            <option value="rpg_dungeons">rpg_dungeons 遠征關卡</option>
             <option value="rpg_adventure_logs">rpg_adventure_logs RPG紀錄</option>
             <option value="admin_audit_logs">admin_audit_logs GM操作紀錄</option>
           </select>
@@ -264,6 +313,8 @@ const TOKEN_KEY = 'TLO_ADMIN_TOKEN';
 const ADMIN_KEY = 'TLO_ADMIN_INFO';
 let currentPlayerUid = '';
 let cardRows = [];
+let bossStageRows = [];
+let rpgDungeonRows = [];
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
@@ -428,6 +479,117 @@ async function saveCard(i){
 }
 
 
+
+async function loadStageAdmin(){
+  try{
+    if(!cardRows.length) await loadCards(false);
+    syncRedeemCardOptions();
+    const [boss, rpg] = await Promise.all([rpc('adminListBossStages', []), rpc('adminListRpgDungeons', [])]);
+    bossStageRows = boss.rows || [];
+    rpgDungeonRows = rpg.rows || [];
+    renderBossStages();
+    renderRpgDungeons();
+    msg('bossStageMsg', `已載入 ${bossStageRows.length} 個爭霸戰關卡`, true);
+    msg('rpgStageMsg', `已載入 ${rpgDungeonRows.length} 個遠征關卡`, true);
+  }catch(e){ msg('bossStageMsg', e.message); msg('rpgStageMsg', e.message); }
+}
+
+function renderBossStages(){
+  if(!$('bossStagesTable')) return;
+  $('bossStagesTable').innerHTML = `<table><thead><tr><th>關卡</th><th>Boss</th><th>戰力</th><th>抽卡獎勵</th><th>操作</th></tr></thead><tbody>` +
+    bossStageRows.map((s,i)=>`<tr>
+      <td>#${fmt(s.stageId)}<br><span class="muted">${esc(s.stageName)}</span></td>
+      <td>${esc(s.bossCardName)}<br><span class="muted">${esc(s.bossRarity||'')}</span></td>
+      <td>${fmt(s.bossPower)}</td>
+      <td>+${fmt(s.rewardDrawTimes)}</td>
+      <td><button class="primary" onclick="editBossStage(${i})">載入編輯</button></td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+function editBossStage(i){
+  const s = bossStageRows[i]; if(!s) return;
+  $('bossStageId').value = s.stageId;
+  $('bossStageName').value = s.stageName || '';
+  $('bossStagePower').value = s.bossPower || 0;
+  $('bossRewardDraw').value = s.rewardDrawTimes || 0;
+  $('bossStageCard').value = s.bossCardName || '';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+async function saveBossStage(){
+  try{
+    const payload = {
+      stageId:$('bossStageId').value,
+      stageName:$('bossStageName').value.trim(),
+      bossCardName:$('bossStageCard').value,
+      bossPower:$('bossStagePower').value,
+      rewardDrawTimes:$('bossRewardDraw').value
+    };
+    if(!payload.stageId || !payload.bossCardName){ msg('bossStageMsg','請輸入關卡編號並指定 BOSS'); return; }
+    if(!confirm('確定新增 / 儲存潮流爭霸戰關卡？')) return;
+    const data = await rpc('adminUpsertBossStage', [payload]);
+    msg('bossStageMsg', data.msg, true);
+    await loadStageAdmin();
+  }catch(e){ msg('bossStageMsg', e.message); }
+}
+
+function renderRpgDungeons(){
+  if(!$('rpgDungeonsTable')) return;
+  $('rpgDungeonsTable').innerHTML = `<table><thead><tr><th>關卡</th><th>Boss</th><th>難度</th><th>獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>` +
+    rpgDungeonRows.map((d,i)=>`<tr>
+      <td><b>${esc(d.name)}</b><br><span class="muted">${esc(d.key)}｜排序 ${fmt(d.sortOrder)}</span><br><span class="muted">${esc(d.description||'')}</span></td>
+      <td>${esc(d.bossCardName||d.name)}<br><span class="muted">${esc(d.bossRarity||'')}</span></td>
+      <td>${fmt(d.requiredPower)}</td>
+      <td>分數 +${fmt(d.rewardScore)}<br>能量 +${fmt(d.rewardEnergy)}<br>抽卡 +${fmt(d.rewardDrawTimes)} / 掉落 ${fmt(d.rewardDrawChance)}%</td>
+      <td>${d.isActive ? '啟用' : '停用'}</td>
+      <td><button class="primary" onclick="editRpgDungeon(${i})">載入編輯</button><br><button class="${d.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleRpgDungeon(${i})">${d.isActive?'停用':'啟用'}</button></td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+function editRpgDungeon(i){
+  const d = rpgDungeonRows[i]; if(!d) return;
+  $('rpgKey').value = d.key || '';
+  $('rpgName').value = d.name || '';
+  $('rpgDesc').value = d.description || '';
+  $('rpgBossCard').value = d.bossCardName || '';
+  $('rpgPower').value = d.requiredPower || 0;
+  $('rpgScore').value = d.rewardScore || 0;
+  $('rpgEnergy').value = d.rewardEnergy || 0;
+  $('rpgDrawChance').value = d.rewardDrawChance || 0;
+  $('rpgDrawTimes').value = d.rewardDrawTimes || 0;
+  $('rpgSort').value = d.sortOrder || 0;
+  $('rpgActive').value = d.isActive ? '1' : '0';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+async function saveRpgDungeon(){
+  try{
+    const payload = {
+      key:$('rpgKey').value.trim(),
+      name:$('rpgName').value.trim(),
+      description:$('rpgDesc').value.trim(),
+      bossCardName:$('rpgBossCard').value,
+      requiredPower:$('rpgPower').value,
+      rewardScore:$('rpgScore').value,
+      rewardEnergy:$('rpgEnergy').value,
+      rewardDrawChance:$('rpgDrawChance').value,
+      rewardDrawTimes:$('rpgDrawTimes').value,
+      sortOrder:$('rpgSort').value,
+      isActive:$('rpgActive').value === '1'
+    };
+    if(!payload.name || !payload.bossCardName){ msg('rpgStageMsg','請輸入關卡名稱並指定 BOSS'); return; }
+    if(!confirm('確定新增 / 儲存遠征異世界關卡？')) return;
+    const data = await rpc('adminUpsertRpgDungeon', [payload]);
+    msg('rpgStageMsg', data.msg, true);
+    await loadStageAdmin();
+  }catch(e){ msg('rpgStageMsg', e.message); }
+}
+async function toggleRpgDungeon(i){
+  const d = rpgDungeonRows[i]; if(!d) return;
+  if(!confirm(`確定要${d.isActive ? '停用' : '啟用'}「${d.name}」？`)) return;
+  try{
+    const data = await rpc('adminSetRpgDungeonActive', [d.key, !d.isActive]);
+    msg('rpgStageMsg', data.msg, true);
+    await loadStageAdmin();
+  }catch(e){ msg('rpgStageMsg', e.message); }
+}
+
 function downloadJson(filename, data){
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json;charset=utf-8'});
   const url = URL.createObjectURL(blob);
@@ -438,7 +600,10 @@ function downloadJson(filename, data){
 
 function syncRedeemCardOptions(){
   if(!cardRows.length) return;
-  if($('redeemCard')) $('redeemCard').innerHTML = cardRows.map(c => `<option value="${esc(c.name)}">${esc(c.name)}｜${esc(c.rarity)}</option>`).join('');
+  const options = cardRows.map(c => `<option value="${esc(c.name)}">${esc(c.name)}｜${esc(c.rarity)}</option>`).join('');
+  if($('redeemCard')) $('redeemCard').innerHTML = options;
+  if($('bossStageCard')) $('bossStageCard').innerHTML = options;
+  if($('rpgBossCard')) $('rpgBossCard').innerHTML = options;
 }
 
 async function loadRedeemCodes(){
