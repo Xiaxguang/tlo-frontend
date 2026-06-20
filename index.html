@@ -333,7 +333,7 @@
     @keyframes hpLowPulse { 0%,100% { opacity: 1; } 50% { opacity: .68; } }
 
 
-    /* === RPG / PVP 共用戰鬥演出 V2 === */
+    /* === 遠征 / PVP 共用戰鬥演出 V2 === */
     .mini-battle-title {
       color:#ffc107; font-weight:1000; text-align:center; margin:8px 0 4px;
       text-shadow:0 0 12px rgba(255,193,7,.3);
@@ -1002,7 +1002,7 @@
         <div class="screen-sub">選擇你今天要做的事：開盒、冒險、簽到或領取活動補償。</div>
         <div class="hero-actions">
           <button class="game-big-btn btn-neon-pink" onclick="showGameScreen('gacha')">🎁 前往抽卡<small>單抽、十連、查看機率與抽卡紀錄</small></button>
-          <button class="game-big-btn btn-neon-cyan" onclick="showGameScreen('battle')">⚔️ 前往戰鬥<small>爭霸戰、RPG 冒險、PVP 與升星</small></button>
+          <button class="game-big-btn btn-neon-cyan" onclick="showGameScreen('battle')">⚔️ 前往戰鬥<small>爭霸戰、遠征異世界、PVP 與升星</small></button>
         </div>
       </div>
 
@@ -1081,7 +1081,7 @@
       <div class="screen-head">
         <div>
           <h2 class="screen-title">戰鬥畫面</h2>
-          <div class="screen-sub">戰鬥、RPG、PVP 與角色培養集中在這個戰鬥大廳。</div>
+          <div class="screen-sub">戰鬥、遠征異世界、PVP 與角色培養集中在這個戰鬥大廳。</div>
         </div>
         <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
       </div>
@@ -1093,9 +1093,9 @@
       </div>
 
       <div class="scene-panel">
-        <h3>🗺️ RPG 冒險模式</h3>
+        <h3>🗺️ 遠征異世界</h3>
         <p>選 1～3 張已持有角色組隊，挑戰關卡並取得分數、能量與抽卡掉落。</p>
-        <button class="scene-btn btn-neon-gold" onclick="openRpgModal()">開始 RPG 冒險<small>編成隊伍並挑戰關卡</small></button>
+        <button class="scene-btn btn-neon-gold" onclick="openRpgModal()">開始遠征<small>編成隊伍遠征異世界</small></button>
       </div>
 
       <div class="scene-panel">
@@ -1161,16 +1161,18 @@
       <div class="modal-h3">⚔️ T-LO 潮流爭霸對決牆</div>
       
       <div class="battle-vs-box">
-        <div style="color: #aaa; font-size:12px;">⚡ 您的潮流總戰力：</div>
+        <div style="color: #aaa; font-size:12px;">⚡ 潮流爭霸代表戰力：</div>
         <div class="power-display" id="player-total-power" style="color: #00fff0;">0</div>
-        <div style="font-size:11px; color:#888;">(SSR卡=+5000, SR卡=+2000, RARE=+500, NORMAL=+100，重複享有星級增幅)</div>
+        <div style="font-size:11px; color:#888;">爭霸戰只由固定代表出戰並獲得經驗。更換代表前，系統會一直使用同一張角色。</div>
       </div>
 
       <div class="diy-select-box">
-        <label>🎭 選擇您的本命代表出戰角色 (僅列出您已解鎖的圖鑑)：</label>
+        <label>🎭 潮流爭霸戰固定代表：</label>
         <select class="player-deck-select" id="player-battle-avatar-select" onchange="changePlayerFighterLook()">
-          <option value="潮流先鋒">👑 預設代表：潮流先鋒</option>
+          <option value="">請先選擇代表角色</option>
         </select>
+        <button class="btn-collection" id="battle-save-rep-btn" onclick="saveBattleRepresentative()" style="width:90%;margin-top:8px;">💾 固定 / 更換爭霸代表</button>
+        <div id="battle-rep-status" style="font-size:12px;color:#aaa;margin-top:6px;line-height:1.5;">尚未讀取代表資料。</div>
       </div>
 
       <div class="boss-card" id="boss-info-panel">
@@ -1209,7 +1211,7 @@
         <div class="turn-battle-log" id="battle-turn-log"></div>
       </div>
 
-      <button class="btn-fight" id="fight-btn" onclick="startChallenge()">⚔️ 發動卡牌全軍出擊 ⚔️</button>
+      <button class="btn-fight" id="fight-btn" onclick="startChallenge()">⚔️ 代表出戰 ⚔️</button>
       <div id="battle-result-msg" style="margin-top:12px; text-align:center; font-size:13px; font-weight:bold;"></div>
     </div>
   </div>
@@ -1358,7 +1360,7 @@
       <div class="modal-h3">🌟 角色養成中心</div>
       <div class="collection-stat" id="growth-energy-text">潮流能量：讀取中...</div>
       <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">
-        戰鬥、RPG、PVP 會給出戰角色經驗。你也可以消耗潮流能量進行特訓、升級技能，星級最高可到 10 星。所有養成都只影響遊戲內戰力，不影響實體卡片與兌獎資格。
+        戰鬥、遠征異世界、PVP 會給出戰角色經驗。你也可以消耗潮流能量進行特訓、升級技能，星級最高可到 10 星。所有養成都只影響遊戲內戰力，不影響實體卡片與兌獎資格。
       </div>
       <div id="growth-rule-text" style="font-size:12px;color:#888;margin-bottom:10px;"></div>
       <div id="growth-card-list" style="display:flex;flex-direction:column;gap:10px;">正在讀取角色養成資料...</div>
@@ -1380,8 +1382,8 @@
   <div class="modal-overlay" id="rpg-modal" onclick="if(event.target.id==='rpg-modal') this.style.display='none';">
     <div class="modal-content" style="max-width:720px;">
       <span class="modal-close" onclick="document.getElementById('rpg-modal').style.display='none';">&times;</span>
-      <div class="modal-h3">🗺️ T-LO RPG 冒險模式</div>
-      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">選 1～3 張已持有角色組隊，挑戰 RPG 關卡。此模式獎勵為遊戲內分數、能量與機率掉落抽卡次數。</div>
+      <div class="modal-h3">🗺️ T-LO 遠征異世界模式</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">選 1～3 張已持有角色組隊，挑戰遠征關卡。此模式獎勵為遊戲內分數、能量與機率掉落抽卡次數。</div>
       <div class="collection-stat" id="rpg-team-power">隊伍戰力：讀取中...</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0;">
         <select id="rpg-slot-1" class="player-deck-select" onchange="renderRpgTeamPreview()"></select>
@@ -1393,25 +1395,25 @@
         <div class="rpg-party-members" id="rpg-party-members"></div>
         <div class="rpg-party-caption" id="rpg-party-caption">選擇隊伍後，角色會組隊準備出發。</div>
       </div>
-      <button class="btn-collection" onclick="saveRpgTeam()" style="width:90%;">💾 儲存 RPG 隊伍</button>
+      <button class="btn-collection" onclick="saveRpgTeam()" style="width:90%;">💾 儲存遠征隊伍</button>
       <div id="rpg-msg" style="min-height:24px;margin:10px 0;font-weight:900;color:#aaa;"></div>
       <div class="battle-arena turn-mode" id="rpg-arena-panel" style="display:none;">
-        <div class="mini-battle-title" id="rpg-arena-title">🗺️ RPG 回合制冒險</div>
+        <div class="mini-battle-title" id="rpg-arena-title">🗺️ 遠征異世界回合戰</div>
         <div class="hp-container">
-          <div style="flex:1;text-align:left;"><b style="color:#00fff0;">冒險隊伍 HP</b><div class="hp-bar-wrapper"><div id="rpg-hp-player-fill" class="hp-bar-fill hp-player"></div></div><div id="rpg-hp-player-text" class="hp-text">--</div></div>
+          <div style="flex:1;text-align:left;"><b style="color:#00fff0;">遠征隊伍 HP</b><div class="hp-bar-wrapper"><div id="rpg-hp-player-fill" class="hp-bar-fill hp-player"></div></div><div id="rpg-hp-player-text" class="hp-text">--</div></div>
           <div style="flex:1;text-align:right;"><b style="color:#ff7777;">敵人 HP</b><div class="hp-bar-wrapper"><div id="rpg-hp-boss-fill" class="hp-bar-fill hp-boss"></div></div><div id="rpg-hp-boss-text" class="hp-text">--</div></div>
         </div>
         <div class="clash-zone">
-          <div class="clash-card card-p" id="rpg-fighter-player"><span id="rpg-player-name-label">冒險隊伍</span><img id="rpg-player-avatar-img" class="clash-avatar" src="" alt="隊伍"></div>
+          <div class="clash-card card-p" id="rpg-fighter-player"><span id="rpg-player-name-label">遠征隊伍</span><img id="rpg-player-avatar-img" class="clash-avatar" src="" alt="隊伍"></div>
           <div style="font-size:22px;color:#ffc107;font-weight:1000;">VS</div>
           <div class="clash-card card-b" id="rpg-fighter-boss"><span id="rpg-boss-name-label">關卡敵人</span><img id="rpg-boss-avatar-img" class="clash-avatar" src="" alt="敵人"></div>
         </div>
-        <div class="turn-banner" id="rpg-turn-banner">RPG 冒險開始...</div>
+        <div class="turn-banner" id="rpg-turn-banner">遠征異世界開始...</div>
         <div class="turn-battle-log" id="rpg-turn-log"></div>
       </div>
       <div class="modal-h3" style="font-size:17px;margin-top:10px;">可挑戰關卡</div>
-      <div id="rpg-dungeon-list">正在讀取 RPG 關卡...</div>
-      <div class="modal-h3" style="font-size:17px;margin-top:14px;">最近 RPG 紀錄</div>
+      <div id="rpg-dungeon-list">正在讀取遠征關卡...</div>
+      <div class="modal-h3" style="font-size:17px;margin-top:14px;">最近遠征紀錄</div>
       <div id="rpg-log-list">正在讀取紀錄...</div>
     </div>
   </div>
@@ -1446,12 +1448,12 @@
     // === 🟢 新增：玩家手動切換本命英雄立繪功能 ===
     function changePlayerFighterLook() {
       const selectEl = document.getElementById('player-battle-avatar-select');
-      const selectedName = selectEl.value;
+      const selectedName = selectEl.value || '尚未選擇';
       
       document.getElementById('arena-player-name-label').innerText = selectedName;
       
       let pImgUrl = "";
-      if (selectedName !== "潮流先鋒" && window && window.NPC_IMAGES && window.NPC_IMAGES[selectedName]) {
+      if (selectedName !== "潮流先鋒" && selectedName !== "尚未選擇" && window && window.NPC_IMAGES && window.NPC_IMAGES[selectedName]) {
         pImgUrl = window.NPC_IMAGES[selectedName];
       }
       
@@ -1537,23 +1539,17 @@
         }
 
         latestBattleDashboard = response;
-        const ownedMap = response.ownedCardsMap || {};
         const selectEl = document.getElementById('player-battle-avatar-select');
-        const currentSelectedValue = selectEl.value;
+        const repStatus = document.getElementById('battle-rep-status');
+        const currentSelectedValue = response.battleRepresentative || selectEl.value || '';
+        const battleOptions = response.battleOptions || [];
 
-        selectEl.innerHTML = '<option value="潮流先鋒">👑 預設代表：潮流先鋒</option>';
-
-        ALL_16_CARDS.forEach(function(cardName) {
-          const count = ownedMap[cardName] || 0;
-          if (count > 0) {
-            const type = CARD_RARITIES[cardName];
-            let rarityLabel = type === "SSR" ? "至尊金" : (type === "SR" ? "炫彩銀" : (type === "RARE" ? "極光藍" : "普通褐"));
-
-            let opt = document.createElement('option');
-            opt.value = cardName;
-            opt.innerText = `🃏 ${cardName} (${rarityLabel} x${count})`;
-            selectEl.appendChild(opt);
-          }
+        selectEl.innerHTML = '<option value="">請先選擇代表角色</option>';
+        battleOptions.forEach(function(card) {
+          let opt = document.createElement('option');
+          opt.value = card.name;
+          opt.innerText = `🃏 ${card.name}｜${Number(card.star||1)}★｜Lv.${Number(card.level||1)}｜技能Lv.${Number(card.skillLevel||1)}｜${Number(card.power||0).toLocaleString()}戰力｜x${Number(card.count||0)}`;
+          selectEl.appendChild(opt);
         });
 
         if ([...selectEl.options].some(o => o.value === currentSelectedValue)) {
@@ -1562,13 +1558,18 @@
 
         changePlayerFighterLook();
 
-        globalPlayerPower = response.playerPower || 0;
-        document.getElementById('player-total-power').innerText = globalPlayerPower.toLocaleString();
+        globalPlayerPower = response.battleRepresentativePower || response.playerPower || 0;
+        document.getElementById('player-total-power').innerText = Number(globalPlayerPower || 0).toLocaleString();
+        if (repStatus) {
+          repStatus.innerHTML = response.battleRepresentative
+            ? `目前固定代表：<b style="color:#00fff0;">${escapeHtml(response.battleRepresentative)}</b>｜戰力 ${Number(globalPlayerPower||0).toLocaleString()}`
+            : '<span style="color:#ffcc66;">尚未固定代表。請先選擇一張角色並按「固定 / 更換爭霸代表」。</span>';
+        }
 
         const cid = response.currentStageId;
         const isClaimed = response.hasRewardClaimed;
 
-        if (response.isAllCleared || cid > 25) {
+        if (response.isAllCleared || cid > 50) {
           document.getElementById('battle-stage-title').innerText = "🏆 潮流制霸 🏆";
           document.getElementById('battle-boss-name').innerText = "🎉 恭喜！您已全通關！";
           document.getElementById('battle-boss-power').innerText = "---";
@@ -1590,7 +1591,7 @@
           bossImgUrl = "https://images.placeholders.dev/?width=150&height=200&text=" + encodeURIComponent(bName) + "&bgColor=%232d1a1a&textColor=%23ff4444&fontSize=18px";
         }
 
-        document.getElementById('battle-stage-title').innerText = `🔥 目前進度：第 ${cid} / 25 關`;
+        document.getElementById('battle-stage-title').innerText = `🔥 目前進度：第 ${cid} / 50 關`;
         document.getElementById('battle-boss-avatar').src = bossImgUrl;
         document.getElementById('battle-boss-avatar').style.display = "block";
         document.getElementById('battle-boss-name').innerText = `【守關王：${bName}】`;
@@ -1599,20 +1600,26 @@
         document.getElementById('arena-boss-name-label').innerText = bName;
         document.getElementById('arena-boss-avatar-img').src = bossImgUrl;
 
-        if (isClaimed) {
-          document.getElementById('battle-stage-reward').innerHTML = `🎁 通關獎勵：抽卡次數 +${currentStage.rewardTimes} 次 <span style="color:red; font-weight:bold;">(已領取，本次不重複發放)</span>`;
+        const rewardTimes = Number(currentStage.rewardTimes || 0);
+        if (rewardTimes > 0) {
+          document.getElementById('battle-stage-reward').innerHTML = isClaimed
+            ? `🎁 第 ${cid} 關獎勵：抽卡次數 +${rewardTimes} 次 <span style="color:red; font-weight:bold;">(已領取)</span>`
+            : `🎁 每 5 關獎勵：抽卡次數 <span style="color:#00ff7f; font-weight:bold;">+${rewardTimes} 次！</span>`;
         } else {
-          document.getElementById('battle-stage-reward').innerHTML = `🎁 通關隨即獲得：抽卡次數 <span style="color:#00ff7f; font-weight:bold;">+${currentStage.rewardTimes} 次！</span>`;
+          document.getElementById('battle-stage-reward').innerHTML = '🎁 進度關：本關無抽卡獎勵；每通過 5 關可獲得抽卡次數 +3。';
         }
 
         btn.onclick = startChallenge;
-        btn.disabled = false;
+        btn.disabled = !response.battleRepresentative;
 
-        if (globalPlayerPower >= currentStage.bossPower) {
-          btn.innerText = "⚔️ 戰力壓制！發動全軍出擊 ⚔️";
+        if (!response.battleRepresentative) {
+          btn.innerText = "請先固定爭霸代表";
+          btn.style.background = "linear-gradient(45deg, #555, #333)";
+        } else if (globalPlayerPower >= currentStage.bossPower) {
+          btn.innerText = "⚔️ 代表戰力壓制！發動攻擊 ⚔️";
           btn.style.background = "linear-gradient(45deg, #00ff7f, #00fff0)";
         } else {
-          btn.innerText = "⚔️ 冒險硬闖！發動全軍出擊 ⚔️";
+          btn.innerText = "⚔️ 代表硬闖！發動攻擊 ⚔️";
           btn.style.background = "linear-gradient(45deg, #ff5500, #ff0055)";
         }
       }).withFailureHandler(function(err) {
@@ -1620,6 +1627,32 @@
         btn.disabled = true;
         btn.innerText = "⚠️ 暫時無法挑戰";
       }).getBattleDashboard(playerUID);
+    }
+
+
+    function saveBattleRepresentative() {
+      const selectEl = document.getElementById('player-battle-avatar-select');
+      const status = document.getElementById('battle-rep-status');
+      const cardName = selectEl && selectEl.value ? selectEl.value : '';
+      if (!cardName) {
+        if (status) status.innerHTML = '<span style="color:#ff7777;">請先選擇一張已持有角色。</span>';
+        return;
+      }
+      if (status) status.innerHTML = '正在固定爭霸代表...';
+      if (window.TLOAudio) window.TLOAudio.playSfx('click');
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (status) status.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '代表設定失敗')}</span>`;
+          return;
+        }
+        if (status) status.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg || '代表已固定')}</span>`;
+        if (res.dashboard) {
+          latestBattleDashboard = res.dashboard;
+          setTimeout(openBattleModal, 350);
+        }
+      }).withFailureHandler(function(err) {
+        if (status) status.innerHTML = `<span style="color:#ff7777;">代表設定失敗：${escapeHtml(err && err.message ? err.message : err)}</span>`;
+      }).setBattleRepresentative(playerUID, cardName);
     }
 
     function sleepTurn(ms) {
@@ -1909,7 +1942,7 @@
       const resultMsg = document.getElementById('battle-result-msg');
 
       btn.disabled = true;
-      btn.innerText = "⚡ 回合制戰鬥演算中...";
+      btn.innerText = "⚡ 代表回合戰鬥演算中...";
       resultMsg.innerHTML = "";
       infoPanel.style.display = "none";
       arenaPanel.style.display = "block";
@@ -3070,7 +3103,7 @@ function showCollectionHistory() {
       }).redeemCode(playerUID, code);
     }
 
-    // ─── RPG 冒險模式 ───
+    // ─── 遠征異世界模式 ───
     function openRpgModal() {
       if (window.TLOAudio) window.TLOAudio.playBgm('battle');
       document.getElementById('rpg-modal').style.display = 'flex';
@@ -3084,10 +3117,10 @@ function showCollectionHistory() {
 
     function loadRpgDashboard() {
       const msg = document.getElementById('rpg-msg');
-      if (msg) msg.innerHTML = '正在讀取 RPG 資料...';
+      if (msg) msg.innerHTML = '正在讀取遠征資料...';
       google.script.run.withSuccessHandler(function(res) {
         if (!res || !res.success) {
-          if (msg) msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : 'RPG 資料讀取失敗')}</span>`;
+          if (msg) msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '遠征資料讀取失敗')}</span>`;
           return;
         }
         renderRpgDashboard(res);
@@ -3120,9 +3153,9 @@ function showCollectionHistory() {
           <div style="font-size:12px;color:#aaa;line-height:1.6;">${escapeHtml(d.description || '')}<br>敵方屬性：${escapeHtml(d.elementIcon || '')}${escapeHtml(d.elementLabel || '')}｜技能：${escapeHtml(d.skillName || '')}<br>建議戰力：${Number(d.requiredPower||0).toLocaleString()}｜獎勵：分數 +${Number(d.rewardScore||0).toLocaleString()}、能量 +${Number(d.rewardEnergy||0).toLocaleString()}｜抽卡掉落率 ${Number(d.rewardDrawChance||0)}%</div>
           <button class="btn-collection" style="margin-top:8px;" onclick="startRpgAdventure('${escapeJsString(d.key)}')">開始挑戰</button>
         </div>`;
-      }).join('') || '<div style="color:#888;">目前沒有可挑戰 RPG 關卡。</div>';
+      }).join('') || '<div style="color:#888;">目前沒有可挑戰遠征關卡。</div>';
 
-      document.getElementById('rpg-log-list').innerHTML = (res.logs || []).map(l => `<div class="pvp-log-item"><b class="${l.result === 'WIN' ? 'pvp-win' : 'pvp-lose'}">${escapeHtml(l.result)}</b>｜${escapeHtml(l.dungeonName)}｜我方 ${Number(l.teamPower||0).toLocaleString()} / 敵方 ${Number(l.enemyPower||0).toLocaleString()}<br><span style="color:#aaa;">${escapeHtml(l.rewardSummary || '')}｜${escapeHtml(l.createdAt || '')}</span></div>`).join('') || '<div style="color:#888;">暫無 RPG 紀錄。</div>';
+      document.getElementById('rpg-log-list').innerHTML = (res.logs || []).map(l => `<div class="pvp-log-item"><b class="${l.result === 'WIN' ? 'pvp-win' : 'pvp-lose'}">${escapeHtml(l.result)}</b>｜${escapeHtml(l.dungeonName)}｜我方 ${Number(l.teamPower||0).toLocaleString()} / 敵方 ${Number(l.enemyPower||0).toLocaleString()}<br><span style="color:#aaa;">${escapeHtml(l.rewardSummary || '')}｜${escapeHtml(l.createdAt || '')}</span></div>`).join('') || '<div style="color:#888;">暫無遠征紀錄。</div>';
     }
 
     function getSelectedRpgNames() {
@@ -3154,7 +3187,7 @@ function showCollectionHistory() {
         html += `<div class="rpg-mini-card"><img src="${img}" alt="${escapeHtml(name)}"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★｜Lv.${Number(info.level||1)}</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')} Lv.${Number(info.skillLevel||1)}</div></div>`;
       }
       box.innerHTML = html;
-      if (caption) caption.innerText = names.length ? `冒險隊伍已集結：${names.join('、')}` : '選擇隊伍後，角色會組隊準備出發。';
+      if (caption) caption.innerText = names.length ? `遠征隊伍已集結：${names.join('、')}` : '選擇隊伍後，角色會組隊準備出發。';
     }
 
     function saveRpgTeam() {
@@ -3176,7 +3209,7 @@ function showCollectionHistory() {
       const preview = document.getElementById('rpg-party-preview');
       const arena = document.getElementById('rpg-arena-panel');
       const names = getSelectedRpgNames();
-      msg.innerHTML = 'RPG 冒險隊伍出發中...';
+      msg.innerHTML = '遠征異世界隊伍出發中...';
       if (preview) preview.classList.add('adventure-running');
       if (arena) arena.style.display = 'none';
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
@@ -3186,13 +3219,13 @@ function showCollectionHistory() {
         if (!res || !res.success) {
           if (res && res.dashboard) renderRpgDashboard(res.dashboard);
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
-          msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '冒險失敗')}</span>`;
+          msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '遠征失敗')}</span>`;
           return;
         }
-        const firstName = names[0] || ((res.dashboard && res.dashboard.partyNames && res.dashboard.partyNames[0]) || '冒險隊伍');
+        const firstName = names[0] || ((res.dashboard && res.dashboard.partyNames && res.dashboard.partyNames[0]) || '遠征隊伍');
         const dungeon = ((latestRpgDashboard && latestRpgDashboard.dungeons) || []).find(d => d.key === key) || {};
         const bossName = (res.battleAnimation && res.battleAnimation.bossName) || dungeon.name || '關卡敵人';
-        const playerLabel = names.length ? names.join('、') : '冒險隊伍';
+        const playerLabel = names.length ? names.join('、') : '遠征隊伍';
         await playMiniTurnBattle('rpg', res, {
           playerName: playerLabel,
           playerImage: getNpcImageUrl(firstName) || placeholderBattleImage('隊伍', '#123a3a', '#00fff0'),
@@ -3204,7 +3237,7 @@ function showCollectionHistory() {
         });
         if (res && res.dashboard) renderRpgDashboard(res.dashboard);
         if (window.TLOAudio) window.TLOAudio.playSfx(res && res.win ? 'win' : 'error');
-        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '冒險完成')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
+        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '遠征完成')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
         if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
           currentCount = parseInt(res.newTimesLeft) || 0;
           updateButtonState();
