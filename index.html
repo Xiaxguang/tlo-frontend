@@ -1892,15 +1892,61 @@
     }
 
 
+    function tloSvgPlaceholderImage(name, bg, color, width, height, fontSize) {
+      name = String(name || 'TLO');
+      bg = bg || '#111111';
+      color = color || '#ffffff';
+      width = Number(width || 150);
+      height = Number(height || 200);
+      fontSize = Number(fontSize || 16);
+      var safeName = escapeHtml(name.length > 14 ? name.slice(0, 14) : name);
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">' +
+        '<rect width="100%" height="100%" rx="10" fill="' + bg + '"/>' +
+        '<rect x="6" y="6" width="' + (width - 12) + '" height="' + (height - 12) + '" rx="8" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2"/>' +
+        '<text x="50%" y="45%" text-anchor="middle" dominant-baseline="middle" font-size="' + fontSize + '" font-family="Arial, sans-serif" font-weight="900" fill="' + color + '">圖片</text>' +
+        '<text x="50%" y="58%" text-anchor="middle" dominant-baseline="middle" font-size="' + Math.max(10, fontSize - 3) + '" font-family="Arial, sans-serif" font-weight="900" fill="' + color + '">' + safeName + '</text>' +
+        '</svg>';
+      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
+
     function placeholderBattleImage(name, bg, color) {
-      return 'https://images.placeholders.dev/?width=90&height=120&text=' + encodeURIComponent(name || 'TLO') + '&bgColor=' + encodeURIComponent(bg || '#111') + '&textColor=' + encodeURIComponent(color || '#ffffff') + '&fontSize=14px';
+      return tloSvgPlaceholderImage(name || 'TLO', bg || '#111111', color || '#ffffff', 110, 145, 15);
+    }
+
+    function tloSetImageFallback(imgEl, name, side) {
+      if (!imgEl || imgEl.dataset.tloFallbackApplied === '1') return;
+      imgEl.dataset.tloFallbackApplied = '1';
+      var bg = side === 'player' ? '#123a3a' : '#3a1616';
+      var color = side === 'player' ? '#00fff0' : '#ff7777';
+      imgEl.onerror = null;
+      imgEl.src = placeholderBattleImage(name || imgEl.alt || 'NO IMAGE', bg, color);
     }
 
     function setMiniBattleAvatar(prefix, side, name, imageUrl) {
       const nameEl = document.getElementById(prefix + '-' + side + '-name-label');
       const imgEl = document.getElementById(prefix + '-' + side + '-avatar-img');
-      if (nameEl) nameEl.innerText = name || (side === 'player' ? '我方' : '敵方');
-      if (imgEl) imgEl.src = imageUrl || placeholderBattleImage(name || 'TLO', side === 'player' ? '#123a3a' : '#3a1616', side === 'player' ? '#00fff0' : '#ff7777');
+      const label = name || (side === 'player' ? '我方' : '敵方');
+      const fallback = placeholderBattleImage(label || 'TLO', side === 'player' ? '#123a3a' : '#3a1616', side === 'player' ? '#00fff0' : '#ff7777');
+      if (nameEl) nameEl.innerText = label;
+      if (imgEl) {
+        imgEl.dataset.tloName = label;
+        imgEl.dataset.tloSide = side;
+        imgEl.dataset.tloFallbackApplied = '0';
+        imgEl.alt = label;
+        imgEl.onerror = function() { tloSetImageFallback(imgEl, label, side); };
+        imgEl.src = imageUrl || fallback;
+      }
+    }
+
+    if (!window.__TLO_GLOBAL_IMAGE_FALLBACK__) {
+      window.__TLO_GLOBAL_IMAGE_FALLBACK__ = true;
+      document.addEventListener('error', function(ev) {
+        var img = ev && ev.target;
+        if (!img || !img.tagName || String(img.tagName).toUpperCase() !== 'IMG') return;
+        var name = img.dataset.tloName || img.alt || img.title || img.getAttribute('data-name') || 'NO IMAGE';
+        var side = img.dataset.tloSide || (String(img.id || '').indexOf('player') >= 0 ? 'player' : 'boss');
+        tloSetImageFallback(img, name, side);
+      }, true);
     }
 
     function appendTurnLogTo(prefix, line, actor, turn) {
@@ -2562,8 +2608,7 @@ function showCollectionHistory() {
 
     function getCardImageUrl(cardOrName) {
       var name = tloGetCardName(cardOrName);
-      return getRawCardImageUrl(cardOrName) ||
-        ('https://placehold.co/150x200/333/fff?text=' + encodeURIComponent(name || 'NO IMAGE'));
+      return getRawCardImageUrl(cardOrName) || tloSvgPlaceholderImage(name || 'NO IMAGE', '#333333', '#ffffff', 150, 200, 18);
     }
 
     // 保留舊函式名稱，避免原本其他功能壞掉。
