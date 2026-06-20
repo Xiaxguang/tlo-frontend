@@ -587,7 +587,7 @@
 
 
   <script>
-    const playerUID = window.TLO_PLAYER_UID || "guest";
+    const playerUID = window.TLO_PLAYER_UID || "";
     let currentCount = parseInt(window.TLO_INITIAL_TIMES || "0") || 0;
     let globalPlayerPower = 0; 
 
@@ -601,10 +601,12 @@
     };
     const ALL_16_CARDS = Object.keys(CARD_RARITIES);
 
-    updateButtonState();
-    loadHomeState();
-    // 留言板延後一點載入，讓首頁與抽卡按鈕先出現。
-    setTimeout(loadMessageBoard, 400); 
+    if (window.TLO_IS_AUTHENTICATED) {
+      updateButtonState();
+      loadHomeState();
+      // 留言板延後一點載入，讓首頁與抽卡按鈕先出現。
+      setTimeout(loadMessageBoard, 400);
+    }
 
     // === 🟢 新增：玩家手動切換本命英雄立繪功能 ===
     function changePlayerFighterLook() {
