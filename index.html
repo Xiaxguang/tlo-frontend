@@ -306,6 +306,8 @@
 
   <div class="container">
     <h2>✨ T-LO 潮流盲盒開榜現場 ✨</h2>
+    <div id="ops-announcement" style="display:none;background:#111;border:1px solid #00fff0;border-radius:12px;padding:12px;margin:10px 0;text-align:left;line-height:1.6;"></div>
+    <div id="ops-maintenance" style="display:none;background:#2a100c;border:1px solid #ff4444;color:#ffaaaa;border-radius:12px;padding:12px;margin:10px 0;text-align:left;line-height:1.6;"></div>
     
     <div class="asset-info">
       <div>玩家：<span id="display-uid">載入中</span></div>
@@ -323,6 +325,8 @@
         <button class="btn-mini btn-fortune" onclick="openFortuneModal()">🔮 今日潮流籤</button>
         <button class="btn-mini btn-pvp" onclick="openPvpModal()">🆚 T-LO 玩家對戰</button>
         <button class="btn-mini" style="background:linear-gradient(45deg,#ffc107,#ff007f); color:#111;" onclick="openStarModal()">⭐ 角色升星</button>
+        <button class="btn-mini" style="background:linear-gradient(45deg,#00ff90,#00fff0); color:#111;" onclick="openRedeemModal()">🎟️ 兌換碼</button>
+        <button class="btn-mini" style="background:linear-gradient(45deg,#ff7a00,#7f00ff); color:#fff;" onclick="openRpgModal()">🗺️ RPG冒險</button>
       </div>
     </div>
 
@@ -586,10 +590,45 @@
   </div>
 
 
+  <div class="modal-overlay" id="redeem-modal" onclick="if(event.target.id==='redeem-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('redeem-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🎟️ 兌換碼 / 補償碼</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:12px;">輸入活動碼或補償碼，可領取抽卡次數、指定卡片、排行榜分數或潮流能量。</div>
+      <input id="redeem-code-input" maxlength="40" placeholder="例如：TLOOPEN100" style="width:90%;padding:14px;border-radius:12px;border:1px solid #555;background:#111;color:#fff;text-align:center;font-size:18px;font-weight:900;text-transform:uppercase;">
+      <button class="btn btn-full btn-roulette" id="redeem-submit-btn" onclick="submitRedeemCode()">確認兌換</button>
+      <div id="redeem-msg" style="min-height:24px;margin-top:10px;color:#aaa;font-weight:900;"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="rpg-modal" onclick="if(event.target.id==='rpg-modal') this.style.display='none';">
+    <div class="modal-content" style="max-width:720px;">
+      <span class="modal-close" onclick="document.getElementById('rpg-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🗺️ T-LO RPG 冒險模式</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">選 1～3 張已持有角色組隊，挑戰 RPG 關卡。此模式獎勵為遊戲內分數、能量與機率掉落抽卡次數。</div>
+      <div class="collection-stat" id="rpg-team-power">隊伍戰力：讀取中...</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0;">
+        <select id="rpg-slot-1" class="player-deck-select"></select>
+        <select id="rpg-slot-2" class="player-deck-select"></select>
+        <select id="rpg-slot-3" class="player-deck-select"></select>
+      </div>
+      <button class="btn-collection" onclick="saveRpgTeam()" style="width:90%;">💾 儲存 RPG 隊伍</button>
+      <div id="rpg-msg" style="min-height:24px;margin:10px 0;font-weight:900;color:#aaa;"></div>
+      <div class="modal-h3" style="font-size:17px;margin-top:10px;">可挑戰關卡</div>
+      <div id="rpg-dungeon-list">正在讀取 RPG 關卡...</div>
+      <div class="modal-h3" style="font-size:17px;margin-top:14px;">最近 RPG 紀錄</div>
+      <div id="rpg-log-list">正在讀取紀錄...</div>
+    </div>
+  </div>
+
+
   <script>
     const playerUID = window.TLO_PLAYER_UID || "";
     let currentCount = parseInt(window.TLO_INITIAL_TIMES || "0") || 0;
     let globalPlayerPower = 0; 
+    let latestRpgDashboard = null;
+
+    loadPublicSettings();
 
     // 🟢 替換為全新的 16 張抽卡池 (已修復缺少的逗號)
     const CARD_RARITIES = {
@@ -1762,6 +1801,136 @@ function showCollectionHistory() {
       }).withFailureHandler(function() {
         alert('升星失敗，請稍後再試。');
       }).upgradeCardStar(playerUID, cardName);
+    }
+
+
+    // ─── 公告 / 維護模式 ───
+    function loadPublicSettings() {
+      if (!window.TLO_RAW_RPC) return;
+      window.TLO_RAW_RPC('getPublicSettings', [], {auth:false}).then(function(res) {
+        const ann = document.getElementById('ops-announcement');
+        const maint = document.getElementById('ops-maintenance');
+        if (ann && (res.announcementTitle || res.announcementBody)) {
+          ann.style.display = 'block';
+          ann.innerHTML = `<b style="color:#00fff0;">📢 ${escapeHtml(res.announcementTitle || 'T-LO 公告')}</b><br>${escapeHtml(res.announcementBody || '').replace(/\n/g, '<br>')}`;
+        }
+        if (maint && res.maintenanceEnabled) {
+          maint.style.display = 'block';
+          maint.innerHTML = `<b>⚠️ 維護模式已開啟</b><br>${escapeHtml(res.maintenanceMessage || '系統維護中，請稍後再試。')}`;
+        }
+      }).catch(function(){});
+    }
+
+    // ─── 兌換碼 / 補償碼 ───
+    function openRedeemModal() {
+      document.getElementById('redeem-modal').style.display = 'flex';
+      document.getElementById('redeem-msg').innerHTML = '';
+      const input = document.getElementById('redeem-code-input');
+      if (input) { input.value = ''; setTimeout(() => input.focus(), 100); }
+    }
+
+    function submitRedeemCode() {
+      const input = document.getElementById('redeem-code-input');
+      const msg = document.getElementById('redeem-msg');
+      const btn = document.getElementById('redeem-submit-btn');
+      const code = (input && input.value ? input.value : '').trim();
+      if (!code) { msg.innerHTML = '<span style="color:#ff7777;">請先輸入兌換碼。</span>'; return; }
+      btn.disabled = true;
+      msg.innerHTML = '兌換中...';
+      google.script.run.withSuccessHandler(function(res) {
+        btn.disabled = false;
+        if (!res || !res.success) {
+          msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '兌換失敗')}</span>`;
+          return;
+        }
+        msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg || '兌換成功')}</span>`;
+        if (typeof res.timesLeft !== 'undefined') {
+          currentCount = parseInt(res.timesLeft) || 0;
+          updateButtonState();
+        }
+        loadHomeState();
+        refreshCollectionCount();
+      }).withFailureHandler(function(err) {
+        btn.disabled = false;
+        msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(err && err.message ? err.message : err)}</span>`;
+      }).redeemCode(playerUID, code);
+    }
+
+    // ─── RPG 冒險模式 ───
+    function openRpgModal() {
+      document.getElementById('rpg-modal').style.display = 'flex';
+      document.getElementById('rpg-msg').innerHTML = '';
+      loadRpgDashboard();
+    }
+
+    function loadRpgDashboard() {
+      const msg = document.getElementById('rpg-msg');
+      if (msg) msg.innerHTML = '正在讀取 RPG 資料...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (msg) msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : 'RPG 資料讀取失敗')}</span>`;
+          return;
+        }
+        renderRpgDashboard(res);
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(err && err.message ? err.message : err)}</span>`;
+      }).getRpgDashboard(playerUID);
+    }
+
+    function renderRpgDashboard(res) {
+      latestRpgDashboard = res;
+      const msg = document.getElementById('rpg-msg');
+      if (msg) msg.innerHTML = '';
+      const powerEl = document.getElementById('rpg-team-power');
+      if (powerEl) powerEl.innerText = `隊伍戰力：${Number(res.teamPower || 0).toLocaleString()}`;
+      const options = ['<option value="">空位</option>'].concat((res.cardOptions || []).map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}｜${escapeHtml(c.rarity)}｜${Number(c.power||0).toLocaleString()}戰力｜${Number(c.star||1)}★</option>`)).join('');
+      [1,2,3].forEach(function(i) {
+        const sel = document.getElementById('rpg-slot-' + i);
+        if (!sel) return;
+        sel.innerHTML = options;
+        sel.value = (res.partyNames || [])[i-1] || '';
+      });
+
+      const dungeons = res.dungeons || [];
+      document.getElementById('rpg-dungeon-list').innerHTML = dungeons.map(d => {
+        const ok = Number(res.teamPower || 0) >= Number(d.requiredPower || 0);
+        return `<div style="background:#111;border:1px solid ${ok ? '#00fff0' : '#555'};border-radius:12px;padding:12px;margin:8px 0;text-align:left;">
+          <b style="color:${ok ? '#00fff0' : '#ffc107'};">${escapeHtml(d.name)}</b>
+          <div style="font-size:12px;color:#aaa;line-height:1.6;">${escapeHtml(d.description || '')}<br>建議戰力：${Number(d.requiredPower||0).toLocaleString()}｜獎勵：分數 +${Number(d.rewardScore||0).toLocaleString()}、能量 +${Number(d.rewardEnergy||0).toLocaleString()}｜抽卡掉落率 ${Number(d.rewardDrawChance||0)}%</div>
+          <button class="btn-collection" style="margin-top:8px;" onclick="startRpgAdventure('${escapeJsString(d.key)}')">開始挑戰</button>
+        </div>`;
+      }).join('') || '<div style="color:#888;">目前沒有可挑戰 RPG 關卡。</div>';
+
+      document.getElementById('rpg-log-list').innerHTML = (res.logs || []).map(l => `<div class="pvp-log-item"><b class="${l.result === 'WIN' ? 'pvp-win' : 'pvp-lose'}">${escapeHtml(l.result)}</b>｜${escapeHtml(l.dungeonName)}｜我方 ${Number(l.teamPower||0).toLocaleString()} / 敵方 ${Number(l.enemyPower||0).toLocaleString()}<br><span style="color:#aaa;">${escapeHtml(l.rewardSummary || '')}｜${escapeHtml(l.createdAt || '')}</span></div>`).join('') || '<div style="color:#888;">暫無 RPG 紀錄。</div>';
+    }
+
+    function saveRpgTeam() {
+      const names = [1,2,3].map(i => document.getElementById('rpg-slot-' + i).value).filter(Boolean);
+      const msg = document.getElementById('rpg-msg');
+      if (!names.length) { msg.innerHTML = '<span style="color:#ff7777;">請至少選一張角色。</span>'; return; }
+      msg.innerHTML = '儲存隊伍中...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderRpgDashboard(res.dashboard);
+        msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res && res.msg ? res.msg : '隊伍已儲存')}</span>`;
+      }).withFailureHandler(function(err) {
+        msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(err && err.message ? err.message : err)}</span>`;
+      }).setRpgTeam(playerUID, names);
+    }
+
+    function startRpgAdventure(key) {
+      const msg = document.getElementById('rpg-msg');
+      msg.innerHTML = 'RPG 冒險進行中...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderRpgDashboard(res.dashboard);
+        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '冒險完成')}</span>`;
+        if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
+          currentCount = parseInt(res.newTimesLeft) || 0;
+          updateButtonState();
+        }
+        loadTrainingDashboard();
+      }).withFailureHandler(function(err) {
+        msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(err && err.message ? err.message : err)}</span>`;
+      }).executeRpgAdventure(playerUID, key);
     }
 
 

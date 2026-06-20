@@ -79,6 +79,9 @@
       <div class="tabs">
         <button class="tab active" onclick="showTab('players', this)">玩家管理</button>
         <button class="tab" onclick="showTab('cards', this); loadCards();">卡池權重</button>
+        <button class="tab" onclick="showTab('redeem', this); loadRedeemCodes();">兌換碼</button>
+        <button class="tab" onclick="showTab('backup', this);">備份匯出</button>
+        <button class="tab" onclick="showTab('settings', this); loadOpsSettings();">公告/維護</button>
         <button class="tab" onclick="showTab('logs', this); loadAuditLogs();">操作紀錄</button>
         <button class="tab" onclick="showTab('password', this)">GM密碼</button>
       </div>
@@ -161,6 +164,78 @@
         <div id="cardsTable"></div>
       </div>
 
+      <div id="tab-redeem" class="hide panel">
+        <h2>🎟️ 兌換碼 / 補償碼</h2>
+        <div class="muted">可建立活動碼、補償碼。玩家前台輸入後可領抽卡次數、指定卡片、排行榜分數或潮流能量。</div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>建立兌換碼</h3>
+            <label>兌換碼</label><input id="redeemCode" placeholder="例如 TLOOPEN100，會自動轉大寫">
+            <label>標題 / 備註</label><input id="redeemTitle" placeholder="例如 開服補償">
+            <div class="row">
+              <div><label>獎勵類型</label><select id="redeemType"><option value="DRAW_TIMES">抽卡次數</option><option value="CARD">指定卡片</option><option value="SCORE">排行榜分數</option><option value="ENERGY">潮流能量</option></select></div>
+              <div><label>獎勵數量</label><input id="redeemValue" type="number" min="0" value="1"></div>
+            </div>
+            <label>指定卡片名稱，獎勵類型為指定卡片時使用</label><select id="redeemCard"></select>
+            <div class="row">
+              <div><label>總可使用次數，0 = 不限</label><input id="redeemMaxUses" type="number" min="0" value="0"></div>
+              <div><label>到期時間，可空白</label><input id="redeemExpires" placeholder="2026-12-31T23:59:59.000Z"></div>
+            </div>
+            <label><input id="redeemActive" type="checkbox" checked style="width:auto"> 建立後直接啟用</label>
+            <button class="primary" onclick="createRedeemCode()" style="width:100%;margin-top:10px">建立兌換碼</button>
+            <div id="redeemMsg" class="msg"></div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>領取紀錄</h3>
+            <div class="row" style="grid-template-columns:1fr auto">
+              <input id="redeemLogCode" placeholder="輸入兌換碼篩選，可空白">
+              <button class="primary" onclick="loadRedeemLogs()">查詢</button>
+            </div>
+            <div id="redeemLogMsg" class="msg"></div>
+            <div id="redeemLogsTable"></div>
+          </div>
+        </div>
+        <h3>目前兌換碼</h3>
+        <div id="redeemCodesTable"></div>
+      </div>
+
+      <div id="tab-backup" class="hide panel">
+        <h2>💾 備份 / 匯出資料</h2>
+        <div class="muted">匯出的是目前 Turso 資料庫中的 JSON 檔。建議正式營運後每天至少手動備份一次。</div>
+        <div class="row" style="grid-template-columns:1fr auto auto">
+          <select id="exportTableName">
+            <option value="players">players 玩家</option>
+            <option value="player_assets">player_assets 玩家資產</option>
+            <option value="player_collection">player_collection 玩家卡盒</option>
+            <option value="gacha_logs">gacha_logs 抽卡紀錄</option>
+            <option value="training_profiles">training_profiles 排行榜</option>
+            <option value="cards">cards 卡池</option>
+            <option value="redeem_codes">redeem_codes 兌換碼</option>
+            <option value="redeem_redemptions">redeem_redemptions 兌換紀錄</option>
+            <option value="rpg_party">rpg_party RPG隊伍</option>
+            <option value="rpg_adventure_logs">rpg_adventure_logs RPG紀錄</option>
+            <option value="admin_audit_logs">admin_audit_logs GM操作紀錄</option>
+          </select>
+          <button class="primary" onclick="exportOneTable()">匯出單表</button>
+          <button class="warn" onclick="exportAllData()">匯出全部</button>
+        </div>
+        <div id="exportMsg" class="msg"></div>
+      </div>
+
+      <div id="tab-settings" class="hide panel">
+        <h2>📢 公告 / 維護模式</h2>
+        <label><input id="maintenanceEnabled" type="checkbox" style="width:auto"> 開啟維護模式</label>
+        <label>維護訊息</label>
+        <textarea id="maintenanceMessage" placeholder="系統維護中，請稍後再試。"></textarea>
+        <label>公告標題</label>
+        <input id="announcementTitle" placeholder="T-LO 公告">
+        <label>公告內容</label>
+        <textarea id="announcementBody" placeholder="公告會顯示在玩家遊戲首頁。"></textarea>
+        <button class="primary" onclick="saveOpsSettings()" style="margin-top:10px">儲存公告 / 維護設定</button>
+        <div id="settingsMsg" class="msg"></div>
+      </div>
+
+
       <div id="tab-logs" class="hide panel">
         <h2>GM 操作紀錄</h2>
         <div class="row" style="grid-template-columns:1fr auto">
@@ -235,7 +310,7 @@ async function logout(){
 
 function openGame(){ location.href = './'; }
 function showTab(name, btn){
-  ['players','cards','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
+  ['players','cards','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
 }
@@ -350,6 +425,114 @@ async function saveCard(i){
   const c = cardRows[i]; if(!c) return;
   if(!confirm(`確定要修改「${c.name}」卡池設定？`)) return;
   try{ const data = await rpc('adminUpdateCardSettings', [c.name, {weight:$('cw'+i).value, isDrawable:$('cd'+i).value === '1'}, 'GM後台卡池設定']); msg('cardsMsg', data.msg, true); await loadCards(false); }catch(e){ msg('cardsMsg', e.message); }
+}
+
+
+function downloadJson(filename, data){
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function syncRedeemCardOptions(){
+  if(!cardRows.length) return;
+  if($('redeemCard')) $('redeemCard').innerHTML = cardRows.map(c => `<option value="${esc(c.name)}">${esc(c.name)}｜${esc(c.rarity)}</option>`).join('');
+}
+
+async function loadRedeemCodes(){
+  try{
+    if(!cardRows.length) await loadCards(false);
+    syncRedeemCardOptions();
+    const data = await rpc('adminListRedeemCodes', []);
+    msg('redeemMsg', `已載入 ${data.rows.length} 組兌換碼`, true);
+    $('redeemCodesTable').innerHTML = `<table><thead><tr><th>代碼</th><th>獎勵</th><th>使用</th><th>狀態</th><th>操作</th></tr></thead><tbody>` +
+      (data.rows || []).map(r => `<tr><td><b>${esc(r.code)}</b><br><span class="muted">${esc(r.title||'')}</span></td><td>${esc(r.rewardType)} ${fmt(r.rewardValue)} ${esc(r.cardName||'')}</td><td>${fmt(r.usedCount)} / ${r.maxUses ? fmt(r.maxUses) : '不限'}</td><td>${r.isActive ? '啟用' : '停用'}<br><span class="muted">到期：${esc(r.expiresAt||'-')}</span></td><td><button class="${r.isActive?'danger':'primary'}" onclick="toggleRedeem('${esc(r.code)}', ${r.isActive ? 'false' : 'true'})">${r.isActive?'停用':'啟用'}</button></td></tr>`).join('') + `</tbody></table>`;
+  }catch(e){ msg('redeemMsg', e.message); }
+}
+
+async function createRedeemCode(){
+  try{
+    const payload = {
+      code: $('redeemCode').value.trim(),
+      title: $('redeemTitle').value.trim(),
+      rewardType: $('redeemType').value,
+      rewardValue: $('redeemValue').value,
+      cardName: $('redeemCard').value,
+      maxUses: $('redeemMaxUses').value,
+      expiresAt: $('redeemExpires').value.trim(),
+      isActive: $('redeemActive').checked
+    };
+    if(!payload.code){ msg('redeemMsg','請輸入兌換碼'); return; }
+    if(!confirm('確定建立兌換碼？')) return;
+    const data = await rpc('adminCreateRedeemCode', [payload]);
+    msg('redeemMsg', data.msg, true);
+    $('redeemCode').value=''; $('redeemTitle').value=''; $('redeemValue').value='1'; $('redeemMaxUses').value='0'; $('redeemExpires').value='';
+    await loadRedeemCodes();
+  }catch(e){ msg('redeemMsg', e.message); }
+}
+
+async function toggleRedeem(code, active){
+  try{
+    const data = await rpc('adminSetRedeemCodeActive', [code, active]);
+    msg('redeemMsg', data.msg, true);
+    await loadRedeemCodes();
+  }catch(e){ msg('redeemMsg', e.message); }
+}
+
+async function loadRedeemLogs(){
+  try{
+    const data = await rpc('adminGetRedeemLogs', [$('redeemLogCode').value.trim()]);
+    msg('redeemLogMsg', `已載入 ${data.rows.length} 筆領取紀錄`, true);
+    $('redeemLogsTable').innerHTML = `<table><thead><tr><th>時間</th><th>代碼</th><th>玩家</th><th>獎勵</th></tr></thead><tbody>` +
+      (data.rows || []).map(r => `<tr><td>${esc(r.createdAt)}</td><td>${esc(r.code)}</td><td>${esc(r.uid)}</td><td>${esc(r.rewardSummary)}</td></tr>`).join('') + `</tbody></table>`;
+  }catch(e){ msg('redeemLogMsg', e.message); }
+}
+
+async function exportOneTable(){
+  try{
+    const table = $('exportTableName').value;
+    msg('exportMsg','匯出中...',true);
+    const data = await rpc('adminExportTable', [table]);
+    downloadJson(`tlo_${table}_${new Date().toISOString().slice(0,10)}.json`, data);
+    msg('exportMsg', `已匯出 ${table}，共 ${data.rows.length} 筆`, true);
+  }catch(e){ msg('exportMsg', e.message); }
+}
+
+async function exportAllData(){
+  if(!confirm('全部匯出可能需要一點時間，確定繼續？')) return;
+  try{
+    msg('exportMsg','全部匯出中...',true);
+    const data = await rpc('adminExportAllData', []);
+    downloadJson(`tlo_full_backup_${new Date().toISOString().slice(0,10)}.json`, data);
+    msg('exportMsg', '已完成全部備份匯出', true);
+  }catch(e){ msg('exportMsg', e.message); }
+}
+
+async function loadOpsSettings(){
+  try{
+    const data = await rpc('adminGetOpsSettings', []);
+    $('maintenanceEnabled').checked = !!data.maintenanceEnabled;
+    $('maintenanceMessage').value = data.maintenanceMessage || '';
+    $('announcementTitle').value = data.announcementTitle || '';
+    $('announcementBody').value = data.announcementBody || '';
+    msg('settingsMsg','已載入設定',true);
+  }catch(e){ msg('settingsMsg', e.message); }
+}
+
+async function saveOpsSettings(){
+  try{
+    const payload = {
+      maintenanceEnabled: $('maintenanceEnabled').checked,
+      maintenanceMessage: $('maintenanceMessage').value,
+      announcementTitle: $('announcementTitle').value,
+      announcementBody: $('announcementBody').value
+    };
+    if(payload.maintenanceEnabled && !confirm('你即將開啟維護模式，玩家前台大多數功能會被暫停。確定？')) return;
+    const data = await rpc('adminUpdateOpsSettings', [payload]);
+    msg('settingsMsg', data.msg, true);
+  }catch(e){ msg('settingsMsg', e.message); }
 }
 
 async function loadAuditLogs(){
