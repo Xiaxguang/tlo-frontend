@@ -274,6 +274,12 @@
     .turn-log-line:last-child { border-bottom: none; }
     .turn-log-player { color: #00fff0; }
     .turn-log-boss { color: #ff7777; }
+    .turn-log-line.is-crit { text-shadow: 0 0 10px rgba(255,214,64,.28); }
+    .turn-log-line.is-skill { background: rgba(255,193,7,.055); border-radius: 8px; }
+    .turn-badge { display:inline-block; margin-left:5px; padding:1px 6px; border-radius:999px; font-size:10px; font-weight:1000; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.08); vertical-align:middle; }
+    .turn-badge.element { color:#111; background:#ffc107; border-color:#ffd95c; }
+    .turn-badge.skill { color:#00fff0; border-color:rgba(0,255,240,.45); }
+    .turn-badge.crit { color:#ffdd44; border-color:rgba(255,221,68,.55); box-shadow:0 0 10px rgba(255,221,68,.18); }
     .damage-float {
       position: absolute;
       z-index: 25;
@@ -287,6 +293,9 @@
     }
     .damage-player { color: #00fff0; left: 72%; top: 38%; }
     .damage-boss { color: #ff5555; left: 28%; top: 62%; }
+    .damage-float.is-crit { font-size: 27px; color:#ffdd44; }
+    .damage-float.is-skill { filter: drop-shadow(0 0 10px rgba(0,255,240,.45)); }
+    .damage-float small { display:block; font-size:10px; line-height:1.1; letter-spacing:1px; margin-top:1px; }
     @keyframes damageFloat {
       0% { opacity: 0; transform: translate(-50%, -20%) scale(.7); }
       18% { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
@@ -1608,22 +1617,46 @@
       textEl.innerText = `${Math.max(0, Number(hp || 0)).toLocaleString()} / ${Number(maxHp || 0).toLocaleString()} (${percent}%)`;
     }
 
-    function showDamageNumber(target, amount, actor) {
+    function showDamageNumber(target, amount, actor, turn) {
       const arena = document.getElementById('battle-arena-panel');
       if (!arena) return;
       const el = document.createElement('div');
-      el.className = 'damage-float ' + (actor === 'player' ? 'damage-player' : 'damage-boss');
-      el.innerText = '-' + Number(amount || 0).toLocaleString();
+      el.className = 'damage-float ' + (actor === 'player' ? 'damage-player' : 'damage-boss') + (turn && turn.isCritical ? ' is-crit' : '') + (turn && turn.isSkill ? ' is-skill' : '');
+      const labels = [];
+      if (turn && turn.isCritical) labels.push('CRIT');
+      if (turn && turn.isSkill && turn.skillName) labels.push(turn.skillName);
+      if (turn && turn.elementResult) labels.push(turn.elementResult);
+      el.innerHTML = '-' + Number(amount || 0).toLocaleString() + (labels.length ? '<small>' + labels.map(escapeHtml).join('｜') + '</small>' : '');
       arena.appendChild(el);
-      setTimeout(() => el.remove(), 760);
+      setTimeout(() => el.remove(), 860);
     }
 
-    function appendTurnLog(line, actor) {
+    function appendTurnLog(line, actor, turn) {
       const log = document.getElementById('battle-turn-log');
       if (!log) return;
       const div = document.createElement('div');
-      div.className = 'turn-log-line ' + (actor === 'player' ? 'turn-log-player' : 'turn-log-boss');
-      div.textContent = line;
+      div.className = 'turn-log-line ' + (actor === 'player' ? 'turn-log-player' : 'turn-log-boss') + (turn && turn.isCritical ? ' is-crit' : '') + (turn && turn.isSkill ? ' is-skill' : '');
+      const main = document.createElement('span');
+      main.textContent = line;
+      div.appendChild(main);
+      if (turn && turn.elementIcon && turn.elementLabel) {
+        const b = document.createElement('span');
+        b.className = 'turn-badge element';
+        b.textContent = turn.elementIcon + turn.elementLabel;
+        div.appendChild(b);
+      }
+      if (turn && turn.isSkill && turn.skillName) {
+        const b = document.createElement('span');
+        b.className = 'turn-badge skill';
+        b.textContent = '技能';
+        div.appendChild(b);
+      }
+      if (turn && turn.isCritical) {
+        const b = document.createElement('span');
+        b.className = 'turn-badge crit';
+        b.textContent = '暴擊';
+        div.appendChild(b);
+      }
       log.appendChild(div);
       log.scrollTop = log.scrollHeight;
     }
@@ -1674,20 +1707,20 @@
       for (const turn of battle.turns) {
         const isPlayer = turn.actor === 'player';
         if (banner) banner.innerText = isPlayer ? `🟦 玩家回合｜第 ${turn.round} 回合` : `🟥 Boss 回合｜第 ${turn.round} 回合`;
-        appendTurnLog(turn.text || (isPlayer ? '玩家攻擊！' : 'Boss 反擊！'), turn.actor);
+        appendTurnLog(turn.text || (isPlayer ? '玩家攻擊！' : 'Boss 反擊！'), turn.actor, turn);
 
         if (isPlayer) {
           fPlayer.classList.add('turn-attack-player');
           await sleepTurn(240);
           fBoss.classList.add('turn-hit-boss');
-          showDamageNumber(fBoss, turn.damage, 'player');
+          showDamageNumber(fBoss, turn.damage, 'player', turn);
           if (window.TLOAudio) window.TLOAudio.playSfx('click');
           setHpBar(hpBossFill, hpBossText, turn.bossHpAfter, battle.bossMaxHp);
         } else {
           fBoss.classList.add('turn-attack-boss');
           await sleepTurn(240);
           fPlayer.classList.add('turn-hit-player');
-          showDamageNumber(fPlayer, turn.damage, 'boss');
+          showDamageNumber(fPlayer, turn.damage, 'boss', turn);
           if (window.TLOAudio) window.TLOAudio.playSfx('click');
           setHpBar(hpPlayerFill, hpPlayerText, turn.playerHpAfter, battle.playerMaxHp);
         }
@@ -1714,24 +1747,48 @@
       if (imgEl) imgEl.src = imageUrl || placeholderBattleImage(name || 'TLO', side === 'player' ? '#123a3a' : '#3a1616', side === 'player' ? '#00fff0' : '#ff7777');
     }
 
-    function appendTurnLogTo(prefix, line, actor) {
+    function appendTurnLogTo(prefix, line, actor, turn) {
       const log = document.getElementById(prefix + '-turn-log');
       if (!log) return;
       const div = document.createElement('div');
-      div.className = 'turn-log-line ' + (actor === 'player' ? 'turn-log-player' : 'turn-log-boss');
-      div.textContent = line;
+      div.className = 'turn-log-line ' + (actor === 'player' ? 'turn-log-player' : 'turn-log-boss') + (turn && turn.isCritical ? ' is-crit' : '') + (turn && turn.isSkill ? ' is-skill' : '');
+      const main = document.createElement('span');
+      main.textContent = line;
+      div.appendChild(main);
+      if (turn && turn.elementIcon && turn.elementLabel) {
+        const b = document.createElement('span');
+        b.className = 'turn-badge element';
+        b.textContent = turn.elementIcon + turn.elementLabel;
+        div.appendChild(b);
+      }
+      if (turn && turn.isSkill && turn.skillName) {
+        const b = document.createElement('span');
+        b.className = 'turn-badge skill';
+        b.textContent = '技能';
+        div.appendChild(b);
+      }
+      if (turn && turn.isCritical) {
+        const b = document.createElement('span');
+        b.className = 'turn-badge crit';
+        b.textContent = '暴擊';
+        div.appendChild(b);
+      }
       log.appendChild(div);
       log.scrollTop = log.scrollHeight;
     }
 
-    function showDamageNumberInArena(prefix, amount, actor) {
+    function showDamageNumberInArena(prefix, amount, actor, turn) {
       const arena = document.getElementById(prefix + '-arena-panel');
       if (!arena) return;
       const el = document.createElement('div');
-      el.className = 'damage-float ' + (actor === 'player' ? 'damage-player' : 'damage-boss');
-      el.innerText = '-' + Number(amount || 0).toLocaleString();
+      el.className = 'damage-float ' + (actor === 'player' ? 'damage-player' : 'damage-boss') + (turn && turn.isCritical ? ' is-crit' : '') + (turn && turn.isSkill ? ' is-skill' : '');
+      const labels = [];
+      if (turn && turn.isCritical) labels.push('CRIT');
+      if (turn && turn.isSkill && turn.skillName) labels.push(turn.skillName);
+      if (turn && turn.elementResult) labels.push(turn.elementResult);
+      el.innerHTML = '-' + Number(amount || 0).toLocaleString() + (labels.length ? '<small>' + labels.map(escapeHtml).join('｜') + '</small>' : '');
       arena.appendChild(el);
-      setTimeout(() => el.remove(), 760);
+      setTimeout(() => el.remove(), 860);
     }
 
     function makeSimpleBattleAnimationForMode(opts) {
@@ -1796,19 +1853,19 @@
       for (const turn of battle.turns || []) {
         const isPlayer = turn.actor === 'player';
         if (banner) banner.innerText = isPlayer ? `🟦 我方回合｜第 ${turn.round} 回合` : `🟥 敵方回合｜第 ${turn.round} 回合`;
-        appendTurnLogTo(prefix, turn.text || (isPlayer ? '我方攻擊！' : '敵方反擊！'), turn.actor);
+        appendTurnLogTo(prefix, turn.text || (isPlayer ? '我方攻擊！' : '敵方反擊！'), turn.actor, turn);
         if (isPlayer) {
           fPlayer.classList.add('turn-attack-player');
           await sleepTurn(240);
           fBoss.classList.add('turn-hit-boss');
-          showDamageNumberInArena(prefix, turn.damage, 'player');
+          showDamageNumberInArena(prefix, turn.damage, 'player', turn);
           if (window.TLOAudio) window.TLOAudio.playSfx('click');
           setHpBar(hpBossFill, hpBossText, turn.bossHpAfter, battle.bossMaxHp);
         } else {
           fBoss.classList.add('turn-attack-boss');
           await sleepTurn(240);
           fPlayer.classList.add('turn-hit-player');
-          showDamageNumberInArena(prefix, turn.damage, 'boss');
+          showDamageNumberInArena(prefix, turn.damage, 'boss', turn);
           if (window.TLOAudio) window.TLOAudio.playSfx('click');
           setHpBar(hpPlayerFill, hpPlayerText, turn.playerHpAfter, battle.playerMaxHp);
         }
@@ -2899,7 +2956,7 @@ function showCollectionHistory() {
       if (msg) msg.innerHTML = '';
       const powerEl = document.getElementById('rpg-team-power');
       if (powerEl) powerEl.innerText = `隊伍戰力：${Number(res.teamPower || 0).toLocaleString()}`;
-      const options = ['<option value="">空位</option>'].concat((res.cardOptions || []).map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}｜${escapeHtml(c.rarity)}｜${Number(c.power||0).toLocaleString()}戰力｜${Number(c.star||1)}★</option>`)).join('');
+      const options = ['<option value="">空位</option>'].concat((res.cardOptions || []).map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}｜${escapeHtml(c.elementIcon || '')}${escapeHtml(c.elementLabel || '')}｜${escapeHtml(c.skillName || '')}｜${Number(c.power||0).toLocaleString()}戰力｜${Number(c.star||1)}★</option>`)).join('');
       [1,2,3].forEach(function(i) {
         const sel = document.getElementById('rpg-slot-' + i);
         if (!sel) return;
@@ -2914,7 +2971,7 @@ function showCollectionHistory() {
         const ok = Number(res.teamPower || 0) >= Number(d.requiredPower || 0);
         return `<div style="background:#111;border:1px solid ${ok ? '#00fff0' : '#555'};border-radius:12px;padding:12px;margin:8px 0;text-align:left;">
           <b style="color:${ok ? '#00fff0' : '#ffc107'};">${escapeHtml(d.name)}</b>
-          <div style="font-size:12px;color:#aaa;line-height:1.6;">${escapeHtml(d.description || '')}<br>建議戰力：${Number(d.requiredPower||0).toLocaleString()}｜獎勵：分數 +${Number(d.rewardScore||0).toLocaleString()}、能量 +${Number(d.rewardEnergy||0).toLocaleString()}｜抽卡掉落率 ${Number(d.rewardDrawChance||0)}%</div>
+          <div style="font-size:12px;color:#aaa;line-height:1.6;">${escapeHtml(d.description || '')}<br>敵方屬性：${escapeHtml(d.elementIcon || '')}${escapeHtml(d.elementLabel || '')}｜技能：${escapeHtml(d.skillName || '')}<br>建議戰力：${Number(d.requiredPower||0).toLocaleString()}｜獎勵：分數 +${Number(d.rewardScore||0).toLocaleString()}、能量 +${Number(d.rewardEnergy||0).toLocaleString()}｜抽卡掉落率 ${Number(d.rewardDrawChance||0)}%</div>
           <button class="btn-collection" style="margin-top:8px;" onclick="startRpgAdventure('${escapeJsString(d.key)}')">開始挑戰</button>
         </div>`;
       }).join('') || '<div style="color:#888;">目前沒有可挑戰 RPG 關卡。</div>';
@@ -2948,7 +3005,7 @@ function showCollectionHistory() {
         }
         const info = findRpgCardInfo(name);
         const img = getNpcImageUrl(name) || info.imageUrl || placeholderBattleImage(name, '#123a3a', '#00fff0');
-        html += `<div class="rpg-mini-card"><img src="${img}" alt="${escapeHtml(name)}"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${Number(info.star||1)}★</div></div>`;
+        html += `<div class="rpg-mini-card"><img src="${img}" alt="${escapeHtml(name)}"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')}</div></div>`;
       }
       box.innerHTML = html;
       if (caption) caption.innerText = names.length ? `冒險隊伍已集結：${names.join('、')}` : '選擇隊伍後，角色會組隊準備出發。';
