@@ -1519,11 +1519,9 @@
       
       let pImgUrl = "";
       if (selectedName !== "潮流先鋒" && selectedName !== "尚未選擇") {
-        const battleOptions = (latestBattleDashboard && latestBattleDashboard.battleOptions) || [];
-        const cardInfo = battleOptions.find(function(card) { return card && card.name === selectedName; }) || { name: selectedName };
-        pImgUrl = getCardImageUrl(cardInfo);
+        pImgUrl = getCardImageUrl({ name: selectedName, cardName: selectedName });
       }
-
+      
       if (!pImgUrl) {
         pImgUrl = "https://images.placeholders.dev/?width=80&height=100&text=" + encodeURIComponent(selectedName) + "&bgColor=%231a3a3a&textColor=%2300fff0";
       }
@@ -2411,19 +2409,39 @@ function showCollectionHistory() {
     // ===============================
     window.TLO_CARD_IMAGE_MAP = window.TLO_CARD_IMAGE_MAP || {};
 
+    var TLO_IMAGE_RAW_BASE = 'https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/';
+
+    function tloEncodeGithubImagePath(path) {
+      return String(path || '')
+        .replace(/^\.?\/+/, '')
+        .split('/')
+        .filter(Boolean)
+        .map(function(part) { return encodeURIComponent(part); })
+        .join('/');
+    }
+
+    function tloBuildRawGithubImageUrl(nameOrPath) {
+      var path = String(nameOrPath || '').trim();
+      if (!path) return '';
+      path = path.replace(/^\.?\/+/, '');
+      if (!/\.(png|jpg|jpeg|webp|gif)$/i.test(path)) path += '.png';
+      return TLO_IMAGE_RAW_BASE + tloEncodeGithubImagePath(path);
+    }
+
     function tloNormalizeImageUrl(url) {
       var value = String(url || '').trim();
       if (!value) return '';
 
       // 如果 GM 後台誤貼 GitHub blob 頁面網址，自動轉成 raw 圖片網址。
-      // 例如：https://github.com/Xiaxguang/lbr-images/blob/main/test.png
-      // 轉成：https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/test.png
       value = value.replace(
         /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/(.+)$/i,
         'https://raw.githubusercontent.com/$1/$2/$3'
       );
 
-      return value;
+      if (/^https?:\/\//i.test(value)) return value;
+
+      // 如果 GM 後台只填「圖片名稱」或「圖片名稱.png」，自動補成你的 lbr-images raw 網址。
+      return tloBuildRawGithubImageUrl(value);
     }
 
     function tloGetCardName(cardOrName) {
@@ -2534,6 +2552,10 @@ function showCollectionHistory() {
       if (name && window.NPC_IMAGES && window.NPC_IMAGES[name]) {
         return window.NPC_IMAGES[name];
       }
+
+      // 最後再自動嘗試你的固定圖庫：lbr-images/main/{卡名}.png。
+      // 這可以避免 GM 新增卡片時漏填完整網址，導致前台只出現 ????。
+      if (name) return tloBuildRawGithubImageUrl(name);
 
       return '';
     }
