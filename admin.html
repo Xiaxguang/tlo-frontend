@@ -78,7 +78,7 @@
 
       <div class="tabs">
         <button class="tab active" onclick="showTab('players', this)">玩家管理</button>
-        <button class="tab" onclick="showTab('cards', this); loadCards();">卡池權重</button>
+        <button class="tab" onclick="showTab('cards', this); loadCards();">卡牌管理</button>
         <button class="tab" onclick="showTab('stages', this); loadStageAdmin();">關卡管理</button>
         <button class="tab" onclick="showTab('redeem', this); loadRedeemCodes();">兌換碼</button>
         <button class="tab" onclick="showTab('backup', this);">備份匯出</button>
@@ -159,8 +159,33 @@
       </div>
 
       <div id="tab-cards" class="hide panel">
-        <h2>卡池權重管理</h2>
-        <div class="muted">修改後會直接影響玩家之後抽卡。權重 0 或關閉可抽代表不會被抽到。</div>
+        <h2>🃏 卡牌 / 卡池管理</h2>
+        <div class="muted">可新增卡牌、設定圖片網址、稀有度、抽卡權重與是否進入卡池。圖片檔請先上傳到 GitHub 前端 repo，例如 <b>images/cards/yeli.png</b>，再填入 <b>./images/cards/yeli.png</b>。</div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>➕ 新增 / 修改卡牌</h3>
+            <div class="row">
+              <div><label>卡片 ID，可空白自動產生</label><input id="newCardId" placeholder="例如 C042 或 BOSS_001"></div>
+              <div><label>卡片名稱</label><input id="newCardName" placeholder="例如 夜璃"></div>
+            </div>
+            <div class="row3">
+              <div><label>稀有度</label><select id="newCardRarity"><option>NORMAL</option><option>RARE</option><option>SUPER RARE</option><option>SSR</option><option>UR</option><option>BOSS</option></select></div>
+              <div><label>抽卡權重</label><input id="newCardWeight" type="number" min="0" value="0"></div>
+              <div><label>排序</label><input id="newCardSort" type="number" min="0" placeholder="空白自動"></div>
+            </div>
+            <label>圖片網址 / 路徑</label><input id="newCardImage" placeholder="例如 ./images/cards/yeli.png 或 https://...png">
+            <div class="row" style="grid-template-columns:1fr auto;align-items:end">
+              <div><label>是否進入抽卡池</label><select id="newCardDrawable"><option value="1">可抽</option><option value="0">不可抽 / Boss 專用</option></select></div>
+              <button class="primary" onclick="saveNewCard()">新增 / 儲存卡牌</button>
+            </div>
+            <div class="muted">提醒：Boss 專用卡建議設為「不可抽」且權重 0；一般抽卡角色請設為「可抽」並填權重。</div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>🖼️ 圖片預覽</h3>
+            <div id="cardPreview" class="muted">填入圖片路徑後會在這裡預覽。</div>
+            <button class="ghost" onclick="previewNewCardImage()" style="margin-top:10px;width:100%">預覽圖片</button>
+          </div>
+        </div>
         <div id="cardsMsg" class="msg"></div>
         <div id="cardsTable"></div>
       </div>
@@ -464,14 +489,65 @@ async function loadCards(showMessage=true){
 }
 function renderCardsTable(){
   if(!$('cardsTable')) return;
-  $('cardsTable').innerHTML = `<table><thead><tr><th>卡片</th><th>稀有度</th><th>權重</th><th>可抽</th><th>操作</th></tr></thead><tbody>` +
+  $('cardsTable').innerHTML = `<table><thead><tr><th>卡片</th><th>圖片</th><th>稀有度</th><th>權重</th><th>可抽</th><th>操作</th></tr></thead><tbody>` +
     cardRows.map((c,i)=>`<tr>
-      <td>${esc(c.name)}</td><td>${esc(c.rarity)}</td>
+      <td><b>${esc(c.name)}</b><br><span class="muted">ID：${esc(c.id||'')}</span><br><span class="muted">排序：${fmt(c.sortOrder)}</span></td>
+      <td>${c.imageUrl ? `<img src="${esc(c.imageUrl)}" style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid #333" onerror="this.style.display='none'">` : '<span class="muted">無圖</span>'}</td>
+      <td>${esc(c.rarity)}</td>
       <td><input id="cw${i}" type="number" min="0" value="${esc(c.weight)}"></td>
       <td><select id="cd${i}"><option value="1" ${c.isDrawable?'selected':''}>可抽</option><option value="0" ${!c.isDrawable?'selected':''}>不可抽</option></select></td>
-      <td><button class="primary" onclick="saveCard(${i})">儲存</button></td>
+      <td><button class="primary" onclick="saveCard(${i})">儲存權重</button><br><button class="ghost" style="margin-top:6px" onclick="loadCardToForm(${i})">載入編輯</button></td>
     </tr>`).join('') + `</tbody></table>`;
 }
+
+function previewNewCardImage(){
+  const url = $('newCardImage') ? $('newCardImage').value.trim() : '';
+  if(!url){ $('cardPreview').innerHTML = '<span class="muted">請先填入圖片網址 / 路徑。</span>'; return; }
+  $('cardPreview').innerHTML = `<img src="${esc(url)}" style="max-width:180px;width:100%;border-radius:16px;border:1px solid #444;background:#111;padding:6px" onerror="this.replaceWith(document.createTextNode('圖片載入失敗，請檢查路徑或大小寫。'))">`;
+}
+
+function clearCardForm(){
+  ['newCardId','newCardName','newCardWeight','newCardSort','newCardImage'].forEach(id => { if($(id)) $(id).value=''; });
+  if($('newCardRarity')) $('newCardRarity').value = 'NORMAL';
+  if($('newCardDrawable')) $('newCardDrawable').value = '1';
+  if($('cardPreview')) $('cardPreview').innerHTML = '<span class="muted">填入圖片路徑後會在這裡預覽。</span>';
+}
+
+function loadCardToForm(i){
+  const c = cardRows[i]; if(!c) return;
+  $('newCardId').value = c.id || '';
+  $('newCardName').value = c.name || '';
+  $('newCardRarity').value = c.rarity || 'NORMAL';
+  $('newCardWeight').value = c.weight || 0;
+  $('newCardSort').value = c.sortOrder || 0;
+  $('newCardImage').value = c.imageUrl || '';
+  $('newCardDrawable').value = c.isDrawable ? '1' : '0';
+  previewNewCardImage();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function saveNewCard(){
+  try{
+    const payload = {
+      id: $('newCardId').value.trim(),
+      name: $('newCardName').value.trim(),
+      rarity: $('newCardRarity').value,
+      weight: $('newCardWeight').value,
+      imageUrl: $('newCardImage').value.trim(),
+      isDrawable: $('newCardDrawable').value === '1',
+      sortOrder: $('newCardSort').value
+    };
+    if(!payload.name){ msg('cardsMsg','請輸入卡片名稱'); return; }
+    if(!payload.imageUrl && !confirm('尚未填入圖片路徑，確定要儲存無圖片卡牌？')) return;
+    if(!confirm(`確定新增 / 更新卡牌「${payload.name}」？`)) return;
+    const data = await rpc('adminUpsertCard', [payload]);
+    msg('cardsMsg', data.msg, true);
+    await loadCards(false);
+    syncRedeemCardOptions();
+    clearCardForm();
+  }catch(e){ msg('cardsMsg', e.message); }
+}
+
 async function saveCard(i){
   const c = cardRows[i]; if(!c) return;
   if(!confirm(`確定要修改「${c.name}」卡池設定？`)) return;
