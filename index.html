@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>T-LO 潮流盲盒開榜現場</title>
+  
+  <script>
+// 建立全域圖片庫，把所有角色跟 BOSS 的圖片連結放在這裡
+  window.NPC_IMAGES = {
+    // 玩家抽卡池 (16隻)
+    // 【超稀有系列 SUPER SUPER RARE】
+    "書宏": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/書宏.png",
+
+    // 【超稀有系列 SUPER RARE】
+    "小艾": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/小艾.png",
+    "小舞": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/小舞.png",
+    "凌凌": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/凌凌.png",
+
+    // 【稀有系列 RARE】
+    "小光": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/小光.png",
+    "萌欣": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/萌欣.png",
+
+    // 【普通系列 NORMAL】
+    "AJ": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/AJ.png",
+    "千思語": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/千思語.png",
+    "以凡": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/以凡.png",
+    "林小蔚": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/林小蔚.png",
+    "阿宗": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/阿宗.png",
+    "氣鵝": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/氣鵝.png",
+    "喬喬": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/喬喬.png",
+    "瑄瑄": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/瑄瑄.png",
+    "夢璃": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/夢璃.png",
+    "燒酒": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/燒酒.png",
+
+    // 守關 BOSS 池 (雖然抽不到，但戰鬥時要顯示頭像，所以也要放進來)
+    // 【普通系列 NORMAL】
+    "小穗": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-小穗.png",
+    "毛毛": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-毛毛.png",
+    "阿甘": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-阿甘.png",
+    "咩姨": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-咩姨.png",
+    "阿福": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-阿福.png",
+    "小葵": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-小葵.png",
+    "米雅": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-米雅.png",
+    "阿土": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-阿土.png",
+    "可可": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-可可.png",
+    "小梅": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-小梅.png",
+    "鐵叔": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-鐵叔.png",
+    "小波": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-小波.png",
+    "露西": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-露西.png",
+    "老陳": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-老陳.png",
+    "王太太": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-王太太.png",
+    "達達": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-達達.png",
+    "小柚": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-小柚.png",
+    "王伯伯": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-王伯伯.png",
+    "蔡蔡子": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-蔡蔡子.png",
+    "吳奶奶": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/N-吳奶奶.png",
+
+    // 【稀有系列 RARE】
+    "李爺爺": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/R-李爺爺.png",
+    "庫奇": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/R-庫奇.png",
+    "星羽": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/R-星羽.png",
+    // 【超稀有系列 SUPER RARE】
+    "葉書宏": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/SR-葉書宏.png",
+    "鹿比": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/SR-鹿比.png",
+    "月婆婆": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/SR-月婆婆.png"
+  };
+</script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="./js/config.js"></script>
+  <script src="./js/api-bridge.js"></script>
+  
+  <style>
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #1a1a1a; color: #fff; text-align: center; padding: 20px; }
+    .container { max-width: 500px; margin: 0 auto; background: #2a2a2a; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; }
+    .asset-info { background: #333; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 16px; border: 1px solid #444; }
+    .highlight-count { color: #ff007f; font-weight: bold; font-size: 20px; }
+    
+    .btn-group { display: flex; justify-content: space-between; width: 90%; margin: 10px auto; gap: 10px; }
+    .btn { display: inline-block; padding: 12px; margin: 5px 0; font-size: 16px; font-weight: bold; border: none; border-radius: 25px; cursor: pointer; transition: 0.3s; text-align: center; text-decoration: none; box-sizing: border-box; }
+    .btn-full { width: 90%; margin: 10px auto; font-size: 18px; }
+    
+    .btn-gacha { width: 48%; background: linear-gradient(45deg, #ff007f, #7f00ff); color: white; box-shadow: 0 4px 15px rgba(255,0,127,0.4); }
+    .btn-gacha10 { width: 48%; background: linear-gradient(45deg, #7f00ff, #ff00ff); color: white; box-shadow: 0 4px 15px rgba(127,0,255,0.5); }
+    
+    .btn-collection { display: inline-block; background: linear-gradient(45deg, #ff8800, #ff007f); color: white; box-shadow: 0 4px 15px rgba(255,136,0,0.4); margin-top: 10px; font-size: 14px; padding: 10px 20px; border-radius: 20px; border: none; cursor: pointer; transition: 0.3s; font-weight: bold; }
+    .btn-collection:hover { transform: scale(1.05); filter: brightness(1.2); }
+
+    .btn-battle-entry { display: inline-block; background: linear-gradient(45deg, #7f00ff, #00fff0); color: white; box-shadow: 0 4px 15px rgba(0,255,240,0.4); margin-top: 10px; margin-left: 8px; font-size: 14px; padding: 8px 15px; border-radius: 15px; border: none; cursor: pointer; transition: 0.3s; font-weight: bold; }
+    .btn-battle-entry:hover { transform: scale(1.05); filter: brightness(1.2); box-shadow: 0 0 15px #00fff0; }
+
+    .btn-buy { background: #28a745; color: white; display: none; box-shadow: 0 4px 15px rgba(40,167,69,0.4); } 
+    .btn-buy:hover { transform: scale(1.03); filter: brightness(1.1); }
+    
+    .btn-roulette { background: linear-gradient(45deg, #7f00ff, #00fff0); color: white; box-shadow: 0 4px 15px rgba(127,0,255,0.4); }
+    .btn-roulette:hover { transform: scale(1.03); box-shadow: 0 0 20px rgba(0,255,240,0.6); }
+
+    .btn-download { display: inline-block; background: #00fff0; color: #1a1a1a; padding: 6px 14px; font-size: 11px; font-weight: bold; border-radius: 12px; margin-top: 8px; text-decoration: none; transition: 0.3s; box-shadow: 0 0 5px rgba(0,255,240,0.3); border: none; cursor: pointer; }
+    .btn-download:hover { background: white; transform: scale(1.05); }
+
+    .btn-download-all { display: block; background: linear-gradient(45deg, #00fff0, #00ff7f); color: #1a1a1a; padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 20px; margin: 0 auto 15px auto; width: 85%; box-shadow: 0 4px 12px rgba(0,255,240,0.4); border: none; cursor: pointer; transition: 0.3s; }
+    .btn-download-all:hover { transform: scale(1.03); filter: brightness(1.1); box-shadow: 0 0 15px rgba(0,255,127,0.6); }
+    
+    /* ⚡ 爭霸戰小視窗專用放大設定 */
+    .btn-fight {
+      width: 90% !important;        /* 寬度撐開 */
+      padding: 22px !important;    /* 增加按鈕高度，超好點 */
+      font-size: 20px !important;  /* 字體放大 */
+      font-weight: 900 !important; /* 加粗字體 */
+      margin: 20px auto !important;
+      border-radius: 15px !important;
+      display: block !important;
+      background: linear-gradient(45deg, #7f00ff, #00fff0) !important;
+      color: white !important;
+      border: none !important;
+      cursor: pointer;
+    }
+
+    /* 放大爭霸戰裡的「本命英雄」下拉選單 */
+    .player-deck-select {
+      width: 100% !important;
+      padding: 16px 12px !important;    /* 增加內距，讓選單高度變高 */
+      font-size: 18px !important;       /* 文字放大，不再是螞蟻字 */
+      border-radius: 10px !important;   /* 圓角化，看起來更像 App 按鈕 */
+      background: #111 !important;
+      color: #fff !important;
+      border: 2px solid #00fff0 !important; /* 加粗邊框，看起來更高級 */
+      appearance: none;                 /* 移除系統預設樣式，確保風格統一 */
+      text-align: center;
+      cursor: pointer;
+    }
+
+    /* ⚡ 爭霸戰 Modal 視窗極限放大設定 */
+    #battle-modal .modal-content {
+      width: 98vw !important;        /* 幾乎填滿手機寬度 */
+      height: 95vh !important;       /* 幾乎填滿手機高度 */
+      max-width: 700px !important;   /* 大螢幕時維持上限 */
+      padding: 30px !important;      /* 增加內邊距 */
+      border-radius: 20px !important;
+    }
+
+    /* ⚡ 爭霸戰內部按鈕放大 */
+    #battle-modal .btn-fight {
+      padding: 25px 0 !important;    /* 超大按鈕高度 */
+      font-size: 24px !important;    /* 文字放大 */
+      margin-top: 30px !important;
+    }
+
+    /* ⚡ 爭霸戰下拉選單放大 */
+    #battle-modal .player-deck-select {
+      padding: 20px !important;      /* 選單變超高 */
+      font-size: 20px !important;
+      border: 3px solid #00fff0 !important;
+    }
+
+    /* ⚡ 爭霸戰標題與文字放大 */
+    #battle-modal .modal-h3 {
+      font-size: 28px !important;
+      margin-bottom: 25px !important;
+    }
+
+    #battle-modal .power-display {
+      font-size: 40px !important;
+    }
+    
+    .notice-box { display: block; background: #3a2512; border: 1px solid #ffc107; color: #ffc107; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 13px; text-align: left; line-height: 1.5; }
+    .card-stage { min-height: 250px; margin: 20px 0; border: 2px dashed #555; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 15px; background: #222; }
+    
+    .card-wrapper { position: relative; display: inline-block; background: #222; padding: 8px; border-radius: 10px; box-sizing: border-box; }
+    .card-serial-badge { position: absolute; top: 4px; right: 4px; background: #00fff0; color: #000; font-size: 11px; font-weight: 900; padding: 3px 8px; border-radius: 5px; box-shadow: 0 0 10px #00fff0; letter-spacing: 0.5px; z-index: 10; font-family: Arial, sans-serif; }
+    .badge-sm { font-size: 9px; padding: 2px 5px; top: 2px; right: 2px; border-radius: 4px; }
+
+    .gacha10-download-wrapper { background: #222; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; }
+    .gacha10-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; box-sizing: border-box; padding: 5px; }
+    .gacha10-card { background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+
+    .rarity-tag { padding: 4px 12px; border-radius: 5px; font-weight: bold; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; }
+    .rarity-tag-sm { padding: 2px 8px; font-size: 10px; border-radius: 4px; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+    .rarity-SSR { background: linear-gradient(45deg, #ff00ff, #00ffff); color: #fff; box-shadow: 0 0 15px #ff00ff; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 10px #ff00ff; } 50% { box-shadow: 0 0 25px #00ffff; } 100% { box-shadow: 0 0 10px #ff00ff; } }
+    .rarity-SUPER-RARE { background: #ffc107; color: #000; box-shadow: 0 0 10px #ffc107; }
+    .rarity-RARE { background: #17a2b8; color: #fff; box-shadow: 0 0 10px #17a2b8; }
+    .rarity-NORMAL { background: #6c757d; color: #fff; }
+    
+    .card-img { width: 180px; height: auto; object-fit: contain; border-radius: 8px; display: block; }
+    .card-img-sm { width: 95px; height: auto; object-fit: contain; border-radius: 6px; display: block; }
+    
+    .history-box { text-align: left; background: #111; padding: 15px; border-radius: 8px; margin-top: 25px; max-height: 450px; overflow-y: auto; }
+    .history-item { font-size: 13px; color: #aaa; margin-bottom: 6px; border-bottom: 1px solid #222; padding-bottom: 4px; }
+    .hist-uid { color: #ff007f; }
+    .hist-name { color: #00fff0; font-weight: bold; }
+
+    .probability-link { display: inline-block; color: #aaa; font-size: 13px; text-decoration: underline; margin-top: 5px; cursor: pointer; transition: 0.2s; }
+    .probability-link:hover { color: #00fff0; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
+    .modal-content { background: #222; border: 2px solid #555; width: 95vw; max-width: 600px; max-height: 85vh; border-radius: 15px; overflow-y: auto; padding: 20px; box-sizing: border-box; position: relative; text-align: left; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+    .modal-close { position: absolute; top: 12px; right: 15px; font-size: 24px; color: #888; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10; }
+    .modal-close:hover { color: #ff007f; }
+    .modal-h3 { font-size: 18px; color: #00fff0; margin-top: 0; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px; }
+    
+    .collection-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+    .collection-item { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 8px; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
+    .collection-item-img { width: 100%; height: auto; border-radius: 4px; object-fit: cover; aspect-ratio: 2/3; display: block; transition: 0.3s; }
+    .locked { filter: grayscale(100%) brightness(30%); border: 1px dashed #555; }
+    .collection-name { font-size: 11px; margin-top: 6px; font-weight: bold; text-align: center; color: #aaa; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .count-badge { display: block; margin-top: 4px; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 10px; text-align: center; width: 90%; }
+    .count-has { background: #ff007f; color: #fff; box-shadow: 0 0 5px #ff007f; }
+    .count-zero { background: #333; color: #666; }
+    .lock-icon { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); font-size: 18px; color: rgba(255,255,255,0.4); z-index: 5; pointer-events: none; }
+    .collection-stat { font-size: 13px; color: #ff007f; font-weight: bold; text-align: center; margin-bottom: 10px; background: #111; padding: 8px; border-radius: 6px; border: 1px solid #333; }
+
+    .battle-vs-box { background: #111; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #444; }
+    .power-display { font-size: 24px; font-weight: 900; letter-spacing: 1px; margin: 10px 0; text-shadow: 0 0 10px rgba(0,255,240,0.5); }
+    
+    .boss-card { background: #2d1a1a; border: 1px solid #ff4444; border-radius: 8px; padding: 15px; margin-top: 15px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .boss-img-frame { width: 110px; height: auto; margin: 8px 0; border: 2px solid #ff4444; border-radius: 6px; box-shadow: 0 0 10px rgba(255,68,68,0.4); object-fit: contain; }
+
+    .battle-arena { display: none; margin-top: 15px; background: #111; border: 2px solid #ff007f; border-radius: 12px; padding: 15px; position: relative; overflow: hidden; }
+    .hp-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
+    .hp-bar-wrapper { flex: 1; background: #333; height: 16px; border-radius: 8px; border: 1px solid #555; overflow: hidden; position: relative; }
+    .hp-bar-fill { height: 100%; width: 100%; transition: width 0.3s ease-out; }
+    .hp-player { background: linear-gradient(90deg, #00fff0, #00ff7f); }
+    .hp-boss { background: linear-gradient(90deg, #ff0055, #ff007f); }
+    .hp-text { font-size: 11px; color: #fff; font-weight: bold; margin-top: 2px; }
+
+    .clash-zone { display: flex; justify-content: space-around; align-items: center; min-height: 120px; position: relative; margin: 20px 0; }
+    .clash-card { width: 100px; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .card-p { background: linear-gradient(135deg, #2a2a2a, #1a3a3a); border: 2px solid #00fff0; color: #00fff0; }
+    .card-b { background: linear-gradient(135deg, #3a1a1a, #2a2a2a); border: 2px solid #ff4444; color: #ff4444; }
+    .clash-avatar { width: 60px; height: auto; border-radius: 4px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.2); object-fit: contain; aspect-ratio: 3/4; }
+
+    /* 🎨 🟢 新增：出戰代表選單排版 */
+    .diy-select-box { background: #333; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #555; text-align: left; }
+    .diy-select-box label { font-size: 12px; color: #00fff0; font-weight: bold; display: block; margin-bottom: 5px; }
+    .player-deck-select { width: 100%; background: #111; color: #fff; border: 1px solid #444; padding: 6px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; }
+
+    /* ⚡ 神奇填充魔法 (動態加寬版) */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a1a;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100% !important;      /* 改為 100% 強制撐開 */
+      max-width: 768px !important; /* 加寬限制，讓畫面在手機上不那麼擠 */
+      min-height: 100vh !important;
+      margin: 0 auto !important;
+      padding: 20px 5px !important; /* 上下留白，左右貼齊 */
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+
+
+    /* 🕹️ 追加免費玩法區 */
+    .mini-entry-row { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px; }
+    .btn-mini { display:inline-block; border:none; color:white; font-weight:900; border-radius:18px; padding:9px 13px; font-size:13px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.35); }
+    .btn-training { background:linear-gradient(45deg,#00fff0,#0077ff); color:#111; }
+    .btn-memory { background:linear-gradient(45deg,#00ff7f,#00fff0); color:#111; }
+    .btn-shadow { background:linear-gradient(45deg,#111,#7f00ff); border:1px solid #7f00ff; }
+    .btn-fortune { background:linear-gradient(45deg,#ff8800,#ffc107); color:#111; }
+    .btn-pvp { background:linear-gradient(45deg,#ff0055,#7f00ff); }
+    .message-board-box { background:#101010; border:1px solid #333; border-radius:12px; padding:14px; margin:16px 0 10px 0; text-align:left; }
+    .message-board-title { color:#00fff0; font-weight:900; font-size:15px; margin-bottom:8px; text-align:center; }
+    .message-list { max-height:260px; overflow-y:auto; background:#181818; border-radius:8px; padding:8px; border:1px solid #2a2a2a; }
+    .message-item { border-bottom:1px solid #2a2a2a; padding:7px 2px; font-size:12px; line-height:1.4; }
+    .message-item:last-child { border-bottom:none; }
+    .message-meta { color:#888; font-size:11px; margin-bottom:3px; }
+    .message-uid { color:#ff007f; font-weight:bold; }
+    .message-text { color:#eee; word-break:break-word; }
+    .message-input-row { display:flex; gap:8px; margin-top:10px; align-items:center; }
+    .message-input { flex:1; background:#222; color:white; border:1px solid #444; border-radius:10px; padding:10px; font-size:14px; box-sizing:border-box; }
+    .message-send-btn { background:#00fff0; color:#111; border:none; border-radius:10px; padding:10px 12px; font-weight:900; cursor:pointer; }
+    .mini-panel { background:#111; border:1px solid #333; border-radius:12px; padding:12px; margin:10px 0; text-align:center; }
+    .shadow-img-wrap { width:210px; max-width:80%; margin:10px auto; padding:10px; background:#222; border:2px dashed #555; border-radius:12px; }
+    .shadow-img { width:100%; height:auto; object-fit:contain; filter:brightness(0) contrast(1.4) drop-shadow(0 0 12px rgba(0,255,240,0.35)); opacity:0.95; }
+    .choice-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:12px; }
+    .choice-btn { background:#2a2a2a; color:#fff; border:1px solid #555; border-radius:12px; padding:12px 8px; font-weight:900; cursor:pointer; }
+    .choice-btn:hover { border-color:#00fff0; color:#00fff0; }
+    .fortune-card { background:linear-gradient(135deg,#2b1a00,#111); border:1px solid #ffc107; color:#ffc107; border-radius:14px; padding:16px; margin:12px 0; text-align:center; }
+    .fortune-title { font-size:28px; font-weight:900; margin:8px 0; }
+    .pvp-stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin:10px 0; }
+    .pvp-stat { background:#111; border:1px solid #333; border-radius:10px; padding:10px; text-align:center; }
+    .pvp-stat b { display:block; color:#00fff0; font-size:18px; margin-top:4px; }
+    .pvp-log-item { background:#151515; border:1px solid #333; border-radius:8px; padding:8px; margin-bottom:7px; font-size:12px; color:#ddd; }
+    .pvp-win { color:#00ff7f; font-weight:900; }
+    .pvp-lose { color:#ff4444; font-weight:900; }
+    .memory-board { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-top:12px; }
+    .memory-card { aspect-ratio:3/4; background:#191919; border:1px solid #444; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; position:relative; box-shadow:0 4px 10px rgba(0,0,0,0.35); }
+    .memory-card::before { content:'?'; color:#00fff0; font-size:26px; font-weight:900; text-shadow:0 0 10px #00fff0; }
+    .memory-card.revealed::before, .memory-card.matched::before { content:''; }
+    .memory-card img { width:100%; height:100%; object-fit:cover; display:none; }
+    .memory-card.revealed img, .memory-card.matched img { display:block; }
+    .memory-card.matched { border-color:#00ff7f; box-shadow:0 0 12px rgba(0,255,127,0.45); }
+
+    /* ========================= */
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>✨ T-LO 潮流盲盒開榜現場 ✨</h2>
+    
+    <div class="asset-info">
+      <div>玩家：<span id="display-uid">載入中</span></div>
+      <div style="margin-top: 5px;">剩餘抽卡次數：<span id="display-count" class="highlight-count">0</span> 次</div>
+      <div style="margin-top: 8px;">
+        <span class="probability-link" onclick="document.getElementById('prob-modal').style.display='flex';">ℹ️ 查看盲盒角色機率表</span>
+      </div>
+      <button class="btn-collection" onclick="openCollectionModal()">🎴 查看我的潮流卡盒 (<span id="collection-summary-count">0</span>/16)</button>
+      <button class="btn-battle-entry" onclick="openBattleModal()">⚔️ 進入潮流爭霸戰</button>
+
+      <div class="mini-entry-row">
+        <button class="btn-mini btn-training" onclick="openTrainingModal()">🎁 每日簽到 / 排行榜</button>
+        <button class="btn-mini btn-memory" onclick="openMemoryModal()">🧠 記憶翻牌</button>
+        <button class="btn-mini btn-shadow" onclick="openShadowModal()">🎭 角色猜影子</button>
+        <button class="btn-mini btn-fortune" onclick="openFortuneModal()">🔮 今日潮流籤</button>
+        <button class="btn-mini btn-pvp" onclick="openPvpModal()">🆚 T-LO 玩家對戰</button>
+        <button class="btn-mini" style="background:linear-gradient(45deg,#ffc107,#ff007f); color:#111;" onclick="openStarModal()">⭐ 角色升星</button>
+      </div>
+    </div>
+
+    <div class="card-stage" id="card-stage">
+      <p>準備就緒，點擊下方按鈕開始心跳開盒！</p>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-gacha" id="gacha-btn" onclick="startGacha()">消耗 1 次．單抽開盒</button>
+      <button class="btn btn-gacha10" id="gacha10-btn" onclick="startGacha10()">消耗 10 次．十連開盒</button>
+    </div>
+
+    <a href="https://lbr-game.up.railway.app/roulette/" class="btn btn-full btn-roulette" target="_blank">🎡 前往 T-LO 大轉盤現場</a>
+    <a href="https://t-lo-games.cashier.ecpay.com.tw/product/000000000976530" class="btn btn-full btn-buy" id="buy-btn" target="_blank">🛒 前往商店獲得更多次數</a>
+
+    <div class="notice-box" id="notice-box" style="display: block;">
+      💡 <b>遊戲提示：</b><br>
+      達成以下三個條件請馬上聯繫我們兌獎！<br>
+      1.集齊三隻SR系列凌凌 小舞 小艾<br>
+      2.集齊三隻SR系列 + SSR系列書宏<br>
+      3.集齊全套16張卡牌<br>
+      首儲 500 抽卡次數 + 3<br>
+      首儲 1000 送 MIYA 99 好禮<br>
+      👉 <b>點擊聯繫客服兌獎：</b><br>
+      <a href="https://line.me/ti/p/~bikabikahikari" style="color: #00fff0; font-weight: bold; text-decoration: underline;">
+        Line: bikabikahikari (點我私訊)
+      </a>
+    </div>
+
+
+    <div class="message-board-box" id="home-message-board">
+      <div class="message-board-title">💬 T-LO 玩家留言板</div>
+      <div id="message-board-list" class="message-list">正在讀取玩家留言...</div>
+      <div class="message-input-row">
+        <input id="message-input" class="message-input" maxlength="50" placeholder="留下你的潮流宣言，最多50字">
+        <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
+      </div>
+      <div id="message-board-msg" style="font-size:12px; color:#888; margin-top:6px; text-align:center;">留言每日限量，僅顯示最近 15 則。</div>
+    </div>
+
+    <div class="history-box">
+      <div style="font-weight: bold; margin-bottom: 10px; color: #ff007f; font-size: 14px;">🌟 最近 10 次抽卡紀錄</div>
+      <div id="history-list">正在讀取歷史紀錄...</div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="prob-modal" onclick="if(event.target.id==='prob-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('prob-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">📊 T-LO 盲盒角色機率表</div>
+      <table class="prob-table">
+        <thead><tr><th>系列 / 級別</th><th>角色名稱</th><th>出貨機率 (每款)</th></tr></thead>
+        <tbody>
+          <tr class="bg-normal">
+            <td rowspan="2" style="font-weight: bold;">NORMAL<br><span style="font-size:11px; font-weight:normal;">(共 10 款)</span></td>
+            <td>AJ, 千思語, 以凡, 林小蔚, 阿宗, 氣鵝, 喬喬, 瑄瑄, 夢璃, 燒酒</td>
+            <td>8.00%</td>
+          </tr>
+          <tr class="bg-normal table-summary"><td>NORMAL 級別總計機率</td><td>80.00%</td></tr>
+          <tr class="bg-rare"><td rowspan="3">RARE<br><span style="font-size:11px; font-weight:normal;">(共 2 款)</span></td><td>小光</td><td>3.50%</td></tr>
+          <tr class="bg-rare"><td>萌欣</td><td>5.00%</td></tr>
+          <tr class="bg-rare table-summary"><td>RARE 級別總計機率</td><td>8.50%</td></tr>
+          <tr class="bg-sr"><td rowspan="4">SUPER RARE<br><span style="font-size:11px; font-weight:normal;">(共 3 款)</span></td><td>凌凌</td><td>3.00%</td></tr>
+          <tr class="bg-sr"><td>小艾</td><td>3.00%</td></tr>
+          <tr class="bg-sr"><td>小舞</td><td>4.50%</td></tr>
+          <tr class="bg-rare table-summary"><td>SUPER RARE 級別總計機率</td><td>10.50%</td></tr>
+          <tr class="bg-sr"><td rowspan="2">SSR<br><span style="font-size:11px; font-weight:normal;">(共 1 款)</span></td><td>書宏</td><td>1.00%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="collection-modal" onclick="if(event.target.id==='collection-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('collection-modal').style.display='none';">&times;</span>
+      <button onclick="showCollectionHistory()" class="btn-collection" style="margin: 0 0 15px 0;">📜 查看我的抽卡歷史清單</button>
+      <div class="modal-h3">🎴 我的潮流卡盒 (集卡冊)</div>
+      <div class="collection-stat" id="collection-progress-text">讀取收集進度中...</div>
+      <div class="collection-grid" id="collection-grid-container"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="battle-modal" onclick="if(event.target.id==='battle-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('battle-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">⚔️ T-LO 潮流爭霸對決牆</div>
+      
+      <div class="battle-vs-box">
+        <div style="color: #aaa; font-size:12px;">⚡ 您的潮流總戰力：</div>
+        <div class="power-display" id="player-total-power" style="color: #00fff0;">0</div>
+        <div style="font-size:11px; color:#888;">(SSR卡=+5000, SR卡=+2000, RARE=+500, NORMAL=+100，重複享有星級增幅)</div>
+      </div>
+
+      <div class="diy-select-box">
+        <label>🎭 選擇您的本命代表出戰角色 (僅列出您已解鎖的圖鑑)：</label>
+        <select class="player-deck-select" id="player-battle-avatar-select" onchange="changePlayerFighterLook()">
+          <option value="潮流先鋒">👑 預設代表：潮流先鋒</option>
+        </select>
+      </div>
+
+      <div class="boss-card" id="boss-info-panel">
+        <div style="color:#ff4444; font-weight:bold; font-size:14px;" id="battle-stage-title">正在打探關卡情報...</div>
+        <img src="" class="boss-img-frame" id="battle-boss-avatar" alt="BOSS頭像">
+        <h2 style="margin:4px 0; color:#fff;" id="battle-boss-name">🔒 載入中...</h2>
+        <div style="color:#aaa; font-size:13px;">守關 Boss 戰力：<span id="battle-boss-power" style="color:#ff4444; font-weight:bold;">0</span></div>
+        <div style="color:#ff8800; font-size:12px; margin-top:5px;" id="battle-stage-reward">通關獎勵：--</div>
+      </div>
+
+      <div class="battle-arena" id="battle-arena-panel">
+        <div class="hp-container">
+          <div style="width: 48%;">
+            <div style="font-size:12px; font-weight:bold; color:#00fff0; text-align:left; margin-bottom:2px;">玩家軍團 HP</div>
+            <div class="hp-bar-wrapper"><div class="hp-bar-fill hp-player" id="hp-player-fill"></div></div>
+            <div class="hp-text" id="hp-player-text">100%</div>
+          </div>
+          <div style="width: 48%;">
+            <div style="font-size:12px; font-weight:bold; color:#ff4444; text-align:right; margin-bottom:2px;">守關 Boss HP</div>
+            <div class="hp-bar-wrapper"><div class="hp-bar-fill hp-boss" id="hp-boss-fill"></div></div>
+            <div class="hp-text" id="hp-boss-text">100%</div>
+          </div>
+        </div>
+        <div class="clash-zone" id="clash-zone-box">
+          <div class="clash-card card-p" id="fighter-player">
+            <span id="arena-player-name-label">潮流先鋒</span>
+            <img src="https://images.placeholders.dev/?width=80&height=100&text=%E6%BD%AE%E6%B5%81&bgColor=%231a3a3a&textColor=%2300fff0" class="clash-avatar" id="arena-player-avatar-img">
+          </div>
+          <div class="vs-text">VS</div>
+          <div class="clash-card card-b" id="fighter-boss">
+            <span id="arena-boss-name-label">守關 Boss</span>
+            <img src="" class="clash-avatar" id="arena-boss-avatar-img">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-fight" id="fight-btn" onclick="startChallenge()">⚔️ 發動卡牌全軍出擊 ⚔️</button>
+      <div id="battle-result-msg" style="margin-top:12px; text-align:center; font-size:13px; font-weight:bold;"></div>
+    </div>
+  </div>
+
+
+
+  <div class="modal-overlay" id="training-modal" onclick="if(event.target.id==='training-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('training-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🎁 T-LO 每日簽到 / 訓練排行榜</div>
+      <div class="mini-panel" style="text-align:center;">
+        <div style="font-size:13px; color:#aaa; line-height:1.5; margin-bottom:10px;">
+          每日簽到只送潮流能量與訓練分數，不影響可兌獎卡片，也不直接送抽卡。
+        </div>
+        <div class="pvp-stat-grid">
+          <div class="pvp-stat">潮流能量<b id="training-energy">0</b></div>
+          <div class="pvp-stat">訓練總分<b id="training-score">0</b></div>
+          <div class="pvp-stat">連續簽到<b id="training-streak">0天</b></div>
+          <div class="pvp-stat">記憶翻牌剩餘<b id="training-memory-left">0</b></div>
+          <div class="pvp-stat">稱號<b id="training-title">潮流新人</b></div>
+        </div>
+        <button class="btn btn-full btn-roulette" id="checkin-btn" onclick="claimTrainingCheckIn()">✅ 每日簽到領獎</button>
+        <div id="checkin-msg" style="margin-top:8px; font-size:13px; font-weight:bold;"></div>
+      </div>
+
+      <div class="mini-panel" style="margin-top:15px; text-align:left;">
+        <div class="modal-h3" style="font-size:16px; margin-bottom:10px;">🧠 每日潮流問答</div>
+        <div id="training-quiz-question" style="font-weight:bold; color:#00fff0; margin-bottom:8px;">正在讀取題目...</div>
+        <div id="training-quiz-options"></div>
+        <div id="training-quiz-msg" style="margin-top:8px; font-size:13px; font-weight:bold; text-align:center;"></div>
+      </div>
+
+      <div class="modal-h3" style="font-size:16px; margin-top:15px;">🏆 訓練排行榜</div>
+      <div id="training-leaderboard-list">正在讀取排行榜...</div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="memory-modal" onclick="if(event.target.id==='memory-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('memory-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🧠 記憶翻牌訓練</div>
+      <div class="mini-panel">
+        <div style="font-size:13px; color:#aaa; line-height:1.5; margin-bottom:10px;">
+          每天最多提交 3 次成績。獎勵只給潮流能量與訓練分數，不增加抽卡次數，也不列入實體兌獎。
+        </div>
+        <div class="pvp-stat-grid">
+          <div class="pvp-stat">步數<b id="memory-moves">0</b></div>
+          <div class="pvp-stat">秒數<b id="memory-seconds">0</b></div>
+          <div class="pvp-stat">配對<b id="memory-pairs">0/4</b></div>
+          <div class="pvp-stat">預估分數<b id="memory-score-preview">0</b></div>
+        </div>
+        <button class="btn btn-full btn-roulette" id="memory-start-btn" onclick="startMemoryGame()">🧠 開始記憶翻牌</button>
+        <div id="memory-msg" style="margin-top:8px; font-size:13px; font-weight:bold; text-align:center;"></div>
+        <div id="memory-board" class="memory-board"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="shadow-modal" onclick="if(event.target.id==='shadow-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('shadow-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🎭 角色猜影子</div>
+      <div class="mini-panel">
+        <div id="shadow-status" style="color:#aaa; font-size:13px;">正在產生題目...</div>
+        <div class="shadow-img-wrap"><img id="shadow-img" class="shadow-img" src="" alt="角色黑影"></div>
+        <div id="shadow-choice-grid" class="choice-grid"></div>
+        <div id="shadow-result" style="margin-top:12px; font-weight:bold;"></div>
+        <button class="btn-collection" style="margin-top:12px;" onclick="loadShadowQuestion()">🔄 換一題 / 下一題</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="fortune-modal" onclick="if(event.target.id==='fortune-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('fortune-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🔮 今日潮流籤</div>
+      <div class="fortune-card">
+        <div style="font-size:13px; color:#ffdd77;">每天限抽一次，只給能量與訓練分數，不影響兌獎卡片。</div>
+        <div class="fortune-title" id="fortune-title">等待抽籤</div>
+        <div id="fortune-text" style="color:#fff; line-height:1.5;">點擊下方按鈕抽出今日潮流運勢。</div>
+      </div>
+      <button class="btn btn-full btn-roulette" id="fortune-btn" onclick="claimFortune()">🔮 抽今日潮流籤</button>
+      <div id="fortune-msg" style="text-align:center; font-size:13px; margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="pvp-modal" onclick="if(event.target.id==='pvp-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('pvp-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🆚 T-LO 非同步玩家對戰</div>
+      <div class="mini-panel" style="text-align:left;">
+        <div style="font-size:12px; color:#aaa; line-height:1.5; margin-bottom:10px;">
+          每天免費挑戰 10 場。每日 3 勝獲得 1 個免費抽卡碎片，集滿 3 個碎片自動換 1 次抽卡。
+        </div>
+        <label style="color:#00fff0; font-size:13px; font-weight:bold;">選擇代表出戰卡：</label>
+        <select id="pvp-rep-select" class="player-deck-select" style="margin-top:6px;"></select>
+        <button class="btn-collection" onclick="savePvpRepresentative()">💾 設定代表卡</button>
+      </div>
+      <div class="pvp-stat-grid">
+        <div class="pvp-stat">今日剩餘挑戰<b id="pvp-left">0</b></div>
+        <div class="pvp-stat">今日勝場<b id="pvp-wins">0</b></div>
+        <div class="pvp-stat">抽卡碎片<b id="pvp-fragments">0/3</b></div>
+        <div class="pvp-stat">代表戰力<b id="pvp-power">0</b></div>
+      </div>
+      <button class="btn-fight" id="pvp-battle-btn" onclick="startPvpBattle()">⚔️ 開始配對對戰</button>
+      <div id="pvp-result" style="text-align:center; margin:10px 0; font-weight:bold;"></div>
+      <div class="modal-h3" style="font-size:16px; margin-top:15px;">最近 10 筆 PVP 戰鬥紀錄</div>
+      <div id="pvp-log-list">正在讀取紀錄...</div>
+    </div>
+  </div>
+
+
+
+  <div class="modal-overlay" id="star-modal" onclick="if(event.target.id==='star-modal') this.style.display='none';">
+    <div class="modal-content">
+      <span class="modal-close" onclick="document.getElementById('star-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">⭐ 角色升星</div>
+      <div class="collection-stat" id="star-energy-text">潮流能量：讀取中...</div>
+      <div style="font-size:12px; color:#aaa; line-height:1.6; margin-bottom:10px;">
+        升星只增加遊戲戰力與展示星級，不增加正式卡片數量，也不列入實體兌獎條件。潮流能量目前只用於角色升星。
+      </div>
+      <div id="star-card-list" style="display:flex; flex-direction:column; gap:10px;">正在讀取角色升星資料...</div>
+    </div>
+  </div>
+
+
+  <script>
+    const playerUID = window.TLO_PLAYER_UID || "guest";
+    let currentCount = parseInt(window.TLO_INITIAL_TIMES || "0") || 0;
+    let globalPlayerPower = 0; 
+
+    // 🟢 替換為全新的 16 張抽卡池 (已修復缺少的逗號)
+    const CARD_RARITIES = {
+      "書宏": "SSR",
+      "凌凌": "SR", "小艾": "SR", "小舞": "SR",
+      "小光": "RARE", "萌欣": "RARE",
+      "AJ": "NORMAL", "千思語": "NORMAL", "以凡": "NORMAL", "林小蔚": "NORMAL", "阿宗": "NORMAL", 
+      "氣鵝": "NORMAL", "喬喬": "NORMAL", "瑄瑄": "NORMAL", "夢璃": "NORMAL", "燒酒": "NORMAL"
+    };
+    const ALL_16_CARDS = Object.keys(CARD_RARITIES);
+
+    updateButtonState();
+    loadHomeState();
+    // 留言板延後一點載入，讓首頁與抽卡按鈕先出現。
+    setTimeout(loadMessageBoard, 400); 
+
+    // === 🟢 新增：玩家手動切換本命英雄立繪功能 ===
+    function changePlayerFighterLook() {
+      const selectEl = document.getElementById('player-battle-avatar-select');
+      const selectedName = selectEl.value;
+      
+      document.getElementById('arena-player-name-label').innerText = selectedName;
+      
+      let pImgUrl = "";
+      if (selectedName !== "潮流先鋒" && window && window.NPC_IMAGES && window.NPC_IMAGES[selectedName]) {
+        pImgUrl = window.NPC_IMAGES[selectedName];
+      }
+      
+      if (!pImgUrl) {
+        pImgUrl = "https://images.placeholders.dev/?width=80&height=100&text=" + encodeURIComponent(selectedName) + "&bgColor=%231a3a3a&textColor=%2300fff0";
+      }
+      document.getElementById('arena-player-avatar-img').src = pImgUrl;
+    }
+
+    function openCollectionModal() { document.getElementById('collection-modal').style.display = 'flex'; renderCollectionWall(); }
+
+    function renderCollectionWall() {
+      const container = document.getElementById('collection-grid-container');
+      const progressText = document.getElementById('collection-progress-text');
+      if (!container) return;
+      container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#aaa; font-size:13px;">正在連線讀取最新資料...</p>';
+
+      google.script.run.withSuccessHandler(function(response) {
+        if (response && response.success) {
+          const ownedMap = response.ownedCardsMap || {}; 
+          const uCount = response.uniqueCount || 0;
+          let html = "";
+          
+          ALL_16_CARDS.forEach(function(cardName) {
+            const count = ownedMap[cardName] || 0;
+            const isOwned = count > 0;
+            let imgUrl = (window && window.NPC_IMAGES && window.NPC_IMAGES[cardName]) ? window.NPC_IMAGES[cardName] : "";
+            if (!imgUrl) imgUrl = "https://placehold.co/150x200/333/fff?text=" + encodeURIComponent(cardName);
+
+            let badgeHtml = isOwned ? `<span class="count-badge count-has">持有 X${count}</span>` : `<span class="count-badge count-zero">未持有</span>`;
+
+            html += `
+              <div class="collection-item">
+                ${isOwned ? '' : '<div class="lock-icon">🔒</div>'}
+                <img src="${imgUrl}" class="collection-item-img ${isOwned ? '' : 'locked'}" alt="${cardName}">
+                <div class="collection-name" style="color: ${isOwned ? '#00fff0' : '#555'};">${cardName}</div>
+                ${badgeHtml}
+              </div>
+            `;
+          });
+          container.innerHTML = html;
+          progressText.innerText = `收集進度：${uCount} / 16 張 (${Math.round((uCount/16)*100)}%)`;
+          document.getElementById('collection-summary-count').innerText = uCount;
+        }
+      }).getPlayerCollection(playerUID);
+    }
+
+    function refreshCollectionCount() {
+      if (typeof google === "undefined" || !google.script || !google.script.run) return;
+      google.script.run.withSuccessHandler(function(response) {
+        if (response && response.success) {
+          document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+          if (typeof response.timesLeft !== "undefined") {
+            currentCount = parseInt(response.timesLeft) || 0;
+            updateButtonState();
+          }
+        }
+      }).getHomeState(playerUID);
+    }
+
+    function openBattleModal() {
+      document.getElementById('battle-modal').style.display = 'flex';
+      document.getElementById('battle-result-msg').innerHTML = "";
+      document.getElementById('boss-info-panel').style.display = "flex"; 
+      document.getElementById('battle-arena-panel').style.display = "none";
+
+      const btn = document.getElementById('fight-btn');
+      btn.disabled = true;
+      btn.innerText = "⏳ 正在校準雙方戰力...";
+
+      google.script.run.withSuccessHandler(function(response) {
+        if (!response || !response.success) {
+          document.getElementById('battle-result-msg').innerHTML = `<span style="color:#ff4444;">${response && response.msg ? response.msg : "戰鬥資料讀取失敗"}</span>`;
+          btn.disabled = true;
+          btn.innerText = "⚠️ 暫時無法挑戰";
+          return;
+        }
+
+        const ownedMap = response.ownedCardsMap || {};
+        const selectEl = document.getElementById('player-battle-avatar-select');
+        const currentSelectedValue = selectEl.value;
+
+        selectEl.innerHTML = '<option value="潮流先鋒">👑 預設代表：潮流先鋒</option>';
+
+        ALL_16_CARDS.forEach(function(cardName) {
+          const count = ownedMap[cardName] || 0;
+          if (count > 0) {
+            const type = CARD_RARITIES[cardName];
+            let rarityLabel = type === "SSR" ? "至尊金" : (type === "SR" ? "炫彩銀" : (type === "RARE" ? "極光藍" : "普通褐"));
+
+            let opt = document.createElement('option');
+            opt.value = cardName;
+            opt.innerText = `🃏 ${cardName} (${rarityLabel} x${count})`;
+            selectEl.appendChild(opt);
+          }
+        });
+
+        if ([...selectEl.options].some(o => o.value === currentSelectedValue)) {
+          selectEl.value = currentSelectedValue;
+        }
+
+        changePlayerFighterLook();
+
+        globalPlayerPower = response.playerPower || 0;
+        document.getElementById('player-total-power').innerText = globalPlayerPower.toLocaleString();
+
+        const cid = response.currentStageId;
+        const isClaimed = response.hasRewardClaimed;
+
+        if (response.isAllCleared || cid > 25) {
+          document.getElementById('battle-stage-title').innerText = "🏆 潮流制霸 🏆";
+          document.getElementById('battle-boss-name').innerText = "🎉 恭喜！您已全通關！";
+          document.getElementById('battle-boss-power').innerText = "---";
+          document.getElementById('battle-stage-reward').innerText = "神祇無上榮耀";
+          document.getElementById('battle-boss-avatar').style.display = "none";
+          btn.disabled = true;
+          btn.innerText = "🔒 已通關所有關卡";
+          return;
+        }
+
+        const currentStage = response.stageData;
+        const bName = currentStage.bossCardName;
+
+        let bossImgUrl = "";
+        if (typeof window !== "undefined" && window.NPC_IMAGES && window.NPC_IMAGES[bName]) {
+          bossImgUrl = window.NPC_IMAGES[bName];
+        }
+        if (!bossImgUrl || bossImgUrl === "") {
+          bossImgUrl = "https://images.placeholders.dev/?width=150&height=200&text=" + encodeURIComponent(bName) + "&bgColor=%232d1a1a&textColor=%23ff4444&fontSize=18px";
+        }
+
+        document.getElementById('battle-stage-title').innerText = `🔥 目前進度：第 ${cid} / 25 關`;
+        document.getElementById('battle-boss-avatar').src = bossImgUrl;
+        document.getElementById('battle-boss-avatar').style.display = "block";
+        document.getElementById('battle-boss-name').innerText = `【守關王：${bName}】`;
+        document.getElementById('battle-boss-power').innerText = Number(currentStage.bossPower || 0).toLocaleString();
+
+        document.getElementById('arena-boss-name-label').innerText = bName;
+        document.getElementById('arena-boss-avatar-img').src = bossImgUrl;
+
+        if (isClaimed) {
+          document.getElementById('battle-stage-reward').innerHTML = `🎁 通關獎勵：抽卡次數 +${currentStage.rewardTimes} 次 <span style="color:red; font-weight:bold;">(已領取，本次不重複發放)</span>`;
+        } else {
+          document.getElementById('battle-stage-reward').innerHTML = `🎁 通關隨即獲得：抽卡次數 <span style="color:#00ff7f; font-weight:bold;">+${currentStage.rewardTimes} 次！</span>`;
+        }
+
+        btn.onclick = startChallenge;
+        btn.disabled = false;
+
+        if (globalPlayerPower >= currentStage.bossPower) {
+          btn.innerText = "⚔️ 戰力壓制！發動全軍出擊 ⚔️";
+          btn.style.background = "linear-gradient(45deg, #00ff7f, #00fff0)";
+        } else {
+          btn.innerText = "⚔️ 冒險硬闖！發動全軍出擊 ⚔️";
+          btn.style.background = "linear-gradient(45deg, #ff5500, #ff0055)";
+        }
+      }).withFailureHandler(function(err) {
+        document.getElementById('battle-result-msg').innerHTML = `<span style="color:#ff4444;">戰鬥資料讀取失敗：${err && err.message ? err.message : err}</span>`;
+        btn.disabled = true;
+        btn.innerText = "⚠️ 暫時無法挑戰";
+      }).getBattleDashboard(playerUID);
+    }
+
+    function startChallenge() {
+  // 1. 碰撞動畫：一行代碼搞定視覺碰撞
+      document.getElementById('clash-zone-box').classList.add('clash-animate');
+  
+  // 2. 設定動畫結束後移除 Class，以便下次能再觸發
+      setTimeout(() => document.getElementById('clash-zone-box').classList.remove('clash-animate'), 500);
+      const btn = document.getElementById('fight-btn');
+      const infoPanel = document.getElementById('boss-info-panel');
+      const arenaPanel = document.getElementById('battle-arena-panel');
+      const resultMsg = document.getElementById('battle-result-msg');
+      
+      const hpPlayerFill = document.getElementById('hp-player-fill'); const hpBossFill = document.getElementById('hp-boss-fill');
+      const hpPlayerText = document.getElementById('hp-player-text'); const hpBossText = document.getElementById('hp-boss-text');
+      const fPlayer = document.getElementById('fighter-player'); const fBoss = document.getElementById('fighter-boss'); const clashZone = document.getElementById('clash-zone-box');
+
+      btn.disabled = true; btn.innerText = "⚡ 雙方大軍全面交火中..."; resultMsg.innerHTML = "";
+      infoPanel.style.display = "none"; arenaPanel.style.display = "block";
+      hpPlayerFill.style.width = "100%"; hpBossFill.style.width = "100%"; hpPlayerText.innerText = "100%"; hpBossText.innerText = "100%";
+      
+      fPlayer.classList.add('animate-player'); fBoss.classList.add('animate-boss'); clashZone.classList.add('animate-shake');
+
+      let currentProgress = 100;
+      let battleTimer = setInterval(function() {
+        currentProgress -= 8;
+        if (currentProgress <= 20) { clearInterval(battleTimer); } 
+        else {
+          hpPlayerFill.style.width = (currentProgress + Math.floor(Math.random()*10)) + "%";
+          hpBossFill.style.width = currentProgress + "%";
+          hpPlayerText.innerText = hpPlayerFill.style.width; hpBossText.innerText = hpBossFill.style.width;
+        }
+      }, 150);
+
+      google.script.run.withSuccessHandler(function(res) {
+        setTimeout(function() {
+          clearInterval(battleTimer);
+          fPlayer.classList.remove('animate-player'); fBoss.classList.remove('animate-boss'); clashZone.classList.remove('animate-shake');
+
+          if (res.success) {
+            hpBossFill.style.width = "0%"; hpBossText.innerText = "0% (LOSE)";
+            hpPlayerFill.style.width = "35%"; hpPlayerText.innerText = "35% (WIN)";
+            resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">${res.msg}<br>🎁 ${res.rewardText}</span>`;
+            currentCount = res.newTimesLeft; updateButtonState();
+            setTimeout(openBattleModal, 3000);
+          } else {
+            hpPlayerFill.style.width = "0%"; hpPlayerText.innerText = "0% (💥 落敗)";
+            hpBossFill.style.width = "85%"; hpBossText.innerText = "85% (殘血)";
+            resultMsg.innerHTML = `<span style="color:#ff4444; font-size:13px; display:block; padding:5px;">${res.msg}</span>`;
+            
+            btn.disabled = false; 
+            btn.innerText = "🔄 從第一關重新啟動挑戰 🔄"; 
+            btn.style.background = "linear-gradient(45deg, #ff5500, #ff0000)";
+            
+            btn.onclick = function() {
+              openBattleModal();
+              btn.onclick = startChallenge;
+            };
+          }
+        }, 1800);
+      }).executeBattle(playerUID);
+    }
+
+    function disableAllButtons(loadingText) {
+      const b1 = document.getElementById('gacha-btn'); const b2 = document.getElementById('gacha10-btn');
+      b1.disabled = true; b1.style.background = "#555"; b1.innerText = "🔒 鎖定中...";
+      b2.disabled = true; b2.style.background = "#555"; b2.innerText = loadingText;
+    }
+    
+    function downloadCombinedCard(elementId, filename, isAllBtn) {
+      const target = document.getElementById(elementId);
+      let dlBtn = isAllBtn ? target.parentElement.querySelector('.btn-download-all') : target.parentElement.querySelector('.btn-download');
+      const originalText = dlBtn.innerText; dlBtn.innerText = isAllBtn ? "⏳ 正在生成十連高清大圖..." : "⏳ 正在生成高畫質大圖..."; dlBtn.disabled = true;
+      html2canvas(target, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: "#222", logging: false }).then(function(canvas) {
+        const downloadLink = document.createElement("a"); downloadLink.href = canvas.toDataURL("image/png"); downloadLink.download = filename + ".png"; document.body.appendChild(downloadLink); downloadLink.click(); document.body.removeChild(downloadLink); dlBtn.innerText = originalText; dlBtn.disabled = false;
+      }).catch(function(err) { alert("大圖生成失敗！"); dlBtn.innerText = originalText; dlBtn.disabled = false; });
+    }
+
+    function startGacha() {
+      if (currentCount <= 0) return;
+
+      disableAllButtons("🔒 鎖定中...");
+      document.getElementById('gacha-btn').innerText = "🔮 注入能量...";
+      document.getElementById('card-stage').innerHTML = '<p style="color:#ff007f; font-weight:bold;">⚡ 正在安全開啟盲盒...</p>';
+
+      google.script.run.withSuccessHandler(function(response) {
+        if (response && response.success) {
+          currentCount = response.timesLeft;
+
+          let githubImgUrl = (window.NPC_IMAGES && window.NPC_IMAGES[response.npcName]) ? window.NPC_IMAGES[response.npcName] : "";
+          let imgHtml = githubImgUrl
+            ? `<div class="card-wrapper" id="single-card"><div class="card-serial-badge">${response.serialNumber}</div><img src="${githubImgUrl}" class="card-img" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('single-card', 'T-LO_${response.npcName}_${response.serialNumber}', false)" class="btn-download">📥 下載卡片</button>`
+            : '<p>(無圖)</p>';
+
+          let now = new Date();
+          let timeStr = now.getFullYear() + '/' + (now.getMonth()+1) + '/' + now.getDate() + ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
+
+          document.getElementById('card-stage').innerHTML = `<div class="rarity-tag rarity-${response.npcRarity}">${response.npcRarity}</div><div style="display:flex; flex-direction:column; align-items:center; width:100%; margin:5px 0;">${imgHtml}</div><h1 style="color: #00fff0; margin: 5px 0;">🎉 【${response.npcName}】 🎉</h1><p style="font-size: 12px; color: #888;">開盒時間：${timeStr}</p>`;
+          document.getElementById('history-list').innerHTML = response.historyHtml || "";
+
+          if (typeof response.collectionUniqueCount !== "undefined") {
+            document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+          }
+        } else {
+          if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
+          document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${response && response.msg ? response.msg : "抽卡失敗，請稍後再試"}</p>`;
+        }
+
+        updateButtonState();
+      }).withFailureHandler(function(err) {
+        document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${err && err.message ? err.message : err}</p>`;
+        updateButtonState();
+      }).executeGacha(playerUID);
+    }
+
+    function startGacha10() {
+      if (currentCount < 10) return;
+
+      disableAllButtons("🔮 十連注入中...");
+      document.getElementById('card-stage').innerHTML = '<p style="color:#00fff0; font-weight:bold;">⚡ 正在召喚 10 連擊...</p>';
+
+      google.script.run.withSuccessHandler(function(response) {
+        if (response && response.success) {
+          currentCount = response.timesLeft;
+
+          let gridHtml = '<div class="gacha10-download-wrapper" id="gacha10-download-area"><h3 style="color:#ff007f; margin:0 0 10px 0; text-align:center;">T-LO 十連抽盲盒爆裂開榜結果</h3><div class="gacha10-grid">';
+          response.results.forEach(function(item, index) {
+            let githubImgUrl = (window.NPC_IMAGES && window.NPC_IMAGES[item.npcName]) ? window.NPC_IMAGES[item.npcName] : "";
+            let cardImgHtml = githubImgUrl
+              ? `<div class="card-wrapper" id="card10-${index}" style="margin:5px 0;"><div class="card-serial-badge badge-sm">${item.serialNumber}</div><img src="${githubImgUrl}" class="card-img-sm" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('card10-${index}', 'T-LO_${item.npcName}_${item.serialNumber}', false)" class="btn-download">📥 下載</button>`
+              : '<p>(無圖)</p>';
+
+            gridHtml += `<div class="gacha10-card"><div class="rarity-tag-sm rarity-${item.npcRarity}">${item.npcRarity}</div>${cardImgHtml}<div style="color: #00fff0; font-weight:bold; font-size:12px; margin-top:4px; text-align:center;">#${index+1} ${item.npcName}</div></div>`;
+          });
+
+          gridHtml += '</div></div>';
+          let batchTime = new Date().getTime();
+
+          document.getElementById('card-stage').innerHTML = `<h2 style="color: #ff007f; margin: 5px 0 15px 0;">🎉 十連抽盲盒爆裂開榜！ 🎉</h2><button onclick="downloadCombinedCard('gacha10-download-area', 'T-LO_十連抽_${batchTime}', true)" class="btn-download-all">📥 一鍵打包下載：本次十連高清大圖</button>${gridHtml}`;
+          document.getElementById('history-list').innerHTML = response.historyHtml || "";
+
+          if (typeof response.collectionUniqueCount !== "undefined") {
+            document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+          }
+        } else {
+          if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
+          document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${response && response.msg ? response.msg : "十連抽失敗，請稍後再試"}</p>`;
+        }
+
+        updateButtonState();
+      }).withFailureHandler(function(err) {
+        document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${err && err.message ? err.message : err}</p>`;
+        updateButtonState();
+      }).executeGacha10(playerUID);
+    }
+
+    function updateButtonState() {
+      document.getElementById('display-count').innerText = currentCount; 
+      const b1 = document.getElementById('gacha-btn'); 
+      const b2 = document.getElementById('gacha10-btn'); 
+      const buyBtn = document.getElementById('buy-btn'); 
+      const noticeBox = document.getElementById('notice-box');
+
+      // 無論次數多少，我們讓 noticeBox 永遠保持顯示 (block)
+      if (noticeBox) {
+        noticeBox.style.display = "block"; 
+      }
+
+      // 處理單抽按鈕
+      if (currentCount <= 0) { 
+        b1.disabled = true; 
+        b1.style.background = "#555"; 
+        b1.style.color = "#888"; 
+        b1.innerText = "❌ 次數用盡"; 
+        buyBtn.style.display = "inline-block"; 
+      } else { 
+        b1.disabled = false; 
+        b1.style.background = "linear-gradient(45deg, #ff007f, #7f00ff)"; 
+        b1.style.color = "white"; 
+        b1.innerText = "消耗 1 次．單抽開盒"; 
+        buyBtn.style.display = "none"; 
+      }
+
+      // 處理十連抽按鈕
+      if (currentCount < 10) { 
+        b2.disabled = true; 
+        b2.style.background = "#444"; 
+        b2.style.color = "#666"; 
+        b2.innerText = "🔒 不足 10 次"; 
+      } else { 
+        b2.disabled = false; 
+        b2.style.background = "linear-gradient(45deg, #7f00ff, #ff00ff)"; 
+        b2.style.color = "white"; 
+        b2.innerText = "消耗 10 次．十連開盒"; 
+      }
+    }
+
+    // 讓玩家抓取自己的抽卡歷史 (放在 <script> 的最底部)
+function showCollectionHistory() {
+      const modalBody = document.getElementById('collection-grid-container');
+      modalBody.innerHTML = '<div style="color:white; text-align:center;">讀取歷史資料中...</div>';
+
+      google.script.run.withSuccessHandler(function(history) {
+        if (!history || history.length === 0) {
+          modalBody.innerHTML = '<div style="color:white; text-align:center;">目前沒有抽卡歷史紀錄。</div>';
+          return;
+        }
+
+        window.__PLAYER_HISTORY_ITEMS__ = history;
+
+        let html = `
+          <style>
+            .history-download-item { display:flex; justify-content:space-between; align-items:center; gap:10px; border-bottom:1px solid #555; padding:10px; color:white; }
+            .history-download-meta { min-width:0; }
+            .history-download-name { font-weight:900; color:#00fff0; }
+            .history-download-date { color:#888; font-size:11px; margin-top:3px; }
+            .history-download-serial { color:#aaa; font-size:12px; margin-top:3px; }
+            .dl-btn { background:#00fff0; color:#111; border:none; padding:8px 10px; cursor:pointer; border-radius:10px; font-weight:900; white-space:nowrap; }
+            .dl-btn:disabled { background:#555; color:#999; cursor:not-allowed; }
+          </style>
+          <h3 style="color:white; margin-top:0;">抽卡歷史與下載</h3>
+        `;
+
+        history.forEach(function(item, index) {
+          html += `
+            <div class="history-download-item">
+              <div class="history-download-meta">
+                <div class="history-download-name">${escapeHtml(item.name || '')}</div>
+                <div class="history-download-serial">編號：${escapeHtml(item.serial || '')}</div>
+                <div class="history-download-date">時間：${escapeHtml(item.date || '')}</div>
+              </div>
+              <button class="dl-btn" onclick="triggerHistoryCardDownload(${index}, this)">📥 下載卡片</button>
+            </div>
+          `;
+        });
+
+        modalBody.innerHTML = html;
+      }).withFailureHandler(function(err) {
+        modalBody.innerHTML = '<div style="color:#ff4444; text-align:center;">歷史資料讀取失敗，請稍後再試。</div>';
+      }).getPlayerHistory(playerUID);
+    }
+
+    function triggerHistoryCardDownload(index, btn) {
+      const history = window.__PLAYER_HISTORY_ITEMS__ || [];
+      const item = history[index];
+      if (!item) {
+        alert('找不到這筆歷史卡片資料，請重新開啟歷史清單。');
+        return;
+      }
+
+      const name = String(item.name || '').trim();
+      const serial = String(item.serial || '').trim();
+      const imgUrl = getNpcImageUrl(name);
+
+      if (!imgUrl) {
+        alert('找不到「' + name + '」的圖片，請先確認 images.html 裡的 NPC_IMAGES 有這張卡。');
+        return;
+      }
+
+      const oldText = btn ? btn.innerText : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳ 生成中...';
+      }
+
+      downloadHistoryCardImage(name, serial, imgUrl).then(function() {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = oldText || '📥 下載卡片';
+        }
+      }).catch(function(err) {
+        console.error(err);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = oldText || '📥 下載卡片';
+        }
+        alert('歷史卡片下載失敗：' + (err && err.message ? err.message : err));
+      });
+    }
+
+    function downloadHistoryCardImage(name, serial, imgUrl) {
+      return new Promise(function(resolve, reject) {
+        const safeId = 'history-card-download-temp-' + Date.now();
+        const rarity = CARD_RARITIES[name] || 'NORMAL';
+        const rarityClass = rarity === 'SR' ? 'SUPER-RARE' : rarity;
+
+        const temp = document.createElement('div');
+        temp.id = safeId;
+        temp.style.position = 'fixed';
+        temp.style.left = '-10000px';
+        temp.style.top = '0';
+        temp.style.width = '240px';
+        temp.style.background = '#222';
+        temp.style.padding = '12px';
+        temp.style.borderRadius = '12px';
+        temp.style.textAlign = 'center';
+        temp.style.zIndex = '-1';
+        temp.innerHTML = `
+          <div class="rarity-tag rarity-${rarityClass}" style="display:inline-block; margin-bottom:8px;">${escapeHtml(rarity)}</div>
+          <div class="card-wrapper">
+            <div class="card-serial-badge">${escapeHtml(serial)}</div>
+            <img src="${imgUrl}" class="card-img" crossorigin="anonymous" style="width:180px; height:auto; object-fit:contain; border-radius:8px; display:block;">
+          </div>
+          <div style="color:#00fff0; font-weight:900; font-size:18px; margin-top:8px;">${escapeHtml(name)}</div>
+        `;
+
+        document.body.appendChild(temp);
+
+        const img = temp.querySelector('img');
+        const render = function() {
+          html2canvas(temp, {
+            scale: 3,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#222',
+            logging: false
+          }).then(function(canvas) {
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'T-LO_' + safeFileName(name) + '_' + safeFileName(serial) + '.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            document.body.removeChild(temp);
+            resolve();
+          }).catch(function(err) {
+            if (document.body.contains(temp)) document.body.removeChild(temp);
+            reject(err);
+          });
+        };
+
+        if (img.complete && img.naturalWidth > 0) {
+          setTimeout(render, 100);
+        } else {
+          img.onload = function() { setTimeout(render, 100); };
+          img.onerror = function() {
+            if (document.body.contains(temp)) document.body.removeChild(temp);
+            reject(new Error('圖片載入失敗，請檢查 images.html 的圖片網址或權限。'));
+          };
+        }
+      });
+    }
+
+    function getNpcImageUrl(name) {
+      const key = String(name || '').trim();
+      const aliasMap = { "葉書宏": "書宏", "書宏": "葉書宏", "蔡蔡子": "菜菜子", "菜菜子": "蔡蔡子", "夣璃": "夢璃", "夢璃": "夣璃" };
+      if (window && window.NPC_IMAGES && window.NPC_IMAGES[key]) return window.NPC_IMAGES[key];
+      const alt = aliasMap[key];
+      if (alt && window && window.NPC_IMAGES && window.NPC_IMAGES[alt]) return window.NPC_IMAGES[alt];
+      return '';
+    }
+
+    function safeFileName(text) {
+      return String(text || '').replace(/[\\/:*?"<>|\s]+/g, '_');
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+
+
+    // ─── 追加免費玩法：猜影子 / 今日籤 / PVP / 留言板 ───
+    let __shadowToken = "";
+    let __pvpDashboard = null;
+
+    function openShadowModal() {
+      document.getElementById('shadow-modal').style.display = 'flex';
+      loadShadowQuestion();
+    }
+
+    function loadShadowQuestion() {
+      const status = document.getElementById('shadow-status');
+      const grid = document.getElementById('shadow-choice-grid');
+      const result = document.getElementById('shadow-result');
+      const img = document.getElementById('shadow-img');
+      status.innerText = '正在產生題目...';
+      result.innerHTML = '';
+      grid.innerHTML = '';
+      img.src = '';
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          status.innerText = res && res.msg ? res.msg : '題目產生失敗';
+          return;
+        }
+        __shadowToken = res.token;
+        const imgUrl = getNpcImageUrl(res.imageKey);
+        img.src = imgUrl || ('https://placehold.co/210x280/111/fff?text=' + encodeURIComponent('影子'));
+        status.innerText = '今日剩餘猜影子次數：' + res.playsLeft + ' / 5';
+        let html = '';
+        (res.choices || []).forEach(function(name) {
+          html += `<button class="choice-btn" onclick="submitShadowAnswer('${jsString(name)}')">${escapeHtml(name)}</button>`;
+        });
+        grid.innerHTML = html;
+      }).withFailureHandler(function(err) {
+        status.innerText = '系統繁忙，請稍後再試。';
+      }).getShadowQuestion(playerUID);
+    }
+
+    function submitShadowAnswer(name) {
+      const grid = document.getElementById('shadow-choice-grid');
+      const result = document.getElementById('shadow-result');
+      Array.from(grid.querySelectorAll('button')).forEach(function(btn) { btn.disabled = true; });
+      result.innerHTML = '⏳ 判定中...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          result.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '送出失敗')}</span>`;
+          return;
+        }
+        result.innerHTML = res.correct
+          ? `<span style="color:#00ff7f;">✅ ${escapeHtml(res.msg)}<br>能量 +${res.energyAdded}｜分數 +${res.scoreAdded}</span>`
+          : `<span style="color:#ff4444;">❌ ${escapeHtml(res.msg)}<br>參與能量 +${res.energyAdded}｜分數 +${res.scoreAdded}</span>`;
+        document.getElementById('shadow-status').innerText = '今日剩餘猜影子次數：' + res.shadowPlaysLeft + ' / 5';
+      }).withFailureHandler(function(err) {
+        result.innerHTML = '<span style="color:#ff4444;">系統繁忙，請稍後再試。</span>';
+      }).submitShadowGuess(playerUID, __shadowToken, name);
+    }
+
+    function openFortuneModal() {
+      document.getElementById('fortune-modal').style.display = 'flex';
+      document.getElementById('fortune-title').innerText = '等待抽籤';
+      document.getElementById('fortune-text').innerText = '點擊下方按鈕抽出今日潮流運勢。';
+      document.getElementById('fortune-msg').innerHTML = '';
+    }
+
+    function claimFortune() {
+      const btn = document.getElementById('fortune-btn');
+      const msg = document.getElementById('fortune-msg');
+      btn.disabled = true;
+      btn.innerText = '⏳ 抽籤中...';
+      msg.innerHTML = '';
+      google.script.run.withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.innerText = '🔮 抽今日潮流籤';
+        if (!res || !res.success) {
+          document.getElementById('fortune-title').innerText = res && res.fortune ? res.fortune : '已抽過';
+          document.getElementById('fortune-text').innerText = res && res.msg ? res.msg : '今天已經抽過。';
+          return;
+        }
+        document.getElementById('fortune-title').innerText = res.fortune || '今日籤';
+        document.getElementById('fortune-text').innerText = res.text || '';
+        msg.innerHTML = `<span style="color:#00ff7f;">能量 +${res.energyAdded}｜訓練分數 +${res.scoreAdded}</span>`;
+      }).withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.innerText = '🔮 抽今日潮流籤';
+        msg.innerHTML = '<span style="color:#ff4444;">系統繁忙，請稍後再試。</span>';
+      }).claimDailyFortune(playerUID);
+    }
+
+    function openPvpModal() {
+      document.getElementById('pvp-modal').style.display = 'flex';
+      loadPvpDashboard();
+    }
+
+    function loadPvpDashboard() {
+      document.getElementById('pvp-log-list').innerHTML = '正在讀取紀錄...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          document.getElementById('pvp-result').innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : 'PVP讀取失敗')}</span>`;
+          return;
+        }
+        renderPvpDashboard(res);
+      }).withFailureHandler(function(err) {
+        document.getElementById('pvp-result').innerHTML = '<span style="color:#ff4444;">PVP 系統繁忙，請稍後再試。</span>';
+      }).getPvpDashboard(playerUID);
+    }
+
+    function renderPvpDashboard(res) {
+      __pvpDashboard = res;
+      const select = document.getElementById('pvp-rep-select');
+      const cards = res.ownedCards || [];
+      if (cards.length === 0) {
+        select.innerHTML = '<option value="">尚未持有可出戰卡片</option>';
+      } else {
+        let html = '';
+        cards.forEach(function(card) {
+          const selected = card.name === res.representative ? 'selected' : '';
+          html += `<option value="${escapeHtml(card.name)}" ${selected}>${escapeHtml(card.name)}｜${escapeHtml(card.rarity)}｜x${card.count}｜戰力 ${Number(card.power).toLocaleString()}</option>`;
+        });
+        select.innerHTML = html;
+      }
+
+      document.getElementById('pvp-left').innerText = res.todayChallengeLeft + ' / ' + res.dailyLimit;
+      document.getElementById('pvp-wins').innerText = res.todayWins + ' / ' + res.dailyWinTarget;
+      document.getElementById('pvp-fragments').innerText = res.fragments + ' / ' + res.fragmentsToDraw;
+      document.getElementById('pvp-power').innerText = Number(res.representativePower || 0).toLocaleString();
+      renderPvpLogs(res.recentLogs || []);
+    }
+
+    function savePvpRepresentative() {
+      const select = document.getElementById('pvp-rep-select');
+      const cardName = select.value;
+      const result = document.getElementById('pvp-result');
+      if (!cardName) {
+        result.innerHTML = '<span style="color:#ff4444;">請先擁有至少一張卡片。</span>';
+        return;
+      }
+      result.innerHTML = '⏳ 正在設定代表卡...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          result.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg)}</span>`;
+          renderPvpDashboard(res.dashboard);
+        } else {
+          result.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '設定失敗')}</span>`;
+        }
+      }).withFailureHandler(function(err) {
+        result.innerHTML = '<span style="color:#ff4444;">系統繁忙，請稍後再試。</span>';
+      }).setPvpRepresentative(playerUID, cardName);
+    }
+
+    function startPvpBattle() {
+      const btn = document.getElementById('pvp-battle-btn');
+      const result = document.getElementById('pvp-result');
+      btn.disabled = true;
+      btn.innerText = '⚡ 配對與戰鬥計算中...';
+      result.innerHTML = '';
+      google.script.run.withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.innerText = '⚔️ 開始配對對戰';
+        if (!res || !res.success) {
+          result.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '對戰失敗')}</span>`;
+          if (res && res.dashboard) renderPvpDashboard(res.dashboard);
+          return;
+        }
+        const cls = res.win ? 'pvp-win' : 'pvp-lose';
+        const txt = res.win ? '勝利' : '落敗';
+        result.innerHTML = `<span class="${cls}">${txt}！${escapeHtml(res.myCard)} ${res.myPower} vs ${escapeHtml(res.opponentUid)} 的 ${escapeHtml(res.opponentCard)} ${res.opponentPower}</span><br><span style="color:#ffc107;">${escapeHtml(res.rewardText || '')}</span>`;
+        if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
+          currentCount = parseInt(res.newTimesLeft) || currentCount;
+          updateButtonState();
+        }
+        renderPvpDashboard(res.dashboard);
+      }).withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.innerText = '⚔️ 開始配對對戰';
+        result.innerHTML = '<span style="color:#ff4444;">PVP 系統繁忙，請稍後再試。</span>';
+      }).executePvpBattle(playerUID);
+    }
+
+    function renderPvpLogs(logs) {
+      const box = document.getElementById('pvp-log-list');
+      if (!logs || logs.length === 0) {
+        box.innerHTML = '<div style="color:#888; text-align:center;">目前沒有 PVP 戰鬥紀錄。</div>';
+        return;
+      }
+      let html = '';
+      logs.forEach(function(log) {
+        const win = log.result === 'WIN';
+        html += `<div class="pvp-log-item">
+          <div>${escapeHtml(log.time)}｜<span class="${win ? 'pvp-win' : 'pvp-lose'}">${win ? 'WIN' : 'LOSE'}</span></div>
+          <div>${escapeHtml(log.myCard)} ${Number(log.myPower).toLocaleString()} vs ${escapeHtml(log.opponentUid)} 的 ${escapeHtml(log.opponentCard)} ${Number(log.opponentPower).toLocaleString()}</div>
+          <div style="color:#ffc107;">${escapeHtml(log.reward || '')}</div>
+        </div>`;
+      });
+      box.innerHTML = html;
+    }
+
+    function loadMessageBoard() {
+      google.script.run.withSuccessHandler(function(list) {
+        renderMessageBoard(list || []);
+      }).withFailureHandler(function() {
+        document.getElementById('message-board-list').innerHTML = '<div style="color:#888; text-align:center;">留言板暫時無法讀取。</div>';
+      }).getMessageBoard();
+    }
+
+    function submitHomeMessage() {
+      const input = document.getElementById('message-input');
+      const btn = document.getElementById('message-send-btn');
+      const msg = document.getElementById('message-board-msg');
+      const text = input.value.trim();
+      if (!text) {
+        msg.innerHTML = '<span style="color:#ff4444;">請先輸入留言。</span>';
+        return;
+      }
+      btn.disabled = true;
+      btn.innerText = '送出中';
+      google.script.run.withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.innerText = '送出';
+        if (res && res.success) {
+          input.value = '';
+          msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg)} 今日剩餘留言 ${res.messageLeftToday} 則。</span>`;
+          renderMessageBoard(res.messages || []);
+        } else {
+          msg.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '留言失敗')}</span>`;
+          if (res && res.messages) renderMessageBoard(res.messages);
+        }
+      }).withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.innerText = '送出';
+        msg.innerHTML = '<span style="color:#ff4444;">留言板系統繁忙，請稍後再試。</span>';
+      }).submitBoardMessage(playerUID, text);
+    }
+
+    function renderMessageBoard(list) {
+      const box = document.getElementById('message-board-list');
+      if (!list || list.length === 0) {
+        box.innerHTML = '<div style="color:#888; text-align:center;">目前還沒有留言，搶第一則吧！</div>';
+        return;
+      }
+      let html = '';
+      list.forEach(function(item) {
+        html += `<div class="message-item">
+          <div class="message-meta"><span class="message-uid">${escapeHtml(item.uid || '玩家')}</span>｜${escapeHtml(item.time || '')}</div>
+          <div class="message-text">${escapeHtml(item.message || '')}</div>
+        </div>`;
+      });
+      box.innerHTML = html;
+    }
+
+    function jsString(text) {
+      return String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+    }
+
+    function loadHomeState() {
+      if (typeof google === "undefined" || !google.script || !google.script.run) return;
+      google.script.run.withSuccessHandler(function(response) {
+        if (response && response.success) {
+          if (typeof response.timesLeft !== "undefined") {
+            currentCount = parseInt(response.timesLeft) || 0;
+          }
+          document.getElementById('history-list').innerHTML = response.historyHtml || "<div>暫無抽卡紀錄</div>";
+          document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+          updateButtonState();
+        }
+      }).withFailureHandler(function() {
+        document.getElementById('history-list').innerHTML = "<div>暫時無法讀取歷史紀錄</div>";
+        updateButtonState();
+      }).getHomeState(playerUID);
+    }
+
+    // 保留舊函式名稱，避免其他地方還有呼叫
+
+
+    function openTrainingModal() {
+      document.getElementById('training-modal').style.display = 'flex';
+      document.getElementById('checkin-msg').innerHTML = '';
+      document.getElementById('training-quiz-msg').innerHTML = '';
+      loadTrainingDashboard();
+    }
+
+    function loadTrainingDashboard() {
+      if (typeof google === "undefined" || !google.script || !google.script.run) return;
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          document.getElementById('training-leaderboard-list').innerHTML = '<div style="color:#ff4444; text-align:center;">訓練場讀取失敗</div>';
+          return;
+        }
+        renderTrainingProfile(res.profile);
+        renderTrainingQuiz(res.quiz);
+        renderTrainingLeaderboard(res.leaderboard || []);
+      }).getTrainingDashboard(playerUID);
+    }
+
+    function renderTrainingProfile(profile) {
+      profile = profile || {};
+      document.getElementById('training-energy').innerText = Number(profile.energy || 0).toLocaleString();
+      document.getElementById('training-score').innerText = Number(profile.totalScore || 0).toLocaleString();
+      document.getElementById('training-streak').innerText = (profile.streak || 0) + '天';
+      document.getElementById('training-title').innerText = profile.title || '潮流新人';
+      var memLeftEl = document.getElementById('training-memory-left');
+      if (memLeftEl) memLeftEl.innerText = (profile.memoryPlaysLeft || 0) + ' / ' + (profile.dailyMemoryLimit || 3);
+      const btn = document.getElementById('checkin-btn');
+      if (profile.checkedInToday) {
+        btn.disabled = true;
+        btn.innerText = '✅ 今日已簽到';
+        btn.style.background = '#555';
+      } else {
+        btn.disabled = false;
+        btn.innerText = '✅ 每日簽到領獎';
+        btn.style.background = 'linear-gradient(45deg, #7f00ff, #00fff0)';
+      }
+    }
+
+    function claimTrainingCheckIn() {
+      const btn = document.getElementById('checkin-btn');
+      const msg = document.getElementById('checkin-msg');
+      btn.disabled = true;
+      btn.innerText = '⏳ 簽到處理中...';
+      msg.innerHTML = '';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.profile) renderTrainingProfile(res.profile);
+        if (res && res.leaderboard) renderTrainingLeaderboard(res.leaderboard);
+        msg.innerHTML = res && res.success ? '<span style="color:#00ff7f;">' + res.msg + '</span>' : '<span style="color:#ffdd77;">' + ((res && res.msg) || '今日已簽到') + '</span>';
+      }).withFailureHandler(function() {
+        btn.disabled = false;
+        btn.innerText = '✅ 每日簽到領獎';
+        msg.innerHTML = '<span style="color:#ff4444;">簽到失敗，請稍後再試。</span>';
+      }).claimDailyCheckIn(playerUID);
+    }
+
+    function renderTrainingQuiz(quiz) {
+      const qBox = document.getElementById('training-quiz-question');
+      const optBox = document.getElementById('training-quiz-options');
+      if (!quiz || !quiz.question || !quiz.options) {
+        qBox.innerText = '目前沒有題目';
+        optBox.innerHTML = '';
+        return;
+      }
+      qBox.innerText = quiz.question;
+      let html = '';
+      quiz.options.forEach(function(opt, idx) {
+        html += `<button class="btn-collection" style="display:block; width:100%; margin:8px 0;" onclick="answerTrainingQuiz(${idx})">${idx + 1}. ${opt}</button>`;
+      });
+      optBox.innerHTML = html;
+    }
+
+    function answerTrainingQuiz(answerIndex) {
+      const msg = document.getElementById('training-quiz-msg');
+      msg.innerHTML = '<span style="color:#aaa;">送出答案中...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.profile) renderTrainingProfile(res.profile);
+        if (res && res.quiz) renderTrainingQuiz(res.quiz);
+        if (res && res.leaderboard) renderTrainingLeaderboard(res.leaderboard);
+        if (res && res.success) {
+          msg.innerHTML = res.correct ? '<span style="color:#00ff7f;">' + res.msg + '</span>' : '<span style="color:#ffdd77;">' + res.msg + '</span>';
+        } else {
+          msg.innerHTML = '<span style="color:#ffdd77;">' + ((res && res.msg) || '今天已完成問答') + '</span>';
+        }
+      }).withFailureHandler(function() {
+        msg.innerHTML = '<span style="color:#ff4444;">問答送出失敗，請稍後再試。</span>';
+      }).answerDailyQuiz(playerUID, answerIndex);
+    }
+
+    function renderTrainingLeaderboard(rows) {
+      const box = document.getElementById('training-leaderboard-list');
+      if (!rows || rows.length === 0) {
+        box.innerHTML = '<div style="text-align:center; color:#aaa;">目前還沒有排行榜資料。</div>';
+        return;
+      }
+      let html = '';
+      rows.forEach(function(row, index) {
+        html += `
+          <div class="history-item" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px;">
+            <div><b style="color:#ffdd77;">#${index + 1}</b> <span class="hist-uid">${row.uid}</span><br><span style="color:#00fff0; font-size:12px;">${row.title || '潮流新人'}｜連簽 ${row.streak || 0} 天</span></div>
+            <div style="color:#fff; font-weight:bold;">${Number(row.totalScore || 0).toLocaleString()} 分</div>
+          </div>
+        `;
+      });
+      box.innerHTML = html;
+    }
+
+
+
+    // ─── 記憶翻牌：前端遊戲、結束才送後端一次，避免增加 Google Sheets 負擔 ───
+    let __memoryCards = [];
+    let __memoryFirst = null;
+    let __memoryLock = false;
+    let __memoryMoves = 0;
+    let __memoryMatched = 0;
+    let __memoryStartTime = 0;
+    let __memoryTimer = null;
+
+    function openMemoryModal() {
+      document.getElementById('memory-modal').style.display = 'flex';
+      resetMemoryGameUI();
+    }
+
+    function resetMemoryGameUI() {
+      __memoryCards = [];
+      __memoryFirst = null;
+      __memoryLock = false;
+      __memoryMoves = 0;
+      __memoryMatched = 0;
+      __memoryStartTime = 0;
+      if (__memoryTimer) clearInterval(__memoryTimer);
+      __memoryTimer = null;
+      document.getElementById('memory-moves').innerText = '0';
+      document.getElementById('memory-seconds').innerText = '0';
+      document.getElementById('memory-pairs').innerText = '0/4';
+      document.getElementById('memory-score-preview').innerText = '0';
+      document.getElementById('memory-msg').innerHTML = '<span style="color:#aaa;">點擊開始後，翻開兩張相同角色即可配對。</span>';
+      document.getElementById('memory-board').innerHTML = '';
+      const btn = document.getElementById('memory-start-btn');
+      btn.disabled = false;
+      btn.innerText = '🧠 開始記憶翻牌';
+      btn.style.background = 'linear-gradient(45deg, #7f00ff, #00fff0)';
+    }
+
+    function startMemoryGame() {
+      const pool = ALL_16_CARDS.slice();
+      const selected = shuffleArray_(pool).slice(0, 4);
+      __memoryCards = shuffleArray_(selected.concat(selected)).map(function(name, idx) {
+        return { id: idx, name: name, revealed: false, matched: false };
+      });
+      __memoryFirst = null;
+      __memoryLock = false;
+      __memoryMoves = 0;
+      __memoryMatched = 0;
+      __memoryStartTime = Date.now();
+      if (__memoryTimer) clearInterval(__memoryTimer);
+      __memoryTimer = setInterval(updateMemoryStats_, 500);
+      document.getElementById('memory-msg').innerHTML = '<span style="color:#00fff0;">遊戲開始！找出 4 組相同角色。</span>';
+      const btn = document.getElementById('memory-start-btn');
+      btn.disabled = true;
+      btn.innerText = '進行中...';
+      renderMemoryBoard_();
+      updateMemoryStats_();
+    }
+
+    function renderMemoryBoard_() {
+      const board = document.getElementById('memory-board');
+      let html = '';
+      __memoryCards.forEach(function(card, index) {
+        const imgUrl = (window.NPC_IMAGES && window.NPC_IMAGES[card.name]) ? window.NPC_IMAGES[card.name] : ('https://placehold.co/120x160/333/fff?text=' + encodeURIComponent(card.name));
+        const cls = card.matched ? 'memory-card matched' : (card.revealed ? 'memory-card revealed' : 'memory-card');
+        html += `<div class="${cls}" onclick="flipMemoryCard(${index})"><img src="${imgUrl}" alt="${escapeHtml(card.name)}"></div>`;
+      });
+      board.innerHTML = html;
+    }
+
+    function flipMemoryCard(index) {
+      if (__memoryLock || !__memoryStartTime) return;
+      const card = __memoryCards[index];
+      if (!card || card.revealed || card.matched) return;
+      card.revealed = true;
+      renderMemoryBoard_();
+
+      if (__memoryFirst === null) {
+        __memoryFirst = index;
+        return;
+      }
+
+      __memoryMoves++;
+      const firstCard = __memoryCards[__memoryFirst];
+      if (firstCard && firstCard.name === card.name) {
+        firstCard.matched = true;
+        card.matched = true;
+        __memoryMatched++;
+        __memoryFirst = null;
+        updateMemoryStats_();
+        renderMemoryBoard_();
+        if (__memoryMatched >= 4) finishMemoryGame_();
+      } else {
+        __memoryLock = true;
+        setTimeout(function() {
+          if (firstCard) firstCard.revealed = false;
+          card.revealed = false;
+          __memoryFirst = null;
+          __memoryLock = false;
+          renderMemoryBoard_();
+          updateMemoryStats_();
+        }, 650);
+      }
+    }
+
+    function updateMemoryStats_() {
+      const seconds = __memoryStartTime ? Math.floor((Date.now() - __memoryStartTime) / 1000) : 0;
+      const score = calculateMemoryScore_(__memoryMoves, seconds, __memoryMatched >= 4);
+      document.getElementById('memory-moves').innerText = String(__memoryMoves);
+      document.getElementById('memory-seconds').innerText = String(seconds);
+      document.getElementById('memory-pairs').innerText = __memoryMatched + '/4';
+      document.getElementById('memory-score-preview').innerText = String(score);
+    }
+
+    function calculateMemoryScore_(moves, seconds, finished) {
+      if (!finished && __memoryMatched < 4) return Math.max(0, 120 - Math.floor(moves * 8) - Math.floor(seconds * 1.5));
+      return Math.max(60, Math.min(200, 220 - moves * 8 - seconds * 2));
+    }
+
+    function finishMemoryGame_() {
+      if (__memoryTimer) clearInterval(__memoryTimer);
+      __memoryTimer = null;
+      const seconds = Math.floor((Date.now() - __memoryStartTime) / 1000);
+      const score = calculateMemoryScore_(__memoryMoves, seconds, true);
+      __memoryStartTime = 0;
+      document.getElementById('memory-msg').innerHTML = '<span style="color:#00fff0;">完成！正在送出成績...</span>';
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.profile) renderTrainingProfile(res.profile);
+        if (res && res.leaderboard) renderTrainingLeaderboard(res.leaderboard);
+        if (res && res.success) {
+          document.getElementById('memory-msg').innerHTML = '<span style="color:#00ff7f;">' + res.msg + '</span>';
+        } else {
+          document.getElementById('memory-msg').innerHTML = '<span style="color:#ffdd77;">' + ((res && res.msg) || '今日次數已用完') + '</span>';
+        }
+        const btn = document.getElementById('memory-start-btn');
+        btn.disabled = false;
+        btn.innerText = '🧠 再玩一次';
+      }).withFailureHandler(function() {
+        document.getElementById('memory-msg').innerHTML = '<span style="color:#ff4444;">成績送出失敗，請稍後再試。</span>';
+        const btn = document.getElementById('memory-start-btn');
+        btn.disabled = false;
+        btn.innerText = '🧠 再玩一次';
+      }).saveMemoryGameScore(playerUID, score, __memoryMoves, seconds);
+    }
+
+    function shuffleArray_(arr) {
+      const copy = arr.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = copy[i];
+        copy[i] = copy[j];
+        copy[j] = tmp;
+      }
+      return copy;
+    }
+
+    function loadHistoryHTML() {
+      loadHomeState();
+    }
+
+
+    // ─── 角色升星 ───
+    function openStarModal() {
+      document.getElementById('star-modal').style.display = 'flex';
+      loadStarDashboard();
+    }
+
+    function loadStarDashboard() {
+      const list = document.getElementById('star-card-list');
+      const energyText = document.getElementById('star-energy-text');
+      if (list) list.innerHTML = '<div style="text-align:center; color:#aaa;">正在讀取升星資料...</div>';
+      if (energyText) energyText.innerText = '潮流能量：讀取中...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          list.innerHTML = '<div style="color:#ff4444; text-align:center;">讀取失敗：' + escapeHtml(res && res.msg ? res.msg : '未知錯誤') + '</div>';
+          return;
+        }
+        renderStarDashboard(res);
+      }).withFailureHandler(function(err) {
+        list.innerHTML = '<div style="color:#ff4444; text-align:center;">讀取失敗，請稍後再試。</div>';
+      }).getStarShopDashboard(playerUID);
+    }
+
+    function renderStarDashboard(res) {
+      const list = document.getElementById('star-card-list');
+      const energyText = document.getElementById('star-energy-text');
+      const energy = Number((res.profile && res.profile.energy) || res.energy || 0);
+      if (energyText) energyText.innerText = '目前潮流能量：' + energy.toLocaleString();
+      const cards = res.cards || [];
+      if (!cards.length) {
+        list.innerHTML = '<div style="text-align:center; color:#aaa;">你目前尚未持有可升星角色。請先抽卡取得角色。</div>';
+        return;
+      }
+      let html = '';
+      cards.forEach(function(card) {
+        const name = card.cardName || card.name || '';
+        const star = Number(card.star || 1);
+        const count = Number(card.count || 0);
+        const currentPower = Number(card.currentPower || card.power || 0);
+        const nextCost = Number(card.nextCost || 0);
+        const isMax = !!card.isMax || !card.nextStar;
+        const nextStar = star + 1;
+        const imgUrl = (window.NPC_IMAGES && window.NPC_IMAGES[name]) ? window.NPC_IMAGES[name] : '';
+        const canUpgrade = !isMax && energy >= nextCost;
+        html += `
+          <div style="background:#111; border:1px solid #444; border-radius:10px; padding:10px; display:flex; gap:10px; align-items:center;">
+            <div style="width:64px; flex:0 0 64px;">
+              ${imgUrl ? `<img src="${imgUrl}" style="width:64px; border-radius:6px;">` : `<div style="width:64px;height:86px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px;">${escapeHtml(name)}</div>`}
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:900; color:#00fff0;">${escapeHtml(name)} <span style="color:#ffc107;">${'⭐'.repeat(Math.max(1, star))}</span></div>
+              <div style="font-size:12px; color:#aaa; margin-top:3px;">持有：${count} 張｜目前 ${star} 星｜戰力：${currentPower.toLocaleString()}</div>
+              <div style="font-size:12px; color:#888; margin-top:3px;">${isMax ? '已滿星' : `升到 ${nextStar} 星需要 ${nextCost.toLocaleString()} 潮流能量`}</div>
+            </div>
+            <button class="btn-collection" style="margin:0; padding:8px 12px; ${canUpgrade ? '' : 'filter:grayscale(1); opacity:.6;'}" ${canUpgrade ? '' : 'disabled'} onclick="upgradeStar('${escapeJsString(name)}')">${isMax ? '滿星' : '升星'}</button>
+          </div>
+        `;
+      });
+      list.innerHTML = html;
+    }
+
+    function upgradeStar(cardName) {
+      if (!cardName) return;
+      const list = document.getElementById('star-card-list');
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          alert(res && res.msg ? res.msg : '升星失敗');
+          if (res && res.dashboard) renderStarDashboard(res.dashboard);
+          return;
+        }
+        alert(res.msg || '升星成功');
+        if (res.dashboard) renderStarDashboard(res.dashboard);
+        // 升星會影響戰力，因此相關視窗下次打開時會重新讀取。
+      }).withFailureHandler(function() {
+        alert('升星失敗，請稍後再試。');
+      }).upgradeCardStar(playerUID, cardName);
+    }
+
+
+    function escapeJsString(text) {
+      return String(text == null ? '' : text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+    }
+
+  </script>
+</body>
+</html>
