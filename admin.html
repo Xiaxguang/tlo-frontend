@@ -361,7 +361,7 @@ async function logout(){
 
 function openGame(){ location.href = './'; }
 function showTab(name, btn){
-  ['players','cards','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
+  ['players','cards','stages','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
 }
