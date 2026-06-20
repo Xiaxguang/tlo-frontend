@@ -2385,7 +2385,7 @@ function showCollectionHistory() {
           return;
         }
         __shadowToken = res.token;
-        const imgUrl = getNpcImageUrl(res.imageKey);
+        const imgUrl = res.imageUrl || getNpcImageUrl(res.imageKey);
         img.src = imgUrl || ('https://placehold.co/210x280/111/fff?text=' + encodeURIComponent('影子'));
         status.innerText = '今日剩餘猜影子次數：' + res.playsLeft + ' / 5';
         let html = '';
