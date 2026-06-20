@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>T-LO GM 管理後台</title>
+  <script src="js/config.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(circle at top,#2b0750 0,#101018 45%,#050506 100%);color:#fff;font-family:'Helvetica Neue',Arial,'Microsoft JhengHei',sans-serif;min-height:100vh}
+    .wrap{width:min(1180px,100%);margin:0 auto;padding:18px}
+    .top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}
+    .title{font-size:26px;font-weight:1000;color:#00fff0;text-shadow:0 0 16px rgba(0,255,240,.7)}
+    .sub{font-size:12px;color:#aaa;margin-top:4px}
+    .panel{background:rgba(16,16,22,.94);border:1px solid rgba(0,255,240,.35);border-radius:18px;padding:16px;box-shadow:0 0 28px rgba(127,0,255,.24);margin-bottom:14px}
+    .login{width:min(430px,94%);margin:10vh auto}
+    label{display:block;color:#00fff0;font-weight:900;font-size:12px;margin:10px 0 5px}
+    input,select,textarea{width:100%;border:1px solid #444;background:#111;color:#fff;border-radius:12px;padding:12px;font-size:15px;outline:none}
+    textarea{min-height:70px;resize:vertical}
+    input:focus,select:focus,textarea:focus{border-color:#00fff0;box-shadow:0 0 10px rgba(0,255,240,.2)}
+    button{border:0;border-radius:12px;padding:11px 13px;background:#252535;color:#ddd;font-weight:900;cursor:pointer}
+    button:hover{filter:brightness(1.15)}
+    .primary{background:linear-gradient(45deg,#00fff0,#7f00ff);color:#fff;box-shadow:0 0 14px rgba(0,255,240,.25)}
+    .danger{background:linear-gradient(45deg,#ff3b3b,#9b111e);color:#fff}
+    .warn{background:linear-gradient(45deg,#ffc107,#ff7a00);color:#221700}
+    .ghost{border:1px solid #555;background:#181820}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .tab{border:1px solid #444;background:#181820;color:#aaa}
+    .tab.active{background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;border-color:#ff00ff}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .msg{min-height:22px;margin:8px 0;color:#ff7777;font-size:13px;line-height:1.5}
+    .msg.good{color:#00ff90}
+    .muted{color:#aaa;font-size:12px;line-height:1.45}
+    .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0}
+    .stat{background:#111;border:1px solid #333;border-radius:14px;padding:12px;text-align:center}
+    .stat b{display:block;color:#00fff0;font-size:21px;margin-top:4px}
+    table{width:100%;border-collapse:collapse;font-size:13px;overflow:hidden;border-radius:12px}
+    th,td{border-bottom:1px solid #292936;padding:9px;text-align:left;vertical-align:top}
+    th{color:#00fff0;background:#12121a;position:sticky;top:0}
+    tr:hover td{background:#151525}
+    .list-btn{display:block;width:100%;text-align:left;margin-bottom:8px;border:1px solid #333;background:#111}
+    .list-btn .uid{font-weight:1000;color:#fff}
+    .list-btn .meta{font-size:12px;color:#aaa;margin-top:4px}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .hide{display:none!important}
+    .badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#252535;color:#ddd;font-size:11px;margin:1px}
+    .ok{color:#00ff90}.bad{color:#ff7777}.cyan{color:#00fff0}.yellow{color:#ffc107}
+    @media(max-width:900px){.grid,.split,.row,.row3{grid-template-columns:1fr}.statgrid{grid-template-columns:repeat(2,1fr)}.top{display:block}.top button{margin-top:8px;width:100%}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="loginPanel" class="panel login">
+      <div class="title" style="text-align:center">🛡️ T-LO GM 後台</div>
+      <div class="sub" style="text-align:center">管理玩家抽卡次數、卡盒、排行榜分數與密碼重設</div>
+      <label>GM 帳號</label>
+      <input id="loginUser" placeholder="admin">
+      <label>GM 密碼</label>
+      <input id="loginPass" type="password" placeholder="請輸入 GM 密碼">
+      <button class="primary" style="width:100%;margin-top:14px" onclick="login()">登入 GM 後台</button>
+      <div id="loginMsg" class="msg"></div>
+      <div class="muted">第一次上線後，請優先到「GM密碼」改掉預設密碼。</div>
+    </div>
+
+    <div id="appPanel" class="hide">
+      <div class="top">
+        <div>
+          <div class="title">🛡️ T-LO GM 管理後台</div>
+          <div class="sub" id="adminInfo">尚未登入</div>
+        </div>
+        <div>
+          <button class="ghost" onclick="openGame()">開啟遊戲首頁</button>
+          <button class="danger" onclick="logout()">登出</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('players', this)">玩家管理</button>
+        <button class="tab" onclick="showTab('cards', this); loadCards();">卡池權重</button>
+        <button class="tab" onclick="showTab('logs', this); loadAuditLogs();">操作紀錄</button>
+        <button class="tab" onclick="showTab('password', this)">GM密碼</button>
+      </div>
+
+      <div id="tab-players">
+        <div class="grid">
+          <div class="panel">
+            <label>搜尋玩家 UID / 顯示名稱</label>
+            <div class="row" style="grid-template-columns:1fr auto">
+              <input id="searchKeyword" placeholder="例如 guang">
+              <button class="primary" onclick="searchPlayers()">搜尋</button>
+            </div>
+            <div id="searchMsg" class="msg"></div>
+            <div id="playerList"></div>
+          </div>
+
+          <div class="panel">
+            <div id="playerDetailEmpty" class="muted">請先搜尋並選擇玩家。</div>
+            <div id="playerDetail" class="hide">
+              <h2 style="margin:0 0 4px"><span id="pUid"></span> <span class="badge" id="pName"></span></h2>
+              <div class="muted" id="pMeta"></div>
+              <div class="statgrid">
+                <div class="stat">抽卡次數<b id="sDraw">0</b></div>
+                <div class="stat">排行榜分數<b id="sScore">0</b></div>
+                <div class="stat">潮流能量<b id="sEnergy">0</b></div>
+                <div class="stat">卡盒張數<b id="sCards">0</b></div>
+              </div>
+
+              <div class="split">
+                <div class="panel" style="box-shadow:none">
+                  <h3>🎟️ 抽卡次數</h3>
+                  <label>直接改成</label><input id="drawSet" type="number" min="0">
+                  <button class="primary" onclick="updateDrawTimes()" style="margin-top:8px;width:100%">儲存抽卡次數</button>
+                  <label>增加 / 扣除次數</label><input id="drawDelta" type="number" placeholder="例如 10 或 -5">
+                  <button class="warn" onclick="addDrawTimes()" style="margin-top:8px;width:100%">套用增加/扣除</button>
+                </div>
+                <div class="panel" style="box-shadow:none">
+                  <h3>🏆 排行榜 / 能量</h3>
+                  <div class="row3">
+                    <div><label>總分</label><input id="scoreSet" type="number" min="0"></div>
+                    <div><label>能量</label><input id="energySet" type="number" min="0"></div>
+                    <div><label>連續天數</label><input id="streakSet" type="number" min="0"></div>
+                  </div>
+                  <button class="primary" onclick="updateTraining()" style="margin-top:8px;width:100%">儲存排行榜資料</button>
+                </div>
+              </div>
+
+              <div class="split">
+                <div class="panel" style="box-shadow:none">
+                  <h3>🃏 修改卡片數量</h3>
+                  <label>卡片名稱</label><select id="cardSelect"></select>
+                  <label>數量</label><input id="cardQty" type="number" min="0" value="1">
+                  <button class="primary" onclick="setCardQuantity()" style="margin-top:8px;width:100%">儲存卡片數量</button>
+                </div>
+                <div class="panel" style="box-shadow:none">
+                  <h3>🔐 重設玩家密碼</h3>
+                  <label>新密碼</label><input id="resetPw" type="password" placeholder="至少 8 碼">
+                  <button class="danger" onclick="resetPlayerPassword()" style="margin-top:8px;width:100%">重設玩家密碼</button>
+                  <div class="muted">重設後玩家舊登入狀態會失效，重新登入後會被提醒改密碼。</div>
+                </div>
+              </div>
+
+              <label>操作備註</label>
+              <textarea id="adminNote" placeholder="例如：活動補償、客服修正、測試調整"></textarea>
+              <div id="actionMsg" class="msg"></div>
+
+              <h3>玩家卡盒</h3>
+              <div id="collectionTable"></div>
+              <h3>最近紀錄</h3>
+              <div id="recentLogs"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-cards" class="hide panel">
+        <h2>卡池權重管理</h2>
+        <div class="muted">修改後會直接影響玩家之後抽卡。權重 0 或關閉可抽代表不會被抽到。</div>
+        <div id="cardsMsg" class="msg"></div>
+        <div id="cardsTable"></div>
+      </div>
+
+      <div id="tab-logs" class="hide panel">
+        <h2>GM 操作紀錄</h2>
+        <div class="row" style="grid-template-columns:1fr auto">
+          <input id="auditTarget" placeholder="可輸入玩家 UID 篩選，空白則顯示最近 100 筆">
+          <button class="primary" onclick="loadAuditLogs()">查詢</button>
+        </div>
+        <div id="auditMsg" class="msg"></div>
+        <div id="auditTable"></div>
+      </div>
+
+      <div id="tab-password" class="hide panel">
+        <h2>修改 GM 密碼</h2>
+        <div class="row">
+          <div><label>目前 GM 密碼</label><input id="gmOldPw" type="password"></div>
+          <div><label>新 GM 密碼</label><input id="gmNewPw" type="password"></div>
+        </div>
+        <button class="primary" onclick="changeAdminPassword()" style="margin-top:10px">儲存 GM 新密碼</button>
+        <div id="gmPwMsg" class="msg"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API_BASE = (window.TLO_CONFIG && window.TLO_CONFIG.API_BASE_URL) || '';
+const TOKEN_KEY = 'TLO_ADMIN_TOKEN';
+const ADMIN_KEY = 'TLO_ADMIN_INFO';
+let currentPlayerUid = '';
+let cardRows = [];
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+function fmt(n){ return Number(n || 0).toLocaleString(); }
+function msg(id, text, good=false){ const el=$(id); if(!el)return; el.textContent=text||''; el.className='msg'+(good?' good':''); }
+function token(){ return localStorage.getItem(TOKEN_KEY) || ''; }
+function note(){ return $('adminNote') ? $('adminNote').value.trim() : ''; }
+
+async function rpc(method, args=[], auth=true){
+  const headers = {'Content-Type':'application/json'};
+  if(auth && token()) headers.Authorization = 'Bearer ' + token();
+  const res = await fetch(API_BASE + '/api/rpc', {method:'POST', headers, body:JSON.stringify({method, args})});
+  const data = await res.json().catch(() => ({success:false,msg:'API 回傳格式錯誤'}));
+  if(!res.ok || data.success === false) throw new Error(data.msg || 'API 錯誤');
+  return data;
+}
+
+function boot(){
+  const t = token();
+  const admin = JSON.parse(localStorage.getItem(ADMIN_KEY) || 'null');
+  if(t && admin){
+    $('loginPanel').classList.add('hide');
+    $('appPanel').classList.remove('hide');
+    $('adminInfo').textContent = `目前登入：${admin.displayName || admin.username}（${admin.role || 'GM'}）`;
+    searchPlayers();
+  }
+}
+
+async function login(){
+  try{
+    msg('loginMsg','登入中...',true);
+    const data = await rpc('adminLogin', [$('loginUser').value.trim(), $('loginPass').value], false);
+    localStorage.setItem(TOKEN_KEY, data.token);
+    localStorage.setItem(ADMIN_KEY, JSON.stringify(data.admin || {}));
+    msg('loginMsg','登入成功',true);
+    setTimeout(() => location.reload(), 300);
+  }catch(e){ msg('loginMsg', e.message); }
+}
+
+async function logout(){
+  try{ if(token()) await rpc('adminLogout', [], true); }catch(e){}
+  localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(ADMIN_KEY); location.reload();
+}
+
+function openGame(){ location.href = './'; }
+function showTab(name, btn){
+  ['players','cards','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+async function searchPlayers(){
+  try{
+    msg('searchMsg','搜尋中...',true);
+    const data = await rpc('adminSearchPlayers', [$('searchKeyword').value.trim()]);
+    msg('searchMsg', `找到 ${data.rows.length} 位玩家`, true);
+    $('playerList').innerHTML = data.rows.map(p => `
+      <button class="list-btn" onclick="loadPlayer('${esc(p.uid)}')">
+        <div class="uid">${esc(p.uid)} <span class="badge">${esc(p.displayName)}</span></div>
+        <div class="meta">抽卡 ${fmt(p.drawTimes)}｜分數 ${fmt(p.totalScore)}｜能量 ${fmt(p.energy)}｜最後登入 ${esc(p.lastLoginAt || '-')}</div>
+      </button>`).join('') || '<div class="muted">沒有找到玩家。</div>';
+  }catch(e){ msg('searchMsg', e.message); }
+}
+
+async function loadPlayer(uid){
+  try{
+    currentPlayerUid = uid;
+    msg('actionMsg','讀取玩家中...',true);
+    const data = await rpc('adminGetPlayer', [uid]);
+    renderPlayer(data);
+    msg('actionMsg','讀取完成',true);
+  }catch(e){ msg('actionMsg', e.message); }
+}
+
+function renderPlayer(data){
+  $('playerDetailEmpty').classList.add('hide');
+  $('playerDetail').classList.remove('hide');
+  $('pUid').textContent = data.player.uid;
+  $('pName').textContent = data.player.displayName || data.player.uid;
+  $('pMeta').textContent = `建立：${data.player.createdAt || '-'}｜最後登入：${data.player.lastLoginAt || '-'}｜找回碼：${data.player.recoveryCode || '-'}`;
+  $('sDraw').textContent = fmt(data.assets.drawTimes);
+  $('sScore').textContent = fmt(data.training?.totalScore || 0);
+  $('sEnergy').textContent = fmt(data.training?.energy || 0);
+  $('sCards').textContent = fmt((data.collection || []).length);
+  $('drawSet').value = data.assets.drawTimes;
+  $('drawDelta').value = '';
+  $('scoreSet').value = data.training?.totalScore || 0;
+  $('energySet').value = data.training?.energy || 0;
+  $('streakSet').value = data.training?.streak || 0;
+  $('resetPw').value = '';
+  $('cardQty').value = 1;
+  renderCollection(data.collection || []);
+  renderRecentLogs(data.logs || {});
+  if(!cardRows.length) loadCards(false);
+}
+
+function renderCollection(rows){
+  $('collectionTable').innerHTML = `<table><thead><tr><th>卡片</th><th>稀有度</th><th>數量</th><th>星等</th></tr></thead><tbody>` +
+    rows.map(c => `<tr><td>${esc(c.cardName)}</td><td>${esc(c.rarity)}</td><td>${fmt(c.quantity)}</td><td>${fmt(c.star)}★</td></tr>`).join('') +
+    `</tbody></table>`;
+}
+
+function renderRecentLogs(logs){
+  const g = (logs.gachaLogs || []).map(x => `<tr><td>抽卡</td><td>${esc(x.card_name)}</td><td>${esc(x.source||'')}</td><td>${esc(x.created_at)}</td></tr>`).join('');
+  const t = (logs.trainingLogs || []).map(x => `<tr><td>${esc(x.type)}</td><td>分數 ${fmt(x.score)} / 能量 ${fmt(x.energy)}</td><td>${esc(x.note||'')}</td><td>${esc(x.created_at)}</td></tr>`).join('');
+  const p = (logs.pvpLogs || []).map(x => `<tr><td>PVP ${esc(x.result)}</td><td>${esc(x.my_card)} vs ${esc(x.opponent_card)}</td><td>${esc(x.reward||'')}</td><td>${esc(x.created_at)}</td></tr>`).join('');
+  $('recentLogs').innerHTML = `<table><thead><tr><th>類型</th><th>內容</th><th>備註</th><th>時間</th></tr></thead><tbody>${g+t+p || '<tr><td colspan="4">暫無紀錄</td></tr>'}</tbody></table>`;
+}
+
+async function updateDrawTimes(){
+  if(!currentPlayerUid) return;
+  if(!confirm('確定要修改抽卡次數？')) return;
+  try{ const data = await rpc('adminUpdateDrawTimes', [currentPlayerUid, $('drawSet').value, note()]); msg('actionMsg', data.msg, true); renderPlayer(data.player); searchPlayers(); }catch(e){ msg('actionMsg', e.message); }
+}
+async function addDrawTimes(){
+  if(!currentPlayerUid) return;
+  if(!confirm('確定要增加/扣除抽卡次數？')) return;
+  try{ const data = await rpc('adminAddDrawTimes', [currentPlayerUid, $('drawDelta').value, note()]); msg('actionMsg', data.msg, true); renderPlayer(data.player); searchPlayers(); }catch(e){ msg('actionMsg', e.message); }
+}
+async function updateTraining(){
+  if(!currentPlayerUid) return;
+  if(!confirm('確定要修改排行榜/能量資料？')) return;
+  try{ const data = await rpc('adminUpdateTraining', [currentPlayerUid, {totalScore:$('scoreSet').value, energy:$('energySet').value, streak:$('streakSet').value}, note()]); msg('actionMsg', data.msg, true); renderPlayer(data.player); searchPlayers(); }catch(e){ msg('actionMsg', e.message); }
+}
+async function setCardQuantity(){
+  if(!currentPlayerUid) return;
+  if(!confirm('確定要修改玩家卡片數量？')) return;
+  try{ const data = await rpc('adminSetCardQuantity', [currentPlayerUid, $('cardSelect').value, $('cardQty').value, note()]); msg('actionMsg', data.msg, true); renderPlayer(data.player); searchPlayers(); }catch(e){ msg('actionMsg', e.message); }
+}
+async function resetPlayerPassword(){
+  if(!currentPlayerUid) return;
+  const pw = $('resetPw').value;
+  if(!pw || pw.length < 8){ msg('actionMsg','新密碼至少 8 碼'); return; }
+  if(!confirm('確定要重設此玩家密碼？玩家舊登入狀態會失效。')) return;
+  try{ const data = await rpc('adminResetPlayerPassword', [currentPlayerUid, pw, note()]); msg('actionMsg', data.msg, true); $('resetPw').value=''; }catch(e){ msg('actionMsg', e.message); }
+}
+
+async function loadCards(showMessage=true){
+  try{
+    const data = await rpc('adminListCards', []);
+    cardRows = data.rows || [];
+    const options = cardRows.map(c => `<option value="${esc(c.name)}">${esc(c.name)}｜${esc(c.rarity)}</option>`).join('');
+    if($('cardSelect')) $('cardSelect').innerHTML = options;
+    renderCardsTable();
+    if(showMessage) msg('cardsMsg', `已載入 ${cardRows.length} 張卡片`, true);
+  }catch(e){ msg('cardsMsg', e.message); }
+}
+function renderCardsTable(){
+  if(!$('cardsTable')) return;
+  $('cardsTable').innerHTML = `<table><thead><tr><th>卡片</th><th>稀有度</th><th>權重</th><th>可抽</th><th>操作</th></tr></thead><tbody>` +
+    cardRows.map((c,i)=>`<tr>
+      <td>${esc(c.name)}</td><td>${esc(c.rarity)}</td>
+      <td><input id="cw${i}" type="number" min="0" value="${esc(c.weight)}"></td>
+      <td><select id="cd${i}"><option value="1" ${c.isDrawable?'selected':''}>可抽</option><option value="0" ${!c.isDrawable?'selected':''}>不可抽</option></select></td>
+      <td><button class="primary" onclick="saveCard(${i})">儲存</button></td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+async function saveCard(i){
+  const c = cardRows[i]; if(!c) return;
+  if(!confirm(`確定要修改「${c.name}」卡池設定？`)) return;
+  try{ const data = await rpc('adminUpdateCardSettings', [c.name, {weight:$('cw'+i).value, isDrawable:$('cd'+i).value === '1'}, 'GM後台卡池設定']); msg('cardsMsg', data.msg, true); await loadCards(false); }catch(e){ msg('cardsMsg', e.message); }
+}
+
+async function loadAuditLogs(){
+  try{
+    const data = await rpc('adminGetAuditLogs', [$('auditTarget') ? $('auditTarget').value.trim() : '']);
+    msg('auditMsg', `已載入 ${data.rows.length} 筆操作紀錄`, true);
+    $('auditTable').innerHTML = `<table><thead><tr><th>時間</th><th>GM</th><th>動作</th><th>玩家</th><th>內容</th></tr></thead><tbody>` +
+      data.rows.map(r => `<tr><td>${esc(r.createdAt)}</td><td>${esc(r.adminUsername)}</td><td>${esc(r.action)}</td><td>${esc(r.targetUid)}</td><td><code>${esc(r.detail)}</code></td></tr>`).join('') + `</tbody></table>`;
+  }catch(e){ msg('auditMsg', e.message); }
+}
+
+async function changeAdminPassword(){
+  const oldPw = $('gmOldPw').value, newPw = $('gmNewPw').value;
+  if(!oldPw || !newPw){ msg('gmPwMsg','請輸入目前密碼與新密碼'); return; }
+  if(newPw.length < 8){ msg('gmPwMsg','新密碼至少 8 碼'); return; }
+  if(!confirm('確定要修改 GM 密碼？')) return;
+  try{ const data = await rpc('adminChangeOwnPassword', [oldPw, newPw]); msg('gmPwMsg', data.msg, true); $('gmOldPw').value=''; $('gmNewPw').value=''; }catch(e){ msg('gmPwMsg', e.message); }
+}
+
+$('searchKeyword').addEventListener('keydown', e => { if(e.key==='Enter') searchPlayers(); });
+boot();
+</script>
+</body>
+</html>
