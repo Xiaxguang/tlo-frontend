@@ -2108,7 +2108,8 @@
         if (response && response.success) {
           currentCount = response.timesLeft;
 
-          let githubImgUrl = (window.NPC_IMAGES && window.NPC_IMAGES[response.npcName]) ? window.NPC_IMAGES[response.npcName] : "";
+          registerCardImages(response);
+          let githubImgUrl = getCardImageUrl({ name: response.npcName, npcName: response.npcName, imageUrl: response.imageUrl, image_url: response.image_url });
           let imgHtml = githubImgUrl
             ? `<div class="card-wrapper" id="single-card"><div class="card-serial-badge">${response.serialNumber}</div><img src="${githubImgUrl}" class="card-img" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('single-card', 'T-LO_${response.npcName}_${response.serialNumber}', false)" class="btn-download">📥 下載卡片</button>`
             : '<p>(無圖)</p>';
@@ -2150,7 +2151,8 @@
 
           let gridHtml = '<div class="gacha10-download-wrapper" id="gacha10-download-area"><h3 style="color:#ff007f; margin:0 0 10px 0; text-align:center;">T-LO 十連抽盲盒爆裂開榜結果</h3><div class="gacha10-grid">';
           response.results.forEach(function(item, index) {
-            let githubImgUrl = (window.NPC_IMAGES && window.NPC_IMAGES[item.npcName]) ? window.NPC_IMAGES[item.npcName] : "";
+            registerCardImages(item);
+            let githubImgUrl = getCardImageUrl({ name: item.npcName, npcName: item.npcName, imageUrl: item.imageUrl, image_url: item.image_url });
             let cardImgHtml = githubImgUrl
               ? `<div class="card-wrapper" id="card10-${index}" style="margin:5px 0;"><div class="card-serial-badge badge-sm">${item.serialNumber}</div><img src="${githubImgUrl}" class="card-img-sm" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('card10-${index}', 'T-LO_${item.npcName}_${item.serialNumber}', false)" class="btn-download">📥 下載</button>`
               : '<p>(無圖)</p>';
