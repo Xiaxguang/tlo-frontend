@@ -1017,6 +1017,7 @@
           <button class="feature-btn" onclick="openShadowModal()"><span>🎭</span>角色猜影子<small>看剪影猜角色</small></button>
           <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
           <button class="feature-btn" onclick="openPvpModal()"><span>🆚</span>玩家對戰<small>設定代表卡並挑戰玩家</small></button>
+          <button class="feature-btn" onclick="openCharacterGrowthModal()"><span>🌟</span>角色養成<small>等級、經驗、技能與10星升星</small></button>
         </div>
       </div>
 
@@ -1104,9 +1105,10 @@
       </div>
 
       <div class="scene-panel">
-        <h3>⭐ 角色升星</h3>
-        <p>使用潮流能量培養角色星級，提升遊戲戰力與展示效果。</p>
-        <button class="scene-btn btn-neon-green" onclick="openStarModal()">角色升星<small>提升角色星級與戰力</small></button>
+        <h3>🌟 角色養成 / 10 星升星</h3>
+        <p>使用潮流能量培養角色等級、技能等級與星級。星級最高可提升到 10 星。</p>
+        <button class="scene-btn btn-neon-green" onclick="openCharacterGrowthModal()">角色養成<small>等級、經驗、技能強化與戰力提升</small></button>
+        <button class="scene-btn btn-neon-gold" style="margin-top:8px;" onclick="openStarModal()">快速升星<small>直接開啟原升星清單</small></button>
       </div>
     </section>
 
@@ -1343,9 +1345,23 @@
       <div class="modal-h3">⭐ 角色升星</div>
       <div class="collection-stat" id="star-energy-text">潮流能量：讀取中...</div>
       <div style="font-size:12px; color:#aaa; line-height:1.6; margin-bottom:10px;">
-        升星只增加遊戲戰力與展示星級，不增加正式卡片數量，也不列入實體兌獎條件。潮流能量目前只用於角色升星。
+        升星只增加遊戲戰力與展示星級，不增加正式卡片數量，也不列入實體兌獎條件。星級最高 10 星，潮流能量也可用於角色特訓與技能升級。
       </div>
       <div id="star-card-list" style="display:flex; flex-direction:column; gap:10px;">正在讀取角色升星資料...</div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="character-growth-modal" onclick="if(event.target.id==='character-growth-modal') this.style.display='none';">
+    <div class="modal-content" style="max-width:760px;">
+      <span class="modal-close" onclick="document.getElementById('character-growth-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🌟 角色養成中心</div>
+      <div class="collection-stat" id="growth-energy-text">潮流能量：讀取中...</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">
+        戰鬥、RPG、PVP 會給出戰角色經驗。你也可以消耗潮流能量進行特訓、升級技能，星級最高可到 10 星。所有養成都只影響遊戲內戰力，不影響實體卡片與兌獎資格。
+      </div>
+      <div id="growth-rule-text" style="font-size:12px;color:#888;margin-bottom:10px;"></div>
+      <div id="growth-card-list" style="display:flex;flex-direction:column;gap:10px;">正在讀取角色養成資料...</div>
     </div>
   </div>
 
@@ -1878,6 +1894,13 @@
       return battle;
     }
 
+    function formatGrowthRewards(growthRewards) {
+      const arr = Array.isArray(growthRewards) ? growthRewards : [];
+      if (!arr.length) return '';
+      const items = arr.slice(0, 3).map(g => `${escapeHtml(g.name || '')} +${Number(g.expAdded || 0).toLocaleString()}EXP${g.leveled ? ` → Lv.${Number(g.level || 1)}` : ''}`);
+      return `<br><span style="color:#00fff0;font-size:12px;">🌟 角色經驗：${items.join('、')}${arr.length > 3 ? '...' : ''}</span>`;
+    }
+
     function startChallenge() {
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
       const btn = document.getElementById('fight-btn');
@@ -1896,14 +1919,14 @@
         await playTurnBattleAnimation(res || {});
 
         if (res && res.success) {
-          resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">${escapeHtml(res.msg || '戰鬥勝利！')}<br>🎁 ${escapeHtml(res.rewardText || '')}</span>`;
+          resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">${escapeHtml(res.msg || '戰鬥勝利！')}<br>🎁 ${escapeHtml(res.rewardText || '')}${formatGrowthRewards(res.growthRewards)}</span>`;
           currentCount = res.newTimesLeft;
           updateButtonState();
           if (window.TLOAudio) window.TLOAudio.playSfx('win');
           btn.innerText = "✅ 已突破此關，準備下一關...";
           setTimeout(openBattleModal, 4200);
         } else {
-          resultMsg.innerHTML = `<span style="color:#ff7777; font-size:13px; display:block; padding:5px;">${escapeHtml(res && res.msg ? res.msg : '挑戰失敗')}</span>`;
+          resultMsg.innerHTML = `<span style="color:#ff7777; font-size:13px; display:block; padding:5px;">${escapeHtml(res && res.msg ? res.msg : '挑戰失敗')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
           btn.disabled = false;
           btn.innerText = "🔄 從第一關重新啟動挑戰 🔄";
@@ -2414,7 +2437,7 @@ function showCollectionHistory() {
         });
         const cls = res.win ? 'pvp-win' : 'pvp-lose';
         const txt = res.win ? '勝利' : '落敗';
-        result.innerHTML = `<span class="${cls}">${txt}！${escapeHtml(res.myCard)} ${Number(res.myPower||0).toLocaleString()} vs ${escapeHtml(res.opponentUid)} 的 ${escapeHtml(res.opponentCard)} ${Number(res.opponentPower||0).toLocaleString()}</span><br><span style="color:#ffc107;">${escapeHtml(res.rewardText || '')}</span>`;
+        result.innerHTML = `<span class="${cls}">${txt}！${escapeHtml(res.myCard)} ${Number(res.myPower||0).toLocaleString()} vs ${escapeHtml(res.opponentUid)} 的 ${escapeHtml(res.opponentCard)} ${Number(res.opponentPower||0).toLocaleString()}</span><br><span style="color:#ffc107;">${escapeHtml(res.rewardText || '')}</span>${formatGrowthRewards(res.growthRewards)}`;
         if (window.TLOAudio) window.TLOAudio.playSfx(res.win ? 'win' : 'error');
         if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
           currentCount = parseInt(res.newTimesLeft) || currentCount;
@@ -2792,6 +2815,20 @@ function showCollectionHistory() {
     }
 
 
+    function renderStarText(star, maxStar) {
+      const s = Math.max(1, Number(star || 1));
+      const m = Math.max(s, Number(maxStar || 10));
+      if (m <= 10) return '★'.repeat(s) + '<span style="opacity:.28;">' + '★'.repeat(Math.max(0, m - s)) + '</span>';
+      return s + '★';
+    }
+
+    function renderGrowthBar(value, max) {
+      const v = Math.max(0, Number(value || 0));
+      const m = Math.max(1, Number(max || 1));
+      const pct = Math.max(0, Math.min(100, Math.round(v / m * 100)));
+      return `<div style="height:8px;background:#252525;border-radius:999px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#00fff0,#ff007f);"></div></div>`;
+    }
+
     // ─── 角色升星 ───
     function openStarModal() {
       document.getElementById('star-modal').style.display = 'flex';
@@ -2841,9 +2878,9 @@ function showCollectionHistory() {
               ${imgUrl ? `<img src="${imgUrl}" style="width:64px; border-radius:6px;">` : `<div style="width:64px;height:86px;background:#333;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px;">${escapeHtml(name)}</div>`}
             </div>
             <div style="flex:1; min-width:0;">
-              <div style="font-weight:900; color:#00fff0;">${escapeHtml(name)} <span style="color:#ffc107;">${'⭐'.repeat(Math.max(1, star))}</span></div>
-              <div style="font-size:12px; color:#aaa; margin-top:3px;">持有：${count} 張｜目前 ${star} 星｜戰力：${currentPower.toLocaleString()}</div>
-              <div style="font-size:12px; color:#888; margin-top:3px;">${isMax ? '已滿星' : `升到 ${nextStar} 星需要 ${nextCost.toLocaleString()} 潮流能量`}</div>
+              <div style="font-weight:900; color:#00fff0;">${escapeHtml(name)} <span style="color:#ffc107;">${renderStarText(star, card.maxStar || 10)}</span></div>
+              <div style="font-size:12px; color:#aaa; margin-top:3px;">持有：${count} 張｜目前 ${star}/${Number(card.maxStar || 10)} 星｜Lv.${Number(card.level || 1)}｜技能Lv.${Number(card.skillLevel || 1)}｜戰力：${currentPower.toLocaleString()}</div>
+              <div style="font-size:12px; color:#888; margin-top:3px;">${isMax ? '已滿 10 星' : `升到 ${nextStar} 星需要 ${nextCost.toLocaleString()} 潮流能量`}</div>
             </div>
             <button class="btn-collection" style="margin:0; padding:8px 12px; ${canUpgrade ? '' : 'filter:grayscale(1); opacity:.6;'}" ${canUpgrade ? '' : 'disabled'} onclick="upgradeStar('${escapeJsString(name)}')">${isMax ? '滿星' : '升星'}</button>
           </div>
@@ -2867,6 +2904,115 @@ function showCollectionHistory() {
       }).withFailureHandler(function() {
         alert('升星失敗，請稍後再試。');
       }).upgradeCardStar(playerUID, cardName);
+    }
+
+
+    // ─── 角色養成中心 ───
+    function openCharacterGrowthModal() {
+      document.getElementById('character-growth-modal').style.display = 'flex';
+      loadCharacterGrowthDashboard();
+    }
+
+    function loadCharacterGrowthDashboard() {
+      const list = document.getElementById('growth-card-list');
+      const energyText = document.getElementById('growth-energy-text');
+      const ruleText = document.getElementById('growth-rule-text');
+      if (list) list.innerHTML = '<div style="text-align:center;color:#aaa;">正在讀取角色養成資料...</div>';
+      if (energyText) energyText.innerText = '潮流能量：讀取中...';
+      if (ruleText) ruleText.innerText = '';
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          list.innerHTML = '<div style="color:#ff7777;text-align:center;">讀取失敗：' + escapeHtml(res && res.msg ? res.msg : '未知錯誤') + '</div>';
+          return;
+        }
+        renderCharacterGrowthDashboard(res);
+      }).withFailureHandler(function(err) {
+        list.innerHTML = '<div style="color:#ff7777;text-align:center;">讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</div>';
+      }).getCharacterGrowthDashboard(playerUID);
+    }
+
+    function renderCharacterGrowthDashboard(res) {
+      const list = document.getElementById('growth-card-list');
+      const energyText = document.getElementById('growth-energy-text');
+      const ruleText = document.getElementById('growth-rule-text');
+      const energy = Number((res.profile && res.profile.energy) || 0);
+      if (energyText) energyText.innerText = '目前潮流能量：' + energy.toLocaleString();
+      if (ruleText) ruleText.innerText = res.ruleText || '';
+      const cards = res.cards || [];
+      if (!cards.length) {
+        list.innerHTML = '<div style="text-align:center;color:#aaa;">目前沒有可養成角色，請先抽卡取得角色。</div>';
+        return;
+      }
+      let html = '';
+      cards.forEach(function(card) {
+        const name = card.name || card.cardName || '';
+        const imgUrl = getNpcImageUrl(name) || card.imageUrl || '';
+        const level = Number(card.level || 1);
+        const maxLevel = Number(card.maxLevel || 50);
+        const exp = Number(card.exp || 0);
+        const expToNext = Number(card.expToNext || 0);
+        const skillLevel = Number(card.skillLevel || 1);
+        const maxSkill = Number(card.maxSkillLevel || 10);
+        const star = Number(card.star || 1);
+        const maxStar = Number(card.maxStar || 10);
+        const trainCost = Number(card.trainCost || 0);
+        const skillCost = Number(card.skillCost || 0);
+        const power = Number(card.power || 0);
+        const levelText = level >= maxLevel ? '已滿級' : `${exp.toLocaleString()} / ${expToNext.toLocaleString()} EXP`;
+        const trainDisabled = level >= maxLevel || energy < trainCost;
+        const skillDisabled = skillLevel >= maxSkill || energy < skillCost;
+        html += `
+          <div style="background:linear-gradient(135deg,#101010,#181225);border:1px solid #3a3a3a;border-radius:14px;padding:12px;display:flex;gap:12px;align-items:flex-start;text-align:left;">
+            <div style="width:74px;flex:0 0 74px;">
+              ${imgUrl ? `<img src="${imgUrl}" style="width:74px;border-radius:10px;box-shadow:0 0 12px rgba(0,255,240,.2);">` : `<div style="width:74px;height:96px;background:#333;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px;">${escapeHtml(name)}</div>`}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:1000;color:#00fff0;font-size:16px;">${escapeHtml(name)} <span style="color:#ffc107;font-size:12px;">${renderStarText(star, maxStar)}</span></div>
+              <div style="font-size:12px;color:#aaa;margin-top:3px;">${escapeHtml(card.elementIcon || '')}${escapeHtml(card.elementLabel || '')}｜${escapeHtml(card.skillName || '')} Lv.${skillLevel}/${maxSkill}｜持有 ${Number(card.count||0)} 張</div>
+              <div style="font-size:12px;color:#fff;margin-top:4px;">戰力：<b style="color:#ff007f;">${power.toLocaleString()}</b>｜等級：Lv.${level}/${maxLevel}</div>
+              <div style="font-size:11px;color:#888;margin-top:5px;">${levelText}</div>
+              ${level >= maxLevel ? renderGrowthBar(1, 1) : renderGrowthBar(exp, expToNext)}
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                <button class="btn-collection" style="margin:0;padding:8px 10px;${trainDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${trainDisabled ? 'disabled' : ''} onclick="trainCharacterLevel('${escapeJsString(name)}')">特訓升級${level >= maxLevel ? '' : `<small style='display:block;font-size:10px;'>${trainCost.toLocaleString()}能量</small>`}</button>
+                <button class="btn-collection" style="margin:0;padding:8px 10px;${skillDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${skillDisabled ? 'disabled' : ''} onclick="upgradeCharacterSkill('${escapeJsString(name)}')">技能升級${skillLevel >= maxSkill ? '' : `<small style='display:block;font-size:10px;'>${skillCost.toLocaleString()}能量</small>`}</button>
+                <button class="btn-collection" style="margin:0;padding:8px 10px;" onclick="document.getElementById('character-growth-modal').style.display='none'; openStarModal();">10星升星</button>
+              </div>
+            </div>
+          </div>`;
+      });
+      list.innerHTML = html;
+    }
+
+    function trainCharacterLevel(cardName) {
+      if (!cardName) return;
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          alert(res && res.msg ? res.msg : '特訓失敗');
+          if (res && res.dashboard) renderCharacterGrowthDashboard(res.dashboard);
+          return;
+        }
+        alert(res.msg || '特訓成功');
+        if (res.dashboard) renderCharacterGrowthDashboard(res.dashboard);
+        loadHomeState();
+      }).withFailureHandler(function(err) {
+        alert('特訓失敗：' + (err && err.message ? err.message : err));
+      }).trainCardLevel(playerUID, cardName);
+    }
+
+    function upgradeCharacterSkill(cardName) {
+      if (!cardName) return;
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          alert(res && res.msg ? res.msg : '技能升級失敗');
+          if (res && res.dashboard) renderCharacterGrowthDashboard(res.dashboard);
+          return;
+        }
+        alert(res.msg || '技能升級成功');
+        if (res.dashboard) renderCharacterGrowthDashboard(res.dashboard);
+        loadHomeState();
+      }).withFailureHandler(function(err) {
+        alert('技能升級失敗：' + (err && err.message ? err.message : err));
+      }).upgradeCardSkill(playerUID, cardName);
     }
 
 
@@ -2956,7 +3102,7 @@ function showCollectionHistory() {
       if (msg) msg.innerHTML = '';
       const powerEl = document.getElementById('rpg-team-power');
       if (powerEl) powerEl.innerText = `隊伍戰力：${Number(res.teamPower || 0).toLocaleString()}`;
-      const options = ['<option value="">空位</option>'].concat((res.cardOptions || []).map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}｜${escapeHtml(c.elementIcon || '')}${escapeHtml(c.elementLabel || '')}｜${escapeHtml(c.skillName || '')}｜${Number(c.power||0).toLocaleString()}戰力｜${Number(c.star||1)}★</option>`)).join('');
+      const options = ['<option value="">空位</option>'].concat((res.cardOptions || []).map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}｜${escapeHtml(c.elementIcon || '')}${escapeHtml(c.elementLabel || '')}｜${escapeHtml(c.skillName || '')}Lv.${Number(c.skillLevel||1)}｜Lv.${Number(c.level||1)}｜${Number(c.power||0).toLocaleString()}戰力｜${Number(c.star||1)}★</option>`)).join('');
       [1,2,3].forEach(function(i) {
         const sel = document.getElementById('rpg-slot-' + i);
         if (!sel) return;
@@ -3005,7 +3151,7 @@ function showCollectionHistory() {
         }
         const info = findRpgCardInfo(name);
         const img = getNpcImageUrl(name) || info.imageUrl || placeholderBattleImage(name, '#123a3a', '#00fff0');
-        html += `<div class="rpg-mini-card"><img src="${img}" alt="${escapeHtml(name)}"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')}</div></div>`;
+        html += `<div class="rpg-mini-card"><img src="${img}" alt="${escapeHtml(name)}"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★｜Lv.${Number(info.level||1)}</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')} Lv.${Number(info.skillLevel||1)}</div></div>`;
       }
       box.innerHTML = html;
       if (caption) caption.innerText = names.length ? `冒險隊伍已集結：${names.join('、')}` : '選擇隊伍後，角色會組隊準備出發。';
@@ -3058,7 +3204,7 @@ function showCollectionHistory() {
         });
         if (res && res.dashboard) renderRpgDashboard(res.dashboard);
         if (window.TLOAudio) window.TLOAudio.playSfx(res && res.win ? 'win' : 'error');
-        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '冒險完成')}</span>`;
+        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '冒險完成')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
         if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
           currentCount = parseInt(res.newTimesLeft) || 0;
           updateButtonState();
