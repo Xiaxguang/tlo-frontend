@@ -300,77 +300,616 @@
     .memory-card.matched { border-color:#00ff7f; box-shadow:0 0 12px rgba(0,255,127,0.45); }
 
     /* ========================= */
+
+
+    /* === T-LO 前台分畫面遊戲化 UI Patch v1 === */
+    body.tlo-game-body, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(255,0,127,.22), transparent 28%),
+        radial-gradient(circle at 80% 10%, rgba(0,255,240,.18), transparent 32%),
+        linear-gradient(180deg, #090912 0%, #11111b 48%, #050509 100%) !important;
+      overflow-x: hidden;
+    }
+
+    .container.game-shell {
+      width: min(500px, 100vw) !important;
+      max-width: 500px !important;
+      min-height: 100vh;
+      margin: 0 auto !important;
+      padding: 0 14px 92px 14px !important;
+      box-sizing: border-box;
+      border-radius: 0 !important;
+      background:
+        linear-gradient(180deg, rgba(22,22,36,.96), rgba(7,7,12,.98)) !important;
+      box-shadow: 0 0 45px rgba(0,0,0,.65) !important;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container.game-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.2));
+    }
+
+    .game-topbar,
+    .game-screen,
+    .game-bottom-nav {
+      position: relative;
+      z-index: 1;
+    }
+
+    .game-topbar {
+      padding: 18px 4px 0 4px;
+    }
+
+    .game-logo-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .game-title {
+      margin: 0;
+      color: #fff;
+      font-size: 22px;
+      line-height: 1.1;
+      letter-spacing: .5px;
+      text-align: left;
+      text-shadow: 0 0 18px rgba(255,0,127,.65);
+    }
+
+    .game-title span {
+      display: block;
+      color: #00fff0;
+      font-size: 12px;
+      margin-top: 4px;
+      letter-spacing: 2px;
+      text-shadow: 0 0 16px rgba(0,255,240,.8);
+    }
+
+    .game-pill {
+      flex: 0 0 auto;
+      border: 1px solid rgba(0,255,240,.55);
+      background: rgba(0,255,240,.08);
+      color: #00fff0;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 11px;
+      font-weight: 900;
+      box-shadow: 0 0 14px rgba(0,255,240,.14);
+    }
+
+    .asset-info.player-hud {
+      background: linear-gradient(135deg, rgba(255,0,127,.16), rgba(0,255,240,.10), rgba(127,0,255,.16)) !important;
+      border: 1px solid rgba(0,255,240,.45) !important;
+      border-radius: 20px !important;
+      padding: 12px !important;
+      margin: 0 0 10px 0 !important;
+      box-shadow: 0 16px 28px rgba(0,0,0,.34), inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    .hud-main {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr .9fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .hud-tile {
+      background: rgba(0,0,0,.38);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 9px 8px;
+      text-align: center;
+      min-width: 0;
+    }
+
+    .hud-label {
+      display: block;
+      color: #aaa;
+      font-size: 10px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .hud-value {
+      display: block;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 950;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .highlight-count.hud-count {
+      color: #ff4fb0 !important;
+      font-size: 22px !important;
+      text-shadow: 0 0 16px rgba(255,0,127,.75);
+    }
+
+    #tlo-auth-userbar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px !important;
+    }
+
+    .game-screen {
+      display: none;
+      animation: gameFadeIn .22s ease-out;
+    }
+
+    .game-screen.active {
+      display: block;
+    }
+
+    @keyframes gameFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .screen-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 8px 0 12px 0;
+    }
+
+    .screen-title {
+      margin: 0;
+      font-size: 22px;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .screen-sub {
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 4px;
+    }
+
+    .game-card {
+      background: rgba(17,17,26,.92);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 20px;
+      padding: 14px;
+      margin: 12px 0;
+      box-shadow: 0 16px 34px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.025);
+      text-align: left;
+      overflow: hidden;
+    }
+
+    .hero-card {
+      background:
+        linear-gradient(135deg, rgba(255,0,127,.22), rgba(127,0,255,.14) 48%, rgba(0,255,240,.16)),
+        rgba(17,17,26,.94);
+      border-color: rgba(255,0,127,.38);
+    }
+
+    .hero-card h3,
+    .game-card h3 {
+      margin: 0 0 8px 0;
+      color: #00fff0;
+      font-size: 17px;
+    }
+
+    .hero-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .game-big-btn,
+    .scene-btn {
+      border: none;
+      border-radius: 18px;
+      padding: 14px 12px;
+      color: #fff;
+      font-weight: 950;
+      font-size: 15px;
+      cursor: pointer;
+      text-align: left;
+      box-shadow: 0 12px 22px rgba(0,0,0,.28);
+      transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+    }
+
+    .game-big-btn:active,
+    .scene-btn:active,
+    .game-bottom-nav button:active {
+      transform: scale(.97);
+    }
+
+    .game-big-btn small,
+    .scene-btn small {
+      display: block;
+      margin-top: 4px;
+      color: rgba(255,255,255,.72);
+      font-size: 11px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .btn-neon-pink { background: linear-gradient(135deg, #ff007f, #7f00ff); }
+    .btn-neon-cyan { background: linear-gradient(135deg, #00fff0, #006bff); color:#061214; }
+    .btn-neon-gold { background: linear-gradient(135deg, #ffbf00, #ff4b00); color:#171007; }
+    .btn-neon-green { background: linear-gradient(135deg, #00ff90, #00b7ff); color:#061214; }
+    .btn-neon-purple { background: linear-gradient(135deg, #7f00ff, #ff00ff); }
+    .btn-neon-red { background: linear-gradient(135deg, #ff305c, #ff7a00); }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .feature-btn {
+      min-height: 84px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      background: rgba(255,255,255,.055);
+      color: #fff;
+      padding: 12px;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 950;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+    }
+
+    .feature-btn span {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .feature-btn small {
+      display: block;
+      color: #aaa;
+      font-size: 11px;
+      line-height: 1.4;
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
+    .scene-panel {
+      position: relative;
+      background:
+        linear-gradient(135deg, rgba(0,255,240,.10), rgba(255,0,127,.09)),
+        rgba(0,0,0,.24);
+      border: 1px solid rgba(0,255,240,.22);
+      border-radius: 22px;
+      padding: 14px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .scene-panel::after {
+      content:"";
+      position:absolute;
+      width:160px;height:160px;
+      right:-80px;top:-80px;
+      background: radial-gradient(circle, rgba(0,255,240,.18), transparent 62%);
+      pointer-events:none;
+    }
+
+    .scene-panel h3 {
+      color: #fff;
+      margin: 0 0 8px 0;
+      font-size: 18px;
+    }
+
+    .scene-panel p {
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.55;
+      margin: 0 0 12px 0;
+    }
+
+    .gacha-machine {
+      min-height: 300px;
+      border: 1px solid rgba(255,0,127,.34) !important;
+      border-radius: 24px !important;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255,0,127,.22), transparent 34%),
+        linear-gradient(180deg, rgba(28,16,36,.95), rgba(10,10,15,.95)) !important;
+      box-shadow: inset 0 0 28px rgba(255,0,127,.10), 0 18px 34px rgba(0,0,0,.34);
+    }
+
+    .gacha-machine::before {
+      content:"CARD DROP ZONE";
+      color: rgba(255,255,255,.12);
+      font-size: 11px;
+      letter-spacing: 2px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .gacha-action-card .btn-group {
+      width: 100% !important;
+      margin: 0 !important;
+      gap: 10px !important;
+    }
+
+    .gacha-action-card .btn-gacha,
+    .gacha-action-card .btn-gacha10 {
+      width: 50% !important;
+      border-radius: 18px !important;
+      padding: 16px 10px !important;
+      font-size: 15px !important;
+      margin: 0 !important;
+    }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    .quick-links .btn-full {
+      width: 100% !important;
+      margin: 0 !important;
+      border-radius: 16px !important;
+      text-align: center;
+    }
+
+    .notice-box,
+    .message-board-box,
+    .history-box {
+      border-radius: 18px !important;
+      border: 1px solid rgba(255,255,255,.10) !important;
+      box-shadow: 0 12px 24px rgba(0,0,0,.22);
+    }
+
+    .history-box {
+      max-height: 380px;
+    }
+
+    .message-board-box {
+      background: rgba(17,17,26,.92) !important;
+    }
+
+    .game-bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      width: min(470px, calc(100vw - 22px));
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: rgba(8,8,14,.88);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 22px;
+      padding: 8px;
+      box-sizing: border-box;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 14px 42px rgba(0,0,0,.55);
+      z-index: 800;
+    }
+
+    .game-bottom-nav button {
+      border: none;
+      border-radius: 16px;
+      background: transparent;
+      color: #888;
+      padding: 9px 4px;
+      font-size: 12px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .game-bottom-nav button span {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 3px;
+    }
+
+    .game-bottom-nav button.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(255,0,127,.55), rgba(0,255,240,.35));
+      box-shadow: 0 0 18px rgba(0,255,240,.18);
+    }
+
+    .desktop-back-btn {
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    @media (max-width: 380px) {
+      .container.game-shell { padding-left: 10px !important; padding-right: 10px !important; }
+      .game-title { font-size: 20px; }
+      .hud-main { grid-template-columns: 1fr 1fr; }
+      .hud-tile:first-child { grid-column: 1 / 3; }
+      .hero-actions, .feature-grid { grid-template-columns: 1fr; }
+      .gacha-action-card .btn-group { flex-direction: column; }
+      .gacha-action-card .btn-gacha, .gacha-action-card .btn-gacha10 { width: 100% !important; }
+    }
+
   </style>
 </head>
-<body>
+<body class="tlo-game-body">
 
-  <div class="container">
-    <h2>✨ T-LO 潮流盲盒開榜現場 ✨</h2>
-    <div id="ops-announcement" style="display:none;background:#111;border:1px solid #00fff0;border-radius:12px;padding:12px;margin:10px 0;text-align:left;line-height:1.6;"></div>
-    <div id="ops-maintenance" style="display:none;background:#2a100c;border:1px solid #ff4444;color:#ffaaaa;border-radius:12px;padding:12px;margin:10px 0;text-align:left;line-height:1.6;"></div>
-    
-    <div class="asset-info">
-      <div>玩家：<span id="display-uid">載入中</span></div>
-      <div style="margin-top: 5px;">剩餘抽卡次數：<span id="display-count" class="highlight-count">0</span> 次</div>
-      <div style="margin-top: 8px;">
-        <span class="probability-link" onclick="document.getElementById('prob-modal').style.display='flex';">ℹ️ 查看盲盒角色機率表</span>
+  <div class="container game-shell">
+    <header class="game-topbar">
+      <div class="game-logo-line">
+        <h2 class="game-title">T-LO 潮流盲盒<span>OPENING LIVE ARENA</span></h2>
+        <div class="game-pill">BETA</div>
       </div>
-      <button class="btn-collection" onclick="openCollectionModal()">🎴 查看我的潮流卡盒 (<span id="collection-summary-count">0</span>/16)</button>
-      <button class="btn-battle-entry" onclick="openBattleModal()">⚔️ 進入潮流爭霸戰</button>
 
-      <div class="mini-entry-row">
-        <button class="btn-mini btn-training" onclick="openTrainingModal()">🎁 每日簽到 / 排行榜</button>
-        <button class="btn-mini btn-memory" onclick="openMemoryModal()">🧠 記憶翻牌</button>
-        <button class="btn-mini btn-shadow" onclick="openShadowModal()">🎭 角色猜影子</button>
-        <button class="btn-mini btn-fortune" onclick="openFortuneModal()">🔮 今日潮流籤</button>
-        <button class="btn-mini btn-pvp" onclick="openPvpModal()">🆚 T-LO 玩家對戰</button>
-        <button class="btn-mini" style="background:linear-gradient(45deg,#ffc107,#ff007f); color:#111;" onclick="openStarModal()">⭐ 角色升星</button>
-        <button class="btn-mini" style="background:linear-gradient(45deg,#00ff90,#00fff0); color:#111;" onclick="openRedeemModal()">🎟️ 兌換碼</button>
-        <button class="btn-mini" style="background:linear-gradient(45deg,#ff7a00,#7f00ff); color:#fff;" onclick="openRpgModal()">🗺️ RPG冒險</button>
+      <div id="ops-announcement" style="display:none;background:#111;border:1px solid #00fff0;border-radius:12px;padding:12px;margin:10px 0;text-align:left;line-height:1.6;"></div>
+      <div id="ops-maintenance" style="display:none;background:#2a100c;border:1px solid #ff4444;color:#ffaaaa;border-radius:12px;padding:12px;margin:10px 0;text-align:left;line-height:1.6;"></div>
+
+      <div class="asset-info player-hud">
+        <div class="hud-main">
+          <div class="hud-tile">
+            <span class="hud-label">PLAYER</span>
+            <span class="hud-value" id="display-uid">載入中</span>
+          </div>
+          <div class="hud-tile">
+            <span class="hud-label">抽卡次數</span>
+            <span class="highlight-count hud-count" id="display-count">0</span>
+          </div>
+          <div class="hud-tile">
+            <span class="hud-label">卡盒進度</span>
+            <span class="hud-value"><span id="collection-summary-count">0</span>/16</span>
+          </div>
+        </div>
       </div>
-    </div>
+    </header>
 
-    <div class="card-stage" id="card-stage">
-      <p>準備就緒，點擊下方按鈕開始心跳開盒！</p>
-    </div>
-
-    <div class="btn-group">
-      <button class="btn btn-gacha" id="gacha-btn" onclick="startGacha()">消耗 1 次．單抽開盒</button>
-      <button class="btn btn-gacha10" id="gacha10-btn" onclick="startGacha10()">消耗 10 次．十連開盒</button>
-    </div>
-
-    <a href="https://lbr-game.up.railway.app/roulette/" class="btn btn-full btn-roulette" target="_blank">🎡 前往 T-LO 大轉盤現場</a>
-    <a href="https://t-lo-games.cashier.ecpay.com.tw/product/000000000976530" class="btn btn-full btn-buy" id="buy-btn" target="_blank">🛒 前往商店獲得更多次數</a>
-
-    <div class="notice-box" id="notice-box" style="display: block;">
-      💡 <b>遊戲提示：</b><br>
-      達成以下三個條件請馬上聯繫我們兌獎！<br>
-      1.集齊三隻SR系列凌凌 小舞 小艾<br>
-      2.集齊三隻SR系列 + SSR系列書宏<br>
-      3.集齊全套16張卡牌<br>
-      首儲 500 抽卡次數 + 3<br>
-      首儲 1000 送 MIYA 99 好禮<br>
-      👉 <b>點擊聯繫客服兌獎：</b><br>
-      <a href="https://line.me/ti/p/~bikabikahikari" style="color: #00fff0; font-weight: bold; text-decoration: underline;">
-        Line: bikabikahikari (點我私訊)
-      </a>
-    </div>
-
-
-    <div class="message-board-box" id="home-message-board">
-      <div class="message-board-title">💬 T-LO 玩家留言板</div>
-      <div id="message-board-list" class="message-list">正在讀取玩家留言...</div>
-      <div class="message-input-row">
-        <input id="message-input" class="message-input" maxlength="50" placeholder="留下你的潮流宣言，最多50字">
-        <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
+    <section class="game-screen active" id="homeScreen" data-screen="home">
+      <div class="screen-head">
+        <div>
+          <h2 class="screen-title">主介面</h2>
+          <div class="screen-sub">每日任務、小遊戲、排行榜與玩家互動集中在這裡。</div>
+        </div>
       </div>
-      <div id="message-board-msg" style="font-size:12px; color:#888; margin-top:6px; text-align:center;">留言每日限量，僅顯示最近 15 則。</div>
-    </div>
 
-    <div class="history-box">
-      <div style="font-weight: bold; margin-bottom: 10px; color: #ff007f; font-size: 14px;">🌟 最近 10 次抽卡紀錄</div>
-      <div id="history-list">正在讀取歷史紀錄...</div>
-    </div>
+      <div class="game-card hero-card">
+        <h3>今日行動</h3>
+        <div class="screen-sub">選擇你今天要做的事：開盒、冒險、簽到或領取活動補償。</div>
+        <div class="hero-actions">
+          <button class="game-big-btn btn-neon-pink" onclick="showGameScreen('gacha')">🎁 前往抽卡<small>單抽、十連、查看機率與抽卡紀錄</small></button>
+          <button class="game-big-btn btn-neon-cyan" onclick="showGameScreen('battle')">⚔️ 前往戰鬥<small>爭霸戰、RPG 冒險、PVP 與升星</small></button>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <h3>快捷功能</h3>
+        <div class="feature-grid">
+          <button class="feature-btn" onclick="openCollectionModal()"><span>🎴</span>我的卡盒<small>查看 16 張角色收集進度</small></button>
+          <button class="feature-btn" onclick="openTrainingModal()"><span>🎁</span>簽到 / 排行榜<small>每日獎勵與玩家分數排名</small></button>
+          <button class="feature-btn" onclick="openRedeemModal()"><span>🎟️</span>兌換碼<small>輸入活動碼或補償碼</small></button>
+          <button class="feature-btn" onclick="document.getElementById('prob-modal').style.display='flex';"><span>📊</span>機率表<small>查看盲盒角色出貨機率</small></button>
+          <button class="feature-btn" onclick="openMemoryModal()"><span>🧠</span>記憶翻牌<small>挑戰記憶小遊戲</small></button>
+          <button class="feature-btn" onclick="openShadowModal()"><span>🎭</span>角色猜影子<small>看剪影猜角色</small></button>
+          <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
+          <button class="feature-btn" onclick="openPvpModal()"><span>🆚</span>玩家對戰<small>設定代表卡並挑戰玩家</small></button>
+        </div>
+      </div>
+
+      <div class="notice-box" id="notice-box" style="display:block;">
+        💡 <b>遊戲提示：</b><br>
+        達成以下三個條件請馬上聯繫我們兌獎！<br>
+        1.集齊三隻SR系列凌凌 小舞 小艾<br>
+        2.集齊三隻SR系列 + SSR系列書宏<br>
+        3.集齊全套16張卡牌<br>
+        首儲 500 抽卡次數 + 3<br>
+        首儲 1000 送 MIYA 99 好禮<br>
+        👉 <b>點擊聯繫客服兌獎：</b><br>
+        <a href="https://line.me/ti/p/~bikabikahikari" style="color:#00fff0;font-weight:bold;text-decoration:underline;">Line: bikabikahikari</a>
+      </div>
+
+      <div class="message-board-box" id="home-message-board">
+        <div class="message-board-title">💬 T-LO 玩家留言板</div>
+        <div id="message-board-list" class="message-list">正在讀取玩家留言...</div>
+        <div class="message-input-row">
+          <input id="message-input" class="message-input" maxlength="50" placeholder="留下你的潮流宣言，最多50字">
+          <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
+        </div>
+        <div id="message-board-msg" style="font-size:12px;color:#888;margin-top:6px;text-align:center;">留言每日限量，僅顯示最近 15 則。</div>
+      </div>
+    </section>
+
+    <section class="game-screen" id="gachaScreen" data-screen="gacha">
+      <div class="screen-head">
+        <div>
+          <h2 class="screen-title">抽卡畫面</h2>
+          <div class="screen-sub">進入開盒現場，抽卡結果與最近紀錄會在這裡顯示。</div>
+        </div>
+        <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
+      </div>
+
+      <div class="card-stage gacha-machine" id="card-stage">
+        <p>準備就緒，點擊下方按鈕開始心跳開盒！</p>
+      </div>
+
+      <div class="game-card gacha-action-card">
+        <h3>開盒操作</h3>
+        <div class="btn-group">
+          <button class="btn btn-gacha" id="gacha-btn" onclick="startGacha()">消耗 1 次．單抽開盒</button>
+          <button class="btn btn-gacha10" id="gacha10-btn" onclick="startGacha10()">消耗 10 次．十連開盒</button>
+        </div>
+        <div class="quick-links">
+          <button class="btn-collection" onclick="openCollectionModal()">🎴 查看我的潮流卡盒</button>
+          <button class="btn-collection" onclick="document.getElementById('prob-modal').style.display='flex';">ℹ️ 查看盲盒角色機率表</button>
+          <a href="https://lbr-game.up.railway.app/roulette/" class="btn btn-full btn-roulette" target="_blank">🎡 前往 T-LO 大轉盤現場</a>
+          <a href="https://t-lo-games.cashier.ecpay.com.tw/product/000000000976530" class="btn btn-full btn-buy" id="buy-btn" target="_blank">🛒 前往商店獲得更多次數</a>
+        </div>
+      </div>
+
+      <div class="history-box">
+        <div style="font-weight:bold;margin-bottom:10px;color:#ff007f;font-size:14px;">🌟 最近 10 次抽卡紀錄</div>
+        <div id="history-list">正在讀取歷史紀錄...</div>
+      </div>
+    </section>
+
+    <section class="game-screen" id="battleScreen" data-screen="battle">
+      <div class="screen-head">
+        <div>
+          <h2 class="screen-title">戰鬥畫面</h2>
+          <div class="screen-sub">戰鬥、RPG、PVP 與角色培養集中在這個戰鬥大廳。</div>
+        </div>
+        <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
+      </div>
+
+      <div class="scene-panel">
+        <h3>⚔️ 潮流爭霸戰</h3>
+        <p>挑戰 Boss 關卡，依照卡盒與角色戰力推進進度。</p>
+        <button class="scene-btn btn-neon-cyan" onclick="openBattleModal()">進入爭霸戰<small>開啟 Boss 戰鬥介面</small></button>
+      </div>
+
+      <div class="scene-panel">
+        <h3>🗺️ RPG 冒險模式</h3>
+        <p>選 1～3 張已持有角色組隊，挑戰關卡並取得分數、能量與抽卡掉落。</p>
+        <button class="scene-btn btn-neon-gold" onclick="openRpgModal()">開始 RPG 冒險<small>編成隊伍並挑戰關卡</small></button>
+      </div>
+
+      <div class="scene-panel">
+        <h3>🆚 玩家對戰</h3>
+        <p>設定代表卡，和其他玩家進行每日 PVP 對戰。</p>
+        <button class="scene-btn btn-neon-purple" onclick="openPvpModal()">進入玩家對戰<small>PVP 配對、勝場與碎片獎勵</small></button>
+      </div>
+
+      <div class="scene-panel">
+        <h3>⭐ 角色升星</h3>
+        <p>使用潮流能量培養角色星級，提升遊戲戰力與展示效果。</p>
+        <button class="scene-btn btn-neon-green" onclick="openStarModal()">角色升星<small>提升角色星級與戰力</small></button>
+      </div>
+    </section>
+
+    <nav class="game-bottom-nav" aria-label="T-LO 主選單">
+      <button type="button" class="active" data-screen-target="home" onclick="showGameScreen('home')"><span>🏠</span>主介面</button>
+      <button type="button" data-screen-target="gacha" onclick="showGameScreen('gacha')"><span>🎁</span>抽卡</button>
+      <button type="button" data-screen-target="battle" onclick="showGameScreen('battle')"><span>⚔️</span>戰鬥</button>
+    </nav>
   </div>
 
   <div class="modal-overlay" id="prob-modal" onclick="if(event.target.id==='prob-modal') this.style.display='none';">
@@ -1939,5 +2478,21 @@ function showCollectionHistory() {
     }
 
   </script>
+
+  <script>
+    // === T-LO 分畫面切換：只控制前台 UI，不改任何後端功能 ===
+    window.showGameScreen = function(screenName) {
+      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen' };
+      var targetId = map[screenName] || map.home;
+      document.querySelectorAll('.game-screen').forEach(function(el) {
+        el.classList.toggle('active', el.id === targetId);
+      });
+      document.querySelectorAll('.game-bottom-nav [data-screen-target]').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-screen-target') === screenName);
+      });
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
+    };
+  </script>
+
 </body>
 </html>
