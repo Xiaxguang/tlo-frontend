@@ -2421,7 +2421,7 @@ function showCollectionHistory() {
                 <div class="achievement-progress"><div style="width:${pct}%"></div></div>
                 <div class="mission-status">進度：${Number(row.progress || 0)} / ${Number(row.target || 0)}</div>
               </div>
-              <button class="achievement-btn" ${row.claimable ? '' : 'disabled'} onclick="claimAchievementReward('${jsString(row.key)}')">${btnText}</button>
+              <button class="achievement-btn" data-achievement-key="${escapeHtml(row.key || '')}" ${row.claimable ? '' : 'disabled'} onclick="claimAchievementReward('${jsString(row.key)}')">${btnText}</button>
             </div>
           `;
         });
@@ -2441,13 +2441,35 @@ function showCollectionHistory() {
       }).getAchievementDashboard(playerUID);
     }
 
+    function markAchievementClaimedFast(key) {
+      document.querySelectorAll('[data-achievement-key]').forEach(function(btn) {
+        if (btn.getAttribute('data-achievement-key') === String(key || '')) {
+          btn.disabled = true;
+          btn.innerText = '已領取';
+          var row = btn.closest('.achievement-row');
+          if (row) {
+            row.classList.remove('claimable');
+            row.classList.add('claimed');
+          }
+        }
+      });
+    }
+
     function claimAchievementReward(key) {
       const status = document.getElementById('achievement-status');
       status.innerText = '正在領取成就獎勵...';
       google.script.run.withSuccessHandler(function(res) {
+        if (window.TLOAudio) window.TLOAudio.playSfx(res && res.success ? 'win' : 'error');
         if (res && res.msg) status.innerText = res.msg;
-        renderAchievementDashboard(res && res.dashboard ? res.dashboard : res);
+        if (res && res.success && res.claimedKey) {
+          markAchievementClaimedFast(res.claimedKey);
+          if (typeof loadHomeState === 'function') loadHomeState();
+          return;
+        }
+        if (res && res.dashboard) renderAchievementDashboard(res.dashboard);
+        else if (res && res.achievements) renderAchievementDashboard(res);
       }).withFailureHandler(function(err) {
+        if (window.TLOAudio) window.TLOAudio.playSfx('error');
         status.innerText = '系統繁忙，請稍後再試。';
       }).claimAchievementReward(playerUID, key);
     }
@@ -2737,7 +2759,7 @@ function showCollectionHistory() {
           <div class="mission-desc">${escapeHtml(item.desc || '')}</div>
           <div class="mission-reward">${escapeHtml(item.rewardText || '')}</div>
           <div class="mission-status">${escapeHtml(status)}</div>
-          <button class="mission-claim-btn" ${item.claimable ? '' : 'disabled'} onclick="claimOpeningReward(${Number(item.day || 0)})">${item.claimed ? '已領' : '領取'}</button>
+          <button class="mission-claim-btn" data-opening-day="${Number(item.day || 0)}" ${item.claimable ? '' : 'disabled'} onclick="claimOpeningReward(${Number(item.day || 0)})">${item.claimed ? '已領' : '領取'}</button>
         </div>`;
       });
       box.innerHTML = html;
@@ -2764,10 +2786,43 @@ function showCollectionHistory() {
             <div class="mission-status">進度：${escapeHtml(stateText)}</div>
             <div class="mission-progress"><div style="width:${pct}%"></div></div>
           </div>
-          <button class="mission-claim-btn" ${item.claimable ? '' : 'disabled'} onclick="claimMissionReward('${group}', '${jsString(item.key || '')}')">${item.claimed ? '已領' : '領取'}</button>
+          <button class="mission-claim-btn" data-mission-group="${escapeHtml(group)}" data-mission-key="${escapeHtml(item.key || '')}" ${item.claimable ? '' : 'disabled'} onclick="claimMissionReward('${group}', '${jsString(item.key || '')}')">${item.claimed ? '已領' : '領取'}</button>
         </div>`;
       });
       box.innerHTML = html;
+    }
+
+    function updateMissionWalletFast(profile) {
+      var wallet = document.getElementById('mission-wallet');
+      if (!wallet || !profile) return;
+      wallet.innerHTML = '潮流能量：' + Number(profile.energy || 0).toLocaleString() +
+        ' ｜ 技能經驗：' + Number(profile.skillExp || 0).toLocaleString() +
+        ' ｜ 訓練分數：' + Number(profile.totalScore || 0).toLocaleString();
+    }
+
+    function markMissionClaimedFast(group, key) {
+      document.querySelectorAll('[data-mission-group]').forEach(function(btn) {
+        if (btn.getAttribute('data-mission-group') === String(group || '') && btn.getAttribute('data-mission-key') === String(key || '')) {
+          btn.disabled = true;
+          btn.innerText = '已領';
+          var row = btn.closest('.mission-row');
+          if (row) row.classList.remove('claimable');
+        }
+      });
+    }
+
+    function markOpeningClaimedFast(day) {
+      document.querySelectorAll('[data-opening-day]').forEach(function(btn) {
+        if (Number(btn.getAttribute('data-opening-day')) === Number(day || 0)) {
+          btn.disabled = true;
+          btn.innerText = '已領';
+          var card = btn.closest('.mission-card');
+          if (card) {
+            card.classList.remove('claimable', 'locked');
+            card.classList.add('claimed');
+          }
+        }
+      });
     }
 
     function claimOpeningReward(day) {
@@ -2776,8 +2831,13 @@ function showCollectionHistory() {
       google.script.run.withSuccessHandler(function(res) {
         if (window.TLOAudio) window.TLOAudio.playSfx(res && res.success ? 'win' : 'error');
         if (msg) msg.innerHTML = res && res.success ? '<span style="color:#00ff7f;">' + escapeHtml(res.msg || '已領取') + '</span>' : '<span style="color:#ff7777;">' + escapeHtml(res && res.msg ? res.msg : '領取失敗') + '</span>';
+        if (res && res.success) {
+          if (res.profile) updateMissionWalletFast(res.profile);
+          if (res.claimedDay || res.day) markOpeningClaimedFast(res.claimedDay || res.day);
+          if (typeof loadHomeState === 'function') loadHomeState();
+          return;
+        }
         if (res && res.dashboard) renderMissionDashboard(res.dashboard);
-        loadHomeState();
       }).withFailureHandler(function(err) {
         if (window.TLOAudio) window.TLOAudio.playSfx('error');
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">領取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
@@ -2790,8 +2850,13 @@ function showCollectionHistory() {
       google.script.run.withSuccessHandler(function(res) {
         if (window.TLOAudio) window.TLOAudio.playSfx(res && res.success ? 'win' : 'error');
         if (msg) msg.innerHTML = res && res.success ? '<span style="color:#00ff7f;">' + escapeHtml(res.msg || '已領取') + '</span>' : '<span style="color:#ff7777;">' + escapeHtml(res && res.msg ? res.msg : '領取失敗') + '</span>';
+        if (res && res.success) {
+          if (res.profile) updateMissionWalletFast(res.profile);
+          markMissionClaimedFast(res.group || group, res.claimedKey || res.key || key);
+          if (typeof loadHomeState === 'function') loadHomeState();
+          return;
+        }
         if (res && res.dashboard) renderMissionDashboard(res.dashboard);
-        loadHomeState();
       }).withFailureHandler(function(err) {
         if (window.TLOAudio) window.TLOAudio.playSfx('error');
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">領取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';

@@ -108,6 +108,7 @@
                 <div class="stat">抽卡次數<b id="sDraw">0</b></div>
                 <div class="stat">排行榜分數<b id="sScore">0</b></div>
                 <div class="stat">潮流能量<b id="sEnergy">0</b></div>
+                <div class="stat">技能經驗<b id="sSkillExp">0</b></div>
                 <div class="stat">卡盒張數<b id="sCards">0</b></div>
               </div>
 
@@ -127,6 +128,11 @@
                     <div><label>連續天數</label><input id="streakSet" type="number" min="0"></div>
                   </div>
                   <button class="primary" onclick="updateTraining()" style="margin-top:8px;width:100%">儲存排行榜資料</button>
+                  <hr style="border:0;border-top:1px solid #333;margin:16px 0">
+                  <h3>✨ 發放技能經驗</h3>
+                  <label>增加 / 扣除技能經驗</label><input id="skillExpDelta" type="number" placeholder="例如 100 或 -50">
+                  <button class="warn" onclick="grantSkillExp()" style="margin-top:8px;width:100%">套用技能經驗調整</button>
+                  <div class="muted">可用於活動補償、客服修正；操作會寫入 GM 紀錄。</div>
                 </div>
               </div>
 
@@ -429,12 +435,14 @@ function renderPlayer(data){
   $('sDraw').textContent = fmt(data.assets.drawTimes);
   $('sScore').textContent = fmt(data.training?.totalScore || 0);
   $('sEnergy').textContent = fmt(data.training?.energy || 0);
+  if($('sSkillExp')) $('sSkillExp').textContent = fmt(data.training?.skillExp || 0);
   $('sCards').textContent = fmt((data.collection || []).length);
   $('drawSet').value = data.assets.drawTimes;
   $('drawDelta').value = '';
   $('scoreSet').value = data.training?.totalScore || 0;
   $('energySet').value = data.training?.energy || 0;
   $('streakSet').value = data.training?.streak || 0;
+  if($('skillExpDelta')) $('skillExpDelta').value = '';
   $('resetPw').value = '';
   $('cardQty').value = 1;
   if($('giftCardQty')) $('giftCardQty').value = 1;
@@ -470,6 +478,18 @@ async function updateTraining(){
   if(!currentPlayerUid) return;
   if(!confirm('確定要修改排行榜/能量資料？')) return;
   try{ const data = await rpc('adminUpdateTraining', [currentPlayerUid, {totalScore:$('scoreSet').value, energy:$('energySet').value, streak:$('streakSet').value}, note()]); msg('actionMsg', data.msg, true); renderPlayer(data.player); searchPlayers(); }catch(e){ msg('actionMsg', e.message); }
+}
+async function grantSkillExp(){
+  if(!currentPlayerUid) return;
+  const delta = $('skillExpDelta') ? $('skillExpDelta').value : '';
+  if(!delta || Number(delta) === 0){ msg('actionMsg','請輸入要發放或扣除的技能經驗。'); return; }
+  if(!confirm(`確定要調整 ${currentPlayerUid} 技能經驗 ${Number(delta) > 0 ? '+' : ''}${delta}？`)) return;
+  try{
+    const data = await rpc('adminGrantSkillExp', [currentPlayerUid, delta, note()]);
+    msg('actionMsg', data.msg, true);
+    renderPlayer(data.player);
+    searchPlayers();
+  }catch(e){ msg('actionMsg', e.message); }
 }
 async function setCardQuantity(){
   if(!currentPlayerUid) return;
