@@ -977,6 +977,20 @@
     .mission-progress > div{height:100%;background:linear-gradient(90deg,#00fff0,#7f00ff);width:0%;}
     .mission-claim-btn{border:none;border-radius:12px;background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer;min-width:88px;}
     .mission-claim-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
+    .achievement-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px;}
+    .achievement-summary .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;text-align:center;}
+    .achievement-summary .stat b{display:block;color:#00fff0;font-size:20px;margin-top:2px;}
+    .achievement-category{font-size:14px;font-weight:900;color:#ffdd77;margin:14px 0 8px;text-align:left;}
+    .achievement-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;}
+    .achievement-row.claimable{border-color:#00fff0;background:rgba(0,255,240,.06);box-shadow:0 0 16px rgba(0,255,240,.18);}
+    .achievement-row.claimed{opacity:.72;border-color:#35ff7a;}
+    .achievement-title{font-size:14px;font-weight:900;color:#fff;margin-bottom:4px;}
+    .achievement-desc{font-size:12px;color:#aaa;line-height:1.45;}
+    .achievement-reward{font-size:12px;color:#ffdd77;font-weight:900;margin-top:6px;}
+    .achievement-progress{height:7px;border-radius:999px;background:#222;overflow:hidden;margin-top:8px;}
+    .achievement-progress > div{height:100%;background:linear-gradient(90deg,#ffdd77,#00fff0);width:0%;}
+    .achievement-btn{border:none;border-radius:12px;background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer;min-width:88px;}
+    .achievement-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
 
   </style>
 </head>
@@ -1036,7 +1050,7 @@
           <button class="feature-btn" onclick="openMissionModal()"><span>🎁</span>開服福利 / 任務<small>7日福利、每日任務、新手任務</small></button>
           <button class="feature-btn" onclick="document.getElementById('prob-modal').style.display='flex';"><span>📊</span>機率表<small>查看盲盒角色出貨機率</small></button>
           <button class="feature-btn" onclick="openMemoryModal()"><span>🧠</span>記憶翻牌<small>挑戰記憶小遊戲</small></button>
-          <button class="feature-btn" onclick="openShadowModal()"><span>🎭</span>角色猜影子<small>看剪影猜角色</small></button>
+          <button class="feature-btn" onclick="openAchievementModal()"><span>🏆</span>成就系統<small>收集、戰鬥、養成里程碑</small></button>
           <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
           <button class="feature-btn" onclick="openPvpModal()"><span>🆚</span>玩家對戰<small>設定代表卡並挑戰玩家</small></button>
           <button class="feature-btn" onclick="openCharacterGrowthModal()"><span>🌟</span>角色養成<small>等級、經驗、技能與10星升星</small></button>
@@ -1294,16 +1308,17 @@
   </div>
 
 
-  <div class="modal-overlay" id="shadow-modal" onclick="if(event.target.id==='shadow-modal') this.style.display='none';">
+  <div class="modal-overlay" id="achievement-modal" onclick="if(event.target.id==='achievement-modal') this.style.display='none';">
     <div class="modal-content">
-      <span class="modal-close" onclick="document.getElementById('shadow-modal').style.display='none';">&times;</span>
-      <div class="modal-h3">🎭 角色猜影子</div>
+      <span class="modal-close" onclick="document.getElementById('achievement-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🏆 T-LO 成就系統</div>
       <div class="mini-panel">
-        <div id="shadow-status" style="color:#aaa; font-size:13px;">正在產生題目...</div>
-        <div class="shadow-img-wrap"><img id="shadow-img" class="shadow-img" src="" alt="角色黑影"></div>
-        <div id="shadow-choice-grid" class="choice-grid"></div>
-        <div id="shadow-result" style="margin-top:12px; font-weight:bold;"></div>
-        <button class="btn-collection" style="margin-top:12px;" onclick="loadShadowQuestion()">🔄 換一題 / 下一題</button>
+        <div style="color:#aaa; font-size:13px; line-height:1.55; text-align:left;">
+          角色猜影子已移除，改為永久成就。完成收集、戰鬥、遠征、PVP、養成里程碑即可領獎。成就獎勵不發放抽卡次數。
+        </div>
+        <div id="achievement-status" style="color:#aaa; font-size:13px; margin-top:10px;">正在讀取成就...</div>
+        <div id="achievement-summary" class="achievement-summary"></div>
+        <div id="achievement-list" class="mission-list"></div>
       </div>
     </div>
   </div>
@@ -2360,61 +2375,81 @@ function showCollectionHistory() {
 
 
 
-    // ─── 追加免費玩法：猜影子 / 今日籤 / PVP / 留言板 ───
-    let __shadowToken = "";
+    // ─── 追加免費玩法：成就系統 / 今日籤 / PVP / 留言板 ───
     let __pvpDashboard = null;
 
-    function openShadowModal() {
-      document.getElementById('shadow-modal').style.display = 'flex';
-      loadShadowQuestion();
+    function openAchievementModal() {
+      document.getElementById('achievement-modal').style.display = 'flex';
+      loadAchievementDashboard();
     }
 
-    function loadShadowQuestion() {
-      const status = document.getElementById('shadow-status');
-      const grid = document.getElementById('shadow-choice-grid');
-      const result = document.getElementById('shadow-result');
-      const img = document.getElementById('shadow-img');
-      status.innerText = '正在產生題目...';
-      result.innerHTML = '';
-      grid.innerHTML = '';
-      img.src = '';
-
-      google.script.run.withSuccessHandler(function(res) {
-        if (!res || !res.success) {
-          status.innerText = res && res.msg ? res.msg : '題目產生失敗';
-          return;
-        }
-        __shadowToken = res.token;
-        const imgUrl = res.imageUrl || getNpcImageUrl(res.imageKey);
-        img.src = imgUrl || ('https://placehold.co/210x280/111/fff?text=' + encodeURIComponent('影子'));
-        status.innerText = '今日剩餘猜影子次數：' + res.playsLeft + ' / 5';
-        let html = '';
-        (res.choices || []).forEach(function(name) {
-          html += `<button class="choice-btn" onclick="submitShadowAnswer('${jsString(name)}')">${escapeHtml(name)}</button>`;
+    function renderAchievementDashboard(res) {
+      const status = document.getElementById('achievement-status');
+      const summary = document.getElementById('achievement-summary');
+      const list = document.getElementById('achievement-list');
+      if (!res || !res.success) {
+        status.innerText = res && res.msg ? res.msg : '成就讀取失敗';
+        summary.innerHTML = '';
+        list.innerHTML = '';
+        return;
+      }
+      status.innerText = res.note || '完成成就即可領取養成資源。';
+      summary.innerHTML = `
+        <div class="stat">已領取<b>${Number(res.claimedCount || 0)}</b></div>
+        <div class="stat">已達成<b>${Number(res.completedCount || 0)}</b></div>
+        <div class="stat">全部成就<b>${Number(res.total || 0)}</b></div>
+      `;
+      const groups = {};
+      (res.achievements || []).forEach(function(row) {
+        const cat = row.category || '其他';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(row);
+      });
+      let html = '';
+      Object.keys(groups).forEach(function(cat) {
+        html += `<div class="achievement-category">${escapeHtml(cat)}</div>`;
+        groups[cat].forEach(function(row) {
+          const pct = Math.max(0, Math.min(100, Math.floor((Number(row.progress || 0) / Math.max(1, Number(row.target || 1))) * 100)));
+          const cls = row.claimed ? 'claimed' : (row.claimable ? 'claimable' : '');
+          const btnText = row.claimed ? '已領取' : (row.claimable ? '領取' : '未完成');
+          html += `
+            <div class="achievement-row ${cls}">
+              <div>
+                <div class="achievement-title">${escapeHtml(row.title)}</div>
+                <div class="achievement-desc">${escapeHtml(row.desc)}</div>
+                <div class="achievement-reward">🎁 ${escapeHtml(row.rewardText || '')}</div>
+                <div class="achievement-progress"><div style="width:${pct}%"></div></div>
+                <div class="mission-status">進度：${Number(row.progress || 0)} / ${Number(row.target || 0)}</div>
+              </div>
+              <button class="achievement-btn" ${row.claimable ? '' : 'disabled'} onclick="claimAchievementReward('${jsString(row.key)}')">${btnText}</button>
+            </div>
+          `;
         });
-        grid.innerHTML = html;
+      });
+      list.innerHTML = html || '<div style="color:#aaa;text-align:center;">目前沒有成就資料。</div>';
+    }
+
+    function loadAchievementDashboard() {
+      const status = document.getElementById('achievement-status');
+      const summary = document.getElementById('achievement-summary');
+      const list = document.getElementById('achievement-list');
+      status.innerText = '正在讀取成就...';
+      summary.innerHTML = '';
+      list.innerHTML = '';
+      google.script.run.withSuccessHandler(renderAchievementDashboard).withFailureHandler(function(err) {
+        status.innerText = '系統繁忙，請稍後再試。';
+      }).getAchievementDashboard(playerUID);
+    }
+
+    function claimAchievementReward(key) {
+      const status = document.getElementById('achievement-status');
+      status.innerText = '正在領取成就獎勵...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.msg) status.innerText = res.msg;
+        renderAchievementDashboard(res && res.dashboard ? res.dashboard : res);
       }).withFailureHandler(function(err) {
         status.innerText = '系統繁忙，請稍後再試。';
-      }).getShadowQuestion(playerUID);
-    }
-
-    function submitShadowAnswer(name) {
-      const grid = document.getElementById('shadow-choice-grid');
-      const result = document.getElementById('shadow-result');
-      Array.from(grid.querySelectorAll('button')).forEach(function(btn) { btn.disabled = true; });
-      result.innerHTML = '⏳ 判定中...';
-      google.script.run.withSuccessHandler(function(res) {
-        if (!res || !res.success) {
-          result.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '送出失敗')}</span>`;
-          return;
-        }
-        result.innerHTML = res.correct
-          ? `<span style="color:#00ff7f;">✅ ${escapeHtml(res.msg)}<br>能量 +${res.energyAdded}｜分數 +${res.scoreAdded}</span>`
-          : `<span style="color:#ff4444;">❌ ${escapeHtml(res.msg)}<br>參與能量 +${res.energyAdded}｜分數 +${res.scoreAdded}</span>`;
-        document.getElementById('shadow-status').innerText = '今日剩餘猜影子次數：' + res.shadowPlaysLeft + ' / 5';
-      }).withFailureHandler(function(err) {
-        result.innerHTML = '<span style="color:#ff4444;">系統繁忙，請稍後再試。</span>';
-      }).submitShadowGuess(playerUID, __shadowToken, name);
+      }).claimAchievementReward(playerUID, key);
     }
 
     function openFortuneModal() {
