@@ -742,6 +742,55 @@
       cursor: pointer;
     }
 
+
+
+    /* 🔊 T-LO 音效 / BGM 控制 */
+    .tlo-sound-fab {
+      position: fixed;
+      right: 14px;
+      bottom: calc(82px + env(safe-area-inset-bottom));
+      z-index: 100002;
+      border: 1px solid rgba(0,255,240,.45);
+      background: rgba(10,10,14,.92);
+      color: #fff;
+      border-radius: 999px;
+      padding: 10px 13px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(0,255,240,.28), inset 0 0 10px rgba(255,255,255,.04);
+      backdrop-filter: blur(10px);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tlo-sound-fab.on {
+      background: linear-gradient(45deg, rgba(0,255,240,.95), rgba(127,0,255,.95));
+      color: #fff;
+      border-color: rgba(255,255,255,.35);
+      box-shadow: 0 0 24px rgba(0,255,240,.45);
+    }
+    .tlo-sound-toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(136px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 100003;
+      background: rgba(0,0,0,.82);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .22s ease, transform .22s ease;
+      white-space: nowrap;
+    }
+    .tlo-sound-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
     @media (max-width: 380px) {
       .container.game-shell { padding-left: 10px !important; padding-right: 10px !important; }
       .game-title { font-size: 20px; }
@@ -1256,6 +1305,7 @@
     }
 
     function openBattleModal() {
+      if (window.TLOAudio) window.TLOAudio.playBgm('battle');
       document.getElementById('battle-modal').style.display = 'flex';
       document.getElementById('battle-result-msg').innerHTML = "";
       document.getElementById('boss-info-panel').style.display = "flex"; 
@@ -1359,6 +1409,7 @@
     }
 
     function startChallenge() {
+      if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
   // 1. 碰撞動畫：一行代碼搞定視覺碰撞
       document.getElementById('clash-zone-box').classList.add('clash-animate');
   
@@ -1400,11 +1451,13 @@
             hpPlayerFill.style.width = "35%"; hpPlayerText.innerText = "35% (WIN)";
             resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">${res.msg}<br>🎁 ${res.rewardText}</span>`;
             currentCount = res.newTimesLeft; updateButtonState();
+            if (window.TLOAudio) window.TLOAudio.playSfx('win');
             setTimeout(openBattleModal, 3000);
           } else {
             hpPlayerFill.style.width = "0%"; hpPlayerText.innerText = "0% (💥 落敗)";
             hpBossFill.style.width = "85%"; hpBossText.innerText = "85% (殘血)";
             resultMsg.innerHTML = `<span style="color:#ff4444; font-size:13px; display:block; padding:5px;">${res.msg}</span>`;
+            if (window.TLOAudio) window.TLOAudio.playSfx('error');
             
             btn.disabled = false; 
             btn.innerText = "🔄 從第一關重新啟動挑戰 🔄"; 
@@ -1435,7 +1488,8 @@
     }
 
     function startGacha() {
-      if (currentCount <= 0) return;
+      if (currentCount <= 0) { if (window.TLOAudio) window.TLOAudio.playSfx('error'); return; }
+      if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
 
       disableAllButtons("🔒 鎖定中...");
       document.getElementById('gacha-btn').innerText = "🔮 注入能量...";
@@ -1455,6 +1509,7 @@
 
           document.getElementById('card-stage').innerHTML = `<div class="rarity-tag rarity-${response.npcRarity}">${response.npcRarity}</div><div style="display:flex; flex-direction:column; align-items:center; width:100%; margin:5px 0;">${imgHtml}</div><h1 style="color: #00fff0; margin: 5px 0;">🎉 【${response.npcName}】 🎉</h1><p style="font-size: 12px; color: #888;">開盒時間：${timeStr}</p>`;
           document.getElementById('history-list').innerHTML = response.historyHtml || "";
+          if (window.TLOAudio) window.TLOAudio.playCardRarity(response.npcRarity);
 
           if (typeof response.collectionUniqueCount !== "undefined") {
             document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
@@ -1462,17 +1517,20 @@
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
           document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${response && response.msg ? response.msg : "抽卡失敗，請稍後再試"}</p>`;
+          if (window.TLOAudio) window.TLOAudio.playSfx('error');
         }
 
         updateButtonState();
       }).withFailureHandler(function(err) {
         document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${err && err.message ? err.message : err}</p>`;
+        if (window.TLOAudio) window.TLOAudio.playSfx('error');
         updateButtonState();
       }).executeGacha(playerUID);
     }
 
     function startGacha10() {
-      if (currentCount < 10) return;
+      if (currentCount < 10) { if (window.TLOAudio) window.TLOAudio.playSfx('error'); return; }
+      if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
 
       disableAllButtons("🔮 十連注入中...");
       document.getElementById('card-stage').innerHTML = '<p style="color:#00fff0; font-weight:bold;">⚡ 正在召喚 10 連擊...</p>';
@@ -1496,6 +1554,7 @@
 
           document.getElementById('card-stage').innerHTML = `<h2 style="color: #ff007f; margin: 5px 0 15px 0;">🎉 十連抽盲盒爆裂開榜！ 🎉</h2><button onclick="downloadCombinedCard('gacha10-download-area', 'T-LO_十連抽_${batchTime}', true)" class="btn-download-all">📥 一鍵打包下載：本次十連高清大圖</button>${gridHtml}`;
           document.getElementById('history-list').innerHTML = response.historyHtml || "";
+          if (window.TLOAudio) window.TLOAudio.playBestGachaResult(response.results || []);
 
           if (typeof response.collectionUniqueCount !== "undefined") {
             document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
@@ -1503,11 +1562,13 @@
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
           document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${response && response.msg ? response.msg : "十連抽失敗，請稍後再試"}</p>`;
+          if (window.TLOAudio) window.TLOAudio.playSfx('error');
         }
 
         updateButtonState();
       }).withFailureHandler(function(err) {
         document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${err && err.message ? err.message : err}</p>`;
+        if (window.TLOAudio) window.TLOAudio.playSfx('error');
         updateButtonState();
       }).executeGacha10(playerUID);
     }
@@ -2379,9 +2440,11 @@ function showCollectionHistory() {
       google.script.run.withSuccessHandler(function(res) {
         btn.disabled = false;
         if (!res || !res.success) {
+          if (window.TLOAudio) window.TLOAudio.playSfx('error');
           msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '兌換失敗')}</span>`;
           return;
         }
+        if (window.TLOAudio) window.TLOAudio.playSfx('win');
         msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg || '兌換成功')}</span>`;
         if (typeof res.timesLeft !== 'undefined') {
           currentCount = parseInt(res.timesLeft) || 0;
@@ -2397,6 +2460,7 @@ function showCollectionHistory() {
 
     // ─── RPG 冒險模式 ───
     function openRpgModal() {
+      if (window.TLOAudio) window.TLOAudio.playBgm('battle');
       document.getElementById('rpg-modal').style.display = 'flex';
       document.getElementById('rpg-msg').innerHTML = '';
       loadRpgDashboard();
@@ -2461,6 +2525,7 @@ function showCollectionHistory() {
       msg.innerHTML = 'RPG 冒險進行中...';
       google.script.run.withSuccessHandler(function(res) {
         if (res && res.dashboard) renderRpgDashboard(res.dashboard);
+        if (window.TLOAudio) window.TLOAudio.playSfx(res && res.win ? 'win' : 'error');
         msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '冒險完成')}</span>`;
         if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
           currentCount = parseInt(res.newTimesLeft) || 0;
@@ -2477,6 +2542,231 @@ function showCollectionHistory() {
       return String(text == null ? '' : text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
     }
 
+  </script>
+
+
+
+  <script>
+    // === T-LO 音效 / BGM 系統：只控制前台聲音，不改資料庫與後端 ===
+    (function () {
+      var SOUND_KEY = 'TLO_SOUND_ENABLED';
+      var VOLUME_KEY = 'TLO_SOUND_VOLUME';
+      var DEFAULT_VOLUME = 0.55;
+      var BGM_VOLUME_RATIO = 0.55;
+      var SFX_VOLUME_RATIO = 0.95;
+
+      var AUDIO_FILES = {
+        bgm: {
+          login: './audio/bgm-login.mp3',
+          home: './audio/bgm-home.mp3',
+          gacha: './audio/bgm-gacha.mp3',
+          battle: './audio/bgm-battle.mp3'
+        },
+        sfx: {
+          click: './audio/sfx-click.mp3',
+          login: './audio/sfx-login.mp3',
+          gachaStart: './audio/sfx-gacha-start.mp3',
+          cardNormal: './audio/sfx-card-normal.mp3',
+          cardRare: './audio/sfx-card-rare.mp3',
+          cardSsr: './audio/sfx-card-ssr.mp3',
+          win: './audio/sfx-win.mp3',
+          error: './audio/sfx-error.mp3'
+        }
+      };
+
+      var enabled = localStorage.getItem(SOUND_KEY) === '1';
+      var unlocked = false;
+      var bgmAudio = null;
+      var currentBgm = '';
+      var desiredBgm = 'login';
+      var toastTimer = null;
+
+      function getVolume() {
+        var v = parseFloat(localStorage.getItem(VOLUME_KEY) || DEFAULT_VOLUME);
+        if (!isFinite(v)) v = DEFAULT_VOLUME;
+        return Math.max(0, Math.min(1, v));
+      }
+
+      function safePlay(audio) {
+        if (!audio) return;
+        try {
+          var p = audio.play();
+          if (p && typeof p.catch === 'function') p.catch(function () {});
+        } catch (_) {}
+      }
+
+      function showToast(text) {
+        var el = document.getElementById('tlo-sound-toast');
+        if (!el) return;
+        el.textContent = text;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { el.classList.remove('show'); }, 1200);
+      }
+
+      function ensureButton() {
+        if (!document.body) return;
+        if (!document.getElementById('tlo-sound-toggle')) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.id = 'tlo-sound-toggle';
+          btn.className = 'tlo-sound-fab';
+          btn.setAttribute('aria-label', '切換音效');
+          btn.onclick = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSound();
+          };
+          document.body.appendChild(btn);
+        }
+        if (!document.getElementById('tlo-sound-toast')) {
+          var toast = document.createElement('div');
+          toast.id = 'tlo-sound-toast';
+          toast.className = 'tlo-sound-toast';
+          document.body.appendChild(toast);
+        }
+        updateButton();
+      }
+
+      function updateButton() {
+        var btn = document.getElementById('tlo-sound-toggle');
+        if (!btn) return;
+        btn.classList.toggle('on', enabled);
+        btn.innerHTML = enabled ? '🔊 音效開' : '🔇 音效關';
+      }
+
+      function unlockAudio() {
+        if (unlocked) return;
+        unlocked = true;
+        if (enabled) playBgm(desiredBgm || getContextBgm());
+      }
+
+      function enableSound() {
+        enabled = true;
+        localStorage.setItem(SOUND_KEY, '1');
+        updateButton();
+        unlockAudio();
+        playBgm(desiredBgm || getContextBgm());
+        playSfx('click');
+        showToast('音效已開啟');
+      }
+
+      function disableSound() {
+        enabled = false;
+        localStorage.setItem(SOUND_KEY, '0');
+        updateButton();
+        if (bgmAudio) {
+          try { bgmAudio.pause(); } catch (_) {}
+        }
+        showToast('音效已關閉');
+      }
+
+      function toggleSound() {
+        if (enabled) disableSound();
+        else enableSound();
+      }
+
+      function getContextBgm() {
+        if (!window.TLO_IS_AUTHENTICATED || document.getElementById('tlo-auth-overlay')) return 'login';
+        var active = document.querySelector('.game-screen.active');
+        var screen = active ? active.getAttribute('data-screen') : 'home';
+        if (screen === 'gacha') return 'gacha';
+        if (screen === 'battle') return 'battle';
+        return 'home';
+      }
+
+      function playBgm(name) {
+        name = name || getContextBgm();
+        desiredBgm = name;
+        if (!AUDIO_FILES.bgm[name]) name = 'home';
+        if (!enabled || !unlocked) return;
+        if (currentBgm === name && bgmAudio && !bgmAudio.paused) return;
+        if (bgmAudio) {
+          try { bgmAudio.pause(); bgmAudio.currentTime = 0; } catch (_) {}
+        }
+        currentBgm = name;
+        bgmAudio = new Audio(AUDIO_FILES.bgm[name]);
+        bgmAudio.loop = true;
+        bgmAudio.preload = 'auto';
+        bgmAudio.volume = getVolume() * BGM_VOLUME_RATIO;
+        safePlay(bgmAudio);
+      }
+
+      function playBgmForScreen(screenName) {
+        if (screenName === 'gacha') return playBgm('gacha');
+        if (screenName === 'battle') return playBgm('battle');
+        return playBgm('home');
+      }
+
+      function playSfx(name) {
+        if (!enabled || !unlocked) return;
+        var src = AUDIO_FILES.sfx[name];
+        if (!src) return;
+        try {
+          var a = new Audio(src);
+          a.preload = 'auto';
+          a.volume = getVolume() * SFX_VOLUME_RATIO;
+          safePlay(a);
+        } catch (_) {}
+      }
+
+      function playCardRarity(rarity) {
+        var r = String(rarity || '').toUpperCase();
+        if (r.indexOf('SUPER') >= 0 || r.indexOf('SSR') >= 0) return playSfx('cardSsr');
+        if (r.indexOf('RARE') >= 0 || r.indexOf('SR') >= 0) return playSfx('cardRare');
+        return playSfx('cardNormal');
+      }
+
+      function playBestGachaResult(results) {
+        var best = 'NORMAL';
+        (results || []).forEach(function (item) {
+          var r = String(item && item.npcRarity || '').toUpperCase();
+          if (r.indexOf('SUPER') >= 0 || r.indexOf('SSR') >= 0) best = 'SUPER RARE';
+          else if (best !== 'SUPER RARE' && (r.indexOf('RARE') >= 0 || r.indexOf('SR') >= 0)) best = 'RARE';
+        });
+        playCardRarity(best);
+      }
+
+      function bindGlobalClickSfx() {
+        document.addEventListener('click', function (e) {
+          var target = e.target && e.target.closest ? e.target.closest('button,a,.btn,.feature-btn,.scene-btn,.game-big-btn,.btn-collection') : null;
+          if (!target || target.id === 'tlo-sound-toggle') return;
+          playSfx('click');
+        }, true);
+      }
+
+      function bindUnlockGesture() {
+        ['pointerdown', 'touchstart', 'keydown'].forEach(function (evt) {
+          document.addEventListener(evt, function () {
+            if (enabled) unlockAudio();
+          }, { once: false, passive: true });
+        });
+      }
+
+      window.TLOAudio = {
+        enable: enableSound,
+        disable: disableSound,
+        toggle: toggleSound,
+        playBgm: playBgm,
+        playBgmForScreen: playBgmForScreen,
+        playSfx: playSfx,
+        playCardRarity: playCardRarity,
+        playBestGachaResult: playBestGachaResult,
+        updateContext: function () { playBgm(getContextBgm()); },
+        isEnabled: function () { return enabled; }
+      };
+
+      document.addEventListener('DOMContentLoaded', function () {
+        ensureButton();
+        bindUnlockGesture();
+        bindGlobalClickSfx();
+        desiredBgm = getContextBgm();
+        setTimeout(function () {
+          desiredBgm = getContextBgm();
+          if (enabled) playBgm(desiredBgm);
+        }, 600);
+      });
+    })();
   </script>
 
   <script>

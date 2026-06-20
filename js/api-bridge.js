@@ -255,9 +255,11 @@
       setAuthMsg("登入中...", true);
       var data = await rawRpc("loginAccount", [uid, pw], { auth: false });
       saveAuth(data);
+      if (window.TLOAudio) window.TLOAudio.playSfx("login");
       setAuthMsg("登入成功，正在進入遊戲...", true);
-      setTimeout(function () { location.reload(); }, 300);
+      setTimeout(function () { location.reload(); }, 450);
     } catch (err) {
+      if (window.TLOAudio) window.TLOAudio.playSfx("error");
       setAuthMsg(err.message || String(err), false);
     }
   }
@@ -273,9 +275,11 @@
       setAuthMsg("註冊中...", true);
       var data = await rawRpc("registerAccount", [uid, pw, name], { auth: false });
       saveAuth(data);
+      if (window.TLOAudio) window.TLOAudio.playSfx("login");
       setAuthMsg("註冊成功，正在進入遊戲...", true);
-      setTimeout(function () { location.reload(); }, 300);
+      setTimeout(function () { location.reload(); }, 450);
     } catch (err) {
+      if (window.TLOAudio) window.TLOAudio.playSfx("error");
       setAuthMsg(err.message || String(err), false);
     }
   }
