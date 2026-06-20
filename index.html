@@ -957,6 +957,27 @@
       .gacha-action-card .btn-gacha, .gacha-action-card .btn-gacha10 { width: 100% !important; }
     }
 
+
+
+    .mission-section{margin:14px 0;text-align:left;}
+    .mission-section-title{font-size:15px;font-weight:900;color:#00fff0;margin:8px 0;text-shadow:0 0 8px rgba(0,255,240,.45);}
+    .mission-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;}
+    .mission-card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px;box-shadow:0 0 14px rgba(0,0,0,.28);}
+    .mission-card.claimable{border-color:#00fff0;box-shadow:0 0 18px rgba(0,255,240,.25);}
+    .mission-card.claimed{opacity:.72;border-color:#35ff7a;}
+    .mission-card.locked{opacity:.58;filter:grayscale(.25);}
+    .mission-title{font-size:14px;font-weight:900;color:#fff;margin-bottom:5px;}
+    .mission-desc{font-size:12px;color:#aaa;line-height:1.45;min-height:34px;}
+    .mission-reward{font-size:12px;color:#ffdd77;font-weight:900;margin:8px 0;}
+    .mission-status{font-size:12px;color:#aaa;margin-bottom:8px;}
+    .mission-list{display:flex;flex-direction:column;gap:10px;}
+    .mission-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;}
+    .mission-row.claimable{border-color:#00fff0;background:rgba(0,255,240,.06);}
+    .mission-progress{height:7px;border-radius:999px;background:#222;overflow:hidden;margin-top:6px;}
+    .mission-progress > div{height:100%;background:linear-gradient(90deg,#00fff0,#7f00ff);width:0%;}
+    .mission-claim-btn{border:none;border-radius:12px;background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer;min-width:88px;}
+    .mission-claim-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
+
   </style>
 </head>
 <body class="tlo-game-body">
@@ -1012,6 +1033,7 @@
           <button class="feature-btn" onclick="openCollectionModal()"><span>🎴</span>我的卡盒<small>查看 16 張角色收集進度</small></button>
           <button class="feature-btn" onclick="openTrainingModal()"><span>🎁</span>簽到 / 排行榜<small>每日獎勵與玩家分數排名</small></button>
           <button class="feature-btn" onclick="openRedeemModal()"><span>🎟️</span>兌換碼<small>輸入活動碼或補償碼</small></button>
+          <button class="feature-btn" onclick="openMissionModal()"><span>🎁</span>開服福利 / 任務<small>7日福利、每日任務、新手任務</small></button>
           <button class="feature-btn" onclick="document.getElementById('prob-modal').style.display='flex';"><span>📊</span>機率表<small>查看盲盒角色出貨機率</small></button>
           <button class="feature-btn" onclick="openMemoryModal()"><span>🧠</span>記憶翻牌<small>挑戰記憶小遊戲</small></button>
           <button class="feature-btn" onclick="openShadowModal()"><span>🎭</span>角色猜影子<small>看剪影猜角色</small></button>
@@ -1376,6 +1398,34 @@
       <input id="redeem-code-input" maxlength="40" placeholder="例如：TLOOPEN100" style="width:90%;padding:14px;border-radius:12px;border:1px solid #555;background:#111;color:#fff;text-align:center;font-size:18px;font-weight:900;text-transform:uppercase;">
       <button class="btn btn-full btn-roulette" id="redeem-submit-btn" onclick="submitRedeemCode()">確認兌換</button>
       <div id="redeem-msg" style="min-height:24px;margin-top:10px;color:#aaa;font-weight:900;"></div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="mission-modal" onclick="if(event.target.id==='mission-modal') this.style.display='none';">
+    <div class="modal-content" style="max-width:820px;">
+      <span class="modal-close" onclick="document.getElementById('mission-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🎁 開服福利 / 任務中心</div>
+      <div id="mission-wallet" class="collection-stat">讀取中...</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:12px;">
+        開服 7 日福利可每日領取 1 份；每日任務與新手任務不再發放抽卡次數，改以潮流能量、技能經驗、訓練分數與 PVP 碎片為主。
+      </div>
+      <div id="mission-msg" style="min-height:22px;font-weight:900;color:#aaa;margin-bottom:10px;"></div>
+
+      <div class="mission-section">
+        <div class="mission-section-title">🎉 開服 7 日福利</div>
+        <div id="opening-reward-list" class="mission-grid">正在讀取...</div>
+      </div>
+
+      <div class="mission-section">
+        <div class="mission-section-title">📅 每日任務</div>
+        <div id="daily-mission-list" class="mission-list">正在讀取...</div>
+      </div>
+
+      <div class="mission-section">
+        <div class="mission-section-title">🌱 新手任務</div>
+        <div id="newbie-mission-list" class="mission-list">正在讀取...</div>
+      </div>
     </div>
   </div>
 
@@ -2141,7 +2191,28 @@ function showCollectionHistory() {
             .history-download-serial { color:#aaa; font-size:12px; margin-top:3px; }
             .dl-btn { background:#00fff0; color:#111; border:none; padding:8px 10px; cursor:pointer; border-radius:10px; font-weight:900; white-space:nowrap; }
             .dl-btn:disabled { background:#555; color:#999; cursor:not-allowed; }
-          </style>
+        
+
+    .mission-section{margin:14px 0;text-align:left;}
+    .mission-section-title{font-size:15px;font-weight:900;color:#00fff0;margin:8px 0;text-shadow:0 0 8px rgba(0,255,240,.45);}
+    .mission-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;}
+    .mission-card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px;box-shadow:0 0 14px rgba(0,0,0,.28);}
+    .mission-card.claimable{border-color:#00fff0;box-shadow:0 0 18px rgba(0,255,240,.25);}
+    .mission-card.claimed{opacity:.72;border-color:#35ff7a;}
+    .mission-card.locked{opacity:.58;filter:grayscale(.25);}
+    .mission-title{font-size:14px;font-weight:900;color:#fff;margin-bottom:5px;}
+    .mission-desc{font-size:12px;color:#aaa;line-height:1.45;min-height:34px;}
+    .mission-reward{font-size:12px;color:#ffdd77;font-weight:900;margin:8px 0;}
+    .mission-status{font-size:12px;color:#aaa;margin-bottom:8px;}
+    .mission-list{display:flex;flex-direction:column;gap:10px;}
+    .mission-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;}
+    .mission-row.claimable{border-color:#00fff0;background:rgba(0,255,240,.06);}
+    .mission-progress{height:7px;border-radius:999px;background:#222;overflow:hidden;margin-top:6px;}
+    .mission-progress > div{height:100%;background:linear-gradient(90deg,#00fff0,#7f00ff);width:0%;}
+    .mission-claim-btn{border:none;border-radius:12px;background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer;min-width:88px;}
+    .mission-claim-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
+
+  </style>
           <h3 style="color:white; margin-top:0;">抽卡歷史與下載</h3>
         `;
 
@@ -2579,6 +2650,119 @@ function showCollectionHistory() {
     // 保留舊函式名稱，避免其他地方還有呼叫
 
 
+
+    // ─── 開服福利 / 任務中心 ───
+    function openMissionModal() {
+      document.getElementById('mission-modal').style.display = 'flex';
+      loadMissionDashboard();
+    }
+
+    function loadMissionDashboard() {
+      var msg = document.getElementById('mission-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在讀取福利與任務...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (msg) msg.innerHTML = '<span style="color:#ff7777;">讀取失敗</span>';
+          return;
+        }
+        renderMissionDashboard(res);
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).getMissionDashboard(playerUID);
+    }
+
+    function renderMissionDashboard(res) {
+      var wallet = document.getElementById('mission-wallet');
+      var profile = res.profile || {};
+      if (wallet) {
+        wallet.innerHTML = '潮流能量：' + Number(profile.energy || 0).toLocaleString() +
+          ' ｜ 技能經驗：' + Number(profile.skillExp || 0).toLocaleString() +
+          ' ｜ 訓練分數：' + Number(profile.totalScore || 0).toLocaleString();
+      }
+      var msg = document.getElementById('mission-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">' + escapeHtml(res.note || '') + '</span>';
+      renderOpeningRewards(res.openingRewards || []);
+      renderMissionList('daily-mission-list', res.dailyMissions || [], 'daily');
+      renderMissionList('newbie-mission-list', res.newbieMissions || [], 'newbie');
+    }
+
+    function renderOpeningRewards(list) {
+      var box = document.getElementById('opening-reward-list');
+      if (!box) return;
+      if (!list.length) {
+        box.innerHTML = '<div style="color:#aaa;text-align:center;">目前沒有開服福利。</div>';
+        return;
+      }
+      var html = '';
+      list.forEach(function(item) {
+        var cls = item.claimed ? 'claimed' : (item.claimable ? 'claimable' : 'locked');
+        var status = item.claimed ? '✅ 已領取' : (item.claimable ? '可領取' : '未解鎖 / 今日已領');
+        html += `<div class="mission-card ${cls}">
+          <div class="mission-title">${escapeHtml(item.title || '')}</div>
+          <div class="mission-desc">${escapeHtml(item.desc || '')}</div>
+          <div class="mission-reward">${escapeHtml(item.rewardText || '')}</div>
+          <div class="mission-status">${escapeHtml(status)}</div>
+          <button class="mission-claim-btn" ${item.claimable ? '' : 'disabled'} onclick="claimOpeningReward(${Number(item.day || 0)})">${item.claimed ? '已領' : '領取'}</button>
+        </div>`;
+      });
+      box.innerHTML = html;
+    }
+
+    function renderMissionList(targetId, list, group) {
+      var box = document.getElementById(targetId);
+      if (!box) return;
+      if (!list.length) {
+        box.innerHTML = '<div style="color:#aaa;text-align:center;">目前沒有任務。</div>';
+        return;
+      }
+      var html = '';
+      list.forEach(function(item) {
+        var progress = Number(item.progress || 0);
+        var target = Math.max(1, Number(item.target || 1));
+        var pct = Math.max(0, Math.min(100, Math.floor(progress / target * 100)));
+        var stateText = item.claimed ? '✅ 已領取' : (item.completed ? '可領取' : progress + ' / ' + target);
+        html += `<div class="mission-row ${item.claimable ? 'claimable' : ''}">
+          <div>
+            <div class="mission-title">${escapeHtml(item.title || '')}</div>
+            <div class="mission-desc">${escapeHtml(item.desc || '')}</div>
+            <div class="mission-reward">獎勵：${escapeHtml(item.rewardText || '')}</div>
+            <div class="mission-status">進度：${escapeHtml(stateText)}</div>
+            <div class="mission-progress"><div style="width:${pct}%"></div></div>
+          </div>
+          <button class="mission-claim-btn" ${item.claimable ? '' : 'disabled'} onclick="claimMissionReward('${group}', '${jsString(item.key || '')}')">${item.claimed ? '已領' : '領取'}</button>
+        </div>`;
+      });
+      box.innerHTML = html;
+    }
+
+    function claimOpeningReward(day) {
+      var msg = document.getElementById('mission-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">領取中...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (window.TLOAudio) window.TLOAudio.playSfx(res && res.success ? 'win' : 'error');
+        if (msg) msg.innerHTML = res && res.success ? '<span style="color:#00ff7f;">' + escapeHtml(res.msg || '已領取') + '</span>' : '<span style="color:#ff7777;">' + escapeHtml(res && res.msg ? res.msg : '領取失敗') + '</span>';
+        if (res && res.dashboard) renderMissionDashboard(res.dashboard);
+        loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (window.TLOAudio) window.TLOAudio.playSfx('error');
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">領取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).claimOpeningReward(playerUID, day);
+    }
+
+    function claimMissionReward(group, key) {
+      var msg = document.getElementById('mission-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">領取中...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (window.TLOAudio) window.TLOAudio.playSfx(res && res.success ? 'win' : 'error');
+        if (msg) msg.innerHTML = res && res.success ? '<span style="color:#00ff7f;">' + escapeHtml(res.msg || '已領取') + '</span>' : '<span style="color:#ff7777;">' + escapeHtml(res && res.msg ? res.msg : '領取失敗') + '</span>';
+        if (res && res.dashboard) renderMissionDashboard(res.dashboard);
+        loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (window.TLOAudio) window.TLOAudio.playSfx('error');
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">領取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).claimMissionReward(playerUID, group, key);
+    }
+
     function openTrainingModal() {
       document.getElementById('training-modal').style.display = 'flex';
       document.getElementById('checkin-msg').innerHTML = '';
@@ -2969,7 +3153,8 @@ function showCollectionHistory() {
       const energyText = document.getElementById('growth-energy-text');
       const ruleText = document.getElementById('growth-rule-text');
       const energy = Number((res.profile && res.profile.energy) || 0);
-      if (energyText) energyText.innerText = '目前潮流能量：' + energy.toLocaleString();
+      const skillExpWallet = Number((res.profile && res.profile.skillExp) || 0);
+      if (energyText) energyText.innerText = '目前潮流能量：' + energy.toLocaleString() + ' ｜ 技能經驗：' + skillExpWallet.toLocaleString();
       if (ruleText) ruleText.innerText = res.ruleText || '';
       const cards = res.cards || [];
       if (!cards.length) {
@@ -2993,7 +3178,7 @@ function showCollectionHistory() {
         const power = Number(card.power || 0);
         const levelText = level >= maxLevel ? '已滿級' : `${exp.toLocaleString()} / ${expToNext.toLocaleString()} EXP`;
         const trainDisabled = level >= maxLevel || energy < trainCost;
-        const skillDisabled = skillLevel >= maxSkill || energy < skillCost;
+        const skillDisabled = skillLevel >= maxSkill || (energy + skillExpWallet) < skillCost;
         html += `
           <div style="background:linear-gradient(135deg,#101010,#181225);border:1px solid #3a3a3a;border-radius:14px;padding:12px;display:flex;gap:12px;align-items:flex-start;text-align:left;">
             <div style="width:74px;flex:0 0 74px;">
@@ -3007,7 +3192,7 @@ function showCollectionHistory() {
               ${level >= maxLevel ? renderGrowthBar(1, 1) : renderGrowthBar(exp, expToNext)}
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
                 <button class="btn-collection" style="margin:0;padding:8px 10px;${trainDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${trainDisabled ? 'disabled' : ''} onclick="trainCharacterLevel('${escapeJsString(name)}')">特訓升級${level >= maxLevel ? '' : `<small style='display:block;font-size:10px;'>${trainCost.toLocaleString()}能量</small>`}</button>
-                <button class="btn-collection" style="margin:0;padding:8px 10px;${skillDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${skillDisabled ? 'disabled' : ''} onclick="upgradeCharacterSkill('${escapeJsString(name)}')">技能升級${skillLevel >= maxSkill ? '' : `<small style='display:block;font-size:10px;'>${skillCost.toLocaleString()}能量</small>`}</button>
+                <button class="btn-collection" style="margin:0;padding:8px 10px;${skillDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${skillDisabled ? 'disabled' : ''} onclick="upgradeCharacterSkill('${escapeJsString(name)}')">技能升級${skillLevel >= maxSkill ? '' : `<small style='display:block;font-size:10px;'>${skillCost.toLocaleString()}技能經驗/能量</small>`}</button>
                 <button class="btn-collection" style="margin:0;padding:8px 10px;" onclick="document.getElementById('character-growth-modal').style.display='none'; openStarModal();">10星升星</button>
               </div>
             </div>
