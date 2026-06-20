@@ -2087,48 +2087,49 @@
       return `<br><span style="color:#00fff0;font-size:12px;">🌟 角色經驗：${items.join('、')}${arr.length > 3 ? '...' : ''}</span>`;
     }
 
-    function startChallenge() {
-      if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
-      const btn = document.getElementById('fight-btn');
-      const infoPanel = document.getElementById('boss-info-panel');
-      const arenaPanel = document.getElementById('battle-arena-panel');
-      const resultMsg = document.getElementById('battle-result-msg');
+    google.script.run.withSuccessHandler(async function(res) {
+  const battleResult = res || {};
 
-      btn.disabled = true;
-      btn.innerText = "⚡ 代表回合戰鬥演算中...";
-      resultMsg.innerHTML = "";
-      infoPanel.style.display = "none";
-      arenaPanel.style.display = "block";
-      arenaPanel.classList.add('turn-mode');
+  // 先播放戰鬥動畫
+  await playTurnBattleAnimation(battleResult);
 
-      google.script.run.withSuccessHandler(async function(res) {
-        registerCardImages(res);
-        await playTurnBattleAnimation(res || {});
+  // 動畫播完後，才顯示結果
+  if (battleResult && battleResult.success) {
+    resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">
+      ${escapeHtml(battleResult.msg || '戰鬥勝利！')}<br>
+      🎁 ${escapeHtml(battleResult.rewardText || '')}
+      ${formatGrowthRewards(battleResult.growthRewards)}
+    </span>`;
 
-        if (res && res.success) {
-          resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">${escapeHtml(res.msg || '戰鬥勝利！')}<br>🎁 ${escapeHtml(res.rewardText || '')}${formatGrowthRewards(res.growthRewards)}</span>`;
-          currentCount = res.newTimesLeft;
-          updateButtonState();
-          if (window.TLOAudio) window.TLOAudio.playSfx('win');
-          btn.innerText = "✅ 已突破此關，準備下一關...";
-          setTimeout(openBattleModal, 4200);
-        } else {
-          resultMsg.innerHTML = `<span style="color:#ff7777; font-size:13px; display:block; padding:5px;">${escapeHtml(res && res.msg ? res.msg : '挑戰失敗')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
-          if (window.TLOAudio) window.TLOAudio.playSfx('error');
-          btn.disabled = false;
-          btn.innerText = "🔄 從第一關重新啟動挑戰 🔄";
-          btn.style.background = "linear-gradient(45deg, #ff5500, #ff0000)";
-          btn.onclick = function() {
-            openBattleModal();
-            btn.onclick = startChallenge;
-          };
-        }
-      }).withFailureHandler(function(err) {
-        resultMsg.innerHTML = `<span style="color:#ff4444;">戰鬥失敗：${escapeHtml(err && err.message ? err.message : err)}</span>`;
-        btn.disabled = false;
-        btn.innerText = "⚔️ 重新挑戰";
-      }).executeBattle(playerUID);
-    }
+    currentCount = battleResult.newTimesLeft;
+    updateButtonState();
+
+    if (window.TLOAudio) window.TLOAudio.playSfx('win');
+
+    btn.innerText = "✅ 已突破此關，準備下一關...";
+    setTimeout(openBattleModal, 4200);
+
+  } else {
+    resultMsg.innerHTML = `<span style="color:#ff7777; font-size:13px; display:block; padding:5px;">
+      ${escapeHtml(battleResult && battleResult.msg ? battleResult.msg : '挑戰失敗')}
+      ${formatGrowthRewards(battleResult && battleResult.growthRewards)}
+    </span>`;
+
+    if (window.TLOAudio) window.TLOAudio.playSfx('error');
+
+    btn.disabled = false;
+    btn.innerText = "🔄 從第一關重新啟動挑戰 🔄";
+    btn.style.background = "linear-gradient(45deg, #ff5500, #ff0000)";
+    btn.onclick = function() {
+      openBattleModal();
+      btn.onclick = startChallenge;
+    };
+  }
+}).withFailureHandler(function(err) {
+  resultMsg.innerHTML = `<span style="color:#ff4444;">戰鬥失敗：${escapeHtml(err && err.message ? err.message : err)}</span>`;
+  btn.disabled = false;
+  btn.innerText = "⚔️ 重新挑戰";
+}).executeBattle(playerUID);
 
 
     function disableAllButtons(loadingText) {
