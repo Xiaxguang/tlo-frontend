@@ -232,6 +232,97 @@
     .card-b { background: linear-gradient(135deg, #3a1a1a, #2a2a2a); border: 2px solid #ff4444; color: #ff4444; }
     .clash-avatar { width: 60px; height: auto; border-radius: 4px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.2); object-fit: contain; aspect-ratio: 3/4; }
 
+
+    /* === T-LO 回合制戰鬥動畫 V1 === */
+    .battle-arena.turn-mode {
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255,0,127,.18), transparent 34%),
+        radial-gradient(circle at 50% 92%, rgba(0,255,240,.14), transparent 38%),
+        linear-gradient(180deg, #12121f 0%, #090911 100%);
+      border-color: #ffc107;
+      box-shadow: 0 0 28px rgba(255,193,7,.22), inset 0 0 22px rgba(0,0,0,.55);
+    }
+    .turn-banner {
+      display: none;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+      color: #ffc107;
+      background: rgba(0,0,0,.45);
+      border: 1px solid rgba(255,193,7,.45);
+      border-radius: 999px;
+      padding: 8px 12px;
+      margin: 8px auto 10px auto;
+      width: fit-content;
+      max-width: 96%;
+      box-shadow: 0 0 14px rgba(255,193,7,.2);
+    }
+    .turn-battle-log {
+      display: none;
+      max-height: 120px;
+      overflow-y: auto;
+      background: rgba(0,0,0,.38);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 8px;
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #ddd;
+    }
+    .turn-log-line { padding: 4px 2px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .turn-log-line:last-child { border-bottom: none; }
+    .turn-log-player { color: #00fff0; }
+    .turn-log-boss { color: #ff7777; }
+    .damage-float {
+      position: absolute;
+      z-index: 25;
+      pointer-events: none;
+      font-weight: 1000;
+      font-size: 22px;
+      letter-spacing: .5px;
+      text-shadow: 0 2px 0 #000, 0 0 14px currentColor;
+      animation: damageFloat .72s ease-out forwards;
+      transform: translate(-50%, -50%);
+    }
+    .damage-player { color: #00fff0; left: 72%; top: 38%; }
+    .damage-boss { color: #ff5555; left: 28%; top: 62%; }
+    @keyframes damageFloat {
+      0% { opacity: 0; transform: translate(-50%, -20%) scale(.7); }
+      18% { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
+      100% { opacity: 0; transform: translate(-50%, -115%) scale(.95); }
+    }
+    .turn-attack-player { animation: turnAttackPlayer .42s ease-in-out; }
+    .turn-attack-boss { animation: turnAttackBoss .42s ease-in-out; }
+    .turn-hit-player { animation: turnHitPlayer .42s ease-in-out; }
+    .turn-hit-boss { animation: turnHitBoss .42s ease-in-out; }
+    @keyframes turnAttackPlayer {
+      0% { transform: translateX(0) scale(1); filter: brightness(1); }
+      45% { transform: translateX(42px) scale(1.08); filter: brightness(1.35); }
+      100% { transform: translateX(0) scale(1); filter: brightness(1); }
+    }
+    @keyframes turnAttackBoss {
+      0% { transform: translateX(0) scale(1); filter: brightness(1); }
+      45% { transform: translateX(-42px) scale(1.08); filter: brightness(1.25); }
+      100% { transform: translateX(0) scale(1); filter: brightness(1); }
+    }
+    @keyframes turnHitPlayer {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); filter: brightness(1.45) saturate(1.6); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(4px); }
+    }
+    @keyframes turnHitBoss {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(8px); filter: brightness(1.55) saturate(1.8); }
+      40% { transform: translateX(-8px); }
+      60% { transform: translateX(6px); }
+      80% { transform: translateX(-4px); }
+    }
+    .hp-bar-fill.turn-low { filter: brightness(1.3) saturate(1.4); animation: hpLowPulse .9s infinite; }
+    @keyframes hpLowPulse { 0%,100% { opacity: 1; } 50% { opacity: .68; } }
+
     /* 🎨 🟢 新增：出戰代表選單排版 */
     .diy-select-box { background: #333; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #555; text-align: left; }
     .diy-select-box label { font-size: 12px; color: #00fff0; font-weight: bold; display: block; margin-bottom: 5px; }
@@ -1036,6 +1127,7 @@
             <div class="hp-text" id="hp-boss-text">100%</div>
           </div>
         </div>
+        <div class="turn-banner" id="battle-turn-banner">準備進入回合制戰鬥...</div>
         <div class="clash-zone" id="clash-zone-box">
           <div class="clash-card card-p" id="fighter-player">
             <span id="arena-player-name-label">潮流先鋒</span>
@@ -1047,6 +1139,7 @@
             <img src="" class="clash-avatar" id="arena-boss-avatar-img">
           </div>
         </div>
+        <div class="turn-battle-log" id="battle-turn-log"></div>
       </div>
 
       <button class="btn-fight" id="fight-btn" onclick="startChallenge()">⚔️ 發動卡牌全軍出擊 ⚔️</button>
@@ -1215,6 +1308,7 @@
     let currentCount = parseInt(window.TLO_INITIAL_TIMES || "0") || 0;
     let globalPlayerPower = 0; 
     let latestRpgDashboard = null;
+    let latestBattleDashboard = null;
 
     loadPublicSettings();
 
@@ -1310,6 +1404,11 @@
       document.getElementById('battle-result-msg').innerHTML = "";
       document.getElementById('boss-info-panel').style.display = "flex"; 
       document.getElementById('battle-arena-panel').style.display = "none";
+      document.getElementById('battle-arena-panel').classList.remove('turn-mode');
+      const turnBanner = document.getElementById('battle-turn-banner');
+      const turnLog = document.getElementById('battle-turn-log');
+      if (turnBanner) { turnBanner.style.display = 'none'; turnBanner.innerText = '準備進入回合制戰鬥...'; }
+      if (turnLog) { turnLog.style.display = 'none'; turnLog.innerHTML = ''; }
 
       const btn = document.getElementById('fight-btn');
       btn.disabled = true;
@@ -1323,6 +1422,7 @@
           return;
         }
 
+        latestBattleDashboard = response;
         const ownedMap = response.ownedCardsMap || {};
         const selectEl = document.getElementById('player-battle-avatar-select');
         const currentSelectedValue = selectEl.value;
@@ -1408,69 +1508,153 @@
       }).getBattleDashboard(playerUID);
     }
 
+    function sleepTurn(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function setHpBar(fillEl, textEl, hp, maxHp) {
+      const percent = maxHp > 0 ? Math.max(0, Math.min(100, Math.round((Number(hp || 0) / maxHp) * 100))) : 0;
+      fillEl.style.width = percent + "%";
+      fillEl.classList.toggle('turn-low', percent > 0 && percent <= 25);
+      textEl.innerText = `${Math.max(0, Number(hp || 0)).toLocaleString()} / ${Number(maxHp || 0).toLocaleString()} (${percent}%)`;
+    }
+
+    function showDamageNumber(target, amount, actor) {
+      const arena = document.getElementById('battle-arena-panel');
+      if (!arena) return;
+      const el = document.createElement('div');
+      el.className = 'damage-float ' + (actor === 'player' ? 'damage-player' : 'damage-boss');
+      el.innerText = '-' + Number(amount || 0).toLocaleString();
+      arena.appendChild(el);
+      setTimeout(() => el.remove(), 760);
+    }
+
+    function appendTurnLog(line, actor) {
+      const log = document.getElementById('battle-turn-log');
+      if (!log) return;
+      const div = document.createElement('div');
+      div.className = 'turn-log-line ' + (actor === 'player' ? 'turn-log-player' : 'turn-log-boss');
+      div.textContent = line;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function makeFallbackTurnAnimation(res) {
+      const stage = (latestBattleDashboard && latestBattleDashboard.stageData) || {};
+      const bossName = stage.bossCardName || '守關 Boss';
+      const playerPower = Number((res && res.serverPlayerPower) || globalPlayerPower || 1000);
+      const bossPower = Number(stage.bossPower || 1000);
+      const playerMaxHp = Math.max(1800, Math.round(2200 + playerPower * 0.28));
+      const bossMaxHp = Math.max(1800, Math.round(2200 + bossPower * 0.34));
+      let pHp = playerMaxHp;
+      let bHp = bossMaxHp;
+      const win = !!(res && res.success);
+      const turns = [];
+      for (let round = 1; round <= 5; round++) {
+        let pDmg = Math.max(120, Math.round(bossMaxHp * (win ? .22 : .13)));
+        if (win && round >= 4) pDmg = bHp;
+        bHp = Math.max(0, bHp - pDmg);
+        turns.push({ round, actor: 'player', damage: pDmg, playerHpAfter: pHp, bossHpAfter: bHp, text: `第 ${round} 回合：玩家軍團攻擊，${bossName} 受到 ${pDmg} 傷害！` });
+        if (bHp <= 0) break;
+        let bDmg = Math.max(100, Math.round(playerMaxHp * (win ? .12 : .24)));
+        if (!win && round >= 4) bDmg = pHp;
+        pHp = Math.max(0, pHp - bDmg);
+        turns.push({ round, actor: 'boss', damage: bDmg, playerHpAfter: pHp, bossHpAfter: bHp, text: `第 ${round} 回合：${bossName} 反擊，玩家軍團受到 ${bDmg} 傷害！` });
+        if (pHp <= 0) break;
+      }
+      return { mode: 'CLIENT_FALLBACK', bossName, win, playerMaxHp, bossMaxHp, playerFinalHp: pHp, bossFinalHp: bHp, turns };
+    }
+
+    async function playTurnBattleAnimation(res) {
+      const battle = (res && res.battleAnimation && Array.isArray(res.battleAnimation.turns)) ? res.battleAnimation : makeFallbackTurnAnimation(res);
+      const hpPlayerFill = document.getElementById('hp-player-fill');
+      const hpBossFill = document.getElementById('hp-boss-fill');
+      const hpPlayerText = document.getElementById('hp-player-text');
+      const hpBossText = document.getElementById('hp-boss-text');
+      const fPlayer = document.getElementById('fighter-player');
+      const fBoss = document.getElementById('fighter-boss');
+      const banner = document.getElementById('battle-turn-banner');
+      const log = document.getElementById('battle-turn-log');
+
+      if (banner) { banner.style.display = 'block'; banner.innerText = `⚔️ ${battle.stageName || 'T-LO 回合制戰鬥'} 開始！`; }
+      if (log) { log.style.display = 'block'; log.innerHTML = ''; }
+      setHpBar(hpPlayerFill, hpPlayerText, battle.playerMaxHp, battle.playerMaxHp);
+      setHpBar(hpBossFill, hpBossText, battle.bossMaxHp, battle.bossMaxHp);
+      await sleepTurn(550);
+
+      for (const turn of battle.turns) {
+        const isPlayer = turn.actor === 'player';
+        if (banner) banner.innerText = isPlayer ? `🟦 玩家回合｜第 ${turn.round} 回合` : `🟥 Boss 回合｜第 ${turn.round} 回合`;
+        appendTurnLog(turn.text || (isPlayer ? '玩家攻擊！' : 'Boss 反擊！'), turn.actor);
+
+        if (isPlayer) {
+          fPlayer.classList.add('turn-attack-player');
+          await sleepTurn(240);
+          fBoss.classList.add('turn-hit-boss');
+          showDamageNumber(fBoss, turn.damage, 'player');
+          if (window.TLOAudio) window.TLOAudio.playSfx('click');
+          setHpBar(hpBossFill, hpBossText, turn.bossHpAfter, battle.bossMaxHp);
+        } else {
+          fBoss.classList.add('turn-attack-boss');
+          await sleepTurn(240);
+          fPlayer.classList.add('turn-hit-player');
+          showDamageNumber(fPlayer, turn.damage, 'boss');
+          if (window.TLOAudio) window.TLOAudio.playSfx('click');
+          setHpBar(hpPlayerFill, hpPlayerText, turn.playerHpAfter, battle.playerMaxHp);
+        }
+
+        await sleepTurn(560);
+        fPlayer.classList.remove('turn-attack-player', 'turn-hit-player');
+        fBoss.classList.remove('turn-attack-boss', 'turn-hit-boss');
+        await sleepTurn(170);
+      }
+
+      if (banner) banner.innerText = res && res.success ? '🏆 戰鬥勝利！結算獎勵中...' : '💥 戰鬥失敗！Boss 擊退了玩家軍團';
+      return battle;
+    }
+
     function startChallenge() {
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
-  // 1. 碰撞動畫：一行代碼搞定視覺碰撞
-      document.getElementById('clash-zone-box').classList.add('clash-animate');
-  
-  // 2. 設定動畫結束後移除 Class，以便下次能再觸發
-      setTimeout(() => document.getElementById('clash-zone-box').classList.remove('clash-animate'), 500);
       const btn = document.getElementById('fight-btn');
       const infoPanel = document.getElementById('boss-info-panel');
       const arenaPanel = document.getElementById('battle-arena-panel');
       const resultMsg = document.getElementById('battle-result-msg');
-      
-      const hpPlayerFill = document.getElementById('hp-player-fill'); const hpBossFill = document.getElementById('hp-boss-fill');
-      const hpPlayerText = document.getElementById('hp-player-text'); const hpBossText = document.getElementById('hp-boss-text');
-      const fPlayer = document.getElementById('fighter-player'); const fBoss = document.getElementById('fighter-boss'); const clashZone = document.getElementById('clash-zone-box');
 
-      btn.disabled = true; btn.innerText = "⚡ 雙方大軍全面交火中..."; resultMsg.innerHTML = "";
-      infoPanel.style.display = "none"; arenaPanel.style.display = "block";
-      hpPlayerFill.style.width = "100%"; hpBossFill.style.width = "100%"; hpPlayerText.innerText = "100%"; hpBossText.innerText = "100%";
-      
-      fPlayer.classList.add('animate-player'); fBoss.classList.add('animate-boss'); clashZone.classList.add('animate-shake');
+      btn.disabled = true;
+      btn.innerText = "⚡ 回合制戰鬥演算中...";
+      resultMsg.innerHTML = "";
+      infoPanel.style.display = "none";
+      arenaPanel.style.display = "block";
+      arenaPanel.classList.add('turn-mode');
 
-      let currentProgress = 100;
-      let battleTimer = setInterval(function() {
-        currentProgress -= 8;
-        if (currentProgress <= 20) { clearInterval(battleTimer); } 
-        else {
-          hpPlayerFill.style.width = (currentProgress + Math.floor(Math.random()*10)) + "%";
-          hpBossFill.style.width = currentProgress + "%";
-          hpPlayerText.innerText = hpPlayerFill.style.width; hpBossText.innerText = hpBossFill.style.width;
+      google.script.run.withSuccessHandler(async function(res) {
+        await playTurnBattleAnimation(res || {});
+
+        if (res && res.success) {
+          resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">${escapeHtml(res.msg || '戰鬥勝利！')}<br>🎁 ${escapeHtml(res.rewardText || '')}</span>`;
+          currentCount = res.newTimesLeft;
+          updateButtonState();
+          if (window.TLOAudio) window.TLOAudio.playSfx('win');
+          btn.innerText = "✅ 已突破此關，準備下一關...";
+          setTimeout(openBattleModal, 4200);
+        } else {
+          resultMsg.innerHTML = `<span style="color:#ff7777; font-size:13px; display:block; padding:5px;">${escapeHtml(res && res.msg ? res.msg : '挑戰失敗')}</span>`;
+          if (window.TLOAudio) window.TLOAudio.playSfx('error');
+          btn.disabled = false;
+          btn.innerText = "🔄 從第一關重新啟動挑戰 🔄";
+          btn.style.background = "linear-gradient(45deg, #ff5500, #ff0000)";
+          btn.onclick = function() {
+            openBattleModal();
+            btn.onclick = startChallenge;
+          };
         }
-      }, 150);
-
-      google.script.run.withSuccessHandler(function(res) {
-        setTimeout(function() {
-          clearInterval(battleTimer);
-          fPlayer.classList.remove('animate-player'); fBoss.classList.remove('animate-boss'); clashZone.classList.remove('animate-shake');
-
-          if (res.success) {
-            hpBossFill.style.width = "0%"; hpBossText.innerText = "0% (LOSE)";
-            hpPlayerFill.style.width = "35%"; hpPlayerText.innerText = "35% (WIN)";
-            resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">${res.msg}<br>🎁 ${res.rewardText}</span>`;
-            currentCount = res.newTimesLeft; updateButtonState();
-            if (window.TLOAudio) window.TLOAudio.playSfx('win');
-            setTimeout(openBattleModal, 3000);
-          } else {
-            hpPlayerFill.style.width = "0%"; hpPlayerText.innerText = "0% (💥 落敗)";
-            hpBossFill.style.width = "85%"; hpBossText.innerText = "85% (殘血)";
-            resultMsg.innerHTML = `<span style="color:#ff4444; font-size:13px; display:block; padding:5px;">${res.msg}</span>`;
-            if (window.TLOAudio) window.TLOAudio.playSfx('error');
-            
-            btn.disabled = false; 
-            btn.innerText = "🔄 從第一關重新啟動挑戰 🔄"; 
-            btn.style.background = "linear-gradient(45deg, #ff5500, #ff0000)";
-            
-            btn.onclick = function() {
-              openBattleModal();
-              btn.onclick = startChallenge;
-            };
-          }
-        }, 1800);
+      }).withFailureHandler(function(err) {
+        resultMsg.innerHTML = `<span style="color:#ff4444;">戰鬥失敗：${escapeHtml(err && err.message ? err.message : err)}</span>`;
+        btn.disabled = false;
+        btn.innerText = "⚔️ 重新挑戰";
       }).executeBattle(playerUID);
     }
+
 
     function disableAllButtons(loadingText) {
       const b1 = document.getElementById('gacha-btn'); const b2 = document.getElementById('gacha10-btn');
@@ -2772,27 +2956,19 @@ function showCollectionHistory() {
   <script>
     // === T-LO 分畫面切換：只控制前台 UI，不改任何後端功能 ===
     window.showGameScreen = function(screenName) {
-  var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen' };
-  var targetId = map[screenName] || map.home;
-
-  document.querySelectorAll('.game-screen').forEach(function(el) {
-    el.classList.toggle('active', el.id === targetId);
-  });
-
-  document.querySelectorAll('.game-bottom-nav [data-screen-target]').forEach(function(btn) {
-    btn.classList.toggle('active', btn.getAttribute('data-screen-target') === screenName);
-  });
-
-  if (window.TLOAudio && typeof window.TLOAudio.playBgmForScreen === "function") {
-    window.TLOAudio.playBgmForScreen(screenName);
-  }
-
-  try { 
-    window.scrollTo({ top: 0, behavior: 'smooth' }); 
-  } catch (_) { 
-    window.scrollTo(0, 0); 
-  }
-};
+      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen' };
+      var targetId = map[screenName] || map.home;
+      document.querySelectorAll('.game-screen').forEach(function(el) {
+        el.classList.toggle('active', el.id === targetId);
+      });
+      document.querySelectorAll('.game-bottom-nav [data-screen-target]').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-screen-target') === screenName);
+      });
+      if (window.TLOAudio && typeof window.TLOAudio.playBgmForScreen === "function") {
+        window.TLOAudio.playBgmForScreen(screenName);
+      }
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
+    };
   </script>
 
 </body>
