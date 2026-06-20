@@ -1518,10 +1518,12 @@
       document.getElementById('arena-player-name-label').innerText = selectedName;
       
       let pImgUrl = "";
-      if (selectedName !== "潮流先鋒" && selectedName !== "尚未選擇" && window && window.NPC_IMAGES && window.NPC_IMAGES[selectedName]) {
-        pImgUrl = window.NPC_IMAGES[selectedName];
+      if (selectedName !== "潮流先鋒" && selectedName !== "尚未選擇") {
+        const battleOptions = (latestBattleDashboard && latestBattleDashboard.battleOptions) || [];
+        const cardInfo = battleOptions.find(function(card) { return card && card.name === selectedName; }) || { name: selectedName };
+        pImgUrl = getCardImageUrl(cardInfo);
       }
-      
+
       if (!pImgUrl) {
         pImgUrl = "https://images.placeholders.dev/?width=80&height=100&text=" + encodeURIComponent(selectedName) + "&bgColor=%231a3a3a&textColor=%2300fff0";
       }
@@ -1608,6 +1610,7 @@
     function refreshCollectionCount() {
       if (typeof google === "undefined" || !google.script || !google.script.run) return;
       google.script.run.withSuccessHandler(function(response) {
+        registerCardImages(response);
         if (response && response.success) {
           document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
           if (typeof response.timesLeft !== "undefined") {
@@ -1642,6 +1645,7 @@
           return;
         }
 
+        registerCardImages(response);
         latestBattleDashboard = response;
         const selectEl = document.getElementById('player-battle-avatar-select');
         const repStatus = document.getElementById('battle-rep-status');
@@ -1687,10 +1691,11 @@
         const currentStage = response.stageData;
         const bName = currentStage.bossCardName;
 
-        let bossImgUrl = "";
-        if (typeof window !== "undefined" && window.NPC_IMAGES && window.NPC_IMAGES[bName]) {
-          bossImgUrl = window.NPC_IMAGES[bName];
-        }
+        let bossImgUrl = getCardImageUrl({
+          name: bName,
+          bossCardName: bName,
+          imageUrl: currentStage.bossImageUrl || currentStage.bossImage || currentStage.imageUrl || currentStage.image_url || currentStage.boss_image_url || ''
+        });
         if (!bossImgUrl || bossImgUrl === "") {
           bossImgUrl = "https://images.placeholders.dev/?width=150&height=200&text=" + encodeURIComponent(bName) + "&bgColor=%232d1a1a&textColor=%23ff4444&fontSize=18px";
         }
@@ -2053,6 +2058,7 @@
       arenaPanel.classList.add('turn-mode');
 
       google.script.run.withSuccessHandler(async function(res) {
+        registerCardImages(res);
         await playTurnBattleAnimation(res || {});
 
         if (res && res.success) {
@@ -2301,10 +2307,13 @@ function showCollectionHistory() {
 
       const name = String(item.name || '').trim();
       const serial = String(item.serial || '').trim();
-      const imgUrl = getNpcImageUrl(name);
+      const imgUrl = getCardImageUrl({
+        name: name,
+        imageUrl: item.imageUrl || item.image_url || item.imgUrl || item.img_url || ''
+      });
 
       if (!imgUrl) {
-        alert('找不到「' + name + '」的圖片，請先確認 images.html 裡的 NPC_IMAGES 有這張卡。');
+        alert('找不到「' + name + '」的圖片，請確認 GM 卡牌管理的圖片網址或 lbr-images 圖片權限。');
         return;
       }
 
@@ -2392,105 +2401,155 @@ function showCollectionHistory() {
       });
     }
 
+    // ===============================
+    // T-LO 圖片讀取統一工具
+    // 讀取優先順序：
+    // 1. Turso cards.image_url / API 回傳 imageUrl
+    // 2. 前端暫存 window.TLO_CARD_IMAGE_MAP
+    // 3. 舊圖片表 window.NPC_IMAGES
+    // 4. 預設佔位圖
+    // ===============================
     window.TLO_CARD_IMAGE_MAP = window.TLO_CARD_IMAGE_MAP || {};
 
-function tloNormalizeImageUrl(url) {
-  return String(url || '').trim();
-}
+    function tloNormalizeImageUrl(url) {
+      var value = String(url || '').trim();
+      if (!value) return '';
 
-function tloGetCardName(cardOrName) {
-  if (typeof cardOrName === 'string') return String(cardOrName || '').trim();
-  if (!cardOrName) return '';
-  return String(
-    cardOrName.name ||
-    cardOrName.cardName ||
-    cardOrName.npcName ||
-    cardOrName.bossCardName ||
-    cardOrName.card_name ||
-    ''
-  ).trim();
-}
-
-function registerCardImages(source) {
-  if (!source) return;
-
-  if (source.imageMap && typeof source.imageMap === 'object') {
-    Object.keys(source.imageMap).forEach(function(name) {
-      var url = tloNormalizeImageUrl(source.imageMap[name]);
-      if (name && url) window.TLO_CARD_IMAGE_MAP[String(name).trim()] = url;
-    });
-  }
-
-  var lists = [];
-  if (Array.isArray(source.cards)) lists.push(source.cards);
-  if (Array.isArray(source.results)) lists.push(source.results);
-  if (Array.isArray(source.rows)) lists.push(source.rows);
-  if (Array.isArray(source.collection)) lists.push(source.collection);
-  if (Array.isArray(source.party)) lists.push(source.party);
-  if (Array.isArray(source.playerTeam)) lists.push(source.playerTeam);
-  if (Array.isArray(source.enemyTeam)) lists.push(source.enemyTeam);
-
-  lists.forEach(function(list) {
-    list.forEach(function(card) {
-      if (!card) return;
-      var name = tloGetCardName(card);
-      var url = tloNormalizeImageUrl(
-        card.imageUrl || card.image_url || card.img || card.image || card.url || ''
+      // 如果 GM 後台誤貼 GitHub blob 頁面網址，自動轉成 raw 圖片網址。
+      // 例如：https://github.com/Xiaxguang/lbr-images/blob/main/test.png
+      // 轉成：https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/test.png
+      value = value.replace(
+        /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/blob\/(.+)$/i,
+        'https://raw.githubusercontent.com/$1/$2/$3'
       );
-      if (name && url) window.TLO_CARD_IMAGE_MAP[name] = url;
-    });
-  });
 
-  var singleName = tloGetCardName(source);
-  var singleUrl = tloNormalizeImageUrl(
-    source.imageUrl || source.image_url || source.img || source.image || source.url || ''
-  );
-  if (singleName && singleUrl) window.TLO_CARD_IMAGE_MAP[singleName] = singleUrl;
-}
+      return value;
+    }
 
-function getRawCardImageUrl(cardOrName) {
-  var name = tloGetCardName(cardOrName);
+    function tloGetCardName(cardOrName) {
+      if (typeof cardOrName === 'string') return String(cardOrName || '').trim();
+      if (!cardOrName) return '';
+      return String(
+        cardOrName.name ||
+        cardOrName.cardName ||
+        cardOrName.npcName ||
+        cardOrName.bossCardName ||
+        cardOrName.bossName ||
+        cardOrName.myCard ||
+        cardOrName.opponentCard ||
+        cardOrName.card_name ||
+        ''
+      ).trim();
+    }
 
-  if (cardOrName && typeof cardOrName === 'object') {
-    var directUrl = tloNormalizeImageUrl(
-      cardOrName.imageUrl || cardOrName.image_url || cardOrName.img || cardOrName.image || cardOrName.url || ''
-    );
-    if (directUrl) return directUrl;
-  }
+    function tloPickImageUrl(obj) {
+      if (!obj || typeof obj !== 'object') return '';
+      return tloNormalizeImageUrl(
+        obj.imageUrl ||
+        obj.image_url ||
+        obj.imgUrl ||
+        obj.img_url ||
+        obj.cardImageUrl ||
+        obj.card_image_url ||
+        obj.bossImageUrl ||
+        obj.boss_image_url ||
+        obj.avatarUrl ||
+        obj.avatar_url ||
+        obj.pictureUrl ||
+        obj.picture_url ||
+        obj.img ||
+        obj.image ||
+        obj.avatar ||
+        obj.picture ||
+        obj.url ||
+        ''
+      );
+    }
 
-  if (name && window.TLO_CARD_IMAGE_MAP && window.TLO_CARD_IMAGE_MAP[name]) {
-    return window.TLO_CARD_IMAGE_MAP[name];
-  }
+    function tloCacheCardImage(name, url) {
+      name = String(name || '').trim();
+      url = tloNormalizeImageUrl(url);
+      if (!name || !url) return;
+      window.TLO_CARD_IMAGE_MAP[name] = url;
+    }
 
-  var aliasMap = {};
+    function registerCardImages(source) {
+      if (!source) return;
 
-  if (name && window.NPC_IMAGES && window.NPC_IMAGES[name]) {
-    return window.NPC_IMAGES[name];
-  }
+      function scan(obj, depth) {
+        if (!obj || depth > 4) return;
 
-  var alt = aliasMap[name];
-  if (alt && window.TLO_CARD_IMAGE_MAP && window.TLO_CARD_IMAGE_MAP[alt]) {
-    return window.TLO_CARD_IMAGE_MAP[alt];
-  }
+        if (Array.isArray(obj)) {
+          obj.forEach(function(item) { scan(item, depth + 1); });
+          return;
+        }
 
-  if (alt && window.NPC_IMAGES && window.NPC_IMAGES[alt]) {
-    return window.NPC_IMAGES[alt];
-  }
+        if (typeof obj !== 'object') return;
 
-  return '';
-}
+        if (obj.imageMap && typeof obj.imageMap === 'object') {
+          Object.keys(obj.imageMap).forEach(function(name) {
+            tloCacheCardImage(name, obj.imageMap[name]);
+          });
+        }
 
-function getCardImageUrl(cardOrName) {
-  var name = tloGetCardName(cardOrName);
-  return getRawCardImageUrl(cardOrName) ||
-    ('https://placehold.co/150x200/333/fff?text=' + encodeURIComponent(name || 'NO IMAGE'));
-}
+        var directName = tloGetCardName(obj);
+        var directUrl = tloPickImageUrl(obj);
+        if (directName && directUrl) tloCacheCardImage(directName, directUrl);
 
-// 保留舊函式名稱，避免原本其他功能壞掉。
-// 注意：這個函式找不到圖時回傳空字串，讓原本的 fallback 邏輯可以繼續生效。
-function getNpcImageUrl(name) {
-  return getRawCardImageUrl(name);
-}
+        // 常見對戰 API 欄位配對。
+        tloCacheCardImage(obj.npcName, obj.imageUrl || obj.image_url);
+        tloCacheCardImage(obj.myCard, obj.myCardImageUrl || obj.myCardImage || obj.my_image_url);
+        tloCacheCardImage(obj.opponentCard, obj.opponentCardImageUrl || obj.opponentCardImage || obj.opponent_image_url);
+        tloCacheCardImage(obj.bossName, obj.bossImageUrl || obj.bossImage || obj.boss_image_url);
+        tloCacheCardImage(obj.bossCardName, obj.bossCardImageUrl || obj.bossImageUrl || obj.imageUrl || obj.image_url);
+
+        Object.keys(obj).forEach(function(key) {
+          var value = obj[key];
+          if (!value) return;
+          if (Array.isArray(value) || (typeof value === 'object' && depth < 4)) {
+            scan(value, depth + 1);
+          }
+        });
+      }
+
+      scan(source, 0);
+    }
+
+    function getRawCardImageUrl(cardOrName) {
+      var name = tloGetCardName(cardOrName);
+
+      // 物件本身如果有 Turso / API 圖片欄位，永遠最優先。
+      var directUrl = tloPickImageUrl(cardOrName);
+      if (directUrl) {
+        if (name) tloCacheCardImage(name, directUrl);
+        return directUrl;
+      }
+
+      // 第二優先：API 回傳後暫存在前端的圖片 Map。
+      if (name && window.TLO_CARD_IMAGE_MAP && window.TLO_CARD_IMAGE_MAP[name]) {
+        return window.TLO_CARD_IMAGE_MAP[name];
+      }
+
+      // 第三優先：舊版固定 NPC_IMAGES。
+      if (name && window.NPC_IMAGES && window.NPC_IMAGES[name]) {
+        return window.NPC_IMAGES[name];
+      }
+
+      return '';
+    }
+
+    function getCardImageUrl(cardOrName) {
+      var name = tloGetCardName(cardOrName);
+      return getRawCardImageUrl(cardOrName) ||
+        ('https://placehold.co/150x200/333/fff?text=' + encodeURIComponent(name || 'NO IMAGE'));
+    }
+
+    // 保留舊函式名稱，避免原本其他功能壞掉。
+    // 注意：這個函式找不到圖時回傳空字串，讓原本的 fallback 邏輯可以繼續生效。
+    function getNpcImageUrl(cardOrName) {
+      return getRawCardImageUrl(cardOrName);
+    }
+
 
 
     function safeFileName(text) {
@@ -2649,6 +2708,7 @@ function getNpcImageUrl(name) {
     function loadPvpDashboard() {
       document.getElementById('pvp-log-list').innerHTML = '正在讀取紀錄...';
       google.script.run.withSuccessHandler(function(res) {
+        registerCardImages(res);
         if (!res || !res.success) {
           document.getElementById('pvp-result').innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : 'PVP讀取失敗')}</span>`;
           return;
@@ -2660,6 +2720,7 @@ function getNpcImageUrl(name) {
     }
 
     function renderPvpDashboard(res) {
+      registerCardImages(res);
       __pvpDashboard = res;
       const select = document.getElementById('pvp-rep-select');
       const cards = res.ownedCards || [];
@@ -2712,6 +2773,7 @@ function getNpcImageUrl(name) {
       if (arena) arena.style.display = 'none';
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
       google.script.run.withSuccessHandler(async function(res) {
+        registerCardImages(res);
         btn.disabled = false;
         btn.innerText = '⚔️ 開始配對對戰';
         if (!res || !res.success) {
@@ -2722,9 +2784,9 @@ function getNpcImageUrl(name) {
         }
         await playMiniTurnBattle('pvp', res, {
           playerName: res.myCard || '我方代表',
-          playerImage: getNpcImageUrl(res.myCard) || placeholderBattleImage(res.myCard || '我方', '#123a3a', '#00fff0'),
+          playerImage: getCardImageUrl({ name: res.myCard, cardName: res.myCard, imageUrl: res.myCardImageUrl || res.myCardImage || res.my_image_url || '' }) || placeholderBattleImage(res.myCard || '我方', '#123a3a', '#00fff0'),
           bossName: (res.opponentUid ? res.opponentUid + '｜' : '') + (res.opponentCard || '對手代表'),
-          bossImage: getNpcImageUrl(res.opponentCard) || placeholderBattleImage(res.opponentCard || '對手', '#3a1616', '#ff7777'),
+          bossImage: getCardImageUrl({ name: res.opponentCard, cardName: res.opponentCard, imageUrl: res.opponentCardImageUrl || res.opponentCardImage || res.opponent_image_url || '' }) || placeholderBattleImage(res.opponentCard || '對手', '#3a1616', '#ff7777'),
           stageName: 'PVP 玩家對戰',
           playerPower: res.myPower,
           bossPower: res.opponentPower
@@ -3166,7 +3228,7 @@ function getNpcImageUrl(name) {
       const board = document.getElementById('memory-board');
       let html = '';
       __memoryCards.forEach(function(card, index) {
-        const imgUrl = (window.NPC_IMAGES && window.NPC_IMAGES[card.name]) ? window.NPC_IMAGES[card.name] : ('https://placehold.co/120x160/333/fff?text=' + encodeURIComponent(card.name));
+        const imgUrl = getCardImageUrl(card);
         const cls = card.matched ? 'memory-card matched' : (card.revealed ? 'memory-card revealed' : 'memory-card');
         html += `<div class="${cls}" onclick="flipMemoryCard(${index})"><img src="${imgUrl}" alt="${escapeHtml(card.name)}"></div>`;
       });
@@ -3302,6 +3364,7 @@ function getNpcImageUrl(name) {
     }
 
     function renderStarDashboard(res) {
+      registerCardImages(res);
       const list = document.getElementById('star-card-list');
       const energyText = document.getElementById('star-energy-text');
       const energy = Number((res.profile && res.profile.energy) || res.energy || 0);
@@ -3320,7 +3383,7 @@ function getNpcImageUrl(name) {
         const nextCost = Number(card.nextCost || 0);
         const isMax = !!card.isMax || !card.nextStar;
         const nextStar = star + 1;
-        const imgUrl = (window.NPC_IMAGES && window.NPC_IMAGES[name]) ? window.NPC_IMAGES[name] : '';
+        const imgUrl = getCardImageUrl(card);
         const canUpgrade = !isMax && energy >= nextCost;
         html += `
           <div style="background:#111; border:1px solid #444; border-radius:10px; padding:10px; display:flex; gap:10px; align-items:center;">
@@ -3382,6 +3445,7 @@ function getNpcImageUrl(name) {
     }
 
     function renderCharacterGrowthDashboard(res) {
+      registerCardImages(res);
       const list = document.getElementById('growth-card-list');
       const energyText = document.getElementById('growth-energy-text');
       const ruleText = document.getElementById('growth-rule-text');
@@ -3397,7 +3461,7 @@ function getNpcImageUrl(name) {
       let html = '';
       cards.forEach(function(card) {
         const name = card.name || card.cardName || '';
-        const imgUrl = getNpcImageUrl(name) || card.imageUrl || '';
+        const imgUrl = getCardImageUrl(card);
         const level = Number(card.level || 1);
         const maxLevel = Number(card.maxLevel || 50);
         const exp = Number(card.exp || 0);
@@ -3548,6 +3612,7 @@ function getNpcImageUrl(name) {
     }
 
     function renderRpgDashboard(res) {
+      registerCardImages(res);
       latestRpgDashboard = res;
       const msg = document.getElementById('rpg-msg');
       if (msg) msg.innerHTML = '';
@@ -3601,7 +3666,7 @@ function getNpcImageUrl(name) {
           continue;
         }
         const info = findRpgCardInfo(name);
-        const img = getNpcImageUrl(name) || info.imageUrl || placeholderBattleImage(name, '#123a3a', '#00fff0');
+        const img = getCardImageUrl(info) || placeholderBattleImage(name, '#123a3a', '#00fff0');
         html += `<div class="rpg-mini-card"><img src="${img}" alt="${escapeHtml(name)}"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★｜Lv.${Number(info.level||1)}</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')} Lv.${Number(info.skillLevel||1)}</div></div>`;
       }
       box.innerHTML = html;
@@ -3633,6 +3698,7 @@ function getNpcImageUrl(name) {
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
 
       google.script.run.withSuccessHandler(async function(res) {
+        registerCardImages(res);
         if (preview) preview.classList.remove('adventure-running');
         if (!res || !res.success) {
           if (res && res.dashboard) renderRpgDashboard(res.dashboard);
@@ -3646,9 +3712,14 @@ function getNpcImageUrl(name) {
         const playerLabel = names.length ? names.join('、') : '遠征隊伍';
         await playMiniTurnBattle('rpg', res, {
           playerName: playerLabel,
-          playerImage: getNpcImageUrl(firstName) || placeholderBattleImage('隊伍', '#123a3a', '#00fff0'),
+          playerImage: getCardImageUrl(findRpgCardInfo(firstName)) || placeholderBattleImage('隊伍', '#123a3a', '#00fff0'),
           bossName: bossName,
-          bossImage: getNpcImageUrl(bossName) || placeholderBattleImage(bossName, '#3a1616', '#ff7777'),
+          bossImage: getCardImageUrl({
+            name: bossName,
+            bossName: bossName,
+            bossCardName: bossName,
+            imageUrl: res.bossImageUrl || res.bossImage || res.boss_image_url || dungeon.bossImageUrl || dungeon.bossImage || dungeon.imageUrl || dungeon.image_url || ''
+          }) || placeholderBattleImage(bossName, '#3a1616', '#ff7777'),
           stageName: bossName,
           playerPower: res.teamPower,
           bossPower: res.enemyPower
