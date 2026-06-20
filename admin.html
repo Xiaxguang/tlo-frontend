@@ -136,6 +136,12 @@
                   <label>卡片名稱</label><select id="cardSelect"></select>
                   <label>數量</label><input id="cardQty" type="number" min="0" value="1">
                   <button class="primary" onclick="setCardQuantity()" style="margin-top:8px;width:100%">儲存卡片數量</button>
+                  <hr style="border:0;border-top:1px solid #333;margin:16px 0">
+                  <h3>🎁 贈與玩家卡片</h3>
+                  <label>贈與卡片</label><select id="giftCardSelect"></select>
+                  <label>贈與數量</label><input id="giftCardQty" type="number" min="1" value="1">
+                  <button class="warn" onclick="giftCardToPlayer()" style="margin-top:8px;width:100%">贈與卡片</button>
+                  <div class="muted">贈與只會增加持有數量，不會覆蓋原本卡盒；操作會寫入 GM 紀錄。</div>
                 </div>
                 <div class="panel" style="box-shadow:none">
                   <h3>🔐 重設玩家密碼</h3>
@@ -431,6 +437,7 @@ function renderPlayer(data){
   $('streakSet').value = data.training?.streak || 0;
   $('resetPw').value = '';
   $('cardQty').value = 1;
+  if($('giftCardQty')) $('giftCardQty').value = 1;
   renderCollection(data.collection || []);
   renderRecentLogs(data.logs || {});
   if(!cardRows.length) loadCards(false);
@@ -469,6 +476,21 @@ async function setCardQuantity(){
   if(!confirm('確定要修改玩家卡片數量？')) return;
   try{ const data = await rpc('adminSetCardQuantity', [currentPlayerUid, $('cardSelect').value, $('cardQty').value, note()]); msg('actionMsg', data.msg, true); renderPlayer(data.player); searchPlayers(); }catch(e){ msg('actionMsg', e.message); }
 }
+
+async function giftCardToPlayer(){
+  if(!currentPlayerUid) return;
+  const cardName = $('giftCardSelect') ? $('giftCardSelect').value : '';
+  const qty = $('giftCardQty') ? $('giftCardQty').value : 1;
+  if(!cardName){ msg('actionMsg','請先選擇要贈與的卡片。'); return; }
+  if(Number(qty) <= 0){ msg('actionMsg','贈與數量必須大於 0。'); return; }
+  if(!confirm(`確定要贈與 ${currentPlayerUid}「${cardName}」x${qty}？`)) return;
+  try{
+    const data = await rpc('adminGiftCard', [currentPlayerUid, cardName, qty, note()]);
+    msg('actionMsg', data.msg, true);
+    renderPlayer(data.player);
+    searchPlayers();
+  }catch(e){ msg('actionMsg', e.message); }
+}
 async function resetPlayerPassword(){
   if(!currentPlayerUid) return;
   const pw = $('resetPw').value;
@@ -483,6 +505,7 @@ async function loadCards(showMessage=true){
     cardRows = data.rows || [];
     const options = cardRows.map(c => `<option value="${esc(c.name)}">${esc(c.name)}｜${esc(c.rarity)}</option>`).join('');
     if($('cardSelect')) $('cardSelect').innerHTML = options;
+    if($('giftCardSelect')) $('giftCardSelect').innerHTML = options;
     renderCardsTable();
     if(showMessage) msg('cardsMsg', `已載入 ${cardRows.length} 張卡片`, true);
   }catch(e){ msg('cardsMsg', e.message); }
