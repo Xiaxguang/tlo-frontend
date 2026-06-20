@@ -1531,40 +1531,79 @@
     function openCollectionModal() { document.getElementById('collection-modal').style.display = 'flex'; renderCollectionWall(); }
 
     function renderCollectionWall() {
-      const container = document.getElementById('collection-grid-container');
-      const progressText = document.getElementById('collection-progress-text');
-      if (!container) return;
-      container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#aaa; font-size:13px;">正在連線讀取最新資料...</p>';
+  const container = document.getElementById('collection-grid-container');
+  const progressText = document.getElementById('collection-progress-text');
+  if (!container) return;
 
-      google.script.run.withSuccessHandler(function(response) {
-        if (response && response.success) {
-          const ownedMap = response.ownedCardsMap || {}; 
-          const uCount = response.uniqueCount || 0;
-          let html = "";
-          
-          ALL_16_CARDS.forEach(function(cardName) {
-            const count = ownedMap[cardName] || 0;
-            const isOwned = count > 0;
-            let imgUrl = (window && window.NPC_IMAGES && window.NPC_IMAGES[cardName]) ? window.NPC_IMAGES[cardName] : "";
-            if (!imgUrl) imgUrl = "https://placehold.co/150x200/333/fff?text=" + encodeURIComponent(cardName);
+  container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#aaa; font-size:13px;">正在連線讀取最新卡盒資料...</p>';
 
-            let badgeHtml = isOwned ? `<span class="count-badge count-has">持有 X${count}</span>` : `<span class="count-badge count-zero">未持有</span>`;
+  google.script.run.withSuccessHandler(function(response) {
+    if (response && response.success) {
+      registerCardImages(response);
 
-            html += `
-              <div class="collection-item">
-                ${isOwned ? '' : '<div class="lock-icon">🔒</div>'}
-                <img src="${imgUrl}" class="collection-item-img ${isOwned ? '' : 'locked'}" alt="${cardName}">
-                <div class="collection-name" style="color: ${isOwned ? '#00fff0' : '#555'};">${cardName}</div>
-                ${badgeHtml}
-              </div>
-            `;
-          });
-          container.innerHTML = html;
-          progressText.innerText = `收集進度：${uCount} / 16 張 (${Math.round((uCount/16)*100)}%)`;
-          document.getElementById('collection-summary-count').innerText = uCount;
-        }
-      }).getPlayerCollection(playerUID);
+      const ownedMap = response.ownedCardsMap || {};
+      const uCount = Number(response.uniqueCount || 0);
+
+      let cardList = [];
+
+      if (Array.isArray(response.cards) && response.cards.length) {
+        cardList = response.cards.map(function(card) {
+          return {
+            name: card.name || card.cardName || card.npcName || '',
+            rarity: card.rarity || '',
+            count: Number(card.count || card.quantity || 0),
+            imageUrl: card.imageUrl || card.image_url || '',
+            sortOrder: Number(card.sortOrder || card.sort_order || 9999)
+          };
+        });
+      } else {
+        cardList = ALL_16_CARDS.map(function(cardName) {
+          return {
+            name: cardName,
+            rarity: CARD_RARITIES[cardName] || '',
+            count: Number(ownedMap[cardName] || 0),
+            imageUrl: getRawCardImageUrl(cardName),
+            sortOrder: 9999
+          };
+        });
+      }
+
+      let html = '';
+
+      cardList.forEach(function(card) {
+        const cardName = card.name;
+        const count = Number(card.count || ownedMap[cardName] || 0);
+        const isOwned = count > 0;
+        const imgUrl = getCardImageUrl(card);
+        const badgeHtml = isOwned
+          ? `<span class="count-badge count-has">持有 X${count}</span>`
+          : `<span class="count-badge count-zero">未持有</span>`;
+
+        html += `
+          <div class="collection-item">
+            ${isOwned ? '' : '<div class="lock-icon">🔒</div>'}
+            <img src="${imgUrl}" class="collection-item-img ${isOwned ? '' : 'locked'}" alt="${escapeHtml(cardName)}" loading="lazy">
+            <div class="collection-name" style="color: ${isOwned ? '#00fff0' : '#555'};">${escapeHtml(cardName)}</div>
+            ${badgeHtml}
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      const totalCards = cardList.length || 16;
+      progressText.innerText = `收集進度：${uCount} / ${totalCards} 張 (${Math.round((uCount / Math.max(1, totalCards)) * 100)}%)`;
+
+      const summary = document.getElementById('collection-summary-count');
+      if (summary) summary.innerText = uCount;
+    } else {
+      container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#ff7777;">卡盒讀取失敗，請稍後再試。</p>';
     }
+  }).withFailureHandler(function(err) {
+    container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#ff7777;">卡盒讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</p>';
+  }).getPlayerCollection(playerUID);
+}
+
 
     function refreshCollectionCount() {
       if (typeof google === "undefined" || !google.script || !google.script.run) return;
