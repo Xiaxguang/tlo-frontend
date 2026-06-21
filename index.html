@@ -1682,8 +1682,9 @@
 
         const cid = response.currentStageId;
         const isClaimed = response.hasRewardClaimed;
-
-        if (response.isAllCleared || cid > 50) {
+        const totalBossStages = Number(response.totalStages || response.maxStage || response.maxStageId || 75);
+        
+        if (response.isAllCleared || cid > totalBossStages) {
           document.getElementById('battle-stage-title').innerText = "🏆 潮流制霸 🏆";
           document.getElementById('battle-boss-name').innerText = "🎉 恭喜！您已全通關！";
           document.getElementById('battle-boss-power').innerText = "---";
@@ -1706,7 +1707,7 @@
           bossImgUrl = "https://images.placeholders.dev/?width=150&height=200&text=" + encodeURIComponent(bName) + "&bgColor=%232d1a1a&textColor=%23ff4444&fontSize=18px";
         }
 
-        document.getElementById('battle-stage-title').innerText = `🔥 目前進度：第 ${cid} / 50 關`;
+        document.getElementById('battle-stage-title').innerText = `🔥 目前進度：第 ${cid} / ${totalBossStages} 關`;
         document.getElementById('battle-boss-avatar').src = bossImgUrl;
         document.getElementById('battle-boss-avatar').style.display = "block";
         document.getElementById('battle-boss-name').innerText = `【守關王：${bName}】`;
