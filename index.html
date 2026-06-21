@@ -1493,6 +1493,8 @@
     let currentCount = parseInt(window.TLO_INITIAL_TIMES || "0") || 0;
     let globalPlayerPower = 0; 
     let latestRpgDashboard = null;
+    let latestRpgAdventureKey = "";
+    let rpgAdventureRunning = false;
     let latestBattleDashboard = null;
 
     loadPublicSettings();
@@ -3795,11 +3797,28 @@ function showCollectionHistory() {
       setTimeout(run, typeof delayMs === 'number' ? delayMs : 80);
     }
 
+    function buildRpgRechallengeButton(key) {
+      if (!key) return '';
+      return `<div style="margin-top:12px;text-align:center;">
+        <button class="btn-collection" style="width:90%;background:linear-gradient(45deg,#ff8800,#ffc107);color:#111;box-shadow:0 0 16px rgba(255,193,7,.35);" onclick="startRpgAdventure('${escapeJsString(key)}')">⚔️ 再次征討</button>
+        <div style="font-size:11px;color:#aaa;margin-top:5px;">使用目前遠征隊伍再次挑戰同一關</div>
+      </div>`;
+    }
+
     function startRpgAdventure(key) {
       const msg = document.getElementById('rpg-msg');
       const preview = document.getElementById('rpg-party-preview');
       const arena = document.getElementById('rpg-arena-panel');
       const names = getSelectedRpgNames();
+
+      if (rpgAdventureRunning) {
+        if (msg) msg.innerHTML = '<span style="color:#ffc107;">遠征正在進行中，請等待本場戰鬥結束。</span>';
+        scrollToRpgBattleArea(60);
+        return;
+      }
+
+      latestRpgAdventureKey = key;
+      rpgAdventureRunning = true;
       msg.innerHTML = '遠征異世界隊伍出發中...';
       if (preview) preview.classList.add('adventure-running');
       if (arena) {
@@ -3833,6 +3852,7 @@ function showCollectionHistory() {
         registerCardImages(res);
         if (preview) preview.classList.remove('adventure-running');
         if (!res || !res.success) {
+          rpgAdventureRunning = false;
           if (arena) arena.style.display = 'none';
           if (res && res.dashboard) renderRpgDashboard(res.dashboard);
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
@@ -3860,19 +3880,23 @@ function showCollectionHistory() {
         });
         if (res && res.dashboard) renderRpgDashboard(res.dashboard);
         if (window.TLOAudio) window.TLOAudio.playSfx(res && res.win ? 'win' : 'error');
-        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '遠征完成')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
+        rpgAdventureRunning = false;
+        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '遠征完成')}${formatGrowthRewards(res && res.growthRewards)}</span>${buildRpgRechallengeButton(key)}`;
         if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
           currentCount = parseInt(res.newTimesLeft) || 0;
           updateButtonState();
         }
         loadTrainingDashboard();
       }).withFailureHandler(function(err) {
+        rpgAdventureRunning = false;
         if (preview) preview.classList.remove('adventure-running');
         if (arena) arena.style.display = 'none';
         msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(err && err.message ? err.message : err)}</span>`;
       }).executeRpgAdventure(playerUID, key);
     }
 
+
+    window.startRpgAdventure = startRpgAdventure;
 
     function escapeJsString(text) {
       return String(text == null ? '' : text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
