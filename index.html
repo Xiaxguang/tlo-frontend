@@ -5,6 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>T-LO 潮流盲盒開榜現場</title>
+  <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+  <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   
   <script>
 // 建立全域圖片庫，把所有角色跟 BOSS 的圖片連結放在這裡
@@ -386,6 +389,20 @@
       .rpg-party-members { gap:6px; }
       .rpg-mini-card { width:68px; padding:6px 4px; }
       .rpg-mini-card img { width:48px; height:64px; }
+    }
+    .rpg-rechallenge-wrap { display:none; text-align:center; margin:12px 0 14px; }
+    .btn-rpg-rechallenge {
+      width:92%; border:none; border-radius:18px; padding:15px 14px; cursor:pointer;
+      font-size:16px; font-weight:1000; color:#111;
+      background:linear-gradient(45deg,#ffdd44,#00fff0);
+      box-shadow:0 0 18px rgba(0,255,240,.28), 0 8px 18px rgba(0,0,0,.35);
+    }
+    .btn-rpg-rechallenge:disabled { opacity:.55; filter:grayscale(.35); cursor:not-allowed; }
+    #rpg-arena-panel.rpg-focus-flash { animation:rpgFocusFlash .65s ease-out; }
+    @keyframes rpgFocusFlash {
+      0% { box-shadow:0 0 0 rgba(0,255,240,0); transform:scale(.995); }
+      35% { box-shadow:0 0 28px rgba(0,255,240,.42), inset 0 0 20px rgba(255,193,7,.12); transform:scale(1.005); }
+      100% { box-shadow:0 0 0 rgba(0,255,240,0); transform:scale(1); }
     }
 
     /* 🎨 🟢 新增：出戰代表選單排版 */
@@ -1478,6 +1495,9 @@
         <div class="turn-banner" id="rpg-turn-banner">遠征異世界開始...</div>
         <div class="turn-battle-log" id="rpg-turn-log"></div>
       </div>
+      <div class="rpg-rechallenge-wrap" id="rpg-rechallenge-wrap">
+        <button class="btn-rpg-rechallenge" id="rpg-rechallenge-btn" onclick="repeatRpgAdventure()">⚔️ 再次征討</button>
+      </div>
       <div class="modal-h3" style="font-size:17px;margin-top:10px;">可挑戰關卡</div>
       <div id="rpg-dungeon-list">正在讀取遠征關卡...</div>
       <div class="modal-h3" style="font-size:17px;margin-top:14px;">最近遠征紀錄</div>
@@ -1491,6 +1511,9 @@
     let currentCount = parseInt(window.TLO_INITIAL_TIMES || "0") || 0;
     let globalPlayerPower = 0; 
     let latestRpgDashboard = null;
+    let latestRpgDashboardLoadedAt = 0;
+    let lastRpgAdventureKey = "";
+    let rpgAdventureRunning = false;
     let latestBattleDashboard = null;
 
     loadPublicSettings();
@@ -3716,6 +3739,73 @@ function showCollectionHistory() {
       }).redeemCode(playerUID, code);
     }
 
+    // ─── 前端輕量效能工具：圖片延遲載入、避免重複請求造成卡頓 ───
+    function optimizeTloImages(root) {
+      try {
+        const scope = root || document;
+        scope.querySelectorAll('img').forEach(function(img) {
+          if (!img.getAttribute('loading')) img.setAttribute('loading', 'lazy');
+          if (!img.getAttribute('decoding')) img.setAttribute('decoding', 'async');
+          img.setAttribute('draggable', 'false');
+        });
+      } catch (_) {}
+    }
+
+    let optimizeTloImagesTimer = null;
+    function scheduleOptimizeTloImages(root) {
+      if (optimizeTloImagesTimer) return;
+      optimizeTloImagesTimer = setTimeout(function() {
+        optimizeTloImagesTimer = null;
+        optimizeTloImages(root || document);
+      }, 60);
+    }
+
+    try {
+      document.addEventListener('DOMContentLoaded', function() {
+        scheduleOptimizeTloImages(document);
+        const mo = new MutationObserver(function() { scheduleOptimizeTloImages(document); });
+        mo.observe(document.body, { childList: true, subtree: true });
+      });
+    } catch (_) {}
+
+    // ─── 遠征異世界體驗修正：自動滑到戰鬥畫面 + 再次征討 ───
+    function scrollToRpgBattleArea(instant) {
+      const target = document.getElementById('rpg-arena-panel') || document.getElementById('rpg-party-preview');
+      if (!target) return;
+      const modalBody = document.querySelector('#rpg-modal .modal-content');
+      requestAnimationFrame(function() {
+        try {
+          target.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'start' });
+        } catch (_) {}
+        try {
+          if (modalBody) modalBody.scrollTo({ top: Math.max(0, target.offsetTop - 14), behavior: instant ? 'auto' : 'smooth' });
+        } catch (_) {
+          if (modalBody) modalBody.scrollTop = Math.max(0, target.offsetTop - 14);
+        }
+        target.classList.remove('rpg-focus-flash');
+        void target.offsetWidth;
+        target.classList.add('rpg-focus-flash');
+      });
+    }
+
+    function setRpgAdventureButtonsDisabled(disabled) {
+      try {
+        document.querySelectorAll('#rpg-dungeon-list button, #rpg-rechallenge-btn').forEach(function(btn) {
+          btn.disabled = !!disabled;
+        });
+      } catch (_) {}
+    }
+
+    function showRpgRechallengeButton(show) {
+      const wrap = document.getElementById('rpg-rechallenge-wrap');
+      if (wrap) wrap.style.display = show && lastRpgAdventureKey ? 'block' : 'none';
+    }
+
+    function repeatRpgAdventure() {
+      if (!lastRpgAdventureKey || rpgAdventureRunning) return;
+      startRpgAdventure(lastRpgAdventureKey, true);
+    }
+
     // ─── 遠征異世界模式 ───
     function openRpgModal() {
       if (window.TLOAudio) window.TLOAudio.playBgm('battle');
@@ -3725,11 +3815,16 @@ function showCollectionHistory() {
       if (arena) arena.style.display = 'none';
       const preview = document.getElementById('rpg-party-preview');
       if (preview) preview.classList.remove('adventure-running');
+      showRpgRechallengeButton(false);
       loadRpgDashboard();
     }
 
-    function loadRpgDashboard() {
+    function loadRpgDashboard(force) {
       const msg = document.getElementById('rpg-msg');
+      if (!force && latestRpgDashboard && Date.now() - latestRpgDashboardLoadedAt < 8000) {
+        renderRpgDashboard(latestRpgDashboard);
+        return;
+      }
       if (msg) msg.innerHTML = '正在讀取遠征資料...';
       google.script.run.withSuccessHandler(function(res) {
         if (!res || !res.success) {
@@ -3745,6 +3840,7 @@ function showCollectionHistory() {
     function renderRpgDashboard(res) {
       registerCardImages(res);
       latestRpgDashboard = res;
+      latestRpgDashboardLoadedAt = Date.now();
       const msg = document.getElementById('rpg-msg');
       if (msg) msg.innerHTML = '';
       const powerEl = document.getElementById('rpg-team-power');
@@ -3770,6 +3866,7 @@ function showCollectionHistory() {
       }).join('') || '<div style="color:#888;">目前沒有可挑戰遠征關卡。</div>';
 
       document.getElementById('rpg-log-list').innerHTML = (res.logs || []).map(l => `<div class="pvp-log-item"><b class="${l.result === 'WIN' ? 'pvp-win' : 'pvp-lose'}">${escapeHtml(l.result)}</b>｜${escapeHtml(l.dungeonName)}｜我方 ${Number(l.teamPower||0).toLocaleString()} / 敵方 ${Number(l.enemyPower||0).toLocaleString()}<br><span style="color:#aaa;">${escapeHtml(l.rewardSummary || '')}｜${escapeHtml(l.createdAt || '')}</span></div>`).join('') || '<div style="color:#888;">暫無遠征紀錄。</div>';
+      scheduleOptimizeTloImages(document.getElementById('rpg-modal'));
     }
 
     function getSelectedRpgNames() {
@@ -3801,6 +3898,7 @@ function showCollectionHistory() {
         html += `<div class="rpg-mini-card"><img src="${img}" alt="${escapeHtml(name)}"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★｜Lv.${Number(info.level||1)}</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')} Lv.${Number(info.skillLevel||1)}</div></div>`;
       }
       box.innerHTML = html;
+      scheduleOptimizeTloImages(box);
       if (caption) caption.innerText = names.length ? `遠征隊伍已集結：${names.join('、')}` : '選擇隊伍後，角色會組隊準備出發。';
     }
 
@@ -3818,23 +3916,39 @@ function showCollectionHistory() {
       }).setRpgTeam(playerUID, names);
     }
 
-    function startRpgAdventure(key) {
+    function startRpgAdventure(key, isRepeat) {
+      if (rpgAdventureRunning) return;
+      rpgAdventureRunning = true;
+      lastRpgAdventureKey = key || lastRpgAdventureKey || '';
+      setRpgAdventureButtonsDisabled(true);
+      showRpgRechallengeButton(false);
       const msg = document.getElementById('rpg-msg');
       const preview = document.getElementById('rpg-party-preview');
       const arena = document.getElementById('rpg-arena-panel');
       const names = getSelectedRpgNames();
-      msg.innerHTML = '遠征異世界隊伍出發中...';
+      msg.innerHTML = isRepeat ? '再次征討準備中...' : '遠征異世界隊伍出發中...';
       if (preview) preview.classList.add('adventure-running');
-      if (arena) arena.style.display = 'none';
+      if (arena) {
+        arena.style.display = 'block';
+        const title = document.getElementById('rpg-arena-title');
+        if (title) title.innerText = '🗺️ 遠征隊伍出發中...';
+        const log = document.getElementById('rpg-turn-log');
+        if (log) { log.style.display = 'block'; log.innerHTML = '<div class="turn-log-line">遠征隊伍正在前往戰鬥地點...</div>'; }
+        scrollToRpgBattleArea(false);
+      }
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
 
       google.script.run.withSuccessHandler(async function(res) {
         registerCardImages(res);
         if (preview) preview.classList.remove('adventure-running');
         if (!res || !res.success) {
+          rpgAdventureRunning = false;
+          setRpgAdventureButtonsDisabled(false);
           if (res && res.dashboard) renderRpgDashboard(res.dashboard);
+          if (arena) arena.style.display = 'none';
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
           msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '遠征失敗')}</span>`;
+          showRpgRechallengeButton(!!lastRpgAdventureKey);
           return;
         }
         const firstName = names[0] || ((res.dashboard && res.dashboard.partyNames && res.dashboard.partyNames[0]) || '遠征隊伍');
@@ -3856,16 +3970,24 @@ function showCollectionHistory() {
           bossPower: res.enemyPower
         });
         if (res && res.dashboard) renderRpgDashboard(res.dashboard);
+        scrollToRpgBattleArea(false);
         if (window.TLOAudio) window.TLOAudio.playSfx(res && res.win ? 'win' : 'error');
         msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '遠征完成')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
         if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
           currentCount = parseInt(res.newTimesLeft) || 0;
           updateButtonState();
         }
+        rpgAdventureRunning = false;
+        setRpgAdventureButtonsDisabled(false);
+        showRpgRechallengeButton(true);
         loadTrainingDashboard();
       }).withFailureHandler(function(err) {
+        rpgAdventureRunning = false;
+        setRpgAdventureButtonsDisabled(false);
         if (preview) preview.classList.remove('adventure-running');
+        if (arena) arena.style.display = 'none';
         msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(err && err.message ? err.message : err)}</span>`;
+        showRpgRechallengeButton(!!lastRpgAdventureKey);
       }).executeRpgAdventure(playerUID, key);
     }
 
@@ -4115,6 +4237,7 @@ function showCollectionHistory() {
       if (window.TLOAudio && typeof window.TLOAudio.playBgmForScreen === "function") {
         window.TLOAudio.playBgmForScreen(screenName);
       }
+      scheduleOptimizeTloImages(document);
       try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
     };
   </script>
