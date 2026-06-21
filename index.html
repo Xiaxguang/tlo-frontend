@@ -1514,6 +1514,7 @@
     let latestRpgDashboardLoadedAt = 0;
     let lastRpgAdventureKey = "";
     let rpgAdventureRunning = false;
+    let rpgDashboardDirty = false;
     let latestBattleDashboard = null;
 
     loadPublicSettings();
@@ -3567,7 +3568,8 @@ function showCollectionHistory() {
         }
         alert(res.msg || '升星成功');
         if (res.dashboard) renderStarDashboard(res.dashboard);
-        // 升星會影響戰力，因此相關視窗下次打開時會重新讀取。
+        refreshRpgDashboardIfOpen('升星已完成');
+        // 升星會影響戰力，因此遠征隊伍需要立即同步。
       }).withFailureHandler(function() {
         alert('升星失敗，請稍後再試。');
       }).upgradeCardStar(playerUID, cardName);
@@ -3663,6 +3665,7 @@ function showCollectionHistory() {
         alert(res.msg || '特訓成功');
         if (res.dashboard) renderCharacterGrowthDashboard(res.dashboard);
         loadHomeState();
+        refreshRpgDashboardIfOpen('角色等級已更新');
       }).withFailureHandler(function(err) {
         alert('特訓失敗：' + (err && err.message ? err.message : err));
       }).trainCardLevel(playerUID, cardName);
@@ -3679,6 +3682,7 @@ function showCollectionHistory() {
         alert(res.msg || '技能升級成功');
         if (res.dashboard) renderCharacterGrowthDashboard(res.dashboard);
         loadHomeState();
+        refreshRpgDashboardIfOpen('角色技能已更新');
       }).withFailureHandler(function(err) {
         alert('技能升級失敗：' + (err && err.message ? err.message : err));
       }).upgradeCardSkill(playerUID, cardName);
@@ -3768,6 +3772,27 @@ function showCollectionHistory() {
       });
     } catch (_) {}
 
+    // ─── 遠征資料同步修正：角色升級 / 升星 / 技能強化後，立刻刷新編隊資料 ───
+    function isRpgModalOpen() {
+      const modal = document.getElementById('rpg-modal');
+      return !!(modal && modal.style.display && modal.style.display !== 'none');
+    }
+
+    function invalidateRpgDashboardCache() {
+      latestRpgDashboard = null;
+      latestRpgDashboardLoadedAt = 0;
+      rpgDashboardDirty = true;
+    }
+
+    function refreshRpgDashboardIfOpen(reason) {
+      invalidateRpgDashboardCache();
+      if (isRpgModalOpen() && !rpgAdventureRunning) {
+        const msg = document.getElementById('rpg-msg');
+        if (msg && reason) msg.innerHTML = `<span style="color:#00fff0;">${escapeHtml(reason)}，正在同步遠征隊伍資料...</span>`;
+        loadRpgDashboard(true);
+      }
+    }
+
     // ─── 遠征異世界體驗修正：自動滑到戰鬥畫面 + 再次征討 ───
     function scrollToRpgBattleArea(instant) {
       const target = document.getElementById('rpg-arena-panel') || document.getElementById('rpg-party-preview');
@@ -3816,7 +3841,7 @@ function showCollectionHistory() {
       const preview = document.getElementById('rpg-party-preview');
       if (preview) preview.classList.remove('adventure-running');
       showRpgRechallengeButton(false);
-      loadRpgDashboard();
+      loadRpgDashboard(rpgDashboardDirty);
     }
 
     function loadRpgDashboard(force) {
@@ -3841,6 +3866,7 @@ function showCollectionHistory() {
       registerCardImages(res);
       latestRpgDashboard = res;
       latestRpgDashboardLoadedAt = Date.now();
+      rpgDashboardDirty = false;
       const msg = document.getElementById('rpg-msg');
       if (msg) msg.innerHTML = '';
       const powerEl = document.getElementById('rpg-team-power');
@@ -3980,6 +4006,7 @@ function showCollectionHistory() {
         rpgAdventureRunning = false;
         setRpgAdventureButtonsDisabled(false);
         showRpgRechallengeButton(true);
+        if (!res.dashboard) loadRpgDashboard(true);
         loadTrainingDashboard();
       }).withFailureHandler(function(err) {
         rpgAdventureRunning = false;
