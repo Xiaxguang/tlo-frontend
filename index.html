@@ -1009,9 +1009,136 @@
     .achievement-btn{border:none;border-radius:12px;background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer;min-width:88px;}
     .achievement-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
 
+
+
+    /* === T-LO 背景動圖插槽 Patch A：登入 / 主頁 / 抽卡 / 戰鬥 === */
+    :root {
+      --tlo-bg-video-opacity: .46;
+      --tlo-bg-dark-mask: rgba(0,0,0,.42);
+    }
+    #tlo-bg-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(255,0,127,.22), transparent 32%),
+        radial-gradient(circle at 80% 10%, rgba(0,255,240,.18), transparent 34%),
+        linear-gradient(180deg, #090912 0%, #11111b 50%, #050509 100%);
+    }
+    #tlo-bg-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: var(--tlo-bg-video-opacity);
+      filter: saturate(1.18) contrast(1.05) brightness(.82);
+      transform: scale(1.02);
+      transition: opacity .35s ease, filter .35s ease;
+    }
+    #tlo-bg-stage.video-missing #tlo-bg-video,
+    #tlo-bg-stage.bg-disabled #tlo-bg-video {
+      opacity: 0;
+    }
+    #tlo-bg-mask {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 10%, rgba(255,255,255,.06), transparent 34%),
+        linear-gradient(180deg, rgba(0,0,0,.22), var(--tlo-bg-dark-mask) 58%, rgba(0,0,0,.72));
+    }
+    #tlo-bg-grain {
+      position: absolute;
+      inset: 0;
+      opacity: .16;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mix-blend-mode: screen;
+    }
+    body.tlo-bg-login #tlo-bg-stage {
+      background:
+        radial-gradient(circle at 50% 0%, rgba(0,255,240,.20), transparent 30%),
+        radial-gradient(circle at 20% 25%, rgba(127,0,255,.20), transparent 36%),
+        linear-gradient(180deg, #060816 0%, #121022 52%, #040407 100%);
+    }
+    body.tlo-bg-home #tlo-bg-stage {
+      background:
+        radial-gradient(circle at 18% 5%, rgba(255,0,127,.20), transparent 32%),
+        radial-gradient(circle at 86% 22%, rgba(0,255,240,.18), transparent 34%),
+        linear-gradient(180deg, #10101c 0%, #080812 100%);
+    }
+    body.tlo-bg-gacha #tlo-bg-stage {
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255,0,127,.34), transparent 34%),
+        radial-gradient(circle at 72% 30%, rgba(255,193,7,.16), transparent 28%),
+        linear-gradient(180deg, #180619 0%, #0a0712 100%);
+    }
+    body.tlo-bg-battle #tlo-bg-stage {
+      background:
+        radial-gradient(circle at 15% 18%, rgba(255,70,70,.22), transparent 34%),
+        radial-gradient(circle at 82% 24%, rgba(0,255,240,.18), transparent 34%),
+        linear-gradient(180deg, #141016 0%, #06070d 100%);
+    }
+    .container.game-shell {
+      position: relative;
+      z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(22,22,36,.78), rgba(7,7,12,.88)) !important;
+      backdrop-filter: blur(1.5px);
+    }
+    .game-card,
+    .scene-panel,
+    .message-board-box,
+    .history-box,
+    .asset-info.player-hud,
+    .modal-content {
+      backdrop-filter: blur(4px);
+    }
+    #tlo-auth-overlay {
+      background: rgba(0,0,0,.68) !important;
+      backdrop-filter: blur(5px);
+    }
+    .tlo-bg-toggle {
+      position: fixed;
+      right: 14px;
+      bottom: calc(126px + env(safe-area-inset-bottom));
+      z-index: 100002;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(10,10,14,.72);
+      color: #ddd;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+    }
+    .tlo-bg-toggle.on {
+      color: #111;
+      background: linear-gradient(45deg,#00fff0,#ffdd77);
+      border-color: rgba(255,255,255,.35);
+    }
+    @media (max-width: 480px) {
+      :root { --tlo-bg-video-opacity: .38; --tlo-bg-dark-mask: rgba(0,0,0,.50); }
+      .container.game-shell { background: linear-gradient(180deg, rgba(22,22,36,.84), rgba(7,7,12,.91)) !important; }
+    }
+
   </style>
 </head>
 <body class="tlo-game-body">
+
+  <!-- T-LO 背景動圖插槽 Patch A：只載入目前畫面的背景影片 -->
+  <div id="tlo-bg-stage" class="video-missing" aria-hidden="true">
+    <video id="tlo-bg-video" autoplay muted loop playsinline preload="metadata"></video>
+    <div id="tlo-bg-mask"></div>
+    <div id="tlo-bg-grain"></div>
+  </div>
+
 
   <div class="container game-shell">
     <header class="game-topbar">
@@ -1035,7 +1162,7 @@
           </div>
           <div class="hud-tile">
             <span class="hud-label">卡盒進度</span>
-            <span class="hud-value"><span id="collection-summary-count">0</span>/16</span>
+            <span class="hud-value"><span id="collection-summary-count">0</span>/<span id="collection-summary-total">0</span></span>
           </div>
         </div>
       </div>
@@ -1077,13 +1204,13 @@
       <div class="notice-box" id="notice-box" style="display:block;">
         💡 <b>遊戲提示：</b><br>
         達成以下三個條件請馬上聯繫我們兌獎！<br>
-        1.集齊SR系列<br>
-        2.集齊SR系列 + SSR系列<br>
-        3.集齊全套卡牌<br>
+        1.集齊三隻SR系列凌凌 小舞 小艾<br>
+        2.集齊三隻SR系列 + SSR系列書宏<br>
+        3.集齊全套16張卡牌<br>
         首儲 500 抽卡次數 + 3<br>
         首儲 1000 抽卡次數 + 7<br>
-        客製化角色 200 可獲得訂製 SR 一張<br>
-        (不記入兌換獎品系列中)<br>
+        客製化角色 200 可獲得訂製 SR 一張
+        (不記入兌換獎品系列中)
         👉 <b>點擊聯繫客服兌獎：</b><br>
         <a href="https://line.me/ti/p/~bikabikahikari" style="color:#00fff0;font-weight:bold;text-decoration:underline;">Line: bikabikahikari</a>
       </div>
@@ -1186,16 +1313,14 @@
             <td>AJ, 千思語, 以凡, 林小蔚, 阿宗, 氣鵝, 喬喬, 瑄瑄, 夢璃, 燒酒</td>
             <td>8.00%</td>
           </tr>
-          <tr class="bg-normal table-summary"><td>NORMAL 級別總計機率</td><td>79.95%</td></tr>
-          <tr class="bg-rare"><td rowspan="3">RARE<br><span style="font-size:11px; font-weight:normal;">(共 3 款)</span></td><td>小光</td><td>3.00%</td></tr>
-          <tr class="bg-rare"><td>萌欣</td><td>3.00%</td></tr>
-          <tr class="bg-rare"><td>果果</td><td>3.05%</td></tr>
-          <tr class="bg-rare table-summary"><td>RARE 級別總計機率</td><td>10.05%</td></tr>
-          <tr class="bg-sr"><td rowspan="4">SUPER RARE<br><span style="font-size:11px; font-weight:normal;">(共 3 款)</span></td><td>凌凌</td><td>2.00%</td></tr>
-          <tr class="bg-sr"><td>小艾</td><td>2.00%</td></tr>
-          <tr class="bg-sr"><td>小舞</td><td>2.00%</td></tr>
-          <tr class="bg-sr"><td>貝貝</td><td>3.00%</td></tr>
-          <tr class="bg-rare table-summary"><td>SUPER RARE 級別總計機率</td><td>9.00%</td></tr>
+          <tr class="bg-normal table-summary"><td>NORMAL 級別總計機率</td><td>80.00%</td></tr>
+          <tr class="bg-rare"><td rowspan="3">RARE<br><span style="font-size:11px; font-weight:normal;">(共 2 款)</span></td><td>小光</td><td>3.50%</td></tr>
+          <tr class="bg-rare"><td>萌欣</td><td>5.00%</td></tr>
+          <tr class="bg-rare table-summary"><td>RARE 級別總計機率</td><td>8.50%</td></tr>
+          <tr class="bg-sr"><td rowspan="4">SUPER RARE<br><span style="font-size:11px; font-weight:normal;">(共 3 款)</span></td><td>凌凌</td><td>3.00%</td></tr>
+          <tr class="bg-sr"><td>小艾</td><td>3.00%</td></tr>
+          <tr class="bg-sr"><td>小舞</td><td>4.50%</td></tr>
+          <tr class="bg-rare table-summary"><td>SUPER RARE 級別總計機率</td><td>10.50%</td></tr>
           <tr class="bg-sr"><td rowspan="2">SSR<br><span style="font-size:11px; font-weight:normal;">(共 1 款)</span></td><td>書宏</td><td>1.00%</td></tr>
         </tbody>
       </table>
@@ -1530,6 +1655,31 @@
       "氣鵝": "NORMAL", "喬喬": "NORMAL", "瑄瑄": "NORMAL", "夢璃": "NORMAL", "燒酒": "NORMAL"
     };
     const ALL_16_CARDS = Object.keys(CARD_RARITIES);
+    // 動態卡盒：後端回傳 cards 後會自動更新，避免新增卡片後仍寫死 /16。
+    let TLO_COLLECTIBLE_CARD_POOL = ALL_16_CARDS.slice();
+    let TLO_COLLECTIBLE_TOTAL = ALL_16_CARDS.length;
+
+    function updateCollectionSummary(ownedCount, totalCount) {
+      const countEl = document.getElementById('collection-summary-count');
+      const totalEl = document.getElementById('collection-summary-total');
+      const owned = Number(ownedCount || 0);
+      const total = Number(totalCount || TLO_COLLECTIBLE_TOTAL || ALL_16_CARDS.length || 0);
+      TLO_COLLECTIBLE_TOTAL = total;
+      if (countEl) countEl.innerText = owned;
+      if (totalEl) totalEl.innerText = total;
+    }
+
+    function registerCollectibleCardsFromResponse(response) {
+      if (!response) return;
+      if (Array.isArray(response.cards) && response.cards.length) {
+        TLO_COLLECTIBLE_CARD_POOL = response.cards
+          .filter(function(card) { return card && (card.isDrawable !== false); })
+          .map(function(card) { return card.name || card.cardName || card.npcName || ''; })
+          .filter(Boolean);
+      }
+      const total = Number(response.totalCollectibleCards || response.totalCards || (TLO_COLLECTIBLE_CARD_POOL && TLO_COLLECTIBLE_CARD_POOL.length) || 0);
+      if (total > 0) TLO_COLLECTIBLE_TOTAL = total;
+    }
 
     if (window.TLO_IS_AUTHENTICATED) {
       updateButtonState();
@@ -1619,11 +1769,11 @@
 
       container.innerHTML = html;
 
-      const totalCards = cardList.length || 16;
+      registerCollectibleCardsFromResponse(response);
+      const totalCards = Number(response.totalCollectibleCards || response.totalCards || cardList.length || TLO_COLLECTIBLE_TOTAL || ALL_16_CARDS.length);
       progressText.innerText = `收集進度：${uCount} / ${totalCards} 張 (${Math.round((uCount / Math.max(1, totalCards)) * 100)}%)`;
 
-      const summary = document.getElementById('collection-summary-count');
-      if (summary) summary.innerText = uCount;
+      updateCollectionSummary(uCount, totalCards);
     } else {
       container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#ff7777;">卡盒讀取失敗，請稍後再試。</p>';
     }
@@ -1638,7 +1788,8 @@
       google.script.run.withSuccessHandler(function(response) {
         registerCardImages(response);
         if (response && response.success) {
-          document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+          registerCollectibleCardsFromResponse(response);
+          updateCollectionSummary(response.collectionUniqueCount || response.uniqueCount || 0, response.totalCollectibleCards || response.totalCards || TLO_COLLECTIBLE_TOTAL);
           if (typeof response.timesLeft !== "undefined") {
             currentCount = parseInt(response.timesLeft) || 0;
             updateButtonState();
@@ -2262,7 +2413,8 @@
           if (window.TLOAudio) window.TLOAudio.playCardRarity(response.npcRarity);
 
           if (typeof response.collectionUniqueCount !== "undefined") {
-            document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+            registerCollectibleCardsFromResponse(response);
+            updateCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || TLO_COLLECTIBLE_TOTAL);
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
@@ -2308,7 +2460,8 @@
           if (window.TLOAudio) window.TLOAudio.playBestGachaResult(response.results || []);
 
           if (typeof response.collectionUniqueCount !== "undefined") {
-            document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+            registerCollectibleCardsFromResponse(response);
+            updateCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || TLO_COLLECTIBLE_TOTAL);
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
@@ -3047,7 +3200,8 @@ function showCollectionHistory() {
             currentCount = parseInt(response.timesLeft) || 0;
           }
           document.getElementById('history-list').innerHTML = response.historyHtml || "<div>暫無抽卡紀錄</div>";
-          document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+          registerCollectibleCardsFromResponse(response);
+          updateCollectionSummary(response.collectionUniqueCount || response.uniqueCount || 0, response.totalCollectibleCards || response.totalCards || TLO_COLLECTIBLE_TOTAL);
           updateButtonState();
         }
       }).withFailureHandler(function() {
@@ -3361,7 +3515,7 @@ function showCollectionHistory() {
     }
 
     function startMemoryGame() {
-      const pool = ALL_16_CARDS.slice();
+      const pool = (TLO_COLLECTIBLE_CARD_POOL && TLO_COLLECTIBLE_CARD_POOL.length ? TLO_COLLECTIBLE_CARD_POOL : ALL_16_CARDS).slice();
       const selected = shuffleArray_(pool).slice(0, 4);
       __memoryCards = shuffleArray_(selected.concat(selected)).map(function(name, idx) {
         return { id: idx, name: name, revealed: false, matched: false };
@@ -4266,9 +4420,119 @@ function showCollectionHistory() {
       if (window.TLOAudio && typeof window.TLOAudio.playBgmForScreen === "function") {
         window.TLOAudio.playBgmForScreen(screenName);
       }
+      if (window.TLOBackground && typeof window.TLOBackground.set === "function") {
+        window.TLOBackground.set(screenName);
+      }
       scheduleOptimizeTloImages(document);
       try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
     };
+  </script>
+
+
+  <script>
+    // === T-LO 背景動圖插槽 Patch A：登入 / 主頁 / 抽卡 / 戰鬥 ===
+    (function () {
+      var STORAGE_KEY = 'TLO_BG_ANIMATION_ENABLED';
+      var BG_FILES = {
+        login: './assets/bg/login-bg.webm',
+        home: './assets/bg/home-bg.webm',
+        gacha: './assets/bg/gacha-bg.webm',
+        battle: './assets/bg/battle-bg.webm'
+      };
+      var current = '';
+      var enabled = localStorage.getItem(STORAGE_KEY) !== '0';
+      var checkTimer = null;
+      var checkCount = 0;
+
+      function isLoginContext() {
+        return !window.TLO_IS_AUTHENTICATED || !!document.getElementById('tlo-auth-overlay');
+      }
+      function getActiveScreen() {
+        if (isLoginContext()) return 'login';
+        var active = document.querySelector('.game-screen.active');
+        var screen = active ? active.getAttribute('data-screen') : 'home';
+        if (screen === 'gacha') return 'gacha';
+        if (screen === 'battle') return 'battle';
+        return 'home';
+      }
+      function applyBodyClass(name) {
+        document.body.classList.remove('tlo-bg-login', 'tlo-bg-home', 'tlo-bg-gacha', 'tlo-bg-battle');
+        document.body.classList.add('tlo-bg-' + name);
+      }
+      function setBackground(name, force) {
+        name = name || getActiveScreen();
+        if (isLoginContext()) name = 'login';
+        if (!BG_FILES[name]) name = 'home';
+        applyBodyClass(name);
+        updateToggleButton();
+        var stage = document.getElementById('tlo-bg-stage');
+        var video = document.getElementById('tlo-bg-video');
+        if (!stage || !video) return;
+        stage.classList.toggle('bg-disabled', !enabled);
+        if (!enabled) return;
+        if (!force && current === name) return;
+        current = name;
+        stage.classList.remove('video-missing');
+        video.onerror = function () { stage.classList.add('video-missing'); };
+        video.oncanplay = function () { stage.classList.remove('video-missing'); };
+        try {
+          video.pause();
+          video.removeAttribute('src');
+          video.src = BG_FILES[name];
+          video.load();
+          var p = video.play();
+          if (p && typeof p.catch === 'function') p.catch(function () {});
+        } catch (_) {
+          stage.classList.add('video-missing');
+        }
+      }
+      function updateToggleButton() {
+        var btn = document.getElementById('tlo-bg-toggle');
+        if (!btn) return;
+        btn.classList.toggle('on', enabled);
+        btn.textContent = enabled ? '🎞️ 背景開' : '🖼️ 背景關';
+      }
+      function ensureToggleButton() {
+        if (document.getElementById('tlo-bg-toggle')) return;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = 'tlo-bg-toggle';
+        btn.className = 'tlo-bg-toggle';
+        btn.onclick = function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          enabled = !enabled;
+          localStorage.setItem(STORAGE_KEY, enabled ? '1' : '0');
+          setBackground(getActiveScreen(), true);
+        };
+        document.body.appendChild(btn);
+        updateToggleButton();
+      }
+      function startShortAuthWatcher() {
+        clearInterval(checkTimer);
+        checkCount = 0;
+        checkTimer = setInterval(function () {
+          checkCount++;
+          setBackground(getActiveScreen());
+          if (checkCount >= 30) clearInterval(checkTimer);
+        }, 1000);
+      }
+      window.TLOBackground = {
+        set: function (name) { setBackground(name || getActiveScreen()); },
+        refresh: function () { setBackground(getActiveScreen(), true); },
+        enable: function () { enabled = true; localStorage.setItem(STORAGE_KEY, '1'); setBackground(getActiveScreen(), true); },
+        disable: function () { enabled = false; localStorage.setItem(STORAGE_KEY, '0'); setBackground(getActiveScreen(), true); }
+      };
+      document.addEventListener('DOMContentLoaded', function () {
+        ensureToggleButton();
+        setBackground(getActiveScreen(), true);
+        startShortAuthWatcher();
+        try {
+          var observer = new MutationObserver(function () { setBackground(getActiveScreen()); });
+          observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+        } catch (_) {}
+      });
+    })();
   </script>
 
 </body>
