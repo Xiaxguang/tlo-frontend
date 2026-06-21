@@ -992,10 +992,6 @@
     .achievement-btn{border:none;border-radius:12px;background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer;min-width:88px;}
     .achievement-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
 
-
-    /* 遠征異世界：選關後自動捲到戰鬥區時，保留一點上方間距 */
-    #rpg-arena-panel { scroll-margin-top: 14px; }
-
   </style>
 </head>
 <body class="tlo-game-body">
@@ -1068,9 +1064,7 @@
         2.集齊三隻SR系列 + SSR系列書宏<br>
         3.集齊全套16張卡牌<br>
         首儲 500 抽卡次數 + 3<br>
-        首儲 1000 抽卡次數 + 7<br>
-        製作客製化卡牌 200 可獲得訂製 SR 一張
-        (但不可記入兌獎系列中)<br>
+        首儲 1000 送 MIYA 99 好禮<br>
         👉 <b>點擊聯繫客服兌獎：</b><br>
         <a href="https://line.me/ti/p/~bikabikahikari" style="color:#00fff0;font-weight:bold;text-decoration:underline;">Line: bikabikahikari</a>
       </div>
@@ -1253,7 +1247,7 @@
         <div class="turn-battle-log" id="battle-turn-log"></div>
       </div>
 
-      <button class="btn-fight" id="fight-btn" onclick="startChallenge()">⚔️ 代表出戰 ⚔️</button>
+      <button class="btn-fight" id="fight-btn" onclick="window.startChallenge()">⚔️ 代表出戰 ⚔️</button>
       <div id="battle-result-msg" style="margin-top:12px; text-align:center; font-size:13px; font-weight:bold;"></div>
     </div>
   </div>
@@ -1320,7 +1314,7 @@
       <div class="modal-h3">🏆 T-LO 成就系統</div>
       <div class="mini-panel">
         <div style="color:#aaa; font-size:13px; line-height:1.55; text-align:left;">
-          完成收集、戰鬥、遠征、PVP、養成里程碑即可領獎。
+          角色猜影子已移除，改為永久成就。完成收集、戰鬥、遠征、PVP、養成里程碑即可領獎。成就獎勵不發放抽卡次數。
         </div>
         <div id="achievement-status" style="color:#aaa; font-size:13px; margin-top:10px;">正在讀取成就...</div>
         <div id="achievement-summary" class="achievement-summary"></div>
@@ -1429,7 +1423,7 @@
       <div class="modal-h3">🎁 開服福利 / 任務中心</div>
       <div id="mission-wallet" class="collection-stat">讀取中...</div>
       <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:12px;">
-        開服 7 日福利可每日領取 1 份；潮流能量、技能經驗、訓練分數。
+        開服 7 日福利可每日領取 1 份；每日任務與新手任務不再發放抽卡次數，改以潮流能量、技能經驗、訓練分數與 PVP 碎片為主。
       </div>
       <div id="mission-msg" style="min-height:22px;font-weight:900;color:#aaa;margin-bottom:10px;"></div>
 
@@ -1454,7 +1448,7 @@
     <div class="modal-content" style="max-width:720px;">
       <span class="modal-close" onclick="document.getElementById('rpg-modal').style.display='none';">&times;</span>
       <div class="modal-h3">🗺️ T-LO 遠征異世界模式</div>
-      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">選已持有角色組隊，挑戰遠征關卡。此模式獎勵為遊戲內分數、能量與機率掉落抽卡次數。</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">選 1～3 張已持有角色組隊，挑戰遠征關卡。此模式獎勵為遊戲內分數、能量與機率掉落抽卡次數。</div>
       <div class="collection-stat" id="rpg-team-power">隊伍戰力：讀取中...</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0;">
         <select id="rpg-slot-1" class="player-deck-select" onchange="renderRpgTeamPreview()"></select>
@@ -1495,8 +1489,6 @@
     let currentCount = parseInt(window.TLO_INITIAL_TIMES || "0") || 0;
     let globalPlayerPower = 0; 
     let latestRpgDashboard = null;
-    let latestRpgAdventureKey = "";
-    let rpgAdventureRunning = false;
     let latestBattleDashboard = null;
 
     loadPublicSettings();
@@ -1683,7 +1675,7 @@
         const cid = response.currentStageId;
         const isClaimed = response.hasRewardClaimed;
         const totalBossStages = Number(response.totalStages || response.maxStage || response.maxStageId || 75);
-        
+
         if (response.isAllCleared || cid > totalBossStages) {
           document.getElementById('battle-stage-title').innerText = "🏆 潮流制霸 🏆";
           document.getElementById('battle-boss-name').innerText = "🎉 恭喜！您已全通關！";
@@ -1725,7 +1717,7 @@
           document.getElementById('battle-stage-reward').innerHTML = '🎁 進度關：本關無抽卡獎勵；每通過 5 關可獲得抽卡次數 +3。';
         }
 
-        btn.onclick = startChallenge;
+        btn.onclick = window.startChallenge;
         btn.disabled = !response.battleRepresentative;
 
         if (!response.battleRepresentative) {
@@ -2096,49 +2088,109 @@
       return `<br><span style="color:#00fff0;font-size:12px;">🌟 角色經驗：${items.join('、')}${arr.length > 3 ? '...' : ''}</span>`;
     }
 
-    google.script.run.withSuccessHandler(async function(res) {
-  const battleResult = res || {};
 
-  // 先播放戰鬥動畫
-  await playTurnBattleAnimation(battleResult);
+    // === 潮流爭霸戰：全域出戰函式修正版 ===
+    // 重點：後端可以先算完，但前端會先播放動畫，動畫結束後才顯示勝負結果。
+    window.startChallenge = async function startChallenge() {
+      const btn = document.getElementById('fight-btn');
+      const infoPanel = document.getElementById('boss-info-panel');
+      const arenaPanel = document.getElementById('battle-arena-panel');
+      const resultMsg = document.getElementById('battle-result-msg');
+      const clashZone = document.getElementById('clash-zone-box');
 
-  // 動畫播完後，才顯示結果
-  if (battleResult && battleResult.success) {
-    resultMsg.innerHTML = `<span style="color:#00ff7f; font-size:16px; text-shadow: 0 0 10px #00ff7f;">
-      ${escapeHtml(battleResult.msg || '戰鬥勝利！')}<br>
-      🎁 ${escapeHtml(battleResult.rewardText || '')}
-      ${formatGrowthRewards(battleResult.growthRewards)}
-    </span>`;
+      function safeText(v) {
+        if (typeof escapeHtml === 'function') return escapeHtml(v || '');
+        return String(v || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
 
-    currentCount = battleResult.newTimesLeft;
-    updateButtonState();
+      if (!btn || !resultMsg) {
+        alert('爭霸戰畫面元件讀取失敗，請重新整理頁面。');
+        return;
+      }
 
-    if (window.TLOAudio) window.TLOAudio.playSfx('win');
+      btn.disabled = true;
+      btn.innerText = '⚡ 戰鬥演算中...';
+      resultMsg.innerHTML = '';
 
-    btn.innerText = "✅ 已突破此關，準備下一關...";
-    setTimeout(openBattleModal, 4200);
+      if (infoPanel) infoPanel.style.display = 'none';
+      if (arenaPanel) arenaPanel.style.display = 'block';
 
-  } else {
-    resultMsg.innerHTML = `<span style="color:#ff7777; font-size:13px; display:block; padding:5px;">
-      ${escapeHtml(battleResult && battleResult.msg ? battleResult.msg : '挑戰失敗')}
-      ${formatGrowthRewards(battleResult && battleResult.growthRewards)}
-    </span>`;
+      if (clashZone) {
+        clashZone.classList.add('clash-animate');
+        setTimeout(function() {
+          clashZone.classList.remove('clash-animate');
+        }, 500);
+      }
 
-    if (window.TLOAudio) window.TLOAudio.playSfx('error');
+      if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
 
-    btn.disabled = false;
-    btn.innerText = "🔄 從第一關重新啟動挑戰 🔄";
-    btn.style.background = "linear-gradient(45deg, #ff5500, #ff0000)";
-    btn.onclick = function() {
-      openBattleModal();
-      btn.onclick = startChallenge;
+      google.script.run
+        .withSuccessHandler(async function(res) {
+          const battleResult = res || {};
+
+          try {
+            if (typeof playTurnBattleAnimation === 'function') {
+              await playTurnBattleAnimation(battleResult);
+            }
+          } catch (e) {
+            console.warn('戰鬥動畫播放失敗，改為直接顯示結果：', e);
+          }
+
+          if (battleResult && battleResult.success) {
+            resultMsg.innerHTML =
+              `<span style="color:#00ff7f; font-size:16px; text-shadow:0 0 10px #00ff7f;">
+                ${safeText(battleResult.msg || '戰鬥勝利！')}<br>
+                🎁 ${safeText(battleResult.rewardText || '')}
+                ${typeof formatGrowthRewards === 'function' ? formatGrowthRewards(battleResult.growthRewards) : ''}
+              </span>`;
+
+            if (typeof battleResult.newTimesLeft !== 'undefined' && battleResult.newTimesLeft !== null) {
+              currentCount = parseInt(battleResult.newTimesLeft, 10) || currentCount;
+              if (typeof updateButtonState === 'function') updateButtonState();
+            }
+
+            if (window.TLOAudio) window.TLOAudio.playSfx('win');
+
+            btn.innerText = '✅ 已突破此關，準備下一關...';
+
+            setTimeout(function() {
+              if (typeof openBattleModal === 'function') openBattleModal();
+            }, 4200);
+
+          } else {
+            resultMsg.innerHTML =
+              `<span style="color:#ff7777; font-size:13px; display:block; padding:5px;">
+                ${safeText(battleResult && battleResult.msg ? battleResult.msg : '挑戰失敗')}
+                ${typeof formatGrowthRewards === 'function' ? formatGrowthRewards(battleResult && battleResult.growthRewards) : ''}
+              </span>`;
+
+            if (window.TLOAudio) window.TLOAudio.playSfx('error');
+
+            btn.disabled = false;
+            btn.innerText = '🔄 從第一關重新啟動挑戰 🔄';
+            btn.style.background = 'linear-gradient(45deg, #ff5500, #ff0000)';
+            btn.onclick = window.startChallenge;
+          }
+        })
+        .withFailureHandler(function(err) {
+          resultMsg.innerHTML =
+            `<span style="color:#ff4444;">
+              戰鬥失敗：${safeText(err && err.message ? err.message : err)}
+            </span>`;
+
+          btn.disabled = false;
+          btn.innerText = '⚔️ 重新挑戰';
+          btn.onclick = window.startChallenge;
+
+          if (window.TLOAudio) window.TLOAudio.playSfx('error');
+        })
+        .executeBattle(playerUID);
     };
-  }
-}).withFailureHandler(function(err) {
-  resultMsg.innerHTML = `<span style="color:#ff4444;">戰鬥失敗：${escapeHtml(err && err.message ? err.message : err)}</span>`;
-  btn.disabled = false;
-  btn.innerText = "⚔️ 重新挑戰";
-}).executeBattle(playerUID);
 
 
     function disableAllButtons(loadingText) {
@@ -3764,105 +3816,25 @@ function showCollectionHistory() {
       }).setRpgTeam(playerUID, names);
     }
 
-
-    function scrollToRpgBattleArea(delayMs) {
-      const run = function() {
-        const target =
-          document.getElementById('rpg-arena-panel') ||
-          document.getElementById('rpg-party-preview') ||
-          document.getElementById('rpg-msg');
-
-        if (!target) return;
-
-        const modalContent = document.querySelector('#rpg-modal .modal-content');
-
-        try {
-          if (modalContent && modalContent.contains(target)) {
-            const targetTop = Math.max(0, target.offsetTop - 12);
-            modalContent.scrollTo({
-              top: targetTop,
-              behavior: 'smooth'
-            });
-            return;
-          }
-        } catch (e) {
-          console.warn('遠征戰鬥區捲動失敗，改用 scrollIntoView：', e);
-        }
-
-        if (typeof target.scrollIntoView === 'function') {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      };
-
-      setTimeout(run, typeof delayMs === 'number' ? delayMs : 80);
-    }
-
-    function buildRpgRechallengeButton(key) {
-      if (!key) return '';
-      return `<div style="margin-top:12px;text-align:center;">
-        <button class="btn-collection" style="width:90%;background:linear-gradient(45deg,#ff8800,#ffc107);color:#111;box-shadow:0 0 16px rgba(255,193,7,.35);" onclick="startRpgAdventure('${escapeJsString(key)}')">⚔️ 再次征討</button>
-        <div style="font-size:11px;color:#aaa;margin-top:5px;">使用目前遠征隊伍再次挑戰同一關</div>
-      </div>`;
-    }
-
     function startRpgAdventure(key) {
       const msg = document.getElementById('rpg-msg');
       const preview = document.getElementById('rpg-party-preview');
       const arena = document.getElementById('rpg-arena-panel');
       const names = getSelectedRpgNames();
-
-      if (rpgAdventureRunning) {
-        if (msg) msg.innerHTML = '<span style="color:#ffc107;">遠征正在進行中，請等待本場戰鬥結束。</span>';
-        scrollToRpgBattleArea(60);
-        return;
-      }
-
-      latestRpgAdventureKey = key;
-      rpgAdventureRunning = true;
       msg.innerHTML = '遠征異世界隊伍出發中...';
       if (preview) preview.classList.add('adventure-running');
-      if (arena) {
-        arena.style.display = 'block';
-        arena.classList.add('turn-mode');
-
-        const banner = document.getElementById('rpg-turn-banner');
-        const log = document.getElementById('rpg-turn-log');
-        const playerFill = document.getElementById('rpg-hp-player-fill');
-        const bossFill = document.getElementById('rpg-hp-boss-fill');
-        const playerText = document.getElementById('rpg-hp-player-text');
-        const bossText = document.getElementById('rpg-hp-boss-text');
-
-        if (banner) {
-          banner.style.display = 'block';
-          banner.innerText = '🗺️ 遠征隊伍出發中，準備進入戰鬥...';
-        }
-        if (log) {
-          log.style.display = 'block';
-          log.innerHTML = '<div class="turn-log-line">遠征隊伍已集結，正在鎖定關卡敵人...</div>';
-        }
-        if (playerFill) playerFill.style.width = '100%';
-        if (bossFill) bossFill.style.width = '100%';
-        if (playerText) playerText.innerText = '--';
-        if (bossText) bossText.innerText = '--';
-      }
-      scrollToRpgBattleArea(80);
+      if (arena) arena.style.display = 'none';
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
 
       google.script.run.withSuccessHandler(async function(res) {
         registerCardImages(res);
         if (preview) preview.classList.remove('adventure-running');
         if (!res || !res.success) {
-          rpgAdventureRunning = false;
-          if (arena) arena.style.display = 'none';
           if (res && res.dashboard) renderRpgDashboard(res.dashboard);
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
           msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '遠征失敗')}</span>`;
           return;
         }
-        scrollToRpgBattleArea(40);
         const firstName = names[0] || ((res.dashboard && res.dashboard.partyNames && res.dashboard.partyNames[0]) || '遠征隊伍');
         const dungeon = ((latestRpgDashboard && latestRpgDashboard.dungeons) || []).find(d => d.key === key) || {};
         const bossName = (res.battleAnimation && res.battleAnimation.bossName) || dungeon.name || '關卡敵人';
@@ -3883,23 +3855,18 @@ function showCollectionHistory() {
         });
         if (res && res.dashboard) renderRpgDashboard(res.dashboard);
         if (window.TLOAudio) window.TLOAudio.playSfx(res && res.win ? 'win' : 'error');
-        rpgAdventureRunning = false;
-        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '遠征完成')}${formatGrowthRewards(res && res.growthRewards)}</span>${buildRpgRechallengeButton(key)}`;
+        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '遠征完成')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
         if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
           currentCount = parseInt(res.newTimesLeft) || 0;
           updateButtonState();
         }
         loadTrainingDashboard();
       }).withFailureHandler(function(err) {
-        rpgAdventureRunning = false;
         if (preview) preview.classList.remove('adventure-running');
-        if (arena) arena.style.display = 'none';
         msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(err && err.message ? err.message : err)}</span>`;
       }).executeRpgAdventure(playerUID, key);
     }
 
-
-    window.startRpgAdventure = startRpgAdventure;
 
     function escapeJsString(text) {
       return String(text == null ? '' : text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
