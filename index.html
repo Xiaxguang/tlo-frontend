@@ -1258,7 +1258,7 @@
       </div>
 
       <div class="game-card">
-        <div class="shop-note" id="shop-payment-notice">儲值商城會依後端設定顯示付款狀態；付款方式限定信用卡一次付清 / ATM / 超商代碼 / 超商條碼 / Apple Pay。</div>
+        <div class="shop-note" id="shop-payment-notice">儲值商城會依後端設定顯示付款狀態；付款方式限定信用卡一次付清 / ATM / 超商代碼 / 超商條碼。</div>
       </div>
 
       <div class="game-card">
@@ -1284,7 +1284,7 @@
           </div>
           <button onclick="closeEcpayModal()" style="background:#333;color:#fff;border:0;border-radius:12px;padding:10px 12px;font-weight:900;">關閉</button>
         </div>
-        <div style="font-size:13px;color:#ffdd77;line-height:1.6;margin-bottom:10px;">付款方式：國內信用卡一次付清 / ATM / 超商代碼 / 超商條碼 / Apple Pay。請勿使用海外信用卡、分期或銀聯卡。Apple Pay 需先完成綠界與 Apple 網域驗證。</div>
+        <div style="font-size:13px;color:#ffdd77;line-height:1.6;margin-bottom:10px;">付款方式：國內信用卡一次付清 / ATM / 超商代碼 / 超商條碼。請勿使用海外信用卡、分期或銀聯卡。</div>
         <div id="ECPayPayment" style="background:#fff;border-radius:14px;padding:8px;color:#111;min-height:160px;"></div>
         <button id="ecpay-submit-btn" onclick="submitEcpayCheckout()" style="width:100%;margin-top:12px;background:linear-gradient(45deg,#7f00ff,#00fff0);color:#fff;border:0;border-radius:14px;padding:14px;font-weight:1000;">確認送出付款</button>
         <div id="ecpay-msg" style="font-size:13px;color:#aaa;line-height:1.7;margin-top:10px;"></div>
@@ -3526,18 +3526,6 @@ function showCollectionHistory() {
       return '交易已建立，付款完成後系統會自動入帳。';
     }
 
-    function getApplePayResultData(resultData, errMsg) {
-      if (errMsg) { setEcpayMsg('Apple Pay 付款結果錯誤：' + errMsg, false); return; }
-      try {
-        var orderNo = resultData && resultData.OrderInfo ? resultData.OrderInfo.MerchantTradeNo : '';
-        setEcpayMsg('Apple Pay 結果已送出確認。訂單：' + (orderNo || '-') + '。實際發獎以綠界 ReturnURL 後端通知為準。', true);
-        loadShopDashboard();
-        loadHomeState();
-      } catch(e) {
-        setEcpayMsg('Apple Pay 結果處理完成，請稍後回遊戲確認入帳。', true);
-      }
-    }
-    window.getApplePayResultData = getApplePayResultData;
 
     function submitEcpayCheckout() {
       if (!currentEcpayOrder) { setEcpayMsg('尚未建立付款訂單。', false); return; }
@@ -3548,11 +3536,7 @@ function showCollectionHistory() {
         var paymentType = paymentInfo && paymentInfo.PaymentType;
         var payToken = paymentInfo && paymentInfo.PayToken;
         if (!payToken) {
-          if (paymentType === 'ApplePay') {
-            setEcpayMsg('Apple Pay 付款已交由 Apple Pay 流程處理。實際結果以綠界 ReturnURL 通知為準。', true);
-          } else {
-            setEcpayMsg('取得付款代碼失敗，請確認付款資料是否填寫完整。', false);
-          }
+          setEcpayMsg('取得付款代碼失敗，請確認付款資料是否填寫完整。', false);
           return;
         }
         setEcpayMsg('正在送出交易...', true);
@@ -4536,7 +4520,8 @@ function showCollectionHistory() {
 
     try {
       document.addEventListener('DOMContentLoaded', function() {
-        if (screenName === 'shop') loadShopDashboard();
+        var initialScreenName = document.querySelector('.game-screen.active')?.getAttribute('data-screen') || 'home';
+        if (initialScreenName === 'shop') loadShopDashboard();
       scheduleOptimizeTloImages(document);
         const mo = new MutationObserver(function() { scheduleOptimizeTloImages(document); });
         mo.observe(document.body, { childList: true, subtree: true });
