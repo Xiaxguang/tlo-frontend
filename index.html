@@ -1275,23 +1275,6 @@
 
 
 
-    <div id="ecpay-modal" style="display:none;position:fixed;z-index:99999;left:0;right:0;top:0;bottom:0;background:rgba(0,0,0,.82);padding:14px;overflow:auto;">
-      <div style="max-width:720px;margin:24px auto;background:#121225;border:1px solid rgba(0,255,240,.35);border-radius:20px;padding:16px;box-shadow:0 0 28px rgba(0,255,240,.18);">
-        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px;">
-          <div>
-            <h3 style="margin:0;color:#00fff0;">綠界付款</h3>
-            <div id="ecpay-order-info" style="font-size:13px;color:#aaa;margin-top:4px;">準備付款中...</div>
-          </div>
-          <button onclick="closeEcpayModal()" style="background:#333;color:#fff;border:0;border-radius:12px;padding:10px 12px;font-weight:900;">關閉</button>
-        </div>
-        <div style="font-size:13px;color:#ffdd77;line-height:1.6;margin-bottom:10px;">付款方式：國內信用卡一次付清 / ATM / 超商代碼 / 超商條碼。請勿使用海外信用卡、分期或銀聯卡。填完付款資料後，請按下方「送出付款 / 取得繳費代碼」。</div>
-        <div id="ecpay-debug-info" style="font-size:12px;color:#9ff;line-height:1.5;margin-bottom:8px;"></div>
-        <div id="ECPayPayment" style="background:#fff;border-radius:14px;padding:0;color:#111;min-height:460px;overflow:hidden;"></div>
-        <button id="ecpay-submit-btn" onclick="submitEcpayCheckout()" disabled style="width:100%;margin-top:12px;background:linear-gradient(45deg,#7f00ff,#00fff0);color:#fff;border:0;border-radius:14px;padding:14px;font-weight:1000;opacity:.55;cursor:not-allowed;display:none;">付款畫面載入中...</button>
-        <div id="ecpay-msg" style="font-size:13px;color:#aaa;line-height:1.7;margin-top:10px;"></div>
-      </div>
-    </div>
-
     <section class="game-screen" id="profileScreen" data-screen="profile">
       <div class="screen-head">
         <div>
@@ -3453,7 +3436,7 @@ function showCollectionHistory() {
         var disabled = !item.canBuy;
         var isCash = item.priceType === 'CASH';
         var note = item.paymentNote ? '<div class="shop-note">' + escapeHtml(item.paymentNote || '') + '</div>' : '';
-        var btnText = isCash && !item.paymentDisabled ? '前往綠界付款' : (item.paymentDisabled ? '付款尚未開放' : (disabled ? '已達限購 / 無法購買' : '購買'));
+        var btnText = isCash && !item.paymentDisabled ? '前往綠界付款頁' : (item.paymentDisabled ? '付款尚未開放' : (disabled ? '已達限購 / 無法購買' : '購買'));
         return `<div class="shop-item-card ${disabled ? 'off' : ''}">
           <div class="shop-item-head"><div class="shop-item-name">${escapeHtml(item.name || '')}</div><span class="shop-tag">${escapeHtml(item.tag || limitText)}</span></div>
           <div class="shop-desc">${escapeHtml(item.description || '')}</div>
@@ -3465,329 +3448,30 @@ function showCollectionHistory() {
       }).join('');
     }
 
-    var currentEcpayOrder = null;
-
-    function closeEcpayModal(options) {
-      options = options || {};
-      var modal = document.getElementById('ecpay-modal');
-      if (modal) modal.style.display = 'none';
-      currentEcpayOrder = null;
-      var pay = document.getElementById('ECPayPayment');
-      if (pay) pay.innerHTML = '';
-      var debug = document.getElementById('ecpay-debug-info');
-      if (debug) debug.innerHTML = '';
-      setEcpaySubmitReady(false, '付款畫面載入中...');
-      if (!options.keepShopMsg) {
+    function submitEcpayAioForm(formAction, fields) {
+      if (!formAction || !fields) {
         var msg = document.getElementById('shop-msg');
-        if (msg) msg.innerHTML = '<span style="color:#aaa;">付款彈窗已關閉，可重新選擇商品測試。</span>';
-      }
-      loadShopDashboard();
-    }
-
-    function setEcpaySubmitReady(ready, text) {
-      var btn = document.getElementById('ecpay-submit-btn');
-      if (!btn) return;
-      btn.disabled = !ready;
-      btn.textContent = text || (ready ? '送出付款 / 取得繳費代碼' : '付款畫面載入中...');
-      btn.style.opacity = ready ? '1' : '.55';
-      btn.style.cursor = ready ? 'pointer' : 'not-allowed';
-    }
-
-    function setEcpayMsg(text, good) {
-      var el = document.getElementById('ecpay-msg');
-      if (el) el.innerHTML = '<span style="color:' + (good ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(text || '') + '</span>';
-    }
-
-    function loadScriptOnce(id, src, readyCheck, cb, onError) {
-      try {
-        if (readyCheck && readyCheck()) { cb && cb(); return; }
-        var existing = document.getElementById(id);
-        if (existing) {
-          var waited = 0;
-          var timer = setInterval(function(){
-            waited += 100;
-            if (readyCheck && readyCheck()) { clearInterval(timer); cb && cb(); }
-            else if (waited >= 10000) { clearInterval(timer); onError && onError(new Error('載入逾時：' + src)); }
-          }, 100);
-          return;
-        }
-        var script = document.createElement('script');
-        script.id = id;
-        script.src = src;
-        script.async = false;
-        script.onload = function(){
-          if (!readyCheck) { cb && cb(); return; }
-          var waited = 0;
-          var timer = setInterval(function(){
-            waited += 100;
-            if (readyCheck()) { clearInterval(timer); cb && cb(); }
-            else if (waited >= 10000) { clearInterval(timer); onError && onError(new Error('載入完成但物件尚未就緒：' + src)); }
-          }, 100);
-        };
-        script.onerror = function(){ onError && onError(new Error('載入失敗：' + src)); };
-        document.body.appendChild(script);
-      } catch (err) {
-        onError && onError(err);
-      }
-    }
-
-    function waitForEcpayReady(cb, onError) {
-      var waited = 0;
-      var timer = setInterval(function(){
-        waited += 100;
-        if (window.ECPay && typeof window.ECPay.initialize === 'function' && typeof window.ECPay.createPayment === 'function' && typeof window.ECPay.getPayToken === 'function') {
-          clearInterval(timer);
-          cb && cb();
-        } else if (waited >= 10000) {
-          clearInterval(timer);
-          onError && onError(new Error('綠界 SDK 尚未準備完成，請確認 jQuery、node-forge 與 sdk-1.0.0.js 是否都已成功載入。'));
-        }
-      }, 100);
-    }
-
-    function loadEcpaySdk(sdkUrl, cb) {
-      var fail = function(err){
-        setEcpayMsg('綠界 SDK 載入失敗：' + escapeHtml(err && err.message ? err.message : err), false);
-      };
-      if (!sdkUrl) {
-        setEcpayMsg('綠界 SDK 網址為空，請檢查後端 ECPay 設定。', false);
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;font-weight:bold;">綠界 AIO 表單資料不完整。</span>';
         return;
       }
-      // 每次只載入一次 SDK；但每筆付款仍會重新 createPayment，避免重複插入 script 造成 SDK 狀態錯亂。
-      if (window.ECPay && typeof window.ECPay.initialize === 'function') { cb(); return; }
-      loadScriptOnce('ecpay-jquery-js', 'https://code.jquery.com/jquery-3.5.1.min.js', function(){ return !!window.jQuery; }, function(){
-        loadScriptOnce('ecpay-forge-js', 'https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js', function(){ return !!window.forge; }, function(){
-          loadScriptOnce('ecpay-sdk-js', sdkUrl, function(){ return !!(window.ECPay && typeof window.ECPay.initialize === 'function'); }, function(){
-            waitForEcpayReady(cb, fail);
-          }, fail);
-        }, fail);
-      }, fail);
+      var old = document.getElementById('ecpay-aio-submit-form');
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+      var form = document.createElement('form');
+      form.id = 'ecpay-aio-submit-form';
+      form.method = 'POST';
+      form.action = formAction;
+      form.acceptCharset = 'UTF-8';
+      form.style.display = 'none';
+      Object.keys(fields || {}).forEach(function(key) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key] == null ? '' : String(fields[key]);
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
     }
-
-    function resetEcpayPaymentContainer() {
-      var oldPay = document.getElementById('ECPayPayment');
-      if (!oldPay || !oldPay.parentNode) return oldPay;
-      var fresh = oldPay.cloneNode(false);
-      fresh.innerHTML = '';
-      oldPay.parentNode.replaceChild(fresh, oldPay);
-      return fresh;
-    }
-
-    function ecpayPaymentHasRendered() {
-      var pay = document.getElementById('ECPayPayment');
-      if (!pay) return false;
-      var html = (pay.innerHTML || '').trim();
-      if (pay.children && pay.children.length > 0) return true;
-      if (html.length > 20) return true;
-      return false;
-    }
-
-    function markEcpayPaymentReadyFromDom(reason) {
-      if (!currentEcpayOrder) return;
-      setEcpaySubmitReady(true, '送出付款 / 取得繳費代碼');
-      setEcpayMsg('付款畫面已載入' + (reason ? '（' + reason + '）' : '') + '。請在上方選擇付款方式並填寫資料，完成後按下方按鈕送出。', true);
-      var shopMsg = document.getElementById('shop-msg');
-      if (shopMsg) shopMsg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">付款畫面已開啟，請在彈窗選擇付款方式並按送出。</span>';
-    }
-
-    function watchEcpayPaymentRender(doneRef) {
-      var pay = document.getElementById('ECPayPayment');
-      if (!pay) return function(){};
-      var stopped = false;
-      var finish = function(reason) {
-        if (stopped || doneRef.done) return;
-        if (!ecpayPaymentHasRendered()) return;
-        doneRef.done = true;
-        stopped = true;
-        try { observer && observer.disconnect(); } catch(e) {}
-        try { clearInterval(timer); } catch(e) {}
-        try { clearTimeout(timeout); } catch(e) {}
-        markEcpayPaymentReadyFromDom(reason);
-      };
-      var observer = null;
-      try {
-        observer = new MutationObserver(function(){ finish('畫面偵測'); });
-        observer.observe(pay, { childList: true, subtree: true });
-      } catch(e) {}
-      var timer = setInterval(function(){ finish('畫面偵測'); }, 300);
-      var timeout = setTimeout(function(){
-        if (doneRef.done) return;
-        doneRef.done = true;
-        stopped = true;
-        try { observer && observer.disconnect(); } catch(e) {}
-        try { clearInterval(timer); } catch(e) {}
-        setEcpaySubmitReady(false, '付款畫面載入逾時');
-        setEcpayMsg('付款畫面載入逾時。請關閉彈窗後重新建立付款訂單；若連續發生，請按 Ctrl + F5 強制重新整理後再測。', false);
-      }, 18000);
-      return function(){
-        stopped = true;
-        try { observer && observer.disconnect(); } catch(e) {}
-        try { clearInterval(timer); } catch(e) {}
-        try { clearTimeout(timeout); } catch(e) {}
-      };
-    }
-
-    function openEcpayModal(order) {
-      currentEcpayOrder = order;
-      var modal = document.getElementById('ecpay-modal');
-      var info = document.getElementById('ecpay-order-info');
-      var pay = document.getElementById('ECPayPayment');
-      var debug = document.getElementById('ecpay-debug-info');
-      var btn = document.getElementById('ecpay-submit-btn');
-      if (btn) btn.style.display = 'none';
-      setEcpaySubmitReady(false, '付款頁面載入中...');
-      if (info) info.innerText = '商品：' + (order.itemName || '') + '｜金額：NT$ ' + Number(order.amount || 0).toLocaleString() + '｜訂單：' + (order.orderNo || '');
-      var ecpay = order.ecpay || {};
-      if (debug) debug.innerHTML = '實際付款清單：' + escapeHtml(ecpay.choosePaymentList || '-') + '｜PaymentUIType：' + escapeHtml(String(ecpay.paymentUIType || 2)) + '｜環境：' + escapeHtml(ecpay.serverType || 'Stage');
-      if (modal) modal.style.display = 'block';
-      setEcpayMsg('正在載入獨立綠界付款頁面...', true);
-      if (!order.token) {
-        setEcpayMsg('付款 Token 遺失，請重新建立付款訂單。', false);
-        return;
-      }
-      if (pay) {
-        var payload = {
-          orderNo: order.orderNo || '',
-          itemName: order.itemName || '',
-          amount: Number(order.amount || 0),
-          token: order.token || '',
-          ecpay: {
-            sdkUrl: ecpay.sdkUrl || '',
-            serverType: ecpay.serverType || 'Stage',
-            choosePaymentList: ecpay.choosePaymentList || '',
-            paymentUIType: ecpay.paymentUIType || 2
-          }
-        };
-        var hash = encodeURIComponent(JSON.stringify(payload));
-        pay.innerHTML = '<iframe id="ecpay-checkout-frame" title="綠界付款" src="ecpay-checkout.html#' + hash + '" style="width:100%;height:520px;border:0;border-radius:14px;background:#fff;display:block;"></iframe>';
-      }
-      var timeout = setTimeout(function(){
-        if (!currentEcpayOrder || currentEcpayOrder.orderNo !== order.orderNo) return;
-        setEcpayMsg('付款頁面仍在載入。若持續空白，請按 Ctrl + F5 強制重新整理，或檢查瀏覽器是否阻擋第三方 Script。', false);
-      }, 18000);
-      order._frameTimeout = timeout;
-    }
-
-    function processEcpayPayToken(paymentInfo) {
-      if (!currentEcpayOrder) { setEcpayMsg('尚未建立付款訂單。', false); return; }
-      paymentInfo = paymentInfo || {};
-      var paymentType = paymentInfo.PaymentType || '';
-      var payToken = paymentInfo.PayToken || '';
-      if (!payToken) {
-        setEcpayMsg('取得付款代碼失敗，請確認付款方式與資料是否填寫完整。', false);
-        return;
-      }
-      setEcpayMsg('正在送出交易...', true);
-      var orderNo = currentEcpayOrder.orderNo;
-      google.script.run.withSuccessHandler(function(res) {
-        if (!res || !res.success) { setEcpayMsg(res && res.msg ? res.msg : '交易建立失敗', false); return; }
-        if (res.redirectUrl) {
-          setEcpayMsg('即將前往 3D 驗證頁面，請完成銀行驗證...', true);
-          location.href = res.redirectUrl;
-          return;
-        }
-        if (res.paymentInfo) {
-          finishPendingOfflinePayment(describePaymentInfo(res.paymentInfo));
-          return;
-        }
-        var doneMsg = res.msg || '交易已送出，等待綠界付款結果通知。';
-        setEcpayMsg(doneMsg, true);
-        var shopMsg2 = document.getElementById('shop-msg');
-        if (shopMsg2) shopMsg2.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">' + escapeHtml(doneMsg) + '</span>';
-        loadShopDashboard();
-        loadHomeState();
-        setTimeout(function(){ closeEcpayModal({ keepShopMsg: true }); }, 1200);
-      }).withFailureHandler(function(err) {
-        setEcpayMsg('交易建立失敗：' + escapeHtml(err && err.message ? err.message : err), false);
-      }).submitEcpayPayment(playerUID, orderNo, payToken, paymentType || '');
-    }
-
-    window.addEventListener('message', function(ev) {
-      if (ev.origin && ev.origin !== window.location.origin) return;
-      var data = ev.data || {};
-      if (!data || !String(data.type || '').startsWith('TLO_ECPAY_')) return;
-      if (currentEcpayOrder && data.orderNo && data.orderNo !== currentEcpayOrder.orderNo) return;
-      if (data.type === 'TLO_ECPAY_READY') {
-        setEcpayMsg('綠界付款頁面已載入，正在建立付款畫面...', true);
-        return;
-      }
-      if (data.type === 'TLO_ECPAY_RENDERED') {
-        if (currentEcpayOrder && currentEcpayOrder._frameTimeout) clearTimeout(currentEcpayOrder._frameTimeout);
-        setEcpayMsg('付款畫面已載入。請在上方付款頁面選擇方式並填寫資料，再按付款頁面內的「送出付款 / 取得繳費代碼」。', true);
-        var shopMsg = document.getElementById('shop-msg');
-        if (shopMsg) shopMsg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">付款畫面已開啟，請在彈窗內完成付款。</span>';
-        return;
-      }
-      if (data.type === 'TLO_ECPAY_ERROR') {
-        setEcpayMsg(data.msg || '綠界付款頁面發生錯誤。', false);
-        return;
-      }
-      if (data.type === 'TLO_ECPAY_PAYTOKEN') {
-        setEcpayMsg('已取得付款代碼，正在建立交易...', true);
-        processEcpayPayToken(data.paymentInfo || {});
-        return;
-      }
-    });
-
-    function firstPaymentField(obj, keys) {
-      obj = obj || {};
-      keys = keys || [];
-      for (var i = 0; i < keys.length; i++) {
-        var v = obj[keys[i]];
-        if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
-      }
-      var raw = obj.rawFields || {};
-      for (var j = 0; j < keys.length; j++) {
-        var rv = raw[keys[j]];
-        if (rv !== undefined && rv !== null && String(rv).trim() !== '') return String(rv).trim();
-      }
-      return '';
-    }
-
-    function describePaymentInfo(info) {
-      info = info || {};
-      var type = String(info.type || '').toUpperCase();
-      if (type === 'ATM') {
-        var bank = firstPaymentField(info, ['BankCode','ATMAccBank','AtmAccBank','BankNo','BankID','BankId']);
-        var account = firstPaymentField(info, ['vAccount','VAccount','VirtualAccount','ATMAccNo','AtmAccNo','AccountNo','PayAccount','PaymentNo']);
-        var expire = firstPaymentField(info, ['ExpireDate','ExpireTime','ExpiredDate','PaymentDeadline','ExpireDateTime']);
-        return 'ATM 轉帳資訊已建立：銀行代碼 ' + (bank || '請以綠界畫面為準') + '，虛擬帳號 ' + (account || '請以綠界畫面為準') + '，期限 ' + (expire || '請以綠界畫面為準') + '。付款完成並收到綠界通知後，系統才會自動發獎。';
-      }
-      if (type === 'CVS') {
-        var code = firstPaymentField(info, ['PaymentNo','CVSNo','CvsNo','CVSCode','CvsCode','PaymentCode']);
-        var cvsExpire = firstPaymentField(info, ['ExpireDate','ExpireTime','ExpiredDate','PaymentDeadline','StoreExpireDate']);
-        return '超商代碼已建立：繳費代碼 ' + (code || '請以綠界畫面為準') + '，期限 ' + (cvsExpire || '請以綠界畫面為準') + '。付款完成並收到綠界通知後，系統才會自動發獎。';
-      }
-      if (type === 'BARCODE') {
-        var b1 = firstPaymentField(info, ['Barcode1','BarCode1']);
-        var b2 = firstPaymentField(info, ['Barcode2','BarCode2']);
-        var b3 = firstPaymentField(info, ['Barcode3','BarCode3']);
-        var barExpire = firstPaymentField(info, ['ExpireDate','ExpireTime','ExpiredDate','PaymentDeadline','StoreExpireDate']);
-        var bars = [b1,b2,b3].filter(Boolean).join(' / ');
-        return '超商條碼已建立' + (bars ? '：' + bars : '') + '，期限 ' + (barExpire || '請以綠界畫面為準') + '。付款完成並收到綠界通知後，系統才會自動發獎。';
-      }
-      return '交易已建立，付款完成並收到綠界通知後，系統才會自動發獎。';
-    }
-
-    function finishPendingOfflinePayment(message) {
-      setEcpayMsg(message, true);
-      var shopMsg = document.getElementById('shop-msg');
-      if (shopMsg) shopMsg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">' + escapeHtml(message) + '</span>';
-      setEcpaySubmitReady(false, '繳費資訊已建立');
-      loadShopDashboard();
-      loadHomeState();
-      setTimeout(function(){ closeEcpayModal({ keepShopMsg: true }); }, 1200);
-    }
-
-    function submitEcpayCheckout() {
-      var frame = document.getElementById('ecpay-checkout-frame');
-      if (frame && frame.contentWindow) {
-        frame.contentWindow.postMessage({ type: 'TLO_ECPAY_REQUEST_PAY', orderNo: currentEcpayOrder && currentEcpayOrder.orderNo }, window.location.origin);
-      } else {
-        setEcpayMsg('付款頁面尚未載入完成，請稍候。', false);
-      }
-    }
-
 
     function buyShopItem(productKey) {
       var msg = document.getElementById('shop-msg');
@@ -3804,8 +3488,8 @@ function showCollectionHistory() {
             renderShopDashboard();
             return;
           }
-          if (msg) msg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">付款訂單已建立，請在彈窗選擇付款方式。</span>';
-          openEcpayModal(res);
+          if (msg) msg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">付款訂單已建立，即將導轉至綠界官方付款頁...</span>';
+          submitEcpayAioForm(res.formAction, res.fields);
         }).withFailureHandler(function(err) {
           if (msg) msg.innerHTML = '<span style="color:#ff7777;">付款訂單建立失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
         }).createEcpayOrder(playerUID, productKey);
