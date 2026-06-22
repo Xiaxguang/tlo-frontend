@@ -1043,6 +1043,38 @@
     .shop-buy-btn{width:100%;border:0;border-radius:12px;padding:11px 12px;font-weight:900;cursor:pointer;color:#111;background:linear-gradient(45deg,#ffdd77,#00fff0);}
     .shop-buy-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
 
+    .profile-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0;}
+    .profile-tile{background:#111;border:1px solid rgba(0,255,240,.2);border-radius:14px;padding:11px;text-align:left;}
+    .profile-tile span{display:block;color:#aaa;font-size:11px;font-weight:900;}
+    .profile-tile b{display:block;color:#00fff0;font-size:18px;margin-top:4px;}
+    .profile-form{display:grid;gap:10px;margin-top:12px;}
+    .profile-form label{color:#aaa;font-size:12px;font-weight:900;display:block;margin-bottom:4px;}
+    .profile-form input,.profile-form textarea,.profile-form select,.social-input{width:100%;box-sizing:border-box;border:1px solid #444;background:#101018;color:#fff;border-radius:12px;padding:10px;font-size:14px;outline:none;}
+    .profile-form textarea{min-height:86px;resize:vertical;line-height:1.5;}
+    .profile-save-btn,.social-action-btn{border:0;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;color:#111;background:linear-gradient(45deg,#00fff0,#00ff7f);}
+    .profile-save-btn:disabled,.social-action-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
+    .item-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px;}
+    .item-card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:11px;text-align:left;}
+    .item-card .item-name{color:#fff;font-weight:900;font-size:13px;}
+    .item-card .item-amount{color:#ffdd77;font-size:20px;font-weight:950;margin:6px 0;}
+    .item-card .item-desc{color:#aaa;font-size:11px;line-height:1.45;}
+    .social-row{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.045);border-radius:14px;padding:11px;margin:8px 0;}
+    .social-main{min-width:0;}
+    .social-name{font-weight:950;color:#fff;font-size:14px;}
+    .social-meta{color:#aaa;font-size:12px;line-height:1.45;margin-top:3px;word-break:break-word;}
+    .social-status{display:inline-block;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:900;margin-left:6px;border:1px solid #666;color:#ccc;}
+    .social-status.online{border-color:#00ff7f;color:#00ff7f;}
+    .social-status.busy{border-color:#ffdd77;color:#ffdd77;}
+    .social-status.offline{border-color:#777;color:#999;}
+    .social-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+    .social-action-btn.warn{background:linear-gradient(45deg,#ff6b6b,#ffdd77);}
+    .game-bottom-dock{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(470px,calc(100vw - 22px));background:rgba(8,8,14,.9);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:8px;box-sizing:border-box;backdrop-filter:blur(16px);box-shadow:0 14px 42px rgba(0,0,0,.55);z-index:800;}
+    .game-menu-toggle{width:100%;border:0;border-radius:16px;background:linear-gradient(135deg,rgba(255,0,127,.45),rgba(0,255,240,.25));color:#fff;padding:10px 12px;font-weight:950;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .game-menu-current{color:#00fff0;font-size:12px;}
+    .game-bottom-dock .game-bottom-nav{position:relative!important;left:auto!important;bottom:auto!important;transform:none!important;width:100%!important;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:transparent!important;border:0!important;border-radius:0!important;padding:8px 0 0 0!important;box-shadow:none!important;backdrop-filter:none!important;}
+    .game-bottom-dock.collapsed .game-bottom-nav{display:none!important;}
+
+
 
   </style>
 </head>
@@ -1120,6 +1152,8 @@
           <button class="feature-btn" onclick="openPvpModal()"><span>🆚</span>玩家對戰<small>設定代表卡並挑戰玩家</small></button>
           <button class="feature-btn" onclick="openCharacterGrowthModal()"><span>🌟</span>角色養成<small>等級、經驗、技能與10星升星</small></button>
           <button class="feature-btn" onclick="showGameScreen('shop')"><span>🛒</span>商城<small>兌換補給與查看儲值商品</small></button>
+          <button class="feature-btn" onclick="showGameScreen('profile')"><span>👤</span>個人<small>查看資產、券與自我介紹</small></button>
+          <button class="feature-btn" onclick="showGameScreen('social')"><span>🤝</span>社交<small>好友邀請、好友列表與狀態</small></button>
         </div>
       </div>
 
@@ -1224,16 +1258,7 @@
       </div>
 
       <div class="game-card">
-        <h3>玩家資產</h3>
-        <div class="shop-wallet">
-          <div class="shop-wallet-tile"><span>抽卡次數</span><b id="shop-asset-draw">0</b></div>
-          <div class="shop-wallet-tile"><span>潮流能量</span><b id="shop-asset-energy">0</b></div>
-          <div class="shop-wallet-tile"><span>積分</span><b id="shop-asset-points">0</b></div>
-          <div class="shop-wallet-tile"><span>技能經驗</span><b id="shop-asset-skill-exp">0</b></div>
-          <div class="shop-wallet-tile"><span>爭霸戰券</span><b id="shop-asset-battle">0 / 30</b></div>
-          <div class="shop-wallet-tile"><span>遠征券</span><b id="shop-asset-rpg">0 / 20</b></div>
-        </div>
-        <div class="shop-note" id="shop-payment-notice">儲值商城目前尚未開放正式付款。</div>
+        <div class="shop-note" id="shop-payment-notice">儲值商城目前尚未開放正式付款。玩家資產已移至「個人」頁。</div>
       </div>
 
       <div class="game-card">
@@ -1247,12 +1272,120 @@
       </div>
     </section>
 
+
+    <section class="game-screen" id="profileScreen" data-screen="profile">
+      <div class="screen-head">
+        <div>
+          <h2 class="screen-title">個人</h2>
+          <div class="screen-sub">查看玩家資產、持有道具、挑戰券與個人資訊。</div>
+        </div>
+        <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
+      </div>
+
+      <div class="game-card">
+        <h3>玩家資訊</h3>
+        <div class="profile-summary">
+          <div class="profile-tile"><span>玩家 UID</span><b id="profile-uid">-</b></div>
+          <div class="profile-tile"><span>暱稱</span><b id="profile-name">-</b></div>
+          <div class="profile-tile"><span>狀態</span><b id="profile-status">-</b></div>
+          <div class="profile-tile"><span>收藏進度</span><b id="profile-collection">0 / 0</b></div>
+          <div class="profile-tile"><span>成就進度</span><b id="profile-achievements">0 / 0</b></div>
+        </div>
+        <div class="profile-form">
+          <div>
+            <label>暱稱</label>
+            <input id="profile-input-name" maxlength="40" placeholder="輸入暱稱">
+          </div>
+          <div>
+            <label>狀態</label>
+            <select id="profile-input-status">
+              <option value="ONLINE">在線</option>
+              <option value="OFFLINE">離線</option>
+              <option value="BUSY">忙碌</option>
+            </select>
+          </div>
+          <div>
+            <label>自我介紹</label>
+            <textarea id="profile-input-bio" maxlength="200" placeholder="寫一段簡短自我介紹，最多 200 字。"></textarea>
+          </div>
+          <button class="profile-save-btn" onclick="savePlayerProfile()">儲存個人資料</button>
+          <div id="profile-msg" style="font-size:13px;color:#aaa;line-height:1.6;"></div>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <h3>玩家資產</h3>
+        <div class="profile-summary">
+          <div class="profile-tile"><span>抽卡次數</span><b id="profile-asset-draw">0</b></div>
+          <div class="profile-tile"><span>潮流能量</span><b id="profile-asset-energy">0</b></div>
+          <div class="profile-tile"><span>積分</span><b id="profile-asset-points">0</b></div>
+          <div class="profile-tile"><span>技能經驗</span><b id="profile-asset-skill-exp">0</b></div>
+          <div class="profile-tile"><span>爭霸戰券</span><b id="profile-asset-battle">0 / 30</b></div>
+          <div class="profile-tile"><span>遠征券</span><b id="profile-asset-rpg">0 / 20</b></div>
+          <div class="profile-tile"><span>PVP 挑戰券</span><b id="profile-asset-pvp">0 / 10</b></div>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <h3>持有的道具</h3>
+        <div class="item-grid" id="profile-item-grid"><div style="color:#aaa;">正在讀取...</div></div>
+      </div>
+    </section>
+
+    <section class="game-screen" id="socialScreen" data-screen="social">
+      <div class="screen-head">
+        <div>
+          <h2 class="screen-title">社交</h2>
+          <div class="screen-sub">好友、好友邀請與在線狀態。私訊功能目前不開放。</div>
+        </div>
+        <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
+      </div>
+
+      <div class="game-card">
+        <h3>新增好友</h3>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="social-input" id="friend-target-uid" placeholder="輸入對方玩家 UID，例如 guang">
+          <button class="social-action-btn" style="flex:0 0 auto;" onclick="sendFriendRequestUI()">送出邀請</button>
+        </div>
+        <div id="social-msg" style="font-size:13px;color:#aaa;line-height:1.6;margin-top:8px;"></div>
+      </div>
+
+      <div class="game-card">
+        <h3>我的狀態</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="social-action-btn" onclick="setPresenceStatusUI('ONLINE')">在線</button>
+          <button class="social-action-btn" onclick="setPresenceStatusUI('BUSY')">忙碌</button>
+          <button class="social-action-btn warn" onclick="setPresenceStatusUI('OFFLINE')">離線</button>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <h3>好友邀請</h3>
+        <div id="incoming-friend-list"><div style="color:#aaa;">正在讀取...</div></div>
+      </div>
+
+      <div class="game-card">
+        <h3>已送出的邀請</h3>
+        <div id="outgoing-friend-list"><div style="color:#aaa;">正在讀取...</div></div>
+      </div>
+
+      <div class="game-card">
+        <h3>好友列表</h3>
+        <div id="friend-list"><div style="color:#aaa;">正在讀取...</div></div>
+      </div>
+    </section>
+
+    <div class="game-bottom-dock collapsed" id="game-bottom-dock">
+      <button type="button" class="game-menu-toggle" onclick="toggleBottomNav()"><span>☰ 選單</span><span class="game-menu-current" id="current-screen-label">目前：主介面</span></button>
     <nav class="game-bottom-nav" aria-label="T-LO 主選單">
       <button type="button" class="active" data-screen-target="home" onclick="showGameScreen('home')"><span>🏠</span>主介面</button>
       <button type="button" data-screen-target="gacha" onclick="showGameScreen('gacha')"><span>🎁</span>抽卡</button>
       <button type="button" data-screen-target="battle" onclick="showGameScreen('battle')"><span>⚔️</span>戰鬥</button>
       <button type="button" data-screen-target="shop" onclick="showGameScreen('shop')"><span>🛒</span>商城</button>
+      <button type="button" data-screen-target="profile" onclick="showGameScreen('profile')"><span>👤</span>個人</button>
+      <button type="button" data-screen-target="social" onclick="showGameScreen('social')"><span>🤝</span>社交</button>
     </nav>
+    </div>
   </div>
 
   <div class="modal-overlay" id="prob-modal" onclick="if(event.target.id==='prob-modal') this.style.display='none';">
@@ -1595,6 +1728,8 @@
     let rpgDashboardDirty = false;
     let latestBattleDashboard = null;
     let latestShopDashboard = null;
+    let latestPersonalDashboard = null;
+    let latestSocialDashboard = null;
     let activeShopCategory = 'ENERGY';
 
     loadPublicSettings();
@@ -3245,18 +3380,21 @@ function showCollectionHistory() {
         ['display-energy', assets.energy || 0],
         ['display-points', assets.points || 0],
         ['display-skill-exp', assets.skillExp || 0],
-        ['shop-asset-draw', currentCount],
-        ['shop-asset-energy', assets.energy || 0],
-        ['shop-asset-points', assets.points || 0],
-        ['shop-asset-skill-exp', assets.skillExp || 0]
+        ['profile-asset-draw', currentCount],
+        ['profile-asset-energy', assets.energy || 0],
+        ['profile-asset-points', assets.points || 0],
+        ['profile-asset-skill-exp', assets.skillExp || 0]
       ];
       map.forEach(function(pair){ var el=document.getElementById(pair[0]); if(el) el.innerText = Number(pair[1] || 0).toLocaleString(); });
       var b = assets.battleDailyLimits || {};
       var r = assets.rpgDailyLimits || {};
-      var battleEl = document.getElementById('shop-asset-battle');
+      var battleEl = document.getElementById('profile-asset-battle');
       if (battleEl) battleEl.innerText = Number(b.challengeRemaining || 0).toLocaleString() + ' / ' + Number(b.challengeLimit || 30).toLocaleString();
-      var rpgEl = document.getElementById('shop-asset-rpg');
+      var rpgEl = document.getElementById('profile-asset-rpg');
       if (rpgEl) rpgEl.innerText = Number(r.expeditionRemaining || 0).toLocaleString() + ' / ' + Number(r.expeditionLimit || 20).toLocaleString();
+      var pvp = assets.pvpDailyLimits || {};
+      var pvpEl = document.getElementById('profile-asset-pvp');
+      if (pvpEl) pvpEl.innerText = Number(pvp.remaining || 0).toLocaleString() + ' / ' + Number(pvp.limit || 10).toLocaleString();
       updateButtonState();
     }
 
@@ -3334,6 +3472,168 @@ function showCollectionHistory() {
       }).withFailureHandler(function(err) {
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">購買失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
       }).buyShopItem(playerUID, productKey);
+    }
+
+
+    function renderPersonalDashboard(res) {
+      if (!res || !res.success) return;
+      latestPersonalDashboard = res;
+      var profile = res.profile || {};
+      var assets = res.assets || {};
+      updateAssetDisplaysFromShopAssets(assets);
+      var pairs = [
+        ['profile-uid', profile.uid || playerUID || '-'],
+        ['profile-name', profile.displayName || '-'],
+        ['profile-status', profile.statusLabel || '-'],
+        ['profile-collection', Number(res.collectionUniqueCount || 0).toLocaleString() + ' / ' + Number(res.totalCollectibleCards || 0).toLocaleString()],
+        ['profile-achievements', Number(res.achievementCompletedCount || 0).toLocaleString() + ' / ' + Number(res.achievementTotalCount || 0).toLocaleString()]
+      ];
+      pairs.forEach(function(pair){ var el=document.getElementById(pair[0]); if(el) el.innerText = pair[1]; });
+      var nameInput = document.getElementById('profile-input-name'); if (nameInput) nameInput.value = profile.displayName || '';
+      var bioInput = document.getElementById('profile-input-bio'); if (bioInput) bioInput.value = profile.bio || '';
+      var statusInput = document.getElementById('profile-input-status'); if (statusInput) statusInput.value = profile.manualStatus || profile.status || 'ONLINE';
+      var grid = document.getElementById('profile-item-grid');
+      if (grid) {
+        var items = res.virtualItems || [];
+        grid.innerHTML = items.length ? items.map(function(item){
+          return `<div class="item-card"><div class="item-name">${escapeHtml(item.name || '')}</div><div class="item-amount">${Number(item.amount || 0).toLocaleString()}</div><div class="item-desc">${escapeHtml(item.desc || '')}</div></div>`;
+        }).join('') : '<div style="color:#aaa;">目前沒有可顯示的道具。</div>';
+      }
+    }
+
+    function loadPersonalDashboard() {
+      var msg = document.getElementById('profile-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在讀取個人資料...</span>';
+      if (typeof google === "undefined" || !google.script || !google.script.run) return;
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (msg) msg.innerHTML = '<span style="color:#ff7777;">個人資料讀取失敗。</span>';
+          return;
+        }
+        renderPersonalDashboard(res);
+        if (msg) msg.innerHTML = '<span style="color:#aaa;">個人資料已同步。</span>';
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).getPersonalDashboard(playerUID);
+    }
+
+    function savePlayerProfile() {
+      var msg = document.getElementById('profile-msg');
+      var payload = {
+        displayName: (document.getElementById('profile-input-name') || {}).value || '',
+        bio: (document.getElementById('profile-input-bio') || {}).value || '',
+        status: (document.getElementById('profile-input-status') || {}).value || 'ONLINE'
+      };
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">儲存中...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderPersonalDashboard(res.dashboard);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '儲存失敗') + '</span>';
+        loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">儲存失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).updatePlayerProfile(playerUID, payload);
+    }
+
+    function statusClass(status) {
+      var s = String(status || '').toLowerCase();
+      if (s === 'online') return 'online';
+      if (s === 'busy') return 'busy';
+      return 'offline';
+    }
+
+    function socialRow(person, actionsHtml) {
+      person = person || {};
+      return `<div class="social-row"><div class="social-main"><div class="social-name">${escapeHtml(person.displayName || person.uid || '玩家')}<span class="social-status ${statusClass(person.status)}">${escapeHtml(person.statusLabel || '離線')}</span></div><div class="social-meta">UID：${escapeHtml(person.uid || '')}${person.bio ? '<br>自介：' + escapeHtml(person.bio) : ''}</div></div><div class="social-actions">${actionsHtml || ''}</div></div>`;
+    }
+
+    function renderSocialDashboard(res) {
+      if (!res || !res.success) return;
+      latestSocialDashboard = res;
+      var msg = document.getElementById('social-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">' + escapeHtml(res.note || '社交資料已同步。') + '</span>';
+      var incoming = document.getElementById('incoming-friend-list');
+      var outgoing = document.getElementById('outgoing-friend-list');
+      var friends = document.getElementById('friend-list');
+      if (incoming) {
+        var list = res.incomingRequests || [];
+        incoming.innerHTML = list.length ? list.map(function(p){
+          var id = Number(p.requestId || 0);
+          return socialRow(p, `<button class="social-action-btn" onclick="respondFriendRequestUI(${id}, 'ACCEPT')">接受</button><button class="social-action-btn warn" onclick="respondFriendRequestUI(${id}, 'REJECT')">拒絕</button>`);
+        }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前沒有好友邀請。</div>';
+      }
+      if (outgoing) {
+        var out = res.outgoingRequests || [];
+        outgoing.innerHTML = out.length ? out.map(function(p){ return socialRow(p, '<span style="color:#aaa;font-size:12px;">等待同意</span>'); }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前沒有送出的邀請。</div>';
+      }
+      if (friends) {
+        var flist = res.friends || [];
+        friends.innerHTML = flist.length ? flist.map(function(p){
+          return socialRow(p, `<button class="social-action-btn warn" onclick="removeFriendUI('${jsString(p.uid || '')}')">解除</button>`);
+        }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前還沒有好友，先新增一位玩家吧。</div>';
+      }
+    }
+
+    function loadSocialDashboard() {
+      var msg = document.getElementById('social-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在讀取社交資料...</span>';
+      if (typeof google === "undefined" || !google.script || !google.script.run) return;
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (msg) msg.innerHTML = '<span style="color:#ff7777;">社交資料讀取失敗。</span>';
+          return;
+        }
+        renderSocialDashboard(res);
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).getSocialDashboard(playerUID);
+    }
+
+    function sendFriendRequestUI() {
+      var input = document.getElementById('friend-target-uid');
+      var msg = document.getElementById('social-msg');
+      var target = input ? input.value.trim() : '';
+      if (!target) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請輸入對方 UID。</span>'; return; }
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">送出邀請中...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderSocialDashboard(res.dashboard);
+        if (res && res.success && input) input.value = '';
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '送出失敗') + '</span>';
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">送出失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).sendFriendRequest(playerUID, target);
+    }
+
+    function respondFriendRequestUI(requestId, action) {
+      var msg = document.getElementById('social-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">處理好友邀請中...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderSocialDashboard(res.dashboard);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '處理失敗') + '</span>';
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">處理失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).respondFriendRequest(playerUID, requestId, action);
+    }
+
+    function removeFriendUI(friendUid) {
+      if (!confirm('確定要解除好友嗎？')) return;
+      var msg = document.getElementById('social-msg');
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderSocialDashboard(res.dashboard);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '解除失敗') + '</span>';
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">解除失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).removeFriend(playerUID, friendUid);
+    }
+
+    function setPresenceStatusUI(status) {
+      var msg = document.getElementById('social-msg');
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderSocialDashboard(res.dashboard);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '切換失敗') + '</span>';
+        loadPersonalDashboard();
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">切換失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).setPlayerPresenceStatus(playerUID, status);
     }
 
     function loadHomeState() {
@@ -4602,19 +4902,34 @@ function showCollectionHistory() {
 
   <script>
     // === T-LO 分畫面切換：只控制前台 UI，不改任何後端功能 ===
+    window.toggleBottomNav = function(forceOpen) {
+      var dock = document.getElementById('game-bottom-dock');
+      if (!dock) return;
+      if (typeof forceOpen === 'boolean') dock.classList.toggle('collapsed', !forceOpen);
+      else dock.classList.toggle('collapsed');
+    };
+
     window.showGameScreen = function(screenName) {
-      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen', shop: 'shopScreen' };
+      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen', shop: 'shopScreen', profile: 'profileScreen', social: 'socialScreen' };
+      var labels = { home: '主介面', gacha: '抽卡', battle: '戰鬥', shop: '商城', profile: '個人', social: '社交' };
       var targetId = map[screenName] || map.home;
+      if (!map[screenName]) screenName = 'home';
       document.querySelectorAll('.game-screen').forEach(function(el) {
         el.classList.toggle('active', el.id === targetId);
       });
       document.querySelectorAll('.game-bottom-nav [data-screen-target]').forEach(function(btn) {
         btn.classList.toggle('active', btn.getAttribute('data-screen-target') === screenName);
       });
+      var label = document.getElementById('current-screen-label');
+      if (label) label.innerText = '目前：' + (labels[screenName] || '主介面');
+      var dock = document.getElementById('game-bottom-dock');
+      if (dock) dock.classList.add('collapsed');
       if (window.TLOAudio && typeof window.TLOAudio.playBgmForScreen === "function") {
         window.TLOAudio.playBgmForScreen(screenName);
       }
       if (screenName === 'shop') loadShopDashboard();
+      if (screenName === 'profile') loadPersonalDashboard();
+      if (screenName === 'social') loadSocialDashboard();
       scheduleOptimizeTloImages(document);
       try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
     };
