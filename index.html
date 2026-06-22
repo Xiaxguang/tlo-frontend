@@ -3467,7 +3467,8 @@ function showCollectionHistory() {
 
     var currentEcpayOrder = null;
 
-    function closeEcpayModal() {
+    function closeEcpayModal(options) {
+      options = options || {};
       var modal = document.getElementById('ecpay-modal');
       if (modal) modal.style.display = 'none';
       currentEcpayOrder = null;
@@ -3476,8 +3477,10 @@ function showCollectionHistory() {
       var debug = document.getElementById('ecpay-debug-info');
       if (debug) debug.innerHTML = '';
       setEcpaySubmitReady(false, '付款畫面載入中...');
-      var msg = document.getElementById('shop-msg');
-      if (msg) msg.innerHTML = '<span style="color:#aaa;">付款彈窗已關閉，可重新選擇商品測試。</span>';
+      if (!options.keepShopMsg) {
+        var msg = document.getElementById('shop-msg');
+        if (msg) msg.innerHTML = '<span style="color:#aaa;">付款彈窗已關閉，可重新選擇商品測試。</span>';
+      }
       loadShopDashboard();
     }
 
@@ -3597,14 +3600,55 @@ function showCollectionHistory() {
       });
     }
 
-    function describePaymentInfo(info) {
-      info = info || {};
-      if (info.type === 'ATM') return 'ATM 轉帳資訊已建立：銀行代碼 ' + (info.BankCode || '-') + '，虛擬帳號 ' + (info.vAccount || info.VAccount || '-') + '，期限 ' + (info.ExpireDate || '-') + '。付款完成後系統會自動入帳。';
-      if (info.type === 'CVS') return '超商代碼已建立：繳費代碼 ' + (info.PaymentNo || info.CVSNo || info.CVSCode || '-') + '，期限 ' + (info.ExpireDate || '-') + '。付款完成後系統會自動入帳。';
-      if (info.type === 'BARCODE') return '超商條碼已建立，請依綠界畫面顯示的條碼期限完成繳費。付款完成後系統會自動入帳。';
-      return '交易已建立，付款完成後系統會自動入帳。';
+    function firstPaymentField(obj, keys) {
+      obj = obj || {};
+      keys = keys || [];
+      for (var i = 0; i < keys.length; i++) {
+        var v = obj[keys[i]];
+        if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+      }
+      var raw = obj.rawFields || {};
+      for (var j = 0; j < keys.length; j++) {
+        var rv = raw[keys[j]];
+        if (rv !== undefined && rv !== null && String(rv).trim() !== '') return String(rv).trim();
+      }
+      return '';
     }
 
+    function describePaymentInfo(info) {
+      info = info || {};
+      var type = String(info.type || '').toUpperCase();
+      if (type === 'ATM') {
+        var bank = firstPaymentField(info, ['BankCode','ATMAccBank','AtmAccBank','BankNo','BankID','BankId']);
+        var account = firstPaymentField(info, ['vAccount','VAccount','VirtualAccount','ATMAccNo','AtmAccNo','AccountNo','PayAccount','PaymentNo']);
+        var expire = firstPaymentField(info, ['ExpireDate','ExpireTime','ExpiredDate','PaymentDeadline','ExpireDateTime']);
+        return 'ATM 轉帳資訊已建立：銀行代碼 ' + (bank || '請以綠界畫面為準') + '，虛擬帳號 ' + (account || '請以綠界畫面為準') + '，期限 ' + (expire || '請以綠界畫面為準') + '。付款完成並收到綠界通知後，系統才會自動發獎。';
+      }
+      if (type === 'CVS') {
+        var code = firstPaymentField(info, ['PaymentNo','CVSNo','CvsNo','CVSCode','CvsCode','PaymentCode']);
+        var cvsExpire = firstPaymentField(info, ['ExpireDate','ExpireTime','ExpiredDate','PaymentDeadline','StoreExpireDate']);
+        return '超商代碼已建立：繳費代碼 ' + (code || '請以綠界畫面為準') + '，期限 ' + (cvsExpire || '請以綠界畫面為準') + '。付款完成並收到綠界通知後，系統才會自動發獎。';
+      }
+      if (type === 'BARCODE') {
+        var b1 = firstPaymentField(info, ['Barcode1','BarCode1']);
+        var b2 = firstPaymentField(info, ['Barcode2','BarCode2']);
+        var b3 = firstPaymentField(info, ['Barcode3','BarCode3']);
+        var barExpire = firstPaymentField(info, ['ExpireDate','ExpireTime','ExpiredDate','PaymentDeadline','StoreExpireDate']);
+        var bars = [b1,b2,b3].filter(Boolean).join(' / ');
+        return '超商條碼已建立' + (bars ? '：' + bars : '') + '，期限 ' + (barExpire || '請以綠界畫面為準') + '。付款完成並收到綠界通知後，系統才會自動發獎。';
+      }
+      return '交易已建立，付款完成並收到綠界通知後，系統才會自動發獎。';
+    }
+
+    function finishPendingOfflinePayment(message) {
+      setEcpayMsg(message, true);
+      var shopMsg = document.getElementById('shop-msg');
+      if (shopMsg) shopMsg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">' + escapeHtml(message) + '</span>';
+      setEcpaySubmitReady(false, '繳費資訊已建立');
+      loadShopDashboard();
+      loadHomeState();
+      setTimeout(function(){ closeEcpayModal({ keepShopMsg: true }); }, 1200);
+    }
 
     function submitEcpayCheckout() {
       if (!currentEcpayOrder) { setEcpayMsg('尚未建立付款訂單。', false); return; }
@@ -3629,9 +3673,13 @@ function showCollectionHistory() {
             return;
           }
           if (res.paymentInfo) {
-            setEcpayMsg(describePaymentInfo(res.paymentInfo), true);
+            finishPendingOfflinePayment(describePaymentInfo(res.paymentInfo));
+            return;
           } else {
-            setEcpayMsg(res.msg || '交易已送出，等待綠界付款結果通知。', true);
+            var doneMsg = res.msg || '交易已送出，等待綠界付款結果通知。';
+            setEcpayMsg(doneMsg, true);
+            var shopMsg2 = document.getElementById('shop-msg');
+            if (shopMsg2) shopMsg2.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">' + escapeHtml(doneMsg) + '</span>';
           }
           setEcpaySubmitReady(false, '交易已送出');
           loadShopDashboard();
