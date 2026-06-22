@@ -3631,9 +3631,14 @@ function showCollectionHistory() {
       currentEcpayOrder = order;
       var modal = document.getElementById('ecpay-modal');
       var info = document.getElementById('ecpay-order-info');
-      var pay = resetEcpayPaymentContainer();
+      var pay = document.getElementById('ECPayPayment');
       var debug = document.getElementById('ecpay-debug-info');
-      if (pay) pay.innerHTML = '';
+      if (pay) {
+        // 不替換整個 ECPayPayment 節點，只清空內容。
+        // 綠界 SDK 會綁定固定 id，替換節點在部分瀏覽器/第二次付款時可能造成畫面空白。
+        pay.innerHTML = '';
+        pay.style.minHeight = '360px';
+      }
       setEcpaySubmitReady(false, '付款畫面載入中...');
       if (info) info.innerText = '商品：' + (order.itemName || '') + '｜金額：NT$ ' + Number(order.amount || 0).toLocaleString() + '｜訂單：' + (order.orderNo || '');
       var ecpay = order.ecpay || {};
@@ -3647,31 +3652,35 @@ function showCollectionHistory() {
             setEcpayMsg('付款 Token 遺失，請重新建立付款訂單。', false);
             return;
           }
-          var readyRef = { done: false };
-          var stopWatch = watchEcpayPaymentRender(readyRef);
+          var finished = false;
+          var loadTimeout = setTimeout(function(){
+            if (finished) return;
+            setEcpaySubmitReady(false, '付款畫面載入逾時');
+            setEcpayMsg('付款畫面載入逾時。請關閉付款視窗後重新建立訂單；若連續發生，請按 Ctrl + F5 強制重新整理。', false);
+          }, 18000);
           var serverType = ecpay.serverType || 'Stage';
-          // 綠界官方範例使用 ECPay.initialize(serverType, callback)。初始化完成後才 createPayment。
+          // 依綠界官方範例：ECPay.initialize(serverType, callback)，初始化完成後再 createPayment。
           window.ECPay.initialize(serverType, function(errMsg) {
             if (errMsg) {
-              readyRef.done = true;
-              stopWatch();
+              finished = true;
+              clearTimeout(loadTimeout);
               setEcpayMsg('綠界初始化失敗：' + errMsg, false);
               setEcpaySubmitReady(false, '初始化失敗');
               return;
             }
             var lang = (window.ECPay.Language && window.ECPay.Language.zhTW) ? window.ECPay.Language.zhTW : 'zh-TW';
             window.ECPay.createPayment(order.token, lang, function(errMsg2) {
-              if (readyRef.done && !errMsg2) return;
+              finished = true;
+              clearTimeout(loadTimeout);
               if (errMsg2) {
-                readyRef.done = true;
-                stopWatch();
                 setEcpayMsg('付款畫面建立失敗：' + errMsg2, false);
                 setEcpaySubmitReady(false, '付款畫面建立失敗');
                 return;
               }
-              readyRef.done = true;
-              stopWatch();
-              markEcpayPaymentReadyFromDom('綠界回呼');
+              setEcpaySubmitReady(true, '送出付款 / 取得繳費代碼');
+              setEcpayMsg('請先在上方選擇付款方式並填寫資料，填完後一定要按下方「送出付款 / 取得繳費代碼」。ATM / 超商取號完成後視窗會自動關閉。', true);
+              var shopMsg = document.getElementById('shop-msg');
+              if (shopMsg) shopMsg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">付款畫面已開啟，請在彈窗選擇付款方式並按送出。</span>';
             }, 'V2');
           });
         } catch (e) {
