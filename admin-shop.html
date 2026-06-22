@@ -14,7 +14,7 @@
 <body>
 <div class="wrap">
   <h1>🛒 T-LO GM 商城管理</h1>
-  <div class="muted">此頁管理能量商店、積分商店、儲值商城的商品與獎勵。儲值付款目前不會真正串接綠界；儲值商品預設只展示，不讓玩家付款。</div>
+  <div class="muted">此頁管理能量商店、訓練總分商店、儲值商城的商品與獎勵。儲值付款目前不會真正串接綠界；儲值商品預設只展示，不讓玩家付款。</div>
 
   <div class="panel" id="login-panel">
     <h2>GM 登入</h2>
@@ -30,8 +30,8 @@
       <div class="grid">
         <div><label>商品 Key</label><input id="product-key" placeholder="energy_battle_ticket_5"></div>
         <div><label>商品名稱</label><input id="product-name" placeholder="爭霸戰補給 +5"></div>
-        <div><label>分類</label><select id="category"><option value="ENERGY">能量商店</option><option value="POINTS">積分商店</option><option value="TOPUP">儲值商城</option></select></div>
-        <div><label>價格類型</label><select id="price-type"><option value="ENERGY">能量</option><option value="POINTS">積分</option><option value="CASH">新台幣</option></select></div>
+        <div><label>分類</label><select id="category"><option value="ENERGY">能量商店</option><option value="POINTS">訓練總分商店</option><option value="TOPUP">儲值商城</option></select></div>
+        <div><label>價格類型</label><select id="price-type"><option value="ENERGY">能量</option><option value="POINTS">訓練總分</option><option value="CASH">新台幣</option></select></div>
         <div><label>價格數量</label><input id="price-amount" type="number" value="100"></div>
         <div><label>限購類型</label><select id="limit-type"><option value="NONE">不限購</option><option value="DAILY">每日</option><option value="WEEKLY">每週</option><option value="MONTHLY">每月</option><option value="ONCE">永久一次</option></select></div>
         <div><label>限購次數</label><input id="limit-count" type="number" value="1"></div>
@@ -48,7 +48,7 @@
 
     <div class="panel">
       <h2>商品列表</h2>
-      <div class="tabs"><button class="active" id="tab-all" onclick="setFilter('ALL')">全部</button><button id="tab-ENERGY" onclick="setFilter('ENERGY')">能量商店</button><button id="tab-POINTS" onclick="setFilter('POINTS')">積分商店</button><button id="tab-TOPUP" onclick="setFilter('TOPUP')">儲值商城</button></div>
+      <div class="tabs"><button class="active" id="tab-all" onclick="setFilter('ALL')">全部</button><button id="tab-ENERGY" onclick="setFilter('ENERGY')">能量商店</button><button id="tab-POINTS" onclick="setFilter('POINTS')">訓練總分商店</button><button id="tab-TOPUP" onclick="setFilter('TOPUP')">儲值商城</button></div>
       <div id="item-list"></div>
     </div>
 

@@ -205,7 +205,27 @@
       
       <div id="tab-stages" class="hide panel">
         <h2>🗺️ 關卡管理</h2>
-        <div class="muted">可新增 / 修改潮流爭霸戰與遠征異世界關卡，調整難度、獎勵，並指定 Boss 卡片。</div>
+        <div class="muted">可新增 / 修改潮流爭霸戰、遠征異世界章節與遠征關卡，調整難度、通關獎勵，並指定活動卡片掉落機率。</div>
+
+        <div class="panel" style="box-shadow:none">
+          <h3>🌌 遠征異世界章節</h3>
+          <div class="row3">
+            <div><label>章節 Key，英文/數字，可空白自動產生</label><input id="rpgChapterKey" placeholder="例如 mist_forest"></div>
+            <div><label>異世界名稱</label><input id="rpgChapterName" placeholder="例如 迷霧森林"></div>
+            <div><label>排序</label><input id="rpgChapterSort" type="number" min="0" value="1"></div>
+          </div>
+          <label>章節描述</label><input id="rpgChapterDesc" placeholder="顯示給玩家看的異世界描述">
+          <div class="row3">
+            <div><label>解鎖條件</label><select id="rpgChapterUnlockType"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option></select></div>
+            <div><label>解鎖值</label><input id="rpgChapterUnlockValue" placeholder="例如 25 或 forest_01"></div>
+            <div><label>狀態</label><select id="rpgChapterActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
+          </div>
+          <button class="primary" onclick="saveRpgChapter()" style="margin-top:10px">新增 / 儲存遠征章節</button>
+          <button class="ghost" onclick="clearRpgChapterForm()" style="margin-top:10px">清空章節表單</button>
+          <div id="rpgChapterMsg" class="msg"></div>
+          <div id="rpgChaptersTable"></div>
+        </div>
+
         <div class="split">
           <div class="panel" style="box-shadow:none">
             <h3>👑 潮流爭霸戰關卡</h3>
@@ -223,7 +243,11 @@
             <h3>🌌 遠征異世界關卡</h3>
             <div class="row">
               <div><label>關卡 Key，英文/數字，可空白自動產生</label><input id="rpgKey" placeholder="例如 world_05"></div>
-              <div><label>排序</label><input id="rpgSort" type="number" min="0" value="5"></div>
+              <div><label>所屬異世界</label><select id="rpgChapterSelect"></select></div>
+            </div>
+            <div class="row">
+              <div><label>關卡排序</label><input id="rpgStageOrder" type="number" min="0" value="5"></div>
+              <div><label>舊排序，保留相容</label><input id="rpgSort" type="number" min="0" value="5"></div>
             </div>
             <label>關卡名稱</label><input id="rpgName" placeholder="例如 異世界裂縫第五層">
             <label>關卡說明</label><input id="rpgDesc" placeholder="顯示給玩家看的簡短說明">
@@ -237,6 +261,15 @@
               <div><label>抽卡掉落率 %</label><input id="rpgDrawChance" type="number" min="0" max="100" value="10"></div>
               <div><label>固定抽卡獎勵</label><input id="rpgDrawTimes" type="number" min="0" value="0"></div>
               <div><label>狀態</label><select id="rpgActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
+            </div>
+            <div class="row3">
+              <div><label>活動掉落卡片，可空白</label><select id="rpgRewardCard"><option value="">不指定</option></select></div>
+              <div><label>活動卡掉落率 %</label><input id="rpgRewardCardChance" type="number" min="0" max="100" value="0"></div>
+              <div><label>掉落張數</label><input id="rpgRewardCardQuantity" type="number" min="1" value="1"></div>
+            </div>
+            <div class="row">
+              <div><label>解鎖條件</label><select id="rpgUnlockType"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option></select></div>
+              <div><label>解鎖值</label><input id="rpgUnlockValue" placeholder="例如 25 或 forest_01"></div>
             </div>
             <button class="primary" onclick="saveRpgDungeon()" style="width:100%;margin-top:10px">新增 / 儲存遠征關卡</button>
             <div id="rpgStageMsg" class="msg"></div>
@@ -352,6 +385,7 @@ let currentPlayerUid = '';
 let cardRows = [];
 let bossStageRows = [];
 let rpgDungeonRows = [];
+let rpgChapterRows = [];
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
@@ -603,14 +637,81 @@ async function loadStageAdmin(){
   try{
     if(!cardRows.length) await loadCards(false);
     syncRedeemCardOptions();
-    const [boss, rpg] = await Promise.all([rpc('adminListBossStages', []), rpc('adminListRpgDungeons', [])]);
+    const [boss, chapters, rpg] = await Promise.all([rpc('adminListBossStages', []), rpc('adminListRpgChapters', []), rpc('adminListRpgDungeons', [])]);
     bossStageRows = boss.rows || [];
+    rpgChapterRows = chapters.rows || [];
     rpgDungeonRows = rpg.rows || [];
     renderBossStages();
+    renderRpgChapterSelect();
+    renderRpgChapters();
     renderRpgDungeons();
     msg('bossStageMsg', `已載入 ${bossStageRows.length} 個爭霸戰關卡`, true);
+    msg('rpgChapterMsg', `已載入 ${rpgChapterRows.length} 個遠征章節`, true);
     msg('rpgStageMsg', `已載入 ${rpgDungeonRows.length} 個遠征關卡`, true);
-  }catch(e){ msg('bossStageMsg', e.message); msg('rpgStageMsg', e.message); }
+  }catch(e){ msg('bossStageMsg', e.message); msg('rpgChapterMsg', e.message); msg('rpgStageMsg', e.message); }
+}
+
+function renderRpgChapterSelect(){
+  const sel = $('rpgChapterSelect');
+  if(!sel) return;
+  sel.innerHTML = (rpgChapterRows || []).map(c => `<option value="${esc(c.key)}">${esc(c.name)}｜${esc(c.key)}</option>`).join('') || '<option value="isekai_entry">異世界入口</option>';
+}
+function clearRpgChapterForm(){
+  ['rpgChapterKey','rpgChapterName','rpgChapterDesc','rpgChapterUnlockValue'].forEach(id => { if($(id)) $(id).value=''; });
+  if($('rpgChapterSort')) $('rpgChapterSort').value = 1;
+  if($('rpgChapterActive')) $('rpgChapterActive').value = '1';
+  if($('rpgChapterUnlockType')) $('rpgChapterUnlockType').value = 'NONE';
+}
+function renderRpgChapters(){
+  if(!$('rpgChaptersTable')) return;
+  $('rpgChaptersTable').innerHTML = `<table><thead><tr><th>章節</th><th>描述</th><th>排序</th><th>解鎖</th><th>狀態</th><th>操作</th></tr></thead><tbody>` +
+    (rpgChapterRows || []).map((c,i)=>`<tr>
+      <td><b>${esc(c.name)}</b><br><span class="muted">${esc(c.key)}</span></td>
+      <td>${esc(c.description || '')}</td>
+      <td>${fmt(c.sortOrder)}</td>
+      <td>${esc(c.unlockType || 'NONE')} ${esc(c.unlockValue || '')}</td>
+      <td>${c.isActive ? '啟用' : '停用'}</td>
+      <td><button class="primary" onclick="editRpgChapter(${i})">載入編輯</button><br><button class="${c.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleRpgChapter(${i})">${c.isActive?'停用':'啟用'}</button></td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+function editRpgChapter(i){
+  const c = rpgChapterRows[i]; if(!c) return;
+  $('rpgChapterKey').value = c.key || '';
+  $('rpgChapterName').value = c.name || '';
+  $('rpgChapterDesc').value = c.description || '';
+  $('rpgChapterSort').value = c.sortOrder || 0;
+  $('rpgChapterActive').value = c.isActive ? '1' : '0';
+  $('rpgChapterUnlockType').value = c.unlockType || 'NONE';
+  $('rpgChapterUnlockValue').value = c.unlockValue || '';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+async function saveRpgChapter(){
+  try{
+    const payload = {
+      key:$('rpgChapterKey').value.trim(),
+      name:$('rpgChapterName').value.trim(),
+      description:$('rpgChapterDesc').value.trim(),
+      sortOrder:$('rpgChapterSort').value,
+      isActive:$('rpgChapterActive').value === '1',
+      unlockType:$('rpgChapterUnlockType').value,
+      unlockValue:$('rpgChapterUnlockValue').value.trim()
+    };
+    if(!payload.name){ msg('rpgChapterMsg','請輸入異世界名稱'); return; }
+    if(!confirm('確定新增 / 儲存遠征異世界章節？')) return;
+    const data = await rpc('adminUpsertRpgChapter', [payload]);
+    msg('rpgChapterMsg', data.msg, true);
+    await loadStageAdmin();
+    clearRpgChapterForm();
+  }catch(e){ msg('rpgChapterMsg', e.message); }
+}
+async function toggleRpgChapter(i){
+  const c = rpgChapterRows[i]; if(!c) return;
+  if(!confirm(`確定要${c.isActive ? '停用' : '啟用'}「${c.name}」？`)) return;
+  try{
+    const data = await rpc('adminSetRpgChapterActive', [c.key, !c.isActive]);
+    msg('rpgChapterMsg', data.msg, true);
+    await loadStageAdmin();
+  }catch(e){ msg('rpgChapterMsg', e.message); }
 }
 
 function renderBossStages(){
@@ -652,13 +753,14 @@ async function saveBossStage(){
 
 function renderRpgDungeons(){
   if(!$('rpgDungeonsTable')) return;
-  $('rpgDungeonsTable').innerHTML = `<table><thead><tr><th>關卡</th><th>Boss</th><th>難度</th><th>獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>` +
+  $('rpgDungeonsTable').innerHTML = `<table><thead><tr><th>章節/關卡</th><th>Boss</th><th>難度</th><th>通關獎勵</th><th>活動掉落</th><th>解鎖/狀態</th><th>操作</th></tr></thead><tbody>` +
     rpgDungeonRows.map((d,i)=>`<tr>
-      <td><b>${esc(d.name)}</b><br><span class="muted">${esc(d.key)}｜排序 ${fmt(d.sortOrder)}</span><br><span class="muted">${esc(d.description||'')}</span></td>
+      <td><b>${esc(d.name)}</b><br><span class="muted">${esc(d.key)}｜${esc(d.chapterName || '')}｜排序 ${fmt(d.stageOrder || d.sortOrder)}</span><br><span class="muted">${esc(d.description||'')}</span></td>
       <td>${esc(d.bossCardName||d.name)}<br><span class="muted">${esc(d.bossRarity||'')}</span></td>
       <td>${fmt(d.requiredPower)}</td>
       <td>分數 +${fmt(d.rewardScore)}<br>能量 +${fmt(d.rewardEnergy)}<br>抽卡 +${fmt(d.rewardDrawTimes)} / 掉落 ${fmt(d.rewardDrawChance)}%</td>
-      <td>${d.isActive ? '啟用' : '停用'}</td>
+      <td>${d.rewardCardName ? `${esc(d.rewardCardName)} x${fmt(d.rewardCardQuantity || 1)}<br>掉落 ${fmt(d.rewardCardChance)}%` : '<span class="muted">未指定</span>'}</td>
+      <td>${d.isActive ? '啟用' : '停用'}<br><span class="muted">${esc(d.unlockType || 'NONE')} ${esc(d.unlockValue || '')}</span></td>
       <td><button class="primary" onclick="editRpgDungeon(${i})">載入編輯</button><br><button class="${d.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleRpgDungeon(${i})">${d.isActive?'停用':'啟用'}</button></td>
     </tr>`).join('') + `</tbody></table>`;
 }
@@ -667,13 +769,20 @@ function editRpgDungeon(i){
   $('rpgKey').value = d.key || '';
   $('rpgName').value = d.name || '';
   $('rpgDesc').value = d.description || '';
+  if($('rpgChapterSelect')) $('rpgChapterSelect').value = d.chapterKey || 'isekai_entry';
   $('rpgBossCard').value = d.bossCardName || '';
   $('rpgPower').value = d.requiredPower || 0;
   $('rpgScore').value = d.rewardScore || 0;
   $('rpgEnergy').value = d.rewardEnergy || 0;
   $('rpgDrawChance').value = d.rewardDrawChance || 0;
   $('rpgDrawTimes').value = d.rewardDrawTimes || 0;
-  $('rpgSort').value = d.sortOrder || 0;
+  if($('rpgRewardCard')) $('rpgRewardCard').value = d.rewardCardName || '';
+  if($('rpgRewardCardChance')) $('rpgRewardCardChance').value = d.rewardCardChance || 0;
+  if($('rpgRewardCardQuantity')) $('rpgRewardCardQuantity').value = d.rewardCardQuantity || 1;
+  if($('rpgUnlockType')) $('rpgUnlockType').value = d.unlockType || 'NONE';
+  if($('rpgUnlockValue')) $('rpgUnlockValue').value = d.unlockValue || '';
+  if($('rpgStageOrder')) $('rpgStageOrder').value = d.stageOrder || d.sortOrder || 0;
+  $('rpgSort').value = d.sortOrder || d.stageOrder || 0;
   $('rpgActive').value = d.isActive ? '1' : '0';
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -683,12 +792,19 @@ async function saveRpgDungeon(){
       key:$('rpgKey').value.trim(),
       name:$('rpgName').value.trim(),
       description:$('rpgDesc').value.trim(),
+      chapterKey:$('rpgChapterSelect') ? $('rpgChapterSelect').value : 'isekai_entry',
+      stageOrder:$('rpgStageOrder') ? $('rpgStageOrder').value : $('rpgSort').value,
       bossCardName:$('rpgBossCard').value,
       requiredPower:$('rpgPower').value,
       rewardScore:$('rpgScore').value,
       rewardEnergy:$('rpgEnergy').value,
       rewardDrawChance:$('rpgDrawChance').value,
       rewardDrawTimes:$('rpgDrawTimes').value,
+      rewardCardName:$('rpgRewardCard') ? $('rpgRewardCard').value : '',
+      rewardCardChance:$('rpgRewardCardChance') ? $('rpgRewardCardChance').value : 0,
+      rewardCardQuantity:$('rpgRewardCardQuantity') ? $('rpgRewardCardQuantity').value : 1,
+      unlockType:$('rpgUnlockType') ? $('rpgUnlockType').value : 'NONE',
+      unlockValue:$('rpgUnlockValue') ? $('rpgUnlockValue').value.trim() : '',
       sortOrder:$('rpgSort').value,
       isActive:$('rpgActive').value === '1'
     };
@@ -723,6 +839,7 @@ function syncRedeemCardOptions(){
   if($('redeemCard')) $('redeemCard').innerHTML = options;
   if($('bossStageCard')) $('bossStageCard').innerHTML = options;
   if($('rpgBossCard')) $('rpgBossCard').innerHTML = options;
+  if($('rpgRewardCard')) $('rpgRewardCard').innerHTML = '<option value="">不指定</option>' + options;
 }
 
 async function loadRedeemCodes(){

@@ -1109,7 +1109,7 @@
             <span class="hud-value" id="display-energy">0</span>
           </div>
           <div class="hud-tile">
-            <span class="hud-label">積分</span>
+            <span class="hud-label">訓練總分</span>
             <span class="hud-value" id="display-points">0</span>
           </div>
           <div class="hud-tile">
@@ -1134,7 +1134,7 @@
         <div class="hero-actions">
           <button class="game-big-btn btn-neon-pink" onclick="showGameScreen('gacha')">🎁 前往抽卡<small>單抽、十連、查看機率與抽卡紀錄</small></button>
           <button class="game-big-btn btn-neon-cyan" onclick="showGameScreen('battle')">⚔️ 前往戰鬥<small>爭霸戰、遠征異世界、PVP 與升星</small></button>
-          <button class="game-big-btn btn-neon-gold" onclick="showGameScreen('shop')">🛒 前往商城<small>能量商店、積分商店與儲值商品</small></button>
+          <button class="game-big-btn btn-neon-gold" onclick="showGameScreen('shop')">🛒 前往商城<small>能量商店、訓練總分商店與儲值商品</small></button>
         </div>
       </div>
 
@@ -1163,7 +1163,7 @@
         1.集齊SR系列<br>
         2.集齊SR系列 + SSR系列<br>
         3.集齊全套卡牌<br>
-        商城已新增能量商店、積分商店與儲值商品展示。<br>
+        商城已新增能量商店、訓練總分商店與儲值商品展示。<br>
         儲值商城目前尚未開放正式付款，請等待公告。<br>
         👉 <b>點擊聯繫客服兌獎：</b><br>
         <a href="https://line.me/ti/p/~bikabikahikari" style="color:#00fff0;font-weight:bold;text-decoration:underline;">Line: bikabikahikari</a>
@@ -1264,7 +1264,7 @@
       <div class="game-card">
         <div class="shop-tabs" id="shop-tabs">
           <button class="shop-tab active" onclick="selectShopCategory('ENERGY')">能量商店</button>
-          <button class="shop-tab" onclick="selectShopCategory('POINTS')">積分商店</button>
+          <button class="shop-tab" onclick="selectShopCategory('POINTS')">訓練總分商店</button>
           <button class="shop-tab" onclick="selectShopCategory('TOPUP')">儲值商城</button>
         </div>
         <div id="shop-msg" style="font-size:13px;color:#aaa;line-height:1.6;margin:6px 0;">正在讀取商城資料...</div>
@@ -1314,20 +1314,7 @@
       </div>
 
       <div class="game-card">
-        <h3>玩家資產</h3>
-        <div class="profile-summary">
-          <div class="profile-tile"><span>抽卡次數</span><b id="profile-asset-draw">0</b></div>
-          <div class="profile-tile"><span>潮流能量</span><b id="profile-asset-energy">0</b></div>
-          <div class="profile-tile"><span>積分</span><b id="profile-asset-points">0</b></div>
-          <div class="profile-tile"><span>技能經驗</span><b id="profile-asset-skill-exp">0</b></div>
-          <div class="profile-tile"><span>爭霸戰券</span><b id="profile-asset-battle">0 / 30</b></div>
-          <div class="profile-tile"><span>遠征券</span><b id="profile-asset-rpg">0 / 20</b></div>
-          <div class="profile-tile"><span>PVP 挑戰券</span><b id="profile-asset-pvp">0 / 10</b></div>
-        </div>
-      </div>
-
-      <div class="game-card">
-        <h3>持有的道具</h3>
+        <h3>我的資產</h3>
         <div class="item-grid" id="profile-item-grid"><div style="color:#aaa;">正在讀取...</div></div>
       </div>
     </section>
@@ -3401,7 +3388,7 @@ function showCollectionHistory() {
     function selectShopCategory(category) {
       activeShopCategory = category || 'ENERGY';
       document.querySelectorAll('.shop-tab').forEach(function(btn) {
-        btn.classList.toggle('active', String(btn.textContent || '').indexOf(activeShopCategory === 'ENERGY' ? '能量' : activeShopCategory === 'POINTS' ? '積分' : '儲值') >= 0);
+        btn.classList.toggle('active', String(btn.textContent || '').indexOf(activeShopCategory === 'ENERGY' ? '能量' : activeShopCategory === 'POINTS' ? '訓練總分' : '儲值') >= 0);
       });
       renderShopDashboard();
     }
@@ -3433,7 +3420,7 @@ function showCollectionHistory() {
       if (!grid) return;
       var res = latestShopDashboard || {};
       var items = (res.items || []).filter(function(item){ return item.category === activeShopCategory; });
-      var title = activeShopCategory === 'ENERGY' ? '能量商店' : activeShopCategory === 'POINTS' ? '積分商店' : '儲值商城';
+      var title = activeShopCategory === 'ENERGY' ? '能量商店' : activeShopCategory === 'POINTS' ? '訓練總分商店' : '儲值商城';
       if (msg) msg.innerHTML = '<b style="color:#ffdd77;">' + escapeHtml(title) + '</b>｜商品與限購由 GM 後台管理。';
       if (!items.length) {
         grid.innerHTML = '<div style="color:#aaa;grid-column:1/-1;text-align:center;padding:20px;">此分類目前沒有上架商品。</div>';
