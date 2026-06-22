@@ -4273,7 +4273,8 @@ function showCollectionHistory() {
       const ruleText = document.getElementById('growth-rule-text');
       const energy = Number((res.profile && res.profile.energy) || 0);
       const skillExpWallet = Number((res.profile && res.profile.skillExp) || 0);
-      if (energyText) energyText.innerText = '目前潮流能量：' + energy.toLocaleString() + ' ｜ 技能經驗：' + skillExpWallet.toLocaleString();
+      const resetTickets = Number((res.itemCounts && res.itemCounts.cardResetTicket) || 0);
+      if (energyText) energyText.innerText = '目前潮流能量：' + energy.toLocaleString() + ' ｜ 技能經驗：' + skillExpWallet.toLocaleString() + ' ｜ 卡牌重置券：' + resetTickets.toLocaleString();
       if (ruleText) ruleText.innerText = res.ruleText || '';
       const cards = res.cards || [];
       if (!cards.length) {
@@ -4294,6 +4295,9 @@ function showCollectionHistory() {
         const maxStar = Number(card.maxStar || 10);
         const trainCost = Number(card.trainCost || 0);
         const skillCost = Number(card.skillCost || 0);
+        const resetRefundEnergy = Number(card.resetRefundEnergy || 0);
+        const resetRefundSkillExp = Number(card.resetRefundSkillExp || 0);
+        const canReset = !!card.canReset;
         const power = Number(card.power || 0);
         const levelText = level >= maxLevel ? '已滿級' : `${exp.toLocaleString()} / ${expToNext.toLocaleString()} EXP`;
         const trainDisabled = level >= maxLevel || energy < trainCost;
@@ -4313,6 +4317,7 @@ function showCollectionHistory() {
                 <button class="btn-collection" style="margin:0;padding:8px 10px;${trainDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${trainDisabled ? 'disabled' : ''} onclick="trainCharacterLevel('${escapeJsString(name)}')">特訓升級${level >= maxLevel ? '' : `<small style='display:block;font-size:10px;'>${trainCost.toLocaleString()}能量</small>`}</button>
                 <button class="btn-collection" style="margin:0;padding:8px 10px;${skillDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${skillDisabled ? 'disabled' : ''} onclick="upgradeCharacterSkill('${escapeJsString(name)}')">技能升級${skillLevel >= maxSkill ? '' : `<small style='display:block;font-size:10px;'>${skillCost.toLocaleString()}技能經驗/能量</small>`}</button>
                 <button class="btn-collection" style="margin:0;padding:8px 10px;" onclick="document.getElementById('character-growth-modal').style.display='none'; openStarModal();">10星升星</button>
+                <button class="btn-collection" style="margin:0;padding:8px 10px;${canReset ? 'background:linear-gradient(135deg,#5b2cff,#00fff0);' : 'filter:grayscale(1);opacity:.55;'}" ${canReset ? '' : 'disabled'} onclick="useCardResetTicketUI('${escapeJsString(name)}', ${star}, ${skillLevel}, ${resetRefundEnergy}, ${resetRefundSkillExp})">重置${resetTickets ? '' : `<small style='display:block;font-size:10px;'>需重置券</small>`}</button>
               </div>
             </div>
           </div>`;
@@ -4352,6 +4357,33 @@ function showCollectionHistory() {
       }).withFailureHandler(function(err) {
         alert('技能升級失敗：' + (err && err.message ? err.message : err));
       }).upgradeCardSkill(playerUID, cardName);
+    }
+
+
+    function useCardResetTicketUI(cardName, star, skillLevel, refundEnergy, refundSkillExp) {
+      if (!cardName) return;
+      var msg = '確定要使用「卡牌重置券」重置『' + cardName + '』嗎？\n\n' +
+        '重置後：\n' +
+        '星等：' + Number(star || 1) + ' 星 → 1 星\n' +
+        '技能：Lv.' + Number(skillLevel || 1) + ' → Lv.1\n\n' +
+        '將退還：\n' +
+        '潮流能量：' + Number(refundEnergy || 0).toLocaleString() + '\n' +
+        '技能經驗：' + Number(refundSkillExp || 0).toLocaleString() + '\n\n' +
+        '本操作會消耗 1 張卡牌重置券，且無法復原。';
+      if (!confirm(msg)) return;
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          alert(res && res.msg ? res.msg : '重置失敗');
+          if (res && res.dashboard) renderCharacterGrowthDashboard(res.dashboard);
+          return;
+        }
+        alert(res.msg || '重置成功');
+        if (res.dashboard) renderCharacterGrowthDashboard(res.dashboard);
+        loadHomeState();
+        refreshRpgDashboardIfOpen('卡牌重置已完成');
+      }).withFailureHandler(function(err) {
+        alert('重置失敗：' + (err && err.message ? err.message : err));
+      }).useCardResetTicket(playerUID, cardName);
     }
 
 
