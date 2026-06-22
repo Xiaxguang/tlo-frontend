@@ -998,6 +998,7 @@
     .battle-chapter-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
     .battle-chapter-title{font-size:14px;font-weight:900;color:#00fff0;text-shadow:0 0 8px rgba(0,255,240,.35);}
     .battle-chapter-note{font-size:12px;color:#aaa;line-height:1.5;}
+    .daily-limit-chip{display:inline-block;margin:3px 4px 3px 0;padding:5px 8px;border-radius:999px;background:rgba(255,221,119,.10);border:1px solid rgba(255,221,119,.35);color:#ffdd77;font-size:12px;font-weight:900;}
     .battle-chapter-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
     .battle-chapter-tab{border:1px solid #444;background:#171717;color:#aaa;border-radius:999px;padding:8px 10px;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer;}
     .battle-chapter-tab.active{border-color:#00fff0;color:#001;background:linear-gradient(45deg,#00fff0,#00ff7f);}
@@ -1478,6 +1479,7 @@
       <div class="modal-h3">🗺️ T-LO 遠征異世界模式</div>
       <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">選 1～3 張已持有角色組隊，挑戰遠征關卡。此模式獎勵為遊戲內分數、能量與機率掉落抽卡次數。</div>
       <div class="collection-stat" id="rpg-team-power">隊伍戰力：讀取中...</div>
+      <div class="collection-stat" id="rpg-daily-limit" style="font-size:12px;color:#ffdd77;">今日遠征券：讀取中...</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0;">
         <select id="rpg-slot-1" class="player-deck-select" onchange="renderRpgTeamPreview()"></select>
         <select id="rpg-slot-2" class="player-deck-select" onchange="renderRpgTeamPreview()"></select>
@@ -1732,7 +1734,12 @@
         const hardText = response.isAllCleared
           ? '已完全制霸秘寶閣，可選擇任一已解鎖關卡重打'
           : (unlocked >= Number(response.hardStartStageId || 76) ? '困難模式已開啟' : '普通第75關通關後開啟困難模式');
-        note.innerText = `目前解鎖到第 ${unlocked} / ${maxStage} 關；${hardText}。`;
+        const limit = response.dailyLimits || {};
+        const chips = [];
+        if (limit.challengeLimit) chips.push(`🎟️ 今日挑戰券 ${Number(limit.challengeRemaining || 0)} / ${Number(limit.challengeLimit || 0)}`);
+        if (limit.normalFirstClearLimit) chips.push(`普通首通 ${Number(limit.normalFirstClearUsed || 0)} / ${Number(limit.normalFirstClearLimit || 0)}`);
+        if (limit.hardFirstClearLimit) chips.push(`困難首通 ${Number(limit.hardFirstClearUsed || 0)} / ${Number(limit.hardFirstClearLimit || 0)}`);
+        note.innerText = `目前解鎖到第 ${unlocked} / ${maxStage} 關；${hardText}。${chips.length ? '｜' + chips.join('｜') : ''}`;
       }
       tabs.innerHTML = chapters.map(function(ch) {
         const cls = ['battle-chapter-tab'];
@@ -1859,10 +1866,15 @@
           document.getElementById('battle-stage-reward').innerHTML = '🎁 進度關：本關無抽卡獎勵；首通獎勵依 GM 後台關卡設定。';
         }
 
+        const battleLimit = response.dailyLimits || {};
+        const noBattleTickets = Number(battleLimit.challengeLimit || 0) > 0 && Number(battleLimit.challengeRemaining || 0) <= 0;
         btn.onclick = window.startChallenge;
-        btn.disabled = !response.battleRepresentative;
+        btn.disabled = !response.battleRepresentative || noBattleTickets;
 
-        if (!response.battleRepresentative) {
+        if (noBattleTickets) {
+          btn.innerText = "今日挑戰券已用完";
+          btn.style.background = "linear-gradient(45deg, #555, #333)";
+        } else if (!response.battleRepresentative) {
           btn.innerText = "請先固定爭霸代表";
           btn.style.background = "linear-gradient(45deg, #555, #333)";
         } else if (globalPlayerPower >= currentStage.bossPower) {
@@ -2276,7 +2288,7 @@
           const battleResult = res || {};
 
           try {
-            if (typeof playTurnBattleAnimation === 'function') {
+            if (!battleResult.limitBlocked && typeof playTurnBattleAnimation === 'function') {
               await playTurnBattleAnimation(battleResult);
             }
           } catch (e) {
@@ -2314,9 +2326,13 @@
 
             if (window.TLOAudio) window.TLOAudio.playSfx('error');
 
-            btn.disabled = false;
-            btn.innerText = '🔄 重新挑戰此關 🔄';
-            btn.style.background = 'linear-gradient(45deg, #ff5500, #ff0000)';
+            if (battleResult && battleResult.dashboard) {
+              latestBattleDashboard = battleResult.dashboard;
+              renderBattleChapterSelector(battleResult.dashboard);
+            }
+            btn.disabled = !!(battleResult && battleResult.limitBlocked);
+            btn.innerText = battleResult && battleResult.limitBlocked ? '今日限制已達上限' : '🔄 重新挑戰此關 🔄';
+            btn.style.background = battleResult && battleResult.limitBlocked ? 'linear-gradient(45deg, #555, #333)' : 'linear-gradient(45deg, #ff5500, #ff0000)';
             btn.onclick = window.startChallenge;
           }
         })
@@ -4016,6 +4032,9 @@ function showCollectionHistory() {
       if (msg) msg.innerHTML = '';
       const powerEl = document.getElementById('rpg-team-power');
       if (powerEl) powerEl.innerText = `隊伍戰力：${Number(res.teamPower || 0).toLocaleString()}`;
+      const rpgLimit = res.dailyLimits || {};
+      const rpgLimitEl = document.getElementById('rpg-daily-limit');
+      if (rpgLimitEl) rpgLimitEl.innerText = rpgLimit.expeditionLimit ? `今日遠征券：${Number(rpgLimit.expeditionRemaining || 0)} / ${Number(rpgLimit.expeditionLimit || 0)}｜每日 00:00 重置` : '今日遠征券：--';
       const options = ['<option value="">空位</option>'].concat((res.cardOptions || []).map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}｜${escapeHtml(c.elementIcon || '')}${escapeHtml(c.elementLabel || '')}｜${escapeHtml(c.skillName || '')}Lv.${Number(c.skillLevel||1)}｜Lv.${Number(c.level||1)}｜${Number(c.power||0).toLocaleString()}戰力｜${Number(c.star||1)}★</option>`)).join('');
       [1,2,3].forEach(function(i) {
         const sel = document.getElementById('rpg-slot-' + i);
@@ -4027,12 +4046,13 @@ function showCollectionHistory() {
       renderRpgTeamPreview();
 
       const dungeons = res.dungeons || [];
+      const noRpgTickets = Number(rpgLimit.expeditionLimit || 0) > 0 && Number(rpgLimit.expeditionRemaining || 0) <= 0;
       document.getElementById('rpg-dungeon-list').innerHTML = dungeons.map(d => {
         const ok = Number(res.teamPower || 0) >= Number(d.requiredPower || 0);
         return `<div style="background:#111;border:1px solid ${ok ? '#00fff0' : '#555'};border-radius:12px;padding:12px;margin:8px 0;text-align:left;">
           <b style="color:${ok ? '#00fff0' : '#ffc107'};">${escapeHtml(d.name)}</b>
           <div style="font-size:12px;color:#aaa;line-height:1.6;">${escapeHtml(d.description || '')}<br>敵方屬性：${escapeHtml(d.elementIcon || '')}${escapeHtml(d.elementLabel || '')}｜技能：${escapeHtml(d.skillName || '')}<br>建議戰力：${Number(d.requiredPower||0).toLocaleString()}｜獎勵：分數 +${Number(d.rewardScore||0).toLocaleString()}、能量 +${Number(d.rewardEnergy||0).toLocaleString()}｜抽卡掉落率 ${Number(d.rewardDrawChance||0)}%</div>
-          <button class="btn-collection" style="margin-top:8px;" onclick="startRpgAdventure('${escapeJsString(d.key)}')">開始挑戰</button>
+          <button class="btn-collection" style="margin-top:8px;" ${noRpgTickets ? 'disabled' : ''} onclick="startRpgAdventure('${escapeJsString(d.key)}')">${noRpgTickets ? '今日遠征券已用完' : '開始挑戰'}</button>
         </div>`;
       }).join('') || '<div style="color:#888;">目前沒有可挑戰遠征關卡。</div>';
 
@@ -4119,7 +4139,7 @@ function showCollectionHistory() {
           if (arena) arena.style.display = 'none';
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
           msg.innerHTML = `<span style="color:#ff7777;">${escapeHtml(res && res.msg ? res.msg : '遠征失敗')}</span>`;
-          showRpgRechallengeButton(!!lastRpgAdventureKey);
+          showRpgRechallengeButton(!(res && res.limitBlocked) && !!lastRpgAdventureKey);
           return;
         }
         const firstName = names[0] || ((res.dashboard && res.dashboard.partyNames && res.dashboard.partyNames[0]) || '遠征隊伍');
