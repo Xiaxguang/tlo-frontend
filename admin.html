@@ -80,6 +80,7 @@
         <button class="tab active" onclick="showTab('players', this)">玩家管理</button>
         <button class="tab" onclick="showTab('cards', this); loadCards();">卡牌管理</button>
         <button class="tab" onclick="showTab('stages', this); loadStageAdmin();">關卡管理</button>
+        <button class="tab" onclick="showTab('shop', this); loadShopAdmin();">商城管理</button>
         <button class="tab" onclick="showTab('redeem', this); loadRedeemCodes();">兌換碼</button>
         <button class="tab" onclick="showTab('backup', this);">備份匯出</button>
         <button class="tab" onclick="showTab('settings', this); loadOpsSettings();">公告/維護</button>
@@ -208,6 +209,30 @@
         <div class="muted">可新增 / 修改潮流爭霸戰、遠征異世界章節與遠征關卡，調整難度、通關獎勵，並指定活動卡片掉落機率。</div>
 
         <div class="panel" style="box-shadow:none">
+          <h3>👑 爭霸戰章節</h3>
+          <div class="row3">
+            <div><label>章節 Key，英文/數字，可空白自動產生</label><input id="battleChapterKey" placeholder="例如 normal_4 或 event_summer"></div>
+            <div><label>章節名稱</label><input id="battleChapterName" placeholder="例如 第四章｜秘寶閣新篇"></div>
+            <div><label>排序</label><input id="battleChapterSort" type="number" min="0" value="40"></div>
+          </div>
+          <label>章節描述</label><input id="battleChapterDesc" placeholder="顯示給玩家看的爭霸戰章節描述">
+          <div class="row3">
+            <div><label>模式</label><select id="battleChapterMode"><option value="normal">普通</option><option value="hard">困難</option><option value="event">活動</option></select></div>
+            <div><label>解鎖條件</label><select id="battleChapterUnlockType"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option></select></div>
+            <div><label>解鎖值</label><input id="battleChapterUnlockValue" placeholder="例如 75 或 forest_01"></div>
+          </div>
+          <div class="row3">
+            <div><label>狀態</label><select id="battleChapterActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
+            <div><label>模式標籤，可空白自動</label><input id="battleChapterModeLabel" placeholder="普通 / 困難 / 活動"></div>
+            <div></div>
+          </div>
+          <button class="primary" onclick="saveBattleChapter()" style="margin-top:10px">新增 / 儲存爭霸戰章節</button>
+          <button class="ghost" onclick="clearBattleChapterForm()" style="margin-top:10px">清空章節表單</button>
+          <div id="battleChapterMsg" class="msg"></div>
+          <div id="battleChaptersTable"></div>
+        </div>
+
+        <div class="panel" style="box-shadow:none">
           <h3>🌌 遠征異世界章節</h3>
           <div class="row3">
             <div><label>章節 Key，英文/數字，可空白自動產生</label><input id="rpgChapterKey" placeholder="例如 mist_forest"></div>
@@ -231,8 +256,17 @@
             <h3>👑 潮流爭霸戰關卡</h3>
             <div class="row3">
               <div><label>關卡編號</label><input id="bossStageId" type="number" min="1" value="51"></div>
+              <div><label>所屬爭霸章節</label><select id="bossChapterSelect"></select></div>
+              <div><label>章內排序</label><input id="bossStageOrder" type="number" min="0" value="1"></div>
+            </div>
+            <div class="row3">
               <div><label>Boss 戰力</label><input id="bossStagePower" type="number" min="1" value="10000"></div>
               <div><label>抽卡獎勵</label><input id="bossRewardDraw" type="number" min="0" value="0"></div>
+              <div><label>狀態</label><select id="bossStageActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
+            </div>
+            <div class="row">
+              <div><label>解鎖條件</label><select id="bossUnlockType"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option></select></div>
+              <div><label>解鎖值</label><input id="bossUnlockValue" placeholder="例如 75 或 forest_01"></div>
             </div>
             <label>關卡名稱</label><input id="bossStageName" placeholder="例如 第 51 關｜終焉潮流王">
             <label>指定 BOSS 卡片</label><select id="bossStageCard"></select>
@@ -279,6 +313,56 @@
         <div id="bossStagesTable"></div>
         <h3>目前遠征異世界關卡</h3>
         <div id="rpgDungeonsTable"></div>
+      </div>
+
+      <div id="tab-shop" class="hide panel">
+        <h2>🛒 商城管理</h2>
+        <div class="muted">可管理能量商店、訓練總分商店、儲值商城。儲值商城目前仍不真正串接綠界；CASH 商品可先設定價格與獎勵，玩家端不可付款，GM 可測試發獎。</div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>新增 / 編輯商品</h3>
+            <div class="row">
+              <div><label>商品 Key</label><input id="shopProductKey" placeholder="例如 cash_daily_33"></div>
+              <div><label>商品名稱</label><input id="shopProductName" placeholder="例如 33元每日小禮包"></div>
+            </div>
+            <div class="row3">
+              <div><label>分類</label><select id="shopCategory"><option value="ENERGY">能量商店</option><option value="POINTS">訓練總分商店</option><option value="TOPUP">儲值商城</option></select></div>
+              <div><label>價格類型</label><select id="shopPriceType"><option value="ENERGY">能量</option><option value="POINTS">訓練總分</option><option value="CASH">新台幣</option></select></div>
+              <div><label>價格</label><input id="shopPriceAmount" type="number" min="0" value="100"></div>
+            </div>
+            <div class="row3">
+              <div><label>限購類型</label><select id="shopLimitType"><option value="NONE">不限購</option><option value="DAILY">每日</option><option value="WEEKLY">每週</option><option value="MONTHLY">每月</option><option value="ONCE">永久一次</option></select></div>
+              <div><label>限購次數</label><input id="shopLimitCount" type="number" min="0" value="1"></div>
+              <div><label>排序</label><input id="shopSortOrder" type="number" value="10"></div>
+            </div>
+            <div class="row3">
+              <div><label>狀態</label><select id="shopActive"><option value="1">上架</option><option value="0">下架</option></select></div>
+              <div><label>正式付款</label><select id="shopPaymentEnabled"><option value="0">未啟用</option><option value="1">啟用（目前仍後端保護）</option></select></div>
+              <div><label>標籤</label><input id="shopTag" placeholder="每日限購"></div>
+            </div>
+            <label>商品描述</label><textarea id="shopDescription" placeholder="商品說明"></textarea>
+            <label>商品獎勵 JSON</label><textarea id="shopRewards" placeholder='[{"rewardType":"DRAW_TIMES","rewardValue":1},{"rewardType":"CARD","cardName":"夏日小梅","rewardValue":1}]'></textarea>
+            <div class="muted">可用 rewardType：DRAW_TIMES、ENERGY、POINTS、SKILL_EXP、BATTLE_TICKET、RPG_TICKET、CARD。指定卡片請填 cardName。</div>
+            <button class="primary" onclick="saveShopItem()">儲存商品</button>
+            <button class="ghost" onclick="clearShopForm()">清空</button>
+            <div id="shopMsg" class="msg"></div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>GM 測試發獎</h3>
+            <label>玩家 UID</label><input id="shopGrantUid" placeholder="例如 guang">
+            <label>商品 Key</label><input id="shopGrantProduct" placeholder="例如 cash_daily_33">
+            <button class="warn" onclick="testGrantShopItem()" style="width:100%;margin-top:10px">測試發放商品獎勵</button>
+            <div class="muted">測試發獎不串付款、不扣資源，只驗證商品獎勵是否正確。</div>
+          </div>
+        </div>
+        <h3>商品列表</h3>
+        <div class="tabs">
+          <button class="tab active" id="shopFilterALL" onclick="setShopFilter('ALL')">全部</button>
+          <button class="tab" id="shopFilterENERGY" onclick="setShopFilter('ENERGY')">能量商店</button>
+          <button class="tab" id="shopFilterPOINTS" onclick="setShopFilter('POINTS')">訓練總分商店</button>
+          <button class="tab" id="shopFilterTOPUP" onclick="setShopFilter('TOPUP')">儲值商城</button>
+        </div>
+        <div id="shopItemsTable"></div>
       </div>
 
 <div id="tab-redeem" class="hide panel">
@@ -330,9 +414,13 @@
             <option value="redeem_codes">redeem_codes 兌換碼</option>
             <option value="redeem_redemptions">redeem_redemptions 兌換紀錄</option>
             <option value="rpg_party">rpg_party RPG隊伍</option>
+            <option value="battle_chapters">battle_chapters 爭霸戰章節</option>
             <option value="boss_stages">boss_stages 爭霸戰關卡</option>
             <option value="rpg_dungeons">rpg_dungeons 遠征關卡</option>
             <option value="rpg_adventure_logs">rpg_adventure_logs RPG紀錄</option>
+            <option value="shop_items">shop_items 商城商品</option>
+            <option value="shop_item_rewards">shop_item_rewards 商城獎勵</option>
+            <option value="shop_purchase_logs">shop_purchase_logs 商城購買紀錄</option>
             <option value="admin_audit_logs">admin_audit_logs GM操作紀錄</option>
           </select>
           <button class="primary" onclick="exportOneTable()">匯出單表</button>
@@ -384,8 +472,11 @@ const ADMIN_KEY = 'TLO_ADMIN_INFO';
 let currentPlayerUid = '';
 let cardRows = [];
 let bossStageRows = [];
+let battleChapterRows = [];
 let rpgDungeonRows = [];
 let rpgChapterRows = [];
+let shopItemRows = [];
+let shopFilter = 'ALL';
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
@@ -432,7 +523,7 @@ async function logout(){
 
 function openGame(){ location.href = './'; }
 function showTab(name, btn){
-  ['players','cards','stages','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
+  ['players','cards','stages','shop','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
 }
@@ -637,18 +728,80 @@ async function loadStageAdmin(){
   try{
     if(!cardRows.length) await loadCards(false);
     syncRedeemCardOptions();
-    const [boss, chapters, rpg] = await Promise.all([rpc('adminListBossStages', []), rpc('adminListRpgChapters', []), rpc('adminListRpgDungeons', [])]);
+    const [battleChapters, boss, chapters, rpg] = await Promise.all([rpc('adminListBattleChapters', []), rpc('adminListBossStages', []), rpc('adminListRpgChapters', []), rpc('adminListRpgDungeons', [])]);
+    battleChapterRows = battleChapters.rows || [];
     bossStageRows = boss.rows || [];
     rpgChapterRows = chapters.rows || [];
     rpgDungeonRows = rpg.rows || [];
+    renderBattleChapterSelect();
+    renderBattleChapters();
     renderBossStages();
     renderRpgChapterSelect();
     renderRpgChapters();
     renderRpgDungeons();
+    msg('battleChapterMsg', `已載入 ${battleChapterRows.length} 個爭霸戰章節`, true);
     msg('bossStageMsg', `已載入 ${bossStageRows.length} 個爭霸戰關卡`, true);
     msg('rpgChapterMsg', `已載入 ${rpgChapterRows.length} 個遠征章節`, true);
     msg('rpgStageMsg', `已載入 ${rpgDungeonRows.length} 個遠征關卡`, true);
-  }catch(e){ msg('bossStageMsg', e.message); msg('rpgChapterMsg', e.message); msg('rpgStageMsg', e.message); }
+  }catch(e){ msg('battleChapterMsg', e.message); msg('bossStageMsg', e.message); msg('rpgChapterMsg', e.message); msg('rpgStageMsg', e.message); }
+}
+
+
+function renderBattleChapterSelect(){
+  const sel = $('bossChapterSelect');
+  if(!sel) return;
+  sel.innerHTML = (battleChapterRows || []).map(c => `<option value="${esc(c.key || c.chapterKey)}">${esc(c.name || c.title)}｜${esc(c.key || c.chapterKey)}</option>`).join('') || '<option value="normal_1">第一章｜初見秘寶閣</option>';
+}
+function clearBattleChapterForm(){
+  ['battleChapterKey','battleChapterName','battleChapterDesc','battleChapterUnlockValue','battleChapterModeLabel'].forEach(id => { if($(id)) $(id).value=''; });
+  if($('battleChapterSort')) $('battleChapterSort').value = 40;
+  if($('battleChapterActive')) $('battleChapterActive').value = '1';
+  if($('battleChapterMode')) $('battleChapterMode').value = 'normal';
+  if($('battleChapterUnlockType')) $('battleChapterUnlockType').value = 'NONE';
+}
+function renderBattleChapters(){
+  if(!$('battleChaptersTable')) return;
+  $('battleChaptersTable').innerHTML = `<table><thead><tr><th>章節</th><th>描述</th><th>模式/排序</th><th>解鎖</th><th>狀態</th><th>操作</th></tr></thead><tbody>` +
+    (battleChapterRows || []).map((c,i)=>`<tr>
+      <td><b>${esc(c.name || c.title)}</b><br><span class="muted">${esc(c.key || c.chapterKey)}</span></td>
+      <td>${esc(c.description || c.story || '')}</td>
+      <td>${esc(c.modeLabel || c.mode || '')}<br>排序 ${fmt(c.sortOrder)}</td>
+      <td>${esc(c.unlockType || 'NONE')} ${esc(c.unlockValue || '')}</td>
+      <td>${c.isActive ? '啟用' : '停用'}</td>
+      <td><button class="primary" onclick="editBattleChapter(${i})">載入編輯</button><br><button class="${c.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleBattleChapter(${i})">${c.isActive?'停用':'啟用'}</button></td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+function editBattleChapter(i){
+  const c = battleChapterRows[i]; if(!c) return;
+  $('battleChapterKey').value = c.key || c.chapterKey || '';
+  $('battleChapterName').value = c.name || c.title || '';
+  $('battleChapterDesc').value = c.description || c.story || '';
+  $('battleChapterSort').value = c.sortOrder || 0;
+  $('battleChapterActive').value = c.isActive ? '1' : '0';
+  $('battleChapterMode').value = c.mode || 'normal';
+  $('battleChapterModeLabel').value = c.modeLabel || '';
+  $('battleChapterUnlockType').value = c.unlockType || 'NONE';
+  $('battleChapterUnlockValue').value = c.unlockValue || '';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+async function saveBattleChapter(){
+  try{
+    const payload = {key:$('battleChapterKey').value.trim(), name:$('battleChapterName').value.trim(), description:$('battleChapterDesc').value.trim(), mode:$('battleChapterMode').value, modeLabel:$('battleChapterModeLabel').value.trim(), sortOrder:$('battleChapterSort').value, isActive:$('battleChapterActive').value === '1', unlockType:$('battleChapterUnlockType').value, unlockValue:$('battleChapterUnlockValue').value.trim()};
+    if(!payload.name){ msg('battleChapterMsg','請輸入爭霸戰章節名稱'); return; }
+    const data = await rpc('adminUpsertBattleChapter', [payload]);
+    msg('battleChapterMsg', data.msg, true);
+    await loadStageAdmin();
+    clearBattleChapterForm();
+  }catch(e){ msg('battleChapterMsg', e.message); }
+}
+async function toggleBattleChapter(i){
+  const c = battleChapterRows[i]; if(!c) return;
+  if(!confirm(`確定要${c.isActive ? '停用' : '啟用'}「${c.name || c.title}」？`)) return;
+  try{
+    const data = await rpc('adminSetBattleChapterActive', [c.key || c.chapterKey, !c.isActive]);
+    msg('battleChapterMsg', data.msg, true);
+    await loadStageAdmin();
+  }catch(e){ msg('battleChapterMsg', e.message); }
 }
 
 function renderRpgChapterSelect(){
@@ -716,32 +869,43 @@ async function toggleRpgChapter(i){
 
 function renderBossStages(){
   if(!$('bossStagesTable')) return;
-  $('bossStagesTable').innerHTML = `<table><thead><tr><th>關卡</th><th>Boss</th><th>戰力</th><th>抽卡獎勵</th><th>操作</th></tr></thead><tbody>` +
+  $('bossStagesTable').innerHTML = `<table><thead><tr><th>章節/關卡</th><th>Boss</th><th>戰力</th><th>首通獎勵</th><th>解鎖/狀態</th><th>操作</th></tr></thead><tbody>` +
     bossStageRows.map((s,i)=>`<tr>
-      <td>#${fmt(s.stageId)}<br><span class="muted">${esc(s.stageName)}</span></td>
+      <td>#${fmt(s.stageId)}｜${esc(s.chapterName || '')}<br><span class="muted">排序 ${fmt(s.stageOrder)}｜${esc(s.stageName)}</span></td>
       <td>${esc(s.bossCardName)}<br><span class="muted">${esc(s.bossRarity||'')}</span></td>
       <td>${fmt(s.bossPower)}</td>
-      <td>+${fmt(s.rewardDrawTimes)}</td>
+      <td>抽卡 +${fmt(s.rewardDrawTimes)}</td>
+      <td>${s.isActive ? '啟用' : '停用'}<br><span class="muted">${esc(s.unlockType || 'NONE')} ${esc(s.unlockValue || '')}</span></td>
       <td><button class="primary" onclick="editBossStage(${i})">載入編輯</button></td>
     </tr>`).join('') + `</tbody></table>`;
 }
 function editBossStage(i){
   const s = bossStageRows[i]; if(!s) return;
   $('bossStageId').value = s.stageId;
+  if($('bossChapterSelect')) $('bossChapterSelect').value = s.chapterKey || 'normal_1';
+  if($('bossStageOrder')) $('bossStageOrder').value = s.stageOrder || s.stageId || 0;
   $('bossStageName').value = s.stageName || '';
   $('bossStagePower').value = s.bossPower || 0;
   $('bossRewardDraw').value = s.rewardDrawTimes || 0;
   $('bossStageCard').value = s.bossCardName || '';
+  if($('bossStageActive')) $('bossStageActive').value = s.isActive ? '1' : '0';
+  if($('bossUnlockType')) $('bossUnlockType').value = s.unlockType || 'NONE';
+  if($('bossUnlockValue')) $('bossUnlockValue').value = s.unlockValue || '';
   window.scrollTo({top:0, behavior:'smooth'});
 }
 async function saveBossStage(){
   try{
     const payload = {
       stageId:$('bossStageId').value,
+      chapterKey:$('bossChapterSelect') ? $('bossChapterSelect').value : 'normal_1',
+      stageOrder:$('bossStageOrder') ? $('bossStageOrder').value : $('bossStageId').value,
       stageName:$('bossStageName').value.trim(),
       bossCardName:$('bossStageCard').value,
       bossPower:$('bossStagePower').value,
-      rewardDrawTimes:$('bossRewardDraw').value
+      rewardDrawTimes:$('bossRewardDraw').value,
+      unlockType:$('bossUnlockType') ? $('bossUnlockType').value : 'NONE',
+      unlockValue:$('bossUnlockValue') ? $('bossUnlockValue').value.trim() : '',
+      isActive:$('bossStageActive') ? $('bossStageActive').value === '1' : true
     };
     if(!payload.stageId || !payload.bossCardName){ msg('bossStageMsg','請輸入關卡編號並指定 BOSS'); return; }
     if(!confirm('確定新增 / 儲存潮流爭霸戰關卡？')) return;
@@ -823,6 +987,82 @@ async function toggleRpgDungeon(i){
     msg('rpgStageMsg', data.msg, true);
     await loadStageAdmin();
   }catch(e){ msg('rpgStageMsg', e.message); }
+}
+
+
+async function loadShopAdmin(){
+  try{
+    const data = await rpc('adminListShopItems', []);
+    shopItemRows = data.rows || [];
+    renderShopItems();
+    msg('shopMsg', `已載入 ${shopItemRows.length} 個商品`, true);
+  }catch(e){ msg('shopMsg', e.message); }
+}
+function setShopFilter(v){
+  shopFilter = v;
+  ['ALL','ENERGY','POINTS','TOPUP'].forEach(k => { const el=$('shopFilter'+k); if(el) el.classList.toggle('active', k===v); });
+  renderShopItems();
+}
+function renderShopItems(){
+  if(!$('shopItemsTable')) return;
+  const rows = (shopItemRows || []).filter(x => shopFilter === 'ALL' || x.category === shopFilter);
+  $('shopItemsTable').innerHTML = `<table><thead><tr><th>商品</th><th>分類/價格</th><th>限購</th><th>獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>` +
+    rows.map(it => { const i = shopItemRows.indexOf(it); return `<tr>
+      <td><b>${esc(it.name)}</b><br><span class="muted">${esc(it.productKey)}</span><br><span class="muted">${esc(it.description || '')}</span></td>
+      <td>${esc(it.categoryLabel || it.category)}<br>${fmt(it.priceAmount)} ${esc(it.priceLabel || it.priceType)}</td>
+      <td>${esc(it.limitLabel || it.limitType)} ${fmt(it.limitCount)}</td>
+      <td>${esc(it.rewardText || '')}</td>
+      <td>${it.isActive ? '上架' : '下架'}<br><span class="muted">付款：${it.isPaymentEnabled ? '已啟用' : '未啟用'}</span></td>
+      <td><button class="primary" onclick="editShopItem(${i})">載入編輯</button><br><button class="${it.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleShopItem(${i})">${it.isActive?'下架':'上架'}</button></td>
+    </tr>`; }).join('') + `</tbody></table>`;
+}
+function clearShopForm(){
+  ['shopProductKey','shopProductName','shopDescription','shopTag'].forEach(id => { if($(id)) $(id).value=''; });
+  if($('shopCategory')) $('shopCategory').value='ENERGY';
+  if($('shopPriceType')) $('shopPriceType').value='ENERGY';
+  if($('shopPriceAmount')) $('shopPriceAmount').value=100;
+  if($('shopLimitType')) $('shopLimitType').value='DAILY';
+  if($('shopLimitCount')) $('shopLimitCount').value=1;
+  if($('shopSortOrder')) $('shopSortOrder').value=10;
+  if($('shopActive')) $('shopActive').value='1';
+  if($('shopPaymentEnabled')) $('shopPaymentEnabled').value='0';
+  if($('shopRewards')) $('shopRewards').value='[{"rewardType":"BATTLE_TICKET","rewardValue":5}]';
+}
+function editShopItem(i){
+  const it = shopItemRows[i]; if(!it) return;
+  $('shopProductKey').value = it.productKey || '';
+  $('shopProductName').value = it.name || '';
+  $('shopCategory').value = it.category || 'ENERGY';
+  $('shopPriceType').value = it.priceType || 'ENERGY';
+  $('shopPriceAmount').value = it.priceAmount || 0;
+  $('shopLimitType').value = it.limitType || 'NONE';
+  $('shopLimitCount').value = it.limitCount || 0;
+  $('shopSortOrder').value = it.sortOrder || 0;
+  $('shopActive').value = it.isActive ? '1' : '0';
+  $('shopPaymentEnabled').value = it.isPaymentEnabled ? '1' : '0';
+  $('shopTag').value = it.tag || '';
+  $('shopDescription').value = it.description || '';
+  $('shopRewards').value = JSON.stringify((it.rewards || []).map(r => ({rewardType:r.rewardType, rewardValue:r.rewardValue, cardName:r.cardName || ''})), null, 2);
+  $('shopProductName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function saveShopItem(){
+  try{
+    let rewards=[];
+    try{ rewards = JSON.parse($('shopRewards').value || '[]'); }catch(e){ msg('shopMsg','獎勵 JSON 格式錯誤：' + e.message); return; }
+    const payload = {productKey:$('shopProductKey').value.trim(), name:$('shopProductName').value.trim(), category:$('shopCategory').value, description:$('shopDescription').value.trim(), priceType:$('shopPriceType').value, priceAmount:$('shopPriceAmount').value, limitType:$('shopLimitType').value, limitCount:$('shopLimitCount').value, isActive:$('shopActive').value==='1', isPaymentEnabled:$('shopPaymentEnabled').value==='1', sortOrder:$('shopSortOrder').value, tag:$('shopTag').value.trim(), rewards};
+    if(!payload.name){ msg('shopMsg','請輸入商品名稱'); return; }
+    const data = await rpc('adminUpsertShopItem', [payload]);
+    msg('shopMsg', data.msg, true);
+    await loadShopAdmin();
+  }catch(e){ msg('shopMsg', e.message); }
+}
+async function toggleShopItem(i){
+  const it = shopItemRows[i]; if(!it) return;
+  if(!confirm(`確定要${it.isActive ? '下架' : '上架'}「${it.name}」？`)) return;
+  try{ const data = await rpc('adminSetShopItemActive', [it.productKey, !it.isActive]); msg('shopMsg', data.msg, true); await loadShopAdmin(); }catch(e){ msg('shopMsg', e.message); }
+}
+async function testGrantShopItem(){
+  try{ const data = await rpc('adminTestGrantShopItem', [$('shopGrantUid').value.trim(), $('shopGrantProduct').value.trim()]); msg('shopMsg', data.msg, true); }catch(e){ msg('shopMsg', e.message); }
 }
 
 function downloadJson(filename, data){
