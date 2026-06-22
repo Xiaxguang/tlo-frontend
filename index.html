@@ -12,7 +12,7 @@
   <script>
 // 建立全域圖片庫，把所有角色跟 BOSS 的圖片連結放在這裡
   window.NPC_IMAGES = {
-    // 玩家抽卡池 (16隻)
+    // 圖片備用庫；實際卡池數量以後端 cards 表 / GM 後台設定為主
     // 【超稀有系列 SUPER SUPER RARE】
     "書宏": "https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/書宏.png",
 
@@ -994,6 +994,19 @@
     .mission-progress > div{height:100%;background:linear-gradient(90deg,#00fff0,#7f00ff);width:0%;}
     .mission-claim-btn{border:none;border-radius:12px;background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer;min-width:88px;}
     .mission-claim-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
+    .battle-chapter-box{background:rgba(0,255,240,.045);border:1px solid rgba(0,255,240,.22);border-radius:16px;padding:12px;margin:12px 0;text-align:left;}
+    .battle-chapter-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+    .battle-chapter-title{font-size:14px;font-weight:900;color:#00fff0;text-shadow:0 0 8px rgba(0,255,240,.35);}
+    .battle-chapter-note{font-size:12px;color:#aaa;line-height:1.5;}
+    .battle-chapter-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
+    .battle-chapter-tab{border:1px solid #444;background:#171717;color:#aaa;border-radius:999px;padding:8px 10px;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer;}
+    .battle-chapter-tab.active{border-color:#00fff0;color:#001;background:linear-gradient(45deg,#00fff0,#00ff7f);}
+    .battle-chapter-tab.locked{opacity:.48;cursor:not-allowed;filter:grayscale(.45);}
+    .battle-stage-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+    .battle-stage-node{border:1px solid #444;background:#111;color:#aaa;border-radius:10px;padding:8px 2px;font-size:12px;font-weight:900;cursor:pointer;min-height:38px;}
+    .battle-stage-node.cleared{border-color:#00ff7f;color:#00ff7f;background:rgba(0,255,127,.08);}
+    .battle-stage-node.current{border-color:#ffdd77;color:#ffdd77;box-shadow:0 0 12px rgba(255,221,119,.35);}
+    .battle-stage-node.locked{opacity:.38;cursor:not-allowed;filter:grayscale(.5);}
     .achievement-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px;}
     .achievement-summary .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;text-align:center;}
     .achievement-summary .stat b{display:block;color:#00fff0;font-size:20px;margin-top:2px;}
@@ -1035,7 +1048,7 @@
           </div>
           <div class="hud-tile">
             <span class="hud-label">卡盒進度</span>
-            <span class="hud-value"><span id="collection-summary-count">0</span>/21</span>
+            <span class="hud-value"><span id="collection-summary-count">0</span>/<span id="collection-summary-total">0</span></span>
           </div>
         </div>
       </div>
@@ -1065,7 +1078,7 @@
           <button class="feature-btn" onclick="openTrainingModal()"><span>🎁</span>簽到 / 排行榜<small>每日獎勵與玩家分數排名</small></button>
           <button class="feature-btn" onclick="openRedeemModal()"><span>🎟️</span>兌換碼<small>輸入活動碼或補償碼</small></button>
           <button class="feature-btn" onclick="openMissionModal()"><span>🎁</span>開服福利 / 任務<small>7日福利、每日任務、新手任務</small></button>
-          <button class="feature-btn" onclick="document.getElementById('prob-modal').style.display='flex';"><span>📊</span>機率表<small>查看盲盒角色出貨機率</small></button>
+          <button class="feature-btn" onclick="openProbabilityModal()"><span>📊</span>機率表<small>查看盲盒角色出貨機率</small></button>
           <button class="feature-btn" onclick="openMemoryModal()"><span>🧠</span>記憶翻牌<small>挑戰記憶小遊戲</small></button>
           <button class="feature-btn" onclick="openAchievementModal()"><span>🏆</span>成就系統<small>收集、戰鬥、養成里程碑</small></button>
           <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
@@ -1120,7 +1133,7 @@
         </div>
         <div class="quick-links">
           <button class="btn-collection" onclick="openCollectionModal()">🎴 查看我的潮流卡盒</button>
-          <button class="btn-collection" onclick="document.getElementById('prob-modal').style.display='flex';">ℹ️ 查看盲盒角色機率表</button>
+          <button class="btn-collection" onclick="openProbabilityModal()">ℹ️ 查看盲盒角色機率表</button>
           <a href="https://lbr-game.up.railway.app/roulette/" class="btn btn-full btn-roulette" target="_blank">🎡 前往 T-LO 大轉盤現場</a>
           <a href="https://t-lo-games.cashier.ecpay.com.tw/product/000000000976530" class="btn btn-full btn-buy" id="buy-btn" target="_blank">🛒 前往商店獲得更多次數</a>
         </div>
@@ -1178,28 +1191,13 @@
     <div class="modal-content">
       <span class="modal-close" onclick="document.getElementById('prob-modal').style.display='none';">&times;</span>
       <div class="modal-h3">📊 T-LO 盲盒角色機率表</div>
+      <div id="prob-status" style="color:#aaa;font-size:13px;line-height:1.6;margin-bottom:8px;">正在讀取最新卡池機率...</div>
       <table class="prob-table">
-        <thead><tr><th>系列 / 級別</th><th>角色名稱</th><th>出貨機率 (每款)</th></tr></thead>
-        <tbody>
-          <tr class="bg-normal">
-            <td rowspan="2" style="font-weight: bold;">NORMAL<br><span style="font-size:11px; font-weight:normal;">(共 13 款)</span></td>
-            <td>AJ,千思語,以凡,林小蔚,阿宗,氣鵝,喬喬,瑄瑄,夢璃,燒酒,阿月,小恭,毛帽</td>
-            <td>6.15%</td>
-          </tr>
-          <tr class="bg-normal table-summary"><td>NORMAL 級別總計機率</td><td>79.95%</td></tr>
-          <tr class="bg-rare"><td rowspan="3">RARE<br><span style="font-size:11px; font-weight:normal;">(共 3 款)</span></td><td>小光</td><td>3.00%</td></tr>
-          <tr class="bg-rare"><td>萌欣</td><td>3.00%</td></tr>
-          <tr class="bg-rare"><td>果果</td><td>3.05%</td></tr>
-          <tr class="bg-rare table-summary"><td>RARE 級別總計機率</td><td>10.05%</td></tr>
-          <tr class="bg-sr"><td rowspan="4">SUPER RARE<br><span style="font-size:11px; font-weight:normal;">(共 3 款)</span></td><td>凌凌</td><td>2.00%</td></tr>
-          <tr class="bg-sr"><td>小艾</td><td>2.00%</td></tr>
-          <tr class="bg-sr"><td>小舞</td><td>2.00%</td></tr>
-          <tr class="bg-sr"><td>貝貝</td><td>3.00%</td></tr>
-          <tr class="bg-rare table-summary"><td>SUPER RARE 級別總計機率</td><td>9.00%</td></tr>
-          <tr class="bg-sr"><td rowspan="2">SSR<br><span style="font-size:11px; font-weight:normal;">(共 1 款)</span></td><td>書宏</td><td>1.00%</td></tr>
+        <thead><tr><th>系列 / 級別</th><th>角色名稱</th><th>出貨機率</th></tr></thead>
+        <tbody id="prob-table-body">
+          <tr><td colspan="3" style="color:#aaa;">請稍候，正在同步 GM 後台卡池設定。</td></tr>
         </tbody>
-      </table>
-    </div>
+      </table>    </div>
   </div>
 
   <div class="modal-overlay" id="collection-modal" onclick="if(event.target.id==='collection-modal') this.style.display='none';">
@@ -1230,6 +1228,15 @@
         </select>
         <button class="btn-collection" id="battle-save-rep-btn" onclick="saveBattleRepresentative()" style="width:90%;margin-top:8px;">💾 固定 / 更換爭霸代表</button>
         <div id="battle-rep-status" style="font-size:12px;color:#aaa;margin-top:6px;line-height:1.5;">尚未讀取代表資料。</div>
+      </div>
+
+      <div class="battle-chapter-box" id="battle-chapter-selector">
+        <div class="battle-chapter-head">
+          <div class="battle-chapter-title">🗺️ 章節關卡選擇</div>
+          <div class="battle-chapter-note" id="battle-chapter-note">讀取章節進度中...</div>
+        </div>
+        <div class="battle-chapter-tabs" id="battle-chapter-tabs"></div>
+        <div class="battle-stage-grid" id="battle-stage-grid"></div>
       </div>
 
       <div class="boss-card" id="boss-info-panel">
@@ -1521,15 +1528,37 @@
 
     loadPublicSettings();
 
-    // 🟢 替換為全新的 16 張抽卡池 (已修復缺少的逗號)
-    const CARD_RARITIES = {
-      "書宏": "SSR",
-      "凌凌": "SR", "小艾": "SR", "小舞": "SR",
-      "小光": "RARE", "萌欣": "RARE",
-      "AJ": "NORMAL", "千思語": "NORMAL", "以凡": "NORMAL", "林小蔚": "NORMAL", "阿宗": "NORMAL", 
-      "氣鵝": "NORMAL", "喬喬": "NORMAL", "瑄瑄": "NORMAL", "夢璃": "NORMAL", "燒酒": "NORMAL"
-    };
-    const ALL_16_CARDS = Object.keys(CARD_RARITIES);
+    // 卡池資料一律以後端 cards 表為主；GM 新增卡片後，收藏、翻牌、機率表會自動跟著更新。
+    let TLO_CARD_RARITIES = {};
+    let TLO_CARD_POOL = [];
+    let selectedBattleStageId = 0;
+
+    function setCollectionSummary(uniqueCount, totalCount) {
+      const countEl = document.getElementById('collection-summary-count');
+      const totalEl = document.getElementById('collection-summary-total');
+      if (countEl) countEl.innerText = Number(uniqueCount || 0);
+      if (totalEl && typeof totalCount !== 'undefined' && totalCount !== null) totalEl.innerText = Number(totalCount || 0);
+    }
+
+    function updateCardCacheFromResponse(response) {
+      if (!response || !Array.isArray(response.cards)) return;
+      const names = [];
+      response.cards.forEach(function(card) {
+        const name = card && (card.name || card.cardName || card.npcName);
+        if (!name) return;
+        names.push(name);
+        TLO_CARD_RARITIES[name] = card.rarity || card.npcRarity || TLO_CARD_RARITIES[name] || 'NORMAL';
+      });
+      if (names.length) TLO_CARD_POOL = names;
+    }
+
+    function getDynamicCardPool() {
+      return TLO_CARD_POOL.length ? TLO_CARD_POOL.slice() : Object.keys(TLO_CARD_RARITIES);
+    }
+
+    function getKnownCardRarity(name) {
+      return TLO_CARD_RARITIES[name] || 'NORMAL';
+    }
 
     if (window.TLO_IS_AUTHENTICATED) {
       updateButtonState();
@@ -1556,6 +1585,42 @@
       document.getElementById('arena-player-avatar-img').src = pImgUrl;
     }
 
+    function openProbabilityModal() {
+      const modal = document.getElementById('prob-modal');
+      const status = document.getElementById('prob-status');
+      const body = document.getElementById('prob-table-body');
+      if (modal) modal.style.display = 'flex';
+      if (status) status.innerText = '正在讀取最新 GM 卡池設定...';
+      if (body) body.innerHTML = '<tr><td colspan="3" style="color:#aaa;">同步中...</td></tr>';
+      if (typeof google === "undefined" || !google.script || !google.script.run) return;
+      google.script.run.withSuccessHandler(function(response) {
+        if (!response || !response.success) {
+          if (status) status.innerText = '卡池機率讀取失敗。';
+          if (body) body.innerHTML = '<tr><td colspan="3" style="color:#ff7777;">卡池機率讀取失敗，請稍後再試。</td></tr>';
+          return;
+        }
+        registerCardImages(response);
+        updateCardCacheFromResponse(response);
+        const groups = response.groups || [];
+        if (status) status.innerText = `目前可抽卡片 ${Number(response.totalCards || 0)} 張，總權重 ${Number(response.totalWeight || 0)}。此表會依 GM 後台 cards 表即時更新。`;
+        let html = '';
+        groups.forEach(function(group) {
+          const cards = group.cards || [];
+          cards.forEach(function(card, idx) {
+            const rowClass = String(card.rarityCss || card.rarity || '').toLowerCase().indexOf('normal') >= 0 ? 'bg-normal' : (String(card.rarityCss || '').toLowerCase().indexOf('super') >= 0 || String(card.rarity || '').toUpperCase().indexOf('SR') >= 0 ? 'bg-sr' : 'bg-rare');
+            html += `<tr class="${rowClass}">`;
+            if (idx === 0) html += `<td rowspan="${cards.length + 1}" style="font-weight:bold;">${escapeHtml(group.rarity || '')}<br><span style="font-size:11px;font-weight:normal;">共 ${cards.length} 款</span></td>`;
+            html += `<td>${escapeHtml(card.name || '')}</td><td>${escapeHtml(card.probabilityText || '0.00%')}</td></tr>`;
+          });
+          html += `<tr class="table-summary"><td>${escapeHtml(group.rarity || '')} 級別總計機率</td><td>${escapeHtml(group.totalProbabilityText || '0.00%')}</td></tr>`;
+        });
+        if (body) body.innerHTML = html || '<tr><td colspan="3" style="color:#aaa;">目前沒有可抽卡片。</td></tr>';
+      }).withFailureHandler(function(err) {
+        if (status) status.innerText = '卡池機率讀取失敗。';
+        if (body) body.innerHTML = '<tr><td colspan="3" style="color:#ff7777;">' + escapeHtml(err && err.message ? err.message : err) + '</td></tr>';
+      }).getCardProbabilityTable(playerUID);
+    }
+
     function openCollectionModal() { document.getElementById('collection-modal').style.display = 'flex'; renderCollectionWall(); }
 
     function renderCollectionWall() {
@@ -1568,6 +1633,7 @@
   google.script.run.withSuccessHandler(function(response) {
     if (response && response.success) {
       registerCardImages(response);
+      updateCardCacheFromResponse(response);
 
       const ownedMap = response.ownedCardsMap || {};
       const uCount = Number(response.uniqueCount || 0);
@@ -1585,10 +1651,11 @@
           };
         });
       } else {
-        cardList = ALL_16_CARDS.map(function(cardName) {
+        const fallbackNames = getDynamicCardPool().length ? getDynamicCardPool() : Object.keys(ownedMap);
+        cardList = fallbackNames.map(function(cardName) {
           return {
             name: cardName,
-            rarity: CARD_RARITIES[cardName] || '',
+            rarity: getKnownCardRarity(cardName),
             count: Number(ownedMap[cardName] || 0),
             imageUrl: getRawCardImageUrl(cardName),
             sortOrder: 9999
@@ -1619,11 +1686,9 @@
 
       container.innerHTML = html;
 
-      const totalCards = cardList.length || 21;
+      const totalCards = Number(response.totalCollectibleCards || response.totalCards || cardList.length || 0);
       progressText.innerText = `收集進度：${uCount} / ${totalCards} 張 (${Math.round((uCount / Math.max(1, totalCards)) * 100)}%)`;
-
-      const summary = document.getElementById('collection-summary-count');
-      if (summary) summary.innerText = uCount;
+      setCollectionSummary(uCount, totalCards);
     } else {
       container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#ff7777;">卡盒讀取失敗，請稍後再試。</p>';
     }
@@ -1638,7 +1703,7 @@
       google.script.run.withSuccessHandler(function(response) {
         registerCardImages(response);
         if (response && response.success) {
-          document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+          setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
           if (typeof response.timesLeft !== "undefined") {
             currentCount = parseInt(response.timesLeft) || 0;
             updateButtonState();
@@ -1647,7 +1712,48 @@
       }).getHomeState(playerUID);
     }
 
-    function openBattleModal() {
+    function getBattleStageText(stage) {
+      if (!stage) return '';
+      const label = stage.chapterStageLabel || ('第 ' + Number(stage.stageId || stage.id || 0) + ' 關');
+      return label + '｜' + (stage.stageName || '未命名關卡');
+    }
+
+    function renderBattleChapterSelector(response) {
+      const tabs = document.getElementById('battle-chapter-tabs');
+      const grid = document.getElementById('battle-stage-grid');
+      const note = document.getElementById('battle-chapter-note');
+      if (!tabs || !grid) return;
+      const chapters = response.battleChapters || [];
+      const selectedId = Number(response.selectedStageId || response.currentStageId || 1);
+      selectedBattleStageId = selectedId;
+      if (note) {
+        note.innerText = `目前解鎖到第 ${Number(response.unlockedMaxStageId || 1)} / ${Number(response.maxStageId || 0)} 關；已解鎖關卡可自由選擇重打。`;
+      }
+      tabs.innerHTML = chapters.map(function(ch) {
+        const cls = ['battle-chapter-tab'];
+        if (ch.current) cls.push('active');
+        if (ch.locked) cls.push('locked');
+        return `<button class="${cls.join(' ')}" ${ch.locked ? 'disabled' : ''} onclick="selectBattleStage(${Number((ch.stages && ch.stages[0] && ch.stages[0].stageId) || ch.startStageId || 1)})">${escapeHtml(ch.title || ('第 ' + ch.chapterId + ' 章'))}｜${Number(ch.clearedCount || 0)}/${Number(ch.totalCount || 0)}</button>`;
+      }).join('');
+      const active = chapters.find(function(ch) { return (ch.stages || []).some(function(st) { return Number(st.stageId) === selectedId; }); }) || chapters.find(function(ch) { return !ch.locked; }) || chapters[0];
+      const stages = (active && active.stages) || [];
+      grid.innerHTML = stages.map(function(st) {
+        const cls = ['battle-stage-node'];
+        if (st.locked) cls.push('locked');
+        if (st.cleared) cls.push('cleared');
+        if (Number(st.stageId) === selectedId) cls.push('current');
+        const icon = st.locked ? '🔒' : (st.cleared ? '✅' : '⚔️');
+        return `<button class="${cls.join(' ')}" ${st.locked ? 'disabled' : ''} title="${escapeHtml(getBattleStageText(st))}" onclick="selectBattleStage(${Number(st.stageId || 1)})">${icon}<br>${Number(st.stageInChapter || st.stageId || 0)}</button>`;
+      }).join('') || '<div style="color:#888;grid-column:1/-1;text-align:center;">尚未建立章節關卡。</div>';
+    }
+
+    function selectBattleStage(stageId) {
+      selectedBattleStageId = Number(stageId || 1);
+      openBattleModal(selectedBattleStageId);
+    }
+
+    function openBattleModal(stageId) {
+      if (stageId) selectedBattleStageId = Number(stageId || 1);
       if (window.TLOAudio) window.TLOAudio.playBgm('battle');
       document.getElementById('battle-modal').style.display = 'flex';
       document.getElementById('battle-result-msg').innerHTML = "";
@@ -1673,6 +1779,7 @@
 
         registerCardImages(response);
         latestBattleDashboard = response;
+        renderBattleChapterSelector(response);
         const selectEl = document.getElementById('player-battle-avatar-select');
         const repStatus = document.getElementById('battle-rep-status');
         const currentSelectedValue = response.battleRepresentative || selectEl.value || '';
@@ -1700,11 +1807,11 @@
             : '<span style="color:#ffcc66;">尚未固定代表。請先選擇一張角色並按「固定 / 更換爭霸代表」。</span>';
         }
 
-        const cid = response.currentStageId;
+        const cid = Number(response.selectedStageId || response.currentStageId || 1);
         const isClaimed = response.hasRewardClaimed;
-        const totalBossStages = Number(response.totalStages || response.maxStage || response.maxStageId || 75);
+        const totalBossStages = Number(response.totalStages || response.maxStage || response.maxStageId || 0);
 
-        if (response.isAllCleared || cid > totalBossStages) {
+        if (cid > totalBossStages || !response.stageData) {
           document.getElementById('battle-stage-title').innerText = "🏆 潮流制霸 🏆";
           document.getElementById('battle-boss-name').innerText = "🎉 恭喜！您已全通關！";
           document.getElementById('battle-boss-power').innerText = "---";
@@ -1727,7 +1834,7 @@
           bossImgUrl = "https://images.placeholders.dev/?width=150&height=200&text=" + encodeURIComponent(bName) + "&bgColor=%232d1a1a&textColor=%23ff4444&fontSize=18px";
         }
 
-        document.getElementById('battle-stage-title').innerText = `🔥 目前進度：第 ${cid} / ${totalBossStages} 關`;
+        document.getElementById('battle-stage-title').innerText = `🔥 ${currentStage.chapterStageLabel || ('第 ' + cid + ' 關')}｜總進度 ${Number(response.unlockedMaxStageId || cid)} / ${totalBossStages}`;
         document.getElementById('battle-boss-avatar').src = bossImgUrl;
         document.getElementById('battle-boss-avatar').style.display = "block";
         document.getElementById('battle-boss-name').innerText = `【守關王：${bName}】`;
@@ -1740,9 +1847,9 @@
         if (rewardTimes > 0) {
           document.getElementById('battle-stage-reward').innerHTML = isClaimed
             ? `🎁 第 ${cid} 關獎勵：抽卡次數 +${rewardTimes} 次 <span style="color:red; font-weight:bold;">(已領取)</span>`
-            : `🎁 每 5 關獎勵：抽卡次數 <span style="color:#00ff7f; font-weight:bold;">+${rewardTimes} 次！</span>`;
+            : `🎁 首通獎勵：抽卡次數 <span style="color:#00ff7f; font-weight:bold;">+${rewardTimes} 次！</span>`;
         } else {
-          document.getElementById('battle-stage-reward').innerHTML = '🎁 進度關：本關無抽卡獎勵；每通過 5 關可獲得抽卡次數 +3。';
+          document.getElementById('battle-stage-reward').innerHTML = '🎁 進度關：本關無抽卡獎勵；首通獎勵依 GM 後台關卡設定。';
         }
 
         btn.onclick = window.startChallenge;
@@ -1762,7 +1869,7 @@
         document.getElementById('battle-result-msg').innerHTML = `<span style="color:#ff4444;">戰鬥資料讀取失敗：${err && err.message ? err.message : err}</span>`;
         btn.disabled = true;
         btn.innerText = "⚠️ 暫時無法挑戰";
-      }).getBattleDashboard(playerUID);
+      }).getBattleDashboard(playerUID, selectedBattleStageId || undefined);
     }
 
 
@@ -2184,6 +2291,7 @@
 
             if (window.TLOAudio) window.TLOAudio.playSfx('win');
 
+            selectedBattleStageId = Number(battleResult.nextStageId || selectedBattleStageId || 1);
             btn.innerText = '✅ 已突破此關，準備下一關...';
 
             setTimeout(function() {
@@ -2200,7 +2308,7 @@
             if (window.TLOAudio) window.TLOAudio.playSfx('error');
 
             btn.disabled = false;
-            btn.innerText = '🔄 從第一關重新啟動挑戰 🔄';
+            btn.innerText = '🔄 重新挑戰此關 🔄';
             btn.style.background = 'linear-gradient(45deg, #ff5500, #ff0000)';
             btn.onclick = window.startChallenge;
           }
@@ -2217,7 +2325,7 @@
 
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
         })
-        .executeBattle(playerUID);
+        .executeBattle(playerUID, selectedBattleStageId || undefined);
     };
 
 
@@ -2262,7 +2370,7 @@
           if (window.TLOAudio) window.TLOAudio.playCardRarity(response.npcRarity);
 
           if (typeof response.collectionUniqueCount !== "undefined") {
-            document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+            setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
@@ -2308,7 +2416,7 @@
           if (window.TLOAudio) window.TLOAudio.playBestGachaResult(response.results || []);
 
           if (typeof response.collectionUniqueCount !== "undefined") {
-            document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+            setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
@@ -2475,7 +2583,7 @@ function showCollectionHistory() {
     function downloadHistoryCardImage(name, serial, imgUrl) {
       return new Promise(function(resolve, reject) {
         const safeId = 'history-card-download-temp-' + Date.now();
-        const rarity = CARD_RARITIES[name] || 'NORMAL';
+        const rarity = getKnownCardRarity(name);
         const rarityClass = rarity === 'SR' ? 'SUPER-RARE' : rarity;
 
         const temp = document.createElement('div');
@@ -3047,7 +3155,7 @@ function showCollectionHistory() {
             currentCount = parseInt(response.timesLeft) || 0;
           }
           document.getElementById('history-list').innerHTML = response.historyHtml || "<div>暫無抽卡紀錄</div>";
-          document.getElementById('collection-summary-count').innerText = response.collectionUniqueCount || 0;
+          setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
           updateButtonState();
         }
       }).withFailureHandler(function() {
@@ -3361,24 +3469,52 @@ function showCollectionHistory() {
     }
 
     function startMemoryGame() {
-      const pool = ALL_16_CARDS.slice();
-      const selected = shuffleArray_(pool).slice(0, 4);
-      __memoryCards = shuffleArray_(selected.concat(selected)).map(function(name, idx) {
-        return { id: idx, name: name, revealed: false, matched: false };
-      });
-      __memoryFirst = null;
-      __memoryLock = false;
-      __memoryMoves = 0;
-      __memoryMatched = 0;
-      __memoryStartTime = Date.now();
-      if (__memoryTimer) clearInterval(__memoryTimer);
-      __memoryTimer = setInterval(updateMemoryStats_, 500);
-      document.getElementById('memory-msg').innerHTML = '<span style="color:#00fff0;">遊戲開始！找出 4 組相同角色。</span>';
       const btn = document.getElementById('memory-start-btn');
-      btn.disabled = true;
-      btn.innerText = '進行中...';
-      renderMemoryBoard_();
-      updateMemoryStats_();
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = '正在讀取卡池...';
+      }
+      document.getElementById('memory-msg').innerHTML = '<span style="color:#aaa;">正在同步最新卡片資料...</span>';
+
+      function beginWithPool(pool) {
+        const cleanPool = (pool || []).filter(Boolean);
+        if (cleanPool.length < 4) {
+          document.getElementById('memory-msg').innerHTML = '<span style="color:#ff7777;">目前卡池少於 4 張，無法開始記憶翻牌。</span>';
+          if (btn) {
+            btn.disabled = false;
+            btn.innerText = '🧠 開始記憶翻牌';
+          }
+          return;
+        }
+        const selected = shuffleArray_(cleanPool).slice(0, 4);
+        __memoryCards = shuffleArray_(selected.concat(selected)).map(function(name, idx) {
+          return { id: idx, name: name, revealed: false, matched: false };
+        });
+        __memoryFirst = null;
+        __memoryLock = false;
+        __memoryMoves = 0;
+        __memoryMatched = 0;
+        __memoryStartTime = Date.now();
+        if (__memoryTimer) clearInterval(__memoryTimer);
+        __memoryTimer = setInterval(updateMemoryStats_, 500);
+        document.getElementById('memory-msg').innerHTML = '<span style="color:#00fff0;">遊戲開始！找出 4 組相同角色。</span>';
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = '進行中...';
+        }
+        renderMemoryBoard_();
+      }
+
+      google.script.run.withSuccessHandler(function(response) {
+        registerCardImages(response);
+        updateCardCacheFromResponse(response);
+        const pool = Array.isArray(response && response.cards)
+          ? response.cards.map(function(card) { return card.name || card.cardName || card.npcName || ''; }).filter(Boolean)
+          : getDynamicCardPool();
+        beginWithPool(pool);
+      }).withFailureHandler(function() {
+        beginWithPool(getDynamicCardPool());
+      }).getPlayerCollection(playerUID);
     }
 
     function renderMemoryBoard_() {
@@ -3906,7 +4042,7 @@ function showCollectionHistory() {
 
     function findRpgCardInfo(name) {
       const opts = (latestRpgDashboard && latestRpgDashboard.cardOptions) || [];
-      return opts.find(c => c.name === name) || { name: name, rarity: CARD_RARITIES[name] || 'NORMAL', power: 0, star: 1 };
+      return opts.find(c => c.name === name) || { name: name, rarity: getKnownCardRarity(name), power: 0, star: 1 };
     }
 
     function renderRpgTeamPreview() {
