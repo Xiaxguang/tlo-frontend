@@ -1002,7 +1002,7 @@
     .battle-chapter-tab{border:1px solid #444;background:#171717;color:#aaa;border-radius:999px;padding:8px 10px;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer;}
     .battle-chapter-tab.active{border-color:#00fff0;color:#001;background:linear-gradient(45deg,#00fff0,#00ff7f);}
     .battle-chapter-tab.locked{opacity:.48;cursor:not-allowed;filter:grayscale(.45);}
-    .battle-stage-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+    .battle-stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:7px;}
     .battle-stage-node{border:1px solid #444;background:#111;color:#aaa;border-radius:10px;padding:8px 2px;font-size:12px;font-weight:900;cursor:pointer;min-height:38px;}
     .battle-stage-node.cleared{border-color:#00ff7f;color:#00ff7f;background:rgba(0,255,127,.08);}
     .battle-stage-node.current{border-color:#ffdd77;color:#ffdd77;box-shadow:0 0 12px rgba(255,221,119,.35);}
@@ -1727,13 +1727,19 @@
       const selectedId = Number(response.selectedStageId || response.currentStageId || 1);
       selectedBattleStageId = selectedId;
       if (note) {
-        note.innerText = `目前解鎖到第 ${Number(response.unlockedMaxStageId || 1)} / ${Number(response.maxStageId || 0)} 關；已解鎖關卡可自由選擇重打。`;
+        const unlocked = Number(response.unlockedMaxStageId || 1);
+        const maxStage = Number(response.maxStageId || 0);
+        const hardText = response.isAllCleared
+          ? '已完全制霸秘寶閣，可選擇任一已解鎖關卡重打'
+          : (unlocked >= Number(response.hardStartStageId || 76) ? '困難模式已開啟' : '普通第75關通關後開啟困難模式');
+        note.innerText = `目前解鎖到第 ${unlocked} / ${maxStage} 關；${hardText}。`;
       }
       tabs.innerHTML = chapters.map(function(ch) {
         const cls = ['battle-chapter-tab'];
         if (ch.current) cls.push('active');
         if (ch.locked) cls.push('locked');
-        return `<button class="${cls.join(' ')}" ${ch.locked ? 'disabled' : ''} onclick="selectBattleStage(${Number((ch.stages && ch.stages[0] && ch.stages[0].stageId) || ch.startStageId || 1)})">${escapeHtml(ch.title || ('第 ' + ch.chapterId + ' 章'))}｜${Number(ch.clearedCount || 0)}/${Number(ch.totalCount || 0)}</button>`;
+        const modeIcon = ch.isHard ? '🔥' : '📘';
+        return `<button class="${cls.join(' ')}" ${ch.locked ? 'disabled' : ''} title="${escapeHtml(ch.story || '')}" onclick="selectBattleStage(${Number((ch.stages && ch.stages[0] && ch.stages[0].stageId) || ch.startStageId || 1)})">${modeIcon} ${escapeHtml(ch.title || ('第 ' + ch.chapterId + ' 章'))}｜${Number(ch.clearedCount || 0)}/${Number(ch.totalCount || 0)}</button>`;
       }).join('');
       const active = chapters.find(function(ch) { return (ch.stages || []).some(function(st) { return Number(st.stageId) === selectedId; }); }) || chapters.find(function(ch) { return !ch.locked; }) || chapters[0];
       const stages = (active && active.stages) || [];
@@ -1743,7 +1749,8 @@
         if (st.cleared) cls.push('cleared');
         if (Number(st.stageId) === selectedId) cls.push('current');
         const icon = st.locked ? '🔒' : (st.cleared ? '✅' : '⚔️');
-        return `<button class="${cls.join(' ')}" ${st.locked ? 'disabled' : ''} title="${escapeHtml(getBattleStageText(st))}" onclick="selectBattleStage(${Number(st.stageId || 1)})">${icon}<br>${Number(st.stageInChapter || st.stageId || 0)}</button>`;
+        const stageLabel = st.isHard ? ('H' + Number(st.chapterNo || 1) + '-' + Number(st.stageInChapter || 1)) : Number(st.stageInChapter || st.stageId || 0);
+        return `<button class="${cls.join(' ')}" ${st.locked ? 'disabled' : ''} title="${escapeHtml(getBattleStageText(st))}" onclick="selectBattleStage(${Number(st.stageId || 1)})">${icon}<br>${stageLabel}</button>`;
       }).join('') || '<div style="color:#888;grid-column:1/-1;text-align:center;">尚未建立章節關卡。</div>';
     }
 
@@ -1812,10 +1819,10 @@
         const totalBossStages = Number(response.totalStages || response.maxStage || response.maxStageId || 0);
 
         if (cid > totalBossStages || !response.stageData) {
-          document.getElementById('battle-stage-title').innerText = "🏆 潮流制霸 🏆";
-          document.getElementById('battle-boss-name').innerText = "🎉 恭喜！您已全通關！";
+          document.getElementById('battle-stage-title').innerText = "🏆 秘寶閣完全制霸 🏆";
+          document.getElementById('battle-boss-name').innerText = "🎉 恭喜！普通與困難模式已全通關！";
           document.getElementById('battle-boss-power').innerText = "---";
-          document.getElementById('battle-stage-reward').innerText = "神祇無上榮耀";
+          document.getElementById('battle-stage-reward').innerText = "已取得秘寶閣最終歸屬權。";
           document.getElementById('battle-boss-avatar').style.display = "none";
           btn.disabled = true;
           btn.innerText = "🔒 已通關所有關卡";
@@ -1834,7 +1841,7 @@
           bossImgUrl = "https://images.placeholders.dev/?width=150&height=200&text=" + encodeURIComponent(bName) + "&bgColor=%232d1a1a&textColor=%23ff4444&fontSize=18px";
         }
 
-        document.getElementById('battle-stage-title').innerText = `🔥 ${currentStage.chapterStageLabel || ('第 ' + cid + ' 關')}｜總進度 ${Number(response.unlockedMaxStageId || cid)} / ${totalBossStages}`;
+        document.getElementById('battle-stage-title').innerText = `${response.isAllCleared ? '🏆 已制霸｜' : '🔥 '}${currentStage.chapterStageLabel || ('第 ' + cid + ' 關')}｜${currentStage.chapterTitle || ''}｜總進度 ${Number(response.unlockedMaxStageId || cid)} / ${totalBossStages}`;
         document.getElementById('battle-boss-avatar').src = bossImgUrl;
         document.getElementById('battle-boss-avatar').style.display = "block";
         document.getElementById('battle-boss-name').innerText = `【守關王：${bName}】`;
