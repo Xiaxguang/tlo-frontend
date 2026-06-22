@@ -1023,6 +1023,27 @@
     .achievement-btn{border:none;border-radius:12px;background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer;min-width:88px;}
     .achievement-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
 
+    .shop-tabs{display:flex;gap:8px;overflow-x:auto;margin:12px 0;padding-bottom:6px;}
+    .shop-tab{border:1px solid #444;background:#151522;color:#aaa;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:900;white-space:nowrap;cursor:pointer;}
+    .shop-tab.active{background:linear-gradient(45deg,#ffdd77,#00fff0);color:#111;border-color:#ffdd77;box-shadow:0 0 12px rgba(255,221,119,.25);}
+    .shop-wallet{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0;}
+    .shop-wallet-tile{background:#111;border:1px solid rgba(255,221,119,.24);border-radius:14px;padding:11px;text-align:left;}
+    .shop-wallet-tile span{display:block;color:#aaa;font-size:11px;font-weight:900;}
+    .shop-wallet-tile b{display:block;color:#ffdd77;font-size:18px;margin-top:4px;}
+    .shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px;}
+    .shop-item-card{background:rgba(10,10,20,.95);border:1px solid rgba(0,255,240,.22);border-radius:16px;padding:14px;text-align:left;box-shadow:0 0 18px rgba(0,255,240,.06);}
+    .shop-item-card.off{opacity:.56;filter:grayscale(.3);}
+    .shop-item-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+    .shop-item-name{font-weight:900;color:#fff;font-size:15px;line-height:1.35;}
+    .shop-tag{display:inline-block;border:1px solid #ffdd77;color:#ffdd77;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:900;white-space:nowrap;}
+    .shop-desc{color:#aaa;font-size:12px;line-height:1.6;margin:8px 0;min-height:38px;}
+    .shop-reward{color:#00fff0;font-size:12px;font-weight:900;line-height:1.5;margin-bottom:8px;}
+    .shop-price{color:#ffdd77;font-size:14px;font-weight:900;margin-bottom:8px;}
+    .shop-note{font-size:12px;color:#ff9999;line-height:1.5;margin:6px 0;}
+    .shop-buy-btn{width:100%;border:0;border-radius:12px;padding:11px 12px;font-weight:900;cursor:pointer;color:#111;background:linear-gradient(45deg,#ffdd77,#00fff0);}
+    .shop-buy-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
+
+
   </style>
 </head>
 <body class="tlo-game-body">
@@ -1051,6 +1072,18 @@
             <span class="hud-label">卡盒進度</span>
             <span class="hud-value"><span id="collection-summary-count">0</span>/<span id="collection-summary-total">0</span></span>
           </div>
+          <div class="hud-tile">
+            <span class="hud-label">能量</span>
+            <span class="hud-value" id="display-energy">0</span>
+          </div>
+          <div class="hud-tile">
+            <span class="hud-label">積分</span>
+            <span class="hud-value" id="display-points">0</span>
+          </div>
+          <div class="hud-tile">
+            <span class="hud-label">技能經驗</span>
+            <span class="hud-value" id="display-skill-exp">0</span>
+          </div>
         </div>
       </div>
     </header>
@@ -1069,6 +1102,7 @@
         <div class="hero-actions">
           <button class="game-big-btn btn-neon-pink" onclick="showGameScreen('gacha')">🎁 前往抽卡<small>單抽、十連、查看機率與抽卡紀錄</small></button>
           <button class="game-big-btn btn-neon-cyan" onclick="showGameScreen('battle')">⚔️ 前往戰鬥<small>爭霸戰、遠征異世界、PVP 與升星</small></button>
+          <button class="game-big-btn btn-neon-gold" onclick="showGameScreen('shop')">🛒 前往商城<small>能量商店、積分商店與儲值商品</small></button>
         </div>
       </div>
 
@@ -1085,6 +1119,7 @@
           <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
           <button class="feature-btn" onclick="openPvpModal()"><span>🆚</span>玩家對戰<small>設定代表卡並挑戰玩家</small></button>
           <button class="feature-btn" onclick="openCharacterGrowthModal()"><span>🌟</span>角色養成<small>等級、經驗、技能與10星升星</small></button>
+          <button class="feature-btn" onclick="showGameScreen('shop')"><span>🛒</span>商城<small>兌換補給與查看儲值商品</small></button>
         </div>
       </div>
 
@@ -1094,10 +1129,8 @@
         1.集齊SR系列<br>
         2.集齊SR系列 + SSR系列<br>
         3.集齊全套卡牌<br>
-        首儲 500 抽卡次數 + 3<br>
-        首儲 1000 抽卡次數 + 7<br>
-        客製化角色 200 可獲得訂製 SR 一張<br>
-        (不記入兌換獎品系列中)<br>
+        商城已新增能量商店、積分商店與儲值商品展示。<br>
+        儲值商城目前尚未開放正式付款，請等待公告。<br>
         👉 <b>點擊聯繫客服兌獎：</b><br>
         <a href="https://line.me/ti/p/~bikabikahikari" style="color:#00fff0;font-weight:bold;text-decoration:underline;">Line: bikabikahikari</a>
       </div>
@@ -1136,7 +1169,6 @@
           <button class="btn-collection" onclick="openCollectionModal()">🎴 查看我的潮流卡盒</button>
           <button class="btn-collection" onclick="openProbabilityModal()">ℹ️ 查看盲盒角色機率表</button>
           <a href="https://lbr-game.up.railway.app/roulette/" class="btn btn-full btn-roulette" target="_blank">🎡 前往 T-LO 大轉盤現場</a>
-          <a href="https://t-lo-games.cashier.ecpay.com.tw/product/000000000976530" class="btn btn-full btn-buy" id="buy-btn" target="_blank">🛒 前往商店獲得更多次數</a>
         </div>
       </div>
 
@@ -1181,10 +1213,45 @@
       </div>
     </section>
 
+
+    <section class="game-screen" id="shopScreen" data-screen="shop">
+      <div class="screen-head">
+        <div>
+          <h2 class="screen-title">商城</h2>
+          <div class="screen-sub">兌換玩法補給、查看儲值商品。儲值付款目前尚未正式開放。</div>
+        </div>
+        <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
+      </div>
+
+      <div class="game-card">
+        <h3>玩家資產</h3>
+        <div class="shop-wallet">
+          <div class="shop-wallet-tile"><span>抽卡次數</span><b id="shop-asset-draw">0</b></div>
+          <div class="shop-wallet-tile"><span>潮流能量</span><b id="shop-asset-energy">0</b></div>
+          <div class="shop-wallet-tile"><span>積分</span><b id="shop-asset-points">0</b></div>
+          <div class="shop-wallet-tile"><span>技能經驗</span><b id="shop-asset-skill-exp">0</b></div>
+          <div class="shop-wallet-tile"><span>爭霸戰券</span><b id="shop-asset-battle">0 / 30</b></div>
+          <div class="shop-wallet-tile"><span>遠征券</span><b id="shop-asset-rpg">0 / 20</b></div>
+        </div>
+        <div class="shop-note" id="shop-payment-notice">儲值商城目前尚未開放正式付款。</div>
+      </div>
+
+      <div class="game-card">
+        <div class="shop-tabs" id="shop-tabs">
+          <button class="shop-tab active" onclick="selectShopCategory('ENERGY')">能量商店</button>
+          <button class="shop-tab" onclick="selectShopCategory('POINTS')">積分商店</button>
+          <button class="shop-tab" onclick="selectShopCategory('TOPUP')">儲值商城</button>
+        </div>
+        <div id="shop-msg" style="font-size:13px;color:#aaa;line-height:1.6;margin:6px 0;">正在讀取商城資料...</div>
+        <div class="shop-grid" id="shop-grid"></div>
+      </div>
+    </section>
+
     <nav class="game-bottom-nav" aria-label="T-LO 主選單">
       <button type="button" class="active" data-screen-target="home" onclick="showGameScreen('home')"><span>🏠</span>主介面</button>
       <button type="button" data-screen-target="gacha" onclick="showGameScreen('gacha')"><span>🎁</span>抽卡</button>
       <button type="button" data-screen-target="battle" onclick="showGameScreen('battle')"><span>⚔️</span>戰鬥</button>
+      <button type="button" data-screen-target="shop" onclick="showGameScreen('shop')"><span>🛒</span>商城</button>
     </nav>
   </div>
 
@@ -1527,6 +1594,8 @@
     let rpgAdventureRunning = false;
     let rpgDashboardDirty = false;
     let latestBattleDashboard = null;
+    let latestShopDashboard = null;
+    let activeShopCategory = 'ENERGY';
 
     loadPublicSettings();
 
@@ -2459,7 +2528,6 @@
       document.getElementById('display-count').innerText = currentCount; 
       const b1 = document.getElementById('gacha-btn'); 
       const b2 = document.getElementById('gacha10-btn'); 
-      const buyBtn = document.getElementById('buy-btn'); 
       const noticeBox = document.getElementById('notice-box');
 
       // 無論次數多少，我們讓 noticeBox 永遠保持顯示 (block)
@@ -2473,13 +2541,11 @@
         b1.style.background = "#555"; 
         b1.style.color = "#888"; 
         b1.innerText = "❌ 次數用盡"; 
-        buyBtn.style.display = "inline-block"; 
       } else { 
         b1.disabled = false; 
         b1.style.background = "linear-gradient(45deg, #ff007f, #7f00ff)"; 
         b1.style.color = "white"; 
         b1.innerText = "消耗 1 次．單抽開盒"; 
-        buyBtn.style.display = "none"; 
       }
 
       // 處理十連抽按鈕
@@ -3170,6 +3236,106 @@ function showCollectionHistory() {
       return String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
     }
 
+
+    function updateAssetDisplaysFromShopAssets(assets) {
+      if (!assets) return;
+      if (typeof assets.drawTimes !== 'undefined') currentCount = Number(assets.drawTimes || 0);
+      const map = [
+        ['display-count', currentCount],
+        ['display-energy', assets.energy || 0],
+        ['display-points', assets.points || 0],
+        ['display-skill-exp', assets.skillExp || 0],
+        ['shop-asset-draw', currentCount],
+        ['shop-asset-energy', assets.energy || 0],
+        ['shop-asset-points', assets.points || 0],
+        ['shop-asset-skill-exp', assets.skillExp || 0]
+      ];
+      map.forEach(function(pair){ var el=document.getElementById(pair[0]); if(el) el.innerText = Number(pair[1] || 0).toLocaleString(); });
+      var b = assets.battleDailyLimits || {};
+      var r = assets.rpgDailyLimits || {};
+      var battleEl = document.getElementById('shop-asset-battle');
+      if (battleEl) battleEl.innerText = Number(b.challengeRemaining || 0).toLocaleString() + ' / ' + Number(b.challengeLimit || 30).toLocaleString();
+      var rpgEl = document.getElementById('shop-asset-rpg');
+      if (rpgEl) rpgEl.innerText = Number(r.expeditionRemaining || 0).toLocaleString() + ' / ' + Number(r.expeditionLimit || 20).toLocaleString();
+      updateButtonState();
+    }
+
+    function selectShopCategory(category) {
+      activeShopCategory = category || 'ENERGY';
+      document.querySelectorAll('.shop-tab').forEach(function(btn) {
+        btn.classList.toggle('active', String(btn.textContent || '').indexOf(activeShopCategory === 'ENERGY' ? '能量' : activeShopCategory === 'POINTS' ? '積分' : '儲值') >= 0);
+      });
+      renderShopDashboard();
+    }
+
+    function loadShopDashboard() {
+      var msg = document.getElementById('shop-msg');
+      var grid = document.getElementById('shop-grid');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在讀取商城資料...</span>';
+      if (grid) grid.innerHTML = '';
+      if (typeof google === "undefined" || !google.script || !google.script.run) return;
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (msg) msg.innerHTML = '<span style="color:#ff7777;">商城資料讀取失敗。</span>';
+          return;
+        }
+        latestShopDashboard = res;
+        updateAssetDisplaysFromShopAssets(res.assets || {});
+        var notice = document.getElementById('shop-payment-notice');
+        if (notice) notice.innerText = res.paymentNotice || '儲值商城目前尚未開放正式付款。';
+        renderShopDashboard();
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">商城資料讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).getShopDashboard(playerUID);
+    }
+
+    function renderShopDashboard() {
+      var msg = document.getElementById('shop-msg');
+      var grid = document.getElementById('shop-grid');
+      if (!grid) return;
+      var res = latestShopDashboard || {};
+      var items = (res.items || []).filter(function(item){ return item.category === activeShopCategory; });
+      var title = activeShopCategory === 'ENERGY' ? '能量商店' : activeShopCategory === 'POINTS' ? '積分商店' : '儲值商城';
+      if (msg) msg.innerHTML = '<b style="color:#ffdd77;">' + escapeHtml(title) + '</b>｜商品與限購由 GM 後台管理。';
+      if (!items.length) {
+        grid.innerHTML = '<div style="color:#aaa;grid-column:1/-1;text-align:center;padding:20px;">此分類目前沒有上架商品。</div>';
+        return;
+      }
+      grid.innerHTML = items.map(function(item) {
+        var price = item.priceType === 'CASH'
+          ? 'NT$ ' + Number(item.priceAmount || 0).toLocaleString()
+          : Number(item.priceAmount || 0).toLocaleString() + ' ' + escapeHtml(item.priceLabel || item.priceType || '');
+        var limitText = item.limitType === 'NONE' ? '不限購' : (escapeHtml(item.limitLabel || '') + ' ' + Number(item.purchaseUsed || 0) + ' / ' + Number(item.limitCount || 0));
+        var disabled = !item.canBuy;
+        var note = item.paymentDisabled ? '<div class="shop-note">' + escapeHtml(item.paymentNote || '正式付款尚未開放') + '</div>' : '';
+        var btnText = item.paymentDisabled ? '正式付款尚未開放' : (disabled ? '已達限購 / 無法購買' : '購買');
+        return `<div class="shop-item-card ${disabled ? 'off' : ''}">
+          <div class="shop-item-head"><div class="shop-item-name">${escapeHtml(item.name || '')}</div><span class="shop-tag">${escapeHtml(item.tag || limitText)}</span></div>
+          <div class="shop-desc">${escapeHtml(item.description || '')}</div>
+          <div class="shop-reward">🎁 ${escapeHtml(item.rewardText || '')}</div>
+          <div class="shop-price">價格：${price}<br><span style="font-size:12px;color:#aaa;">${limitText}</span></div>
+          ${note}
+          <button class="shop-buy-btn" ${disabled ? 'disabled' : ''} onclick="buyShopItem('${escapeHtml(item.productKey || '')}')">${escapeHtml(btnText)}</button>
+        </div>`;
+      }).join('');
+    }
+
+    function buyShopItem(productKey) {
+      var msg = document.getElementById('shop-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">處理購買中...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) {
+          latestShopDashboard = res.dashboard;
+          updateAssetDisplaysFromShopAssets(res.dashboard.assets || {});
+        }
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '購買失敗') + '</span>';
+        renderShopDashboard();
+        loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">購買失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).buyShopItem(playerUID, productKey);
+    }
+
     function loadHomeState() {
       if (typeof google === "undefined" || !google.script || !google.script.run) return;
       google.script.run.withSuccessHandler(function(response) {
@@ -3179,6 +3345,9 @@ function showCollectionHistory() {
           }
           document.getElementById('history-list').innerHTML = response.historyHtml || "<div>暫無抽卡紀錄</div>";
           setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
+          var e=document.getElementById('display-energy'); if(e) e.innerText = Number(response.energy || 0).toLocaleString();
+          var p=document.getElementById('display-points'); if(p) p.innerText = Number(response.availablePoints || 0).toLocaleString();
+          var s=document.getElementById('display-skill-exp'); if(s) s.innerText = Number(response.skillExp || 0).toLocaleString();
           updateButtonState();
         }
       }).withFailureHandler(function() {
@@ -3927,7 +4096,8 @@ function showCollectionHistory() {
 
     try {
       document.addEventListener('DOMContentLoaded', function() {
-        scheduleOptimizeTloImages(document);
+        if (screenName === 'shop') loadShopDashboard();
+      scheduleOptimizeTloImages(document);
         const mo = new MutationObserver(function() { scheduleOptimizeTloImages(document); });
         mo.observe(document.body, { childList: true, subtree: true });
       });
@@ -4433,7 +4603,7 @@ function showCollectionHistory() {
   <script>
     // === T-LO 分畫面切換：只控制前台 UI，不改任何後端功能 ===
     window.showGameScreen = function(screenName) {
-      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen' };
+      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen', shop: 'shopScreen' };
       var targetId = map[screenName] || map.home;
       document.querySelectorAll('.game-screen').forEach(function(el) {
         el.classList.toggle('active', el.id === targetId);
@@ -4444,6 +4614,7 @@ function showCollectionHistory() {
       if (window.TLOAudio && typeof window.TLOAudio.playBgmForScreen === "function") {
         window.TLOAudio.playBgmForScreen(screenName);
       }
+      if (screenName === 'shop') loadShopDashboard();
       scheduleOptimizeTloImages(document);
       try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
     };

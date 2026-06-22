@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>T-LO GM 商城管理</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#080812;color:#fff;font-family:Arial,'Microsoft JhengHei',sans-serif;padding:18px}.wrap{max-width:1220px;margin:0 auto}.panel{background:#121225;border:1px solid rgba(255,221,119,.28);border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 0 24px rgba(255,221,119,.07)}
+    h1,h2,h3{margin:0 0 12px}.muted{color:#aaa;font-size:13px;line-height:1.6}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}label{display:block;font-size:12px;color:#ffdd77;margin:8px 0 4px;font-weight:900}input,textarea,select{width:100%;padding:11px;border-radius:10px;border:1px solid #444;background:#090913;color:#fff}textarea{min-height:90px;resize:vertical;font-family:Consolas,monospace;font-size:12px}
+    button{border:0;border-radius:12px;padding:11px 14px;font-weight:900;cursor:pointer;color:#111;background:linear-gradient(45deg,#ffdd77,#00fff0);margin:6px 4px 6px 0}button.danger{background:linear-gradient(45deg,#a00,#ff7777);color:#fff}button.gray{background:#333;color:#fff}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.msg{min-height:24px;font-weight:900}.ok{color:#00ff7f}.off{color:#ff7777}.tag{display:inline-block;border:1px solid #555;border-radius:999px;padding:2px 8px;font-size:11px;color:#ddd}.small{font-size:12px;color:#aaa;line-height:1.5}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{border-bottom:1px solid #333;padding:8px;text-align:left;vertical-align:top}th{color:#ffdd77;background:#17172b}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button.active{box-shadow:0 0 0 2px #ffdd77 inset}.reward-help{background:#0d0d18;border:1px solid #333;border-radius:10px;padding:10px;color:#aaa;font-size:12px;line-height:1.6;margin-top:8px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛒 T-LO GM 商城管理</h1>
+  <div class="muted">此頁管理能量商店、積分商店、儲值商城的商品與獎勵。儲值付款目前不會真正串接綠界；儲值商品預設只展示，不讓玩家付款。</div>
+
+  <div class="panel" id="login-panel">
+    <h2>GM 登入</h2>
+    <div class="grid"><div><label>GM 帳號</label><input id="gm-user" autocomplete="username" value="admin"></div><div><label>GM 密碼</label><input id="gm-pass" type="password" autocomplete="current-password"></div></div>
+    <button onclick="login()">登入</button><span class="msg" id="login-msg"></span>
+  </div>
+
+  <div id="main" style="display:none">
+    <div class="panel"><div class="row"><button onclick="loadAll()">重新整理</button><button class="gray" onclick="logout()">登出</button><span class="msg" id="msg"></span></div></div>
+
+    <div class="panel">
+      <h2>新增 / 編輯商城商品</h2>
+      <div class="grid">
+        <div><label>商品 Key</label><input id="product-key" placeholder="energy_battle_ticket_5"></div>
+        <div><label>商品名稱</label><input id="product-name" placeholder="爭霸戰補給 +5"></div>
+        <div><label>分類</label><select id="category"><option value="ENERGY">能量商店</option><option value="POINTS">積分商店</option><option value="TOPUP">儲值商城</option></select></div>
+        <div><label>價格類型</label><select id="price-type"><option value="ENERGY">能量</option><option value="POINTS">積分</option><option value="CASH">新台幣</option></select></div>
+        <div><label>價格數量</label><input id="price-amount" type="number" value="100"></div>
+        <div><label>限購類型</label><select id="limit-type"><option value="NONE">不限購</option><option value="DAILY">每日</option><option value="WEEKLY">每週</option><option value="MONTHLY">每月</option><option value="ONCE">永久一次</option></select></div>
+        <div><label>限購次數</label><input id="limit-count" type="number" value="1"></div>
+        <div><label>排序</label><input id="sort-order" type="number" value="10"></div>
+        <div><label>狀態</label><select id="is-active"><option value="1">上架</option><option value="0">下架</option></select></div>
+        <div><label>正式付款</label><select id="payment-enabled"><option value="0">未啟用</option><option value="1">啟用（保留欄位，現階段不建議）</option></select></div>
+        <div><label>標籤</label><input id="tag" placeholder="每日限購"></div>
+      </div>
+      <label>商品描述</label><textarea id="description" placeholder="消耗能量，今日爭霸戰挑戰券額外 +5。"></textarea>
+      <label>商品獎勵 JSON</label><textarea id="rewards" placeholder='[{"rewardType":"BATTLE_TICKET","rewardValue":5}]'></textarea>
+      <div class="reward-help">可用 rewardType：DRAW_TIMES、ENERGY、POINTS、SKILL_EXP、BATTLE_TICKET、RPG_TICKET。儲值商品 CASH 目前預設不讓玩家購買，可由 GM 測試發獎。</div>
+      <button onclick="saveItem()">儲存商品</button><button class="gray" onclick="clearForm()">清空</button>
+    </div>
+
+    <div class="panel">
+      <h2>商品列表</h2>
+      <div class="tabs"><button class="active" id="tab-all" onclick="setFilter('ALL')">全部</button><button id="tab-ENERGY" onclick="setFilter('ENERGY')">能量商店</button><button id="tab-POINTS" onclick="setFilter('POINTS')">積分商店</button><button id="tab-TOPUP" onclick="setFilter('TOPUP')">儲值商城</button></div>
+      <div id="item-list"></div>
+    </div>
+
+    <div class="panel">
+      <h2>GM 測試發獎</h2>
+      <div class="muted">用來測試商品獎勵是否正確，不會真的串付款，也不會扣玩家資源。</div>
+      <div class="grid"><div><label>玩家 UID</label><input id="grant-uid" placeholder="玩家 UID"></div><div><label>商品 Key</label><input id="grant-product" placeholder="cash_daily_33"></div></div>
+      <button onclick="testGrant()">測試發放商品獎勵</button>
+    </div>
+  </div>
+</div>
+<script>
+const API_BASE=(location.origin||'')+'/api/rpc';let token=localStorage.getItem('tlo_gm_token')||'';let items=[];let filter='ALL';
+function esc(v){return String(v??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s]));}
+async function rpc(method,args=[]){const body={method,args};if(token)body.adminToken=token;const r=await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({success:false,msg:'API 回傳格式錯誤'}));if(!r.ok||j.success===false)throw new Error(j.msg||('API 錯誤 '+r.status));return j;}
+function setMsg(t,ok=true){document.getElementById('msg').innerHTML=`<span class="${ok?'ok':'off'}">${esc(t)}</span>`;}
+async function login(){try{const res=await rpc('adminLogin',[val('gm-user'),val('gm-pass')]);token=res.token;localStorage.setItem('tlo_gm_token',token);document.getElementById('login-panel').style.display='none';document.getElementById('main').style.display='block';await loadAll();}catch(e){document.getElementById('login-msg').innerHTML='<span class="off">'+esc(e.message)+'</span>';}}
+async function logout(){localStorage.removeItem('tlo_gm_token');token='';location.reload();}
+async function loadAll(){try{const res=await rpc('adminListShopItems');items=res.rows||[];renderList();setMsg('商城資料已同步');}catch(e){setMsg(e.message,false);}}
+function setFilter(v){filter=v;document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+v).classList.add('active');renderList();}
+function renderList(){const rows=items.filter(x=>filter==='ALL'||x.category===filter);document.getElementById('item-list').innerHTML=`<table><thead><tr><th>商品</th><th>分類/價格</th><th>限購</th><th>獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows.map((it)=>{const idx=items.indexOf(it);return `<tr><td><b>${esc(it.name)}</b><br><span class="tag">${esc(it.productKey)}</span><br><span class="small">${esc(it.description)}</span></td><td>${esc(it.categoryLabel||it.category)}<br>${Number(it.priceAmount||0).toLocaleString()} ${esc(it.priceLabel||it.priceType)}</td><td>${esc(it.limitLabel||it.limitType)} ${Number(it.limitCount||0)}</td><td>${esc(it.rewardText||'')}</td><td><span class="${it.isActive?'ok':'off'}">${it.isActive?'上架':'下架'}</span><br><span class="small">付款：${it.isPaymentEnabled?'已啟用':'未啟用'}</span></td><td><button onclick="editItem(${idx})">編輯</button><button class="${it.isActive?'danger':'gray'}" onclick="toggleItem('${esc(it.productKey)}',${it.isActive?0:1})">${it.isActive?'下架':'上架'}</button></td></tr>`}).join('')}</tbody></table>`;}
+function editItem(idx){const it=items[idx];if(!it)return;set('product-key',it.productKey);set('product-name',it.name);set('category',it.category);set('price-type',it.priceType);set('price-amount',it.priceAmount);set('limit-type',it.limitType);set('limit-count',it.limitCount);set('sort-order',it.sortOrder);set('is-active',it.isActive?'1':'0');set('payment-enabled',it.isPaymentEnabled?'1':'0');set('tag',it.tag||'');set('description',it.description||'');set('rewards',JSON.stringify((it.rewards||[]).map(r=>({rewardType:r.rewardType,rewardValue:r.rewardValue})),null,2));document.getElementById('product-name').scrollIntoView({behavior:'smooth',block:'center'});}
+function clearForm(){['product-key','product-name','description','tag'].forEach(id=>set(id,''));set('category','ENERGY');set('price-type','ENERGY');set('price-amount',100);set('limit-type','DAILY');set('limit-count',1);set('sort-order',10);set('is-active','1');set('payment-enabled','0');set('rewards','[{"rewardType":"BATTLE_TICKET","rewardValue":5}]');}
+async function saveItem(){try{let rewards;try{rewards=JSON.parse(val('rewards')||'[]')}catch(e){throw new Error('獎勵 JSON 格式錯誤：'+e.message)}await rpc('adminUpsertShopItem',[{productKey:val('product-key'),name:val('product-name'),category:val('category'),description:val('description'),priceType:val('price-type'),priceAmount:num('price-amount'),limitType:val('limit-type'),limitCount:num('limit-count'),isActive:val('is-active')==='1',isPaymentEnabled:val('payment-enabled')==='1',sortOrder:num('sort-order'),tag:val('tag'),rewards}]);await loadAll();setMsg('商品已儲存');}catch(e){setMsg(e.message,false);}}
+async function toggleItem(key,active){try{await rpc('adminSetShopItemActive',[key,!!active]);await loadAll();}catch(e){setMsg(e.message,false);}}
+async function testGrant(){try{const res=await rpc('adminTestGrantShopItem',[val('grant-uid'),val('grant-product')]);setMsg(res.msg||'已測試發放');}catch(e){setMsg(e.message,false);}}
+function val(id){return document.getElementById(id).value.trim()}function num(id){return Number(document.getElementById(id).value||0)}function set(id,v){document.getElementById(id).value=v}
+if(token){document.getElementById('login-panel').style.display='none';document.getElementById('main').style.display='block';loadAll();}
+</script>
+</body>
+</html>
