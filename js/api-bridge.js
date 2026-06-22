@@ -43,6 +43,33 @@
   window.TLO_AUTH_TOKEN = window.TLO_IS_AUTHENTICATED ? currentAuth.token : "";
   window.TLO_INITIAL_TIMES = "0";
 
+  var TLO_INFLIGHT_RPC = new Map();
+  var TLO_READ_METHODS = new Set([
+    "getPublicSettings",
+    "getHomeState",
+    "getPlayerCollection",
+    "getBattleDashboard",
+    "getCardProbabilityTable",
+    "getRpgDashboard",
+    "getShopDashboard",
+    "getPersonalDashboard",
+    "getSocialDashboard",
+    "getPvpDashboard",
+    "getTrainingDashboard",
+    "getStarShopDashboard",
+    "getCharacterGrowthDashboard",
+    "getMissionDashboard",
+    "getAchievementDashboard",
+    "getMessageBoard",
+    "getPlayerHistory"
+  ]);
+
+  function stableRpcKey(method, args, authToken) {
+    var safeArgs;
+    try { safeArgs = JSON.stringify(args || []); } catch (_) { safeArgs = String(args || ""); }
+    return String(method || "") + "::" + String(authToken || "") + "::" + safeArgs;
+  }
+
   async function rawRpc(method, args, options) {
     options = options || {};
     var baseUrl = getApiBaseUrl();
@@ -60,28 +87,41 @@
       body.authToken = auth.token;
     }
 
-    var res = await fetch(baseUrl + "/api/rpc", {
+    var isRead = TLO_READ_METHODS.has(String(method || ""));
+    var dedupeKey = isRead ? stableRpcKey(method, body.args, body.authToken || "public") : "";
+    if (dedupeKey && TLO_INFLIGHT_RPC.has(dedupeKey)) {
+      return TLO_INFLIGHT_RPC.get(dedupeKey);
+    }
+
+    var request = fetch(baseUrl + "/api/rpc", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
+    }).then(async function(res) {
+      var data;
+      try {
+        data = await res.json();
+      } catch (err) {
+        throw new Error("後端沒有回傳 JSON，請檢查 Railway API 是否正常。");
+      }
+
+      if (!res.ok || (data && data.success === false)) {
+        if (res.status === 401) {
+          clearAuth();
+          showAuthScreen("登入狀態已過期，請重新登入。");
+        }
+        throw new Error(data && data.msg ? data.msg : "API 呼叫失敗");
+      }
+
+      return data;
     });
 
-    var data;
-    try {
-      data = await res.json();
-    } catch (err) {
-      throw new Error("後端沒有回傳 JSON，請檢查 Railway API 是否正常。");
+    if (dedupeKey) {
+      TLO_INFLIGHT_RPC.set(dedupeKey, request);
+      request.then(function () { TLO_INFLIGHT_RPC.delete(dedupeKey); }, function () { TLO_INFLIGHT_RPC.delete(dedupeKey); });
     }
 
-    if (!res.ok || (data && data.success === false)) {
-      if (res.status === 401) {
-        clearAuth();
-        showAuthScreen("登入狀態已過期，請重新登入。");
-      }
-      throw new Error(data && data.msg ? data.msg : "API 呼叫失敗");
-    }
-
-    return data;
+    return request;
   }
 
   async function callRpc(method, args) {

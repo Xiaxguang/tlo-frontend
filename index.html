@@ -4305,7 +4305,7 @@ function showCollectionHistory() {
         html += `
           <div style="background:linear-gradient(135deg,#101010,#181225);border:1px solid #3a3a3a;border-radius:14px;padding:12px;display:flex;gap:12px;align-items:flex-start;text-align:left;">
             <div style="width:74px;flex:0 0 74px;">
-              ${imgUrl ? `<img src="${imgUrl}" style="width:74px;border-radius:10px;box-shadow:0 0 12px rgba(0,255,240,.2);">` : `<div style="width:74px;height:96px;background:#333;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px;">${escapeHtml(name)}</div>`}
+              ${imgUrl ? `<img src="${imgUrl}" loading="lazy" decoding="async" style="width:74px;border-radius:10px;box-shadow:0 0 12px rgba(0,255,240,.2);">` : `<div style="width:74px;height:96px;background:#333;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px;">${escapeHtml(name)}</div>`}
             </div>
             <div style="flex:1;min-width:0;">
               <div style="font-weight:1000;color:#00fff0;font-size:16px;">${escapeHtml(name)} <span style="color:#ffc107;font-size:12px;">${renderStarText(star, maxStar)}</span></div>
@@ -4887,7 +4887,7 @@ function showCollectionHistory() {
         currentBgm = name;
         bgmAudio = new Audio(AUDIO_FILES.bgm[name]);
         bgmAudio.loop = true;
-        bgmAudio.preload = 'auto';
+        bgmAudio.preload = 'metadata';
         bgmAudio.volume = getVolume() * BGM_VOLUME_RATIO;
         safePlay(bgmAudio);
       }
@@ -4904,7 +4904,7 @@ function showCollectionHistory() {
         if (!src) return;
         try {
           var a = new Audio(src);
-          a.preload = 'auto';
+          a.preload = 'metadata';
           a.volume = getVolume() * SFX_VOLUME_RATIO;
           safePlay(a);
         } catch (_) {}
