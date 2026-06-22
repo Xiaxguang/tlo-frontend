@@ -1006,8 +1006,23 @@
     .battle-stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:7px;}
     .battle-stage-node{border:1px solid #444;background:#111;color:#aaa;border-radius:10px;padding:8px 2px;font-size:12px;font-weight:900;cursor:pointer;min-height:38px;}
     .battle-stage-node.cleared{border-color:#00ff7f;color:#00ff7f;background:rgba(0,255,127,.08);}
-    .battle-stage-node.current{border-color:#ffdd77;color:#ffdd77;box-shadow:0 0 12px rgba(255,221,119,.35);}
+    .battle-stage-node.current{border-color:#ffdd77;color:#ffdd77;box-shadow:0 0 12px rgba(255,221,119,.35);} 
     .battle-stage-node.locked{opacity:.38;cursor:not-allowed;filter:grayscale(.5);}
+    .rpg-chapter-shell{background:rgba(127,0,255,.055);border:1px solid rgba(127,0,255,.28);border-radius:16px;padding:12px;margin:12px 0;text-align:left;}
+    .rpg-chapter-tabs{display:flex;gap:8px;overflow-x:auto;padding:0 0 7px;margin-bottom:10px;scrollbar-width:thin;}
+    .rpg-chapter-tab{border:1px solid #444;background:#171717;color:#aaa;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer;}
+    .rpg-chapter-tab.active{border-color:#ffdd77;color:#211400;background:linear-gradient(45deg,#ffdd77,#ff9f1a);box-shadow:0 0 12px rgba(255,221,119,.26);}
+    .rpg-chapter-tab.locked{opacity:.46;cursor:not-allowed;filter:grayscale(.45);}
+    .rpg-active-chapter-card{border:1px solid rgba(255,221,119,.32);background:linear-gradient(135deg,rgba(127,0,255,.16),rgba(0,255,240,.06));border-radius:16px;padding:12px;}
+    .rpg-active-chapter-title{font-size:18px;font-weight:900;color:#ffdd77;margin-bottom:5px;}
+    .rpg-active-chapter-note{font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;}
+    .rpg-stage-list{display:flex;flex-direction:column;gap:8px;}
+    .rpg-stage-card{background:#111;border:1px solid #444;border-radius:12px;padding:12px;text-align:left;}
+    .rpg-stage-card.cleared{border-color:#00ff7f;background:rgba(0,255,127,.055);}
+    .rpg-stage-card.current{border-color:#00fff0;box-shadow:0 0 12px rgba(0,255,240,.18);}
+    .rpg-stage-card.locked{opacity:.70;filter:grayscale(.35);}
+    .battle-reward-earned{display:block;margin-top:8px;padding:8px 10px;border:1px solid rgba(255,221,119,.42);border-radius:12px;background:rgba(255,221,119,.08);color:#ffdd77;font-size:12px;line-height:1.55;font-weight:900;text-align:left;}
+    .battle-sync-note{display:block;margin-top:5px;color:#00fff0;font-size:12px;font-weight:900;}
     .achievement-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px;}
     .achievement-summary .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;text-align:center;}
     .achievement-summary .stat b{display:block;color:#00fff0;font-size:20px;margin-top:2px;}
@@ -1713,6 +1728,7 @@
     let latestRpgDashboard = null;
     let latestRpgDashboardLoadedAt = 0;
     let lastRpgAdventureKey = "";
+    let selectedRpgChapterKey = "";
     let rpgAdventureRunning = false;
     let rpgDashboardDirty = false;
     let latestBattleDashboard = null;
@@ -1959,6 +1975,126 @@
       openBattleModal(selectedBattleStageId);
     }
 
+    function applyBattleDashboard(response) {
+      const btn = document.getElementById('fight-btn');
+      const resultMsg = document.getElementById('battle-result-msg');
+      if (!response || !response.success) {
+        if (resultMsg) resultMsg.innerHTML = `<span style="color:#ff4444;">${escapeHtml(response && response.msg ? response.msg : "戰鬥資料讀取失敗")}</span>`;
+        if (btn) { btn.disabled = true; btn.innerText = "⚠️ 暫時無法挑戰"; }
+        return false;
+      }
+
+      registerCardImages(response);
+      latestBattleDashboard = response;
+      renderBattleChapterSelector(response);
+      const selectEl = document.getElementById('player-battle-avatar-select');
+      const repStatus = document.getElementById('battle-rep-status');
+      const currentSelectedValue = response.battleRepresentative || (selectEl && selectEl.value) || '';
+      const battleOptions = response.battleOptions || [];
+
+      if (selectEl) {
+        selectEl.innerHTML = '<option value="">請先選擇代表角色</option>';
+        battleOptions.forEach(function(card) {
+          let opt = document.createElement('option');
+          opt.value = card.name;
+          opt.innerText = `🃏 ${card.name}｜${Number(card.star||1)}★｜Lv.${Number(card.level||1)}｜技能Lv.${Number(card.skillLevel||1)}｜${Number(card.power||0).toLocaleString()}戰力｜x${Number(card.count||0)}`;
+          selectEl.appendChild(opt);
+        });
+
+        if ([...selectEl.options].some(o => o.value === currentSelectedValue)) {
+          selectEl.value = currentSelectedValue;
+        }
+      }
+
+      if (typeof changePlayerFighterLook === 'function') changePlayerFighterLook();
+
+      globalPlayerPower = response.battleRepresentativePower || response.playerPower || 0;
+      const powerEl = document.getElementById('player-total-power');
+      if (powerEl) powerEl.innerText = Number(globalPlayerPower || 0).toLocaleString();
+      if (repStatus) {
+        repStatus.innerHTML = response.battleRepresentative
+          ? `目前固定代表：<b style="color:#00fff0;">${escapeHtml(response.battleRepresentative)}</b>｜戰力 ${Number(globalPlayerPower||0).toLocaleString()}`
+          : '<span style="color:#ffcc66;">尚未固定代表。請先選擇一張角色並按「固定 / 更換爭霸代表」。</span>';
+      }
+
+      const cid = Number(response.selectedStageId || response.currentStageId || 1);
+      const isClaimed = response.hasRewardClaimed;
+      const totalBossStages = Number(response.totalStages || response.maxStage || response.maxStageId || 0);
+
+      if (cid > totalBossStages || !response.stageData) {
+        const titleEl = document.getElementById('battle-stage-title');
+        const bossNameEl = document.getElementById('battle-boss-name');
+        const bossPowerEl = document.getElementById('battle-boss-power');
+        const rewardEl = document.getElementById('battle-stage-reward');
+        const bossAvatar = document.getElementById('battle-boss-avatar');
+        if (titleEl) titleEl.innerText = "🏆 秘寶閣完全制霸 🏆";
+        if (bossNameEl) bossNameEl.innerText = "🎉 恭喜！普通與困難模式已全通關！";
+        if (bossPowerEl) bossPowerEl.innerText = "---";
+        if (rewardEl) rewardEl.innerText = "已取得秘寶閣最終歸屬權。";
+        if (bossAvatar) bossAvatar.style.display = "none";
+        if (btn) { btn.disabled = true; btn.innerText = "🔒 已通關所有關卡"; }
+        return true;
+      }
+
+      const currentStage = response.stageData;
+      const bName = currentStage.bossCardName;
+
+      let bossImgUrl = getCardImageUrl({
+        name: bName,
+        bossCardName: bName,
+        imageUrl: currentStage.bossImageUrl || currentStage.bossImage || currentStage.imageUrl || currentStage.image_url || currentStage.boss_image_url || ''
+      });
+      if (!bossImgUrl || bossImgUrl === "") {
+        bossImgUrl = "https://images.placeholders.dev/?width=150&height=200&text=" + encodeURIComponent(bName) + "&bgColor=%232d1a1a&textColor=%23ff4444&fontSize=18px";
+      }
+
+      const stageTitle = document.getElementById('battle-stage-title');
+      const bossAvatar = document.getElementById('battle-boss-avatar');
+      const bossName = document.getElementById('battle-boss-name');
+      const bossPower = document.getElementById('battle-boss-power');
+      const arenaBossName = document.getElementById('arena-boss-name-label');
+      const arenaBossAvatar = document.getElementById('arena-boss-avatar-img');
+      if (stageTitle) stageTitle.innerText = `${response.isAllCleared ? '🏆 已制霸｜' : '🔥 '}${currentStage.chapterStageLabel || ('第 ' + cid + ' 關')}｜${currentStage.chapterTitle || ''}｜總進度 ${Number(response.unlockedMaxStageId || cid)} / ${totalBossStages}`;
+      if (bossAvatar) { bossAvatar.src = bossImgUrl; bossAvatar.style.display = "block"; }
+      if (bossName) bossName.innerText = `【守關王：${bName}】`;
+      if (bossPower) bossPower.innerText = Number(currentStage.bossPower || 0).toLocaleString();
+      if (arenaBossName) arenaBossName.innerText = bName;
+      if (arenaBossAvatar) arenaBossAvatar.src = bossImgUrl;
+
+      const rewardTimes = Number(currentStage.rewardTimes || 0);
+      const rewardEl = document.getElementById('battle-stage-reward');
+      if (rewardEl) {
+        if (rewardTimes > 0) {
+          rewardEl.innerHTML = isClaimed
+            ? `🎁 第 ${cid} 關獎勵：抽卡次數 +${rewardTimes} 次 <span style="color:red; font-weight:bold;">(已領取)</span>`
+            : `🎁 首通獎勵：抽卡次數 <span style="color:#00ff7f; font-weight:bold;">+${rewardTimes} 次！</span>`;
+        } else {
+          rewardEl.innerHTML = '🎁 進度關：本關無抽卡獎勵；首通獎勵依 GM 後台關卡設定。';
+        }
+      }
+
+      const battleLimit = response.dailyLimits || {};
+      const noBattleTickets = Number(battleLimit.challengeLimit || 0) > 0 && Number(battleLimit.challengeRemaining || 0) <= 0;
+      if (btn) {
+        btn.onclick = window.startChallenge;
+        btn.disabled = !response.battleRepresentative || noBattleTickets;
+        if (noBattleTickets) {
+          btn.innerText = "今日挑戰券已用完";
+          btn.style.background = "linear-gradient(45deg, #555, #333)";
+        } else if (!response.battleRepresentative) {
+          btn.innerText = "請先固定爭霸代表";
+          btn.style.background = "linear-gradient(45deg, #555, #333)";
+        } else if (globalPlayerPower >= currentStage.bossPower) {
+          btn.innerText = "⚔️ 代表戰力壓制！發動攻擊 ⚔️";
+          btn.style.background = "linear-gradient(45deg, #00ff7f, #00fff0)";
+        } else {
+          btn.innerText = "⚔️ 代表硬闖！發動攻擊 ⚔️";
+          btn.style.background = "linear-gradient(45deg, #ff5500, #ff0055)";
+        }
+      }
+      return true;
+    }
+
     function openBattleModal(stageId) {
       if (stageId) selectedBattleStageId = Number(stageId || 1);
       if (window.TLOAudio) window.TLOAudio.playBgm('battle');
@@ -1977,106 +2113,7 @@
       btn.innerText = "⏳ 正在校準雙方戰力...";
 
       google.script.run.withSuccessHandler(function(response) {
-        if (!response || !response.success) {
-          document.getElementById('battle-result-msg').innerHTML = `<span style="color:#ff4444;">${response && response.msg ? response.msg : "戰鬥資料讀取失敗"}</span>`;
-          btn.disabled = true;
-          btn.innerText = "⚠️ 暫時無法挑戰";
-          return;
-        }
-
-        registerCardImages(response);
-        latestBattleDashboard = response;
-        renderBattleChapterSelector(response);
-        const selectEl = document.getElementById('player-battle-avatar-select');
-        const repStatus = document.getElementById('battle-rep-status');
-        const currentSelectedValue = response.battleRepresentative || selectEl.value || '';
-        const battleOptions = response.battleOptions || [];
-
-        selectEl.innerHTML = '<option value="">請先選擇代表角色</option>';
-        battleOptions.forEach(function(card) {
-          let opt = document.createElement('option');
-          opt.value = card.name;
-          opt.innerText = `🃏 ${card.name}｜${Number(card.star||1)}★｜Lv.${Number(card.level||1)}｜技能Lv.${Number(card.skillLevel||1)}｜${Number(card.power||0).toLocaleString()}戰力｜x${Number(card.count||0)}`;
-          selectEl.appendChild(opt);
-        });
-
-        if ([...selectEl.options].some(o => o.value === currentSelectedValue)) {
-          selectEl.value = currentSelectedValue;
-        }
-
-        changePlayerFighterLook();
-
-        globalPlayerPower = response.battleRepresentativePower || response.playerPower || 0;
-        document.getElementById('player-total-power').innerText = Number(globalPlayerPower || 0).toLocaleString();
-        if (repStatus) {
-          repStatus.innerHTML = response.battleRepresentative
-            ? `目前固定代表：<b style="color:#00fff0;">${escapeHtml(response.battleRepresentative)}</b>｜戰力 ${Number(globalPlayerPower||0).toLocaleString()}`
-            : '<span style="color:#ffcc66;">尚未固定代表。請先選擇一張角色並按「固定 / 更換爭霸代表」。</span>';
-        }
-
-        const cid = Number(response.selectedStageId || response.currentStageId || 1);
-        const isClaimed = response.hasRewardClaimed;
-        const totalBossStages = Number(response.totalStages || response.maxStage || response.maxStageId || 0);
-
-        if (cid > totalBossStages || !response.stageData) {
-          document.getElementById('battle-stage-title').innerText = "🏆 秘寶閣完全制霸 🏆";
-          document.getElementById('battle-boss-name').innerText = "🎉 恭喜！普通與困難模式已全通關！";
-          document.getElementById('battle-boss-power').innerText = "---";
-          document.getElementById('battle-stage-reward').innerText = "已取得秘寶閣最終歸屬權。";
-          document.getElementById('battle-boss-avatar').style.display = "none";
-          btn.disabled = true;
-          btn.innerText = "🔒 已通關所有關卡";
-          return;
-        }
-
-        const currentStage = response.stageData;
-        const bName = currentStage.bossCardName;
-
-        let bossImgUrl = getCardImageUrl({
-          name: bName,
-          bossCardName: bName,
-          imageUrl: currentStage.bossImageUrl || currentStage.bossImage || currentStage.imageUrl || currentStage.image_url || currentStage.boss_image_url || ''
-        });
-        if (!bossImgUrl || bossImgUrl === "") {
-          bossImgUrl = "https://images.placeholders.dev/?width=150&height=200&text=" + encodeURIComponent(bName) + "&bgColor=%232d1a1a&textColor=%23ff4444&fontSize=18px";
-        }
-
-        document.getElementById('battle-stage-title').innerText = `${response.isAllCleared ? '🏆 已制霸｜' : '🔥 '}${currentStage.chapterStageLabel || ('第 ' + cid + ' 關')}｜${currentStage.chapterTitle || ''}｜總進度 ${Number(response.unlockedMaxStageId || cid)} / ${totalBossStages}`;
-        document.getElementById('battle-boss-avatar').src = bossImgUrl;
-        document.getElementById('battle-boss-avatar').style.display = "block";
-        document.getElementById('battle-boss-name').innerText = `【守關王：${bName}】`;
-        document.getElementById('battle-boss-power').innerText = Number(currentStage.bossPower || 0).toLocaleString();
-
-        document.getElementById('arena-boss-name-label').innerText = bName;
-        document.getElementById('arena-boss-avatar-img').src = bossImgUrl;
-
-        const rewardTimes = Number(currentStage.rewardTimes || 0);
-        if (rewardTimes > 0) {
-          document.getElementById('battle-stage-reward').innerHTML = isClaimed
-            ? `🎁 第 ${cid} 關獎勵：抽卡次數 +${rewardTimes} 次 <span style="color:red; font-weight:bold;">(已領取)</span>`
-            : `🎁 首通獎勵：抽卡次數 <span style="color:#00ff7f; font-weight:bold;">+${rewardTimes} 次！</span>`;
-        } else {
-          document.getElementById('battle-stage-reward').innerHTML = '🎁 進度關：本關無抽卡獎勵；首通獎勵依 GM 後台關卡設定。';
-        }
-
-        const battleLimit = response.dailyLimits || {};
-        const noBattleTickets = Number(battleLimit.challengeLimit || 0) > 0 && Number(battleLimit.challengeRemaining || 0) <= 0;
-        btn.onclick = window.startChallenge;
-        btn.disabled = !response.battleRepresentative || noBattleTickets;
-
-        if (noBattleTickets) {
-          btn.innerText = "今日挑戰券已用完";
-          btn.style.background = "linear-gradient(45deg, #555, #333)";
-        } else if (!response.battleRepresentative) {
-          btn.innerText = "請先固定爭霸代表";
-          btn.style.background = "linear-gradient(45deg, #555, #333)";
-        } else if (globalPlayerPower >= currentStage.bossPower) {
-          btn.innerText = "⚔️ 代表戰力壓制！發動攻擊 ⚔️";
-          btn.style.background = "linear-gradient(45deg, #00ff7f, #00fff0)";
-        } else {
-          btn.innerText = "⚔️ 代表硬闖！發動攻擊 ⚔️";
-          btn.style.background = "linear-gradient(45deg, #ff5500, #ff0055)";
-        }
+        applyBattleDashboard(response);
       }).withFailureHandler(function(err) {
         document.getElementById('battle-result-msg').innerHTML = `<span style="color:#ff4444;">戰鬥資料讀取失敗：${err && err.message ? err.message : err}</span>`;
         btn.disabled = true;
@@ -2435,6 +2472,23 @@
       return `<br><span style="color:#00fff0;font-size:12px;">🌟 角色經驗：${items.join('、')}${arr.length > 3 ? '...' : ''}</span>`;
     }
 
+    function formatRewardSummaryBox(summary, label) {
+      const text = String(summary || '').trim();
+      if (!text) return '';
+      return `<span class="battle-reward-earned">🎁 ${escapeHtml(label || '本次獲得')}：${escapeHtml(text)}</span>`;
+    }
+
+    function syncBattleCommonUiAfterReward(res) {
+      if (!res) return;
+      if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
+        const n = parseInt(res.newTimesLeft, 10);
+        if (!Number.isNaN(n)) currentCount = n;
+        if (typeof updateButtonState === 'function') updateButtonState();
+      }
+      try { if (typeof loadTrainingDashboard === 'function') loadTrainingDashboard(); } catch (_) {}
+      try { if (typeof refreshCollectionCount === 'function') refreshCollectionCount(); } catch (_) {}
+    }
+
 
     // === 潮流爭霸戰：全域出戰函式修正版 ===
     // 重點：後端可以先算完，但前端會先播放動畫，動畫結束後才顯示勝負結果。
@@ -2491,24 +2545,24 @@
           if (battleResult && battleResult.success) {
             resultMsg.innerHTML =
               `<span style="color:#00ff7f; font-size:16px; text-shadow:0 0 10px #00ff7f;">
-                ${safeText(battleResult.msg || '戰鬥勝利！')}<br>
-                🎁 ${safeText(battleResult.rewardText || '')}
+                ${safeText(battleResult.msg || '戰鬥勝利！')}
+                ${typeof formatRewardSummaryBox === 'function' ? formatRewardSummaryBox(battleResult.rewardText || '', '本次通關獎勵') : `<br>🎁 ${safeText(battleResult.rewardText || '')}`}
                 ${typeof formatGrowthRewards === 'function' ? formatGrowthRewards(battleResult.growthRewards) : ''}
+                <span class="battle-sync-note">✅ 戰鬥資料已同步更新，不需要重新整理頁面。</span>
               </span>`;
 
-            if (typeof battleResult.newTimesLeft !== 'undefined' && battleResult.newTimesLeft !== null) {
-              currentCount = parseInt(battleResult.newTimesLeft, 10) || currentCount;
-              if (typeof updateButtonState === 'function') updateButtonState();
-            }
+            syncBattleCommonUiAfterReward(battleResult);
 
             if (window.TLOAudio) window.TLOAudio.playSfx('win');
 
             selectedBattleStageId = Number(battleResult.nextStageId || selectedBattleStageId || 1);
-            btn.innerText = '✅ 已突破此關，準備下一關...';
-
-            setTimeout(function() {
-              if (typeof openBattleModal === 'function') openBattleModal();
-            }, 4200);
+            if (battleResult.dashboard) {
+              applyBattleDashboard(battleResult.dashboard);
+            } else {
+              btn.disabled = false;
+              btn.innerText = '✅ 已突破此關，重新讀取下一關...';
+              setTimeout(function() { if (typeof openBattleModal === 'function') openBattleModal(); }, 600);
+            }
 
           } else {
             resultMsg.innerHTML =
@@ -2520,9 +2574,9 @@
             if (window.TLOAudio) window.TLOAudio.playSfx('error');
 
             if (battleResult && battleResult.dashboard) {
-              latestBattleDashboard = battleResult.dashboard;
-              renderBattleChapterSelector(battleResult.dashboard);
+              applyBattleDashboard(battleResult.dashboard);
             }
+            syncBattleCommonUiAfterReward(battleResult);
             btn.disabled = !!(battleResult && battleResult.limitBlocked);
             btn.innerText = battleResult && battleResult.limitBlocked ? '今日限制已達上限' : '🔄 重新挑戰此關 🔄';
             btn.style.background = battleResult && battleResult.limitBlocked ? 'linear-gradient(45deg, #555, #333)' : 'linear-gradient(45deg, #ff5500, #ff0000)';
@@ -3271,13 +3325,10 @@ function showCollectionHistory() {
         });
         const cls = res.win ? 'pvp-win' : 'pvp-lose';
         const txt = res.win ? '勝利' : '落敗';
-        result.innerHTML = `<span class="${cls}">${txt}！${escapeHtml(res.myCard)} ${Number(res.myPower||0).toLocaleString()} vs ${escapeHtml(res.opponentUid)} 的 ${escapeHtml(res.opponentCard)} ${Number(res.opponentPower||0).toLocaleString()}</span><br><span style="color:#ffc107;">${escapeHtml(res.rewardText || '')}</span>${formatGrowthRewards(res.growthRewards)}`;
+        result.innerHTML = `<span class="${cls}">${txt}！${escapeHtml(res.myCard)} ${Number(res.myPower||0).toLocaleString()} vs ${escapeHtml(res.opponentUid)} 的 ${escapeHtml(res.opponentCard)} ${Number(res.opponentPower||0).toLocaleString()}</span>${formatRewardSummaryBox(res.rewardText || '', '本次 PVP 獎勵')}${formatGrowthRewards(res.growthRewards)}<span class="battle-sync-note">✅ PVP 數據已同步更新，不需要重新整理頁面。</span>`;
         if (window.TLOAudio) window.TLOAudio.playSfx(res.win ? 'win' : 'error');
-        if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
-          currentCount = parseInt(res.newTimesLeft) || currentCount;
-          updateButtonState();
-        }
-        renderPvpDashboard(res.dashboard);
+        syncBattleCommonUiAfterReward(res);
+        if (res.dashboard) renderPvpDashboard(res.dashboard); else loadPvpDashboard();
       }).withFailureHandler(function(err) {
         btn.disabled = false;
         btn.innerText = '⚔️ 開始配對對戰';
@@ -4562,13 +4613,19 @@ function showCollectionHistory() {
       }).getRpgDashboard(playerUID);
     }
 
-    function renderRpgDashboard(res) {
+    function selectRpgChapter(chapterKey) {
+      selectedRpgChapterKey = String(chapterKey || '');
+      if (latestRpgDashboard) renderRpgDashboard(latestRpgDashboard, { keepMessage: true });
+    }
+
+    function renderRpgDashboard(res, opts) {
+      opts = opts || {};
       registerCardImages(res);
       latestRpgDashboard = res;
       latestRpgDashboardLoadedAt = Date.now();
       rpgDashboardDirty = false;
       const msg = document.getElementById('rpg-msg');
-      if (msg) msg.innerHTML = '';
+      if (msg && !opts.keepMessage) msg.innerHTML = '';
       const powerEl = document.getElementById('rpg-team-power');
       if (powerEl) powerEl.innerText = `隊伍戰力：${Number(res.teamPower || 0).toLocaleString()}`;
       const rpgLimit = res.dailyLimits || {};
@@ -4585,30 +4642,62 @@ function showCollectionHistory() {
       renderRpgTeamPreview();
 
       const dungeons = res.dungeons || [];
-      const chapters = Array.isArray(res.chapters) && res.chapters.length ? res.chapters : [{ name: '異世界入口', description: '', unlocked: true, stages: dungeons }];
+      const chapters = Array.isArray(res.chapters) && res.chapters.length ? res.chapters : [{ key: 'isekai_entry', name: '異世界入口', description: '', unlocked: true, stages: dungeons }];
       const noRpgTickets = Number(rpgLimit.expeditionLimit || 0) > 0 && Number(rpgLimit.expeditionRemaining || 0) <= 0;
-      document.getElementById('rpg-dungeon-list').innerHTML = chapters.map(ch => {
-        const chapterLocked = ch.locked || ch.unlocked === false;
-        const stageHtml = (ch.stages || []).map(d => {
-          const ok = Number(res.teamPower || 0) >= Number(d.requiredPower || 0);
-          const locked = chapterLocked || d.locked || d.unlocked === false;
-          const disabled = noRpgTickets || locked;
-          const btnText = noRpgTickets ? '今日遠征券已用完' : (locked ? '尚未解鎖' : '開始挑戰');
-          return `<div style="background:#111;border:1px solid ${locked ? '#555' : (ok ? '#00fff0' : '#ffc107')};border-radius:12px;padding:12px;margin:8px 0;text-align:left;opacity:${locked ? '.72' : '1'};">
-            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-              <b style="color:${locked ? '#aaa' : (ok ? '#00fff0' : '#ffc107')};">${Number(d.stageOrder||0) ? `#${Number(d.stageOrder||0)} ` : ''}${escapeHtml(d.name)}</b>
-              <span style="font-size:11px;color:${d.cleared ? '#00ff7f' : '#aaa'};">${d.cleared ? '已勝利' : (locked ? '未解鎖' : '可遠征')}</span>
-            </div>
-            <div style="font-size:12px;color:#aaa;line-height:1.6;">${escapeHtml(d.description || '')}<br>敵方屬性：${escapeHtml(d.elementIcon || '')}${escapeHtml(d.elementLabel || '')}｜技能：${escapeHtml(d.skillName || '')}<br>建議戰力：${Number(d.requiredPower||0).toLocaleString()}｜獎勵：分數 +${Number(d.rewardScore||0).toLocaleString()}、能量 +${Number(d.rewardEnergy||0).toLocaleString()}｜抽卡掉落率 ${Number(d.rewardDrawChance||0)}%${Number(d.rewardDrawTimes||0) ? `｜保底抽卡 +${Number(d.rewardDrawTimes||0)}` : ''}${locked && d.lockReason ? `<br><span style="color:#ffcc66;">🔒 ${escapeHtml(d.lockReason)}</span>` : ''}</div>
-            <button class="btn-collection" style="margin-top:8px;" ${disabled ? 'disabled' : ''} onclick="startRpgAdventure('${escapeJsString(d.key)}')">${btnText}</button>
-          </div>`;
-        }).join('') || '<div style="color:#888;font-size:12px;padding:8px;">此異世界尚未建立可遠征關卡。</div>';
-        return `<div style="border:1px solid ${chapterLocked ? '#555' : '#7f00ff'};background:linear-gradient(135deg,rgba(127,0,255,.16),rgba(0,255,240,.06));border-radius:16px;padding:12px;margin:12px 0;text-align:left;">
-          <div style="font-size:18px;font-weight:900;color:${chapterLocked ? '#aaa' : '#ffdd77'};">🌌 ${escapeHtml(ch.name || '異世界入口')}</div>
-          <div style="font-size:12px;color:#aaa;line-height:1.6;margin:4px 0 8px;">${escapeHtml(ch.description || '')}${chapterLocked && ch.lockReason ? `<br><span style="color:#ffcc66;">🔒 ${escapeHtml(ch.lockReason)}</span>` : ''}<br>進度：${Number(ch.clearedCount||0)} / ${Number(ch.totalCount || ((ch.stages||[]).length) || 0)}</div>
-          ${stageHtml}
+      const availableChapters = chapters.filter(function(ch) { return ch && (ch.stages || []).length; });
+      const selectedStillExists = availableChapters.some(function(ch) { return String(ch.key || ch.chapterKey || '') === String(selectedRpgChapterKey || ''); });
+      if (!selectedStillExists) {
+        const lastChapter = lastRpgAdventureKey ? availableChapters.find(function(ch) {
+          return (ch.stages || []).some(function(st) { return String(st.key || '') === String(lastRpgAdventureKey); });
+        }) : null;
+        const firstUnlocked = availableChapters.find(function(ch) { return !(ch.locked || ch.unlocked === false); });
+        const pick = lastChapter || firstUnlocked || availableChapters[0] || chapters[0];
+        selectedRpgChapterKey = pick ? String(pick.key || pick.chapterKey || '') : '';
+      }
+      let activeChapter = availableChapters.find(function(ch) { return String(ch.key || ch.chapterKey || '') === String(selectedRpgChapterKey || ''); }) || availableChapters[0] || chapters[0];
+      const activeKey = activeChapter ? String(activeChapter.key || activeChapter.chapterKey || '') : '';
+      selectedRpgChapterKey = activeKey;
+
+      const tabsHtml = chapters.map(function(ch) {
+        const chapterKey = String(ch.key || ch.chapterKey || '');
+        const locked = ch.locked || ch.unlocked === false;
+        const cls = ['rpg-chapter-tab'];
+        if (chapterKey === activeKey) cls.push('active');
+        if (locked) cls.push('locked');
+        return `<button class="${cls.join(' ')}" ${locked ? 'disabled' : ''} title="${escapeHtml(ch.description || ch.lockReason || '')}" onclick="selectRpgChapter('${escapeJsString(chapterKey)}')">🌌 ${escapeHtml(ch.name || '異世界入口')}｜${Number(ch.clearedCount||0)}/${Number(ch.totalCount || ((ch.stages||[]).length) || 0)}</button>`;
+      }).join('');
+
+      const chapterLocked = activeChapter && (activeChapter.locked || activeChapter.unlocked === false);
+      const activeStages = (activeChapter && activeChapter.stages) || [];
+      const stageHtml = activeStages.map(function(d) {
+        const ok = Number(res.teamPower || 0) >= Number(d.requiredPower || 0);
+        const locked = chapterLocked || d.locked || d.unlocked === false;
+        const disabled = noRpgTickets || locked;
+        const btnText = noRpgTickets ? '今日遠征券已用完' : (locked ? '尚未解鎖' : '開始挑戰');
+        const cls = ['rpg-stage-card'];
+        if (locked) cls.push('locked');
+        if (d.cleared) cls.push('cleared');
+        if (String(d.key || '') === String(lastRpgAdventureKey || '')) cls.push('current');
+        const statusText = d.cleared ? '已勝利' : (locked ? '未解鎖' : '可遠征');
+        return `<div class="${cls.join(' ')}">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+            <b style="color:${locked ? '#aaa' : (ok ? '#00fff0' : '#ffc107')};">${Number(d.stageOrder||0) ? `#${Number(d.stageOrder||0)} ` : ''}${escapeHtml(d.name)}</b>
+            <span style="font-size:11px;color:${d.cleared ? '#00ff7f' : '#aaa'};">${statusText}</span>
+          </div>
+          <div style="font-size:12px;color:#aaa;line-height:1.6;margin-top:4px;">${escapeHtml(d.description || '')}<br>敵方屬性：${escapeHtml(d.elementIcon || '')}${escapeHtml(d.elementLabel || '')}｜技能：${escapeHtml(d.skillName || '')}<br>建議戰力：${Number(d.requiredPower||0).toLocaleString()}｜獎勵：分數 +${Number(d.rewardScore||0).toLocaleString()}、能量 +${Number(d.rewardEnergy||0).toLocaleString()}｜抽卡掉落率 ${Number(d.rewardDrawChance||0)}%${Number(d.rewardDrawTimes||0) ? `｜保底抽卡 +${Number(d.rewardDrawTimes||0)}` : ''}${locked && d.lockReason ? `<br><span style="color:#ffcc66;">🔒 ${escapeHtml(d.lockReason)}</span>` : ''}</div>
+          <button class="btn-collection" style="margin-top:8px;" ${disabled ? 'disabled' : ''} onclick="startRpgAdventure('${escapeJsString(d.key)}')">${btnText}</button>
         </div>`;
-      }).join('') || '<div style="color:#888;">目前沒有可挑戰遠征關卡。</div>';
+      }).join('') || '<div style="color:#888;font-size:12px;padding:8px;">此異世界尚未建立可遠征關卡。</div>';
+
+      const activeDesc = activeChapter ? `${escapeHtml(activeChapter.description || '')}${chapterLocked && activeChapter.lockReason ? `<br><span style="color:#ffcc66;">🔒 ${escapeHtml(activeChapter.lockReason)}</span>` : ''}<br>進度：${Number(activeChapter.clearedCount||0)} / ${Number(activeChapter.totalCount || activeStages.length || 0)}` : '';
+      document.getElementById('rpg-dungeon-list').innerHTML = chapters.length ? `<div class="rpg-chapter-shell">
+        <div class="rpg-chapter-tabs">${tabsHtml}</div>
+        <div class="rpg-active-chapter-card">
+          <div class="rpg-active-chapter-title">🌌 ${escapeHtml((activeChapter && activeChapter.name) || '異世界入口')}</div>
+          <div class="rpg-active-chapter-note">${activeDesc}</div>
+          <div class="rpg-stage-list">${stageHtml}</div>
+        </div>
+      </div>` : '<div style="color:#888;">目前沒有可挑戰遠征關卡。</div>';
 
       document.getElementById('rpg-log-list').innerHTML = (res.logs || []).map(l => `<div class="pvp-log-item"><b class="${l.result === 'WIN' ? 'pvp-win' : 'pvp-lose'}">${escapeHtml(l.result)}</b>｜${escapeHtml(l.dungeonName)}｜我方 ${Number(l.teamPower||0).toLocaleString()} / 敵方 ${Number(l.enemyPower||0).toLocaleString()}<br><span style="color:#aaa;">${escapeHtml(l.rewardSummary || '')}｜${escapeHtml(l.createdAt || '')}</span></div>`).join('') || '<div style="color:#888;">暫無遠征紀錄。</div>';
       scheduleOptimizeTloImages(document.getElementById('rpg-modal'));
@@ -4717,16 +4806,13 @@ function showCollectionHistory() {
         if (res && res.dashboard) renderRpgDashboard(res.dashboard);
         scrollToRpgBattleArea(false);
         if (window.TLOAudio) window.TLOAudio.playSfx(res && res.win ? 'win' : 'error');
-        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '遠征完成')}${formatGrowthRewards(res && res.growthRewards)}</span>`;
-        if (typeof res.newTimesLeft !== 'undefined' && res.newTimesLeft !== null) {
-          currentCount = parseInt(res.newTimesLeft) || 0;
-          updateButtonState();
-        }
+        const rewardBox = res && res.win ? formatRewardSummaryBox(res.rewardSummary || '', '本次通關獎勵') : formatRewardSummaryBox(res && res.rewardSummary ? res.rewardSummary : '未取得通關獎勵', '本次獎勵');
+        msg.innerHTML = `<span style="color:${res && res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res && res.msg ? res.msg : '遠征完成')}${rewardBox}${formatGrowthRewards(res && res.growthRewards)}<span class="battle-sync-note">✅ 遠征數據已同步更新，不需要重新整理頁面。</span></span>`;
+        syncBattleCommonUiAfterReward(res);
         rpgAdventureRunning = false;
         setRpgAdventureButtonsDisabled(false);
         showRpgRechallengeButton(true);
         if (!res.dashboard) loadRpgDashboard(true);
-        loadTrainingDashboard();
       }).withFailureHandler(function(err) {
         rpgAdventureRunning = false;
         setRpgAdventureButtonsDisabled(false);
