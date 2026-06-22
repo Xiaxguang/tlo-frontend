@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>T-LO GM 遠征異世界章節管理</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;background:#080812;color:#fff;font-family:Arial,'Microsoft JhengHei',sans-serif;padding:18px}
+    .wrap{max-width:1180px;margin:0 auto}.panel{background:#121225;border:1px solid rgba(0,255,240,.28);border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 0 24px rgba(0,255,240,.08)}
+    h1,h2,h3{margin:0 0 12px}.muted{color:#aaa;font-size:13px;line-height:1.6}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+    label{display:block;font-size:12px;color:#aef;margin:8px 0 4px;font-weight:900}input,textarea,select{width:100%;padding:11px;border-radius:10px;border:1px solid #444;background:#090913;color:#fff}textarea{min-height:70px;resize:vertical}
+    button{border:0;border-radius:12px;padding:11px 14px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(45deg,#7f00ff,#00fff0);margin:6px 4px 6px 0}button.danger{background:linear-gradient(45deg,#a00,#ff6b6b)}button.gray{background:#333}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{border-bottom:1px solid #333;padding:8px;text-align:left;vertical-align:top}th{color:#ffdd77;background:#17172b}.ok{color:#00ff7f}.off{color:#ff7777}.tag{display:inline-block;border:1px solid #555;border-radius:999px;padding:2px 8px;font-size:11px;color:#ddd}.msg{min-height:24px;font-weight:900}.small{font-size:12px;color:#aaa}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🌌 T-LO GM 遠征異世界章節管理</h1>
+  <div class="muted">此頁可獨立使用。若你的原本 GM 後台還沒整合章節管理，可以先用這頁管理「異世界章節」與「遠征關卡所屬章節」。</div>
+
+  <div class="panel" id="login-panel">
+    <h2>GM 登入</h2>
+    <div class="grid"><div><label>GM 帳號</label><input id="gm-user" autocomplete="username" value="admin"></div><div><label>GM 密碼</label><input id="gm-pass" type="password" autocomplete="current-password"></div></div>
+    <button onclick="login()">登入</button><span class="msg" id="login-msg"></span>
+  </div>
+
+  <div id="main" style="display:none">
+    <div class="panel"><div class="row"><button onclick="loadAll()">重新整理</button><button class="gray" onclick="logout()">登出</button><span class="msg" id="msg"></span></div></div>
+
+    <div class="panel">
+      <h2>新增 / 編輯異世界章節</h2>
+      <div class="grid">
+        <div><label>章節 Key（英文/數字/底線，留空會自動產生）</label><input id="ch-key" placeholder="mist_forest"></div>
+        <div><label>異世界名稱</label><input id="ch-name" placeholder="迷霧森林"></div>
+        <div><label>排序</label><input id="ch-sort" type="number" value="1"></div>
+        <div><label>狀態</label><select id="ch-active"><option value="1">啟用</option><option value="0">停用</option></select></div>
+        <div><label>解鎖條件</label><select id="ch-unlock-type"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option></select></div>
+        <div><label>解鎖值</label><input id="ch-unlock-value" placeholder="例如 25 或 street_01"></div>
+      </div>
+      <label>章節描述</label><textarea id="ch-desc" placeholder="被霧氣覆蓋的古老森林，深處藏著未知寶物。"></textarea>
+      <button onclick="saveChapter()">儲存章節</button><button class="gray" onclick="clearChapterForm()">清空</button>
+      <div id="chapter-list"></div>
+    </div>
+
+    <div class="panel">
+      <h2>新增 / 編輯遠征關卡</h2>
+      <div class="grid">
+        <div><label>關卡 Key（英文/數字/底線，留空會自動產生）</label><input id="dg-key" placeholder="forest_01"></div>
+        <div><label>關卡名稱</label><input id="dg-name" placeholder="森林入口"></div>
+        <div><label>所屬異世界</label><select id="dg-chapter"></select></div>
+        <div><label>關卡排序</label><input id="dg-stage-order" type="number" value="1"></div>
+        <div><label>Boss 卡片名稱</label><input id="dg-boss" placeholder="阿福"></div>
+        <div><label>建議戰力</label><input id="dg-power" type="number" value="300"></div>
+        <div><label>分數獎勵</label><input id="dg-score" type="number" value="80"></div>
+        <div><label>能量獎勵</label><input id="dg-energy" type="number" value="40"></div>
+        <div><label>抽卡掉落率 %</label><input id="dg-chance" type="number" value="5"></div>
+        <div><label>保底抽卡次數</label><input id="dg-draw-times" type="number" value="0"></div>
+        <div><label>狀態</label><select id="dg-active"><option value="1">啟用</option><option value="0">停用</option></select></div>
+        <div><label>解鎖條件</label><select id="dg-unlock-type"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option></select></div>
+        <div><label>解鎖值</label><input id="dg-unlock-value" placeholder="例如 25 或 forest_01"></div>
+      </div>
+      <label>關卡描述</label><textarea id="dg-desc" placeholder="異世界入口的第一道試煉。"></textarea>
+      <button onclick="saveDungeon()">儲存關卡</button><button class="gray" onclick="clearDungeonForm()">清空</button>
+      <div id="dungeon-list"></div>
+    </div>
+  </div>
+</div>
+<script>
+const API_BASE = (location.origin || '') + '/api/rpc';
+let token = localStorage.getItem('tlo_gm_token') || '';
+let chapters = [], dungeons = [];
+function esc(v){return String(v??'').replace(/[&<>"']/g,s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[s]));}
+async function rpc(method,args=[]){const body={method,args}; if(token) body.adminToken=token; const r=await fetch(API_BASE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json().catch(()=>({success:false,msg:'API 回傳格式錯誤'})); if(!r.ok || j.success===false) throw new Error(j.msg||('API 錯誤 '+r.status)); return j;}
+function setMsg(t,ok=true){document.getElementById('msg').innerHTML=`<span class="${ok?'ok':'off'}">${esc(t)}</span>`;}
+async function login(){try{const res=await rpc('adminLogin',[document.getElementById('gm-user').value,document.getElementById('gm-pass').value]); token=res.token; localStorage.setItem('tlo_gm_token',token); document.getElementById('login-panel').style.display='none'; document.getElementById('main').style.display='block'; await loadAll();}catch(e){document.getElementById('login-msg').innerHTML='<span class="off">'+esc(e.message)+'</span>';}}
+async function logout(){localStorage.removeItem('tlo_gm_token'); token=''; location.reload();}
+async function loadAll(){try{const [ch,dg]=await Promise.all([rpc('adminListRpgChapters'),rpc('adminListRpgDungeons')]); chapters=ch.rows||[]; dungeons=dg.rows||[]; renderChapterSelect(); renderChapters(); renderDungeons(); setMsg('資料已同步');}catch(e){setMsg(e.message,false);}}
+function renderChapterSelect(){const sel=document.getElementById('dg-chapter'); sel.innerHTML=chapters.map(c=>`<option value="${esc(c.key)}">${esc(c.name)}｜${esc(c.key)}</option>`).join('')||'<option value="isekai_entry">異世界入口</option>';}
+function renderChapters(){document.getElementById('chapter-list').innerHTML=`<table><thead><tr><th>Key</th><th>名稱</th><th>排序</th><th>狀態</th><th>解鎖</th><th>操作</th></tr></thead><tbody>${chapters.map(c=>`<tr><td><span class="tag">${esc(c.key)}</span></td><td><b>${esc(c.name)}</b><br><span class="small">${esc(c.description)}</span></td><td>${Number(c.sortOrder||0)}</td><td class="${c.isActive?'ok':'off'}">${c.isActive?'啟用':'停用'}</td><td>${esc(c.unlockType||'NONE')} ${esc(c.unlockValue||'')}</td><td><button onclick='editChapter(${JSON.stringify(c).replace(/'/g,"&#039;")})'>編輯</button><button class="${c.isActive?'danger':'gray'}" onclick="toggleChapter('${esc(c.key)}',${c.isActive?0:1})">${c.isActive?'停用':'啟用'}</button></td></tr>`).join('')}</tbody></table>`;}
+function renderDungeons(){document.getElementById('dungeon-list').innerHTML=`<table><thead><tr><th>章節</th><th>關卡</th><th>Boss/戰力</th><th>獎勵</th><th>解鎖/狀態</th><th>操作</th></tr></thead><tbody>${dungeons.map(d=>`<tr><td>${esc(d.chapterName)}<br><span class="tag">${esc(d.chapterKey)}</span></td><td>#${Number(d.stageOrder||0)} <b>${esc(d.name)}</b><br><span class="small">${esc(d.key)}｜${esc(d.description)}</span></td><td>${esc(d.bossCardName)}<br>${Number(d.requiredPower||0).toLocaleString()}</td><td>分數 ${Number(d.rewardScore||0).toLocaleString()}<br>能量 ${Number(d.rewardEnergy||0).toLocaleString()}<br>掉落 ${Number(d.rewardDrawChance||0)}%｜保底 ${Number(d.rewardDrawTimes||0)}</td><td><span class="${d.isActive?'ok':'off'}">${d.isActive?'啟用':'停用'}</span><br>${esc(d.unlockType||'NONE')} ${esc(d.unlockValue||'')}</td><td><button onclick='editDungeon(${JSON.stringify(d).replace(/'/g,"&#039;")})'>編輯</button><button class="${d.isActive?'danger':'gray'}" onclick="toggleDungeon('${esc(d.key)}',${d.isActive?0:1})">${d.isActive?'停用':'啟用'}</button></td></tr>`).join('')}</tbody></table>`;}
+function clearChapterForm(){['ch-key','ch-name','ch-desc','ch-unlock-value'].forEach(id=>document.getElementById(id).value=''); document.getElementById('ch-sort').value=1; document.getElementById('ch-active').value='1'; document.getElementById('ch-unlock-type').value='NONE';}
+function editChapter(c){document.getElementById('ch-key').value=c.key||'';document.getElementById('ch-name').value=c.name||'';document.getElementById('ch-desc').value=c.description||'';document.getElementById('ch-sort').value=c.sortOrder||0;document.getElementById('ch-active').value=c.isActive?'1':'0';document.getElementById('ch-unlock-type').value=c.unlockType||'NONE';document.getElementById('ch-unlock-value').value=c.unlockValue||'';scrollTo(0,0);}
+async function saveChapter(){try{await rpc('adminUpsertRpgChapter',[{key:val('ch-key'),name:val('ch-name'),description:val('ch-desc'),sortOrder:num('ch-sort'),isActive:val('ch-active')==='1',unlockType:val('ch-unlock-type'),unlockValue:val('ch-unlock-value')}]); await loadAll(); clearChapterForm();}catch(e){setMsg(e.message,false);}}
+async function toggleChapter(key,active){try{await rpc('adminSetRpgChapterActive',[key,!!active]); await loadAll();}catch(e){setMsg(e.message,false);}}
+function clearDungeonForm(){['dg-key','dg-name','dg-desc','dg-boss','dg-unlock-value'].forEach(id=>document.getElementById(id).value=''); document.getElementById('dg-stage-order').value=1; document.getElementById('dg-power').value=300; document.getElementById('dg-score').value=80; document.getElementById('dg-energy').value=40; document.getElementById('dg-chance').value=5; document.getElementById('dg-draw-times').value=0; document.getElementById('dg-active').value='1'; document.getElementById('dg-unlock-type').value='NONE';}
+function editDungeon(d){document.getElementById('dg-key').value=d.key||'';document.getElementById('dg-name').value=d.name||'';document.getElementById('dg-desc').value=d.description||'';document.getElementById('dg-chapter').value=d.chapterKey||'isekai_entry';document.getElementById('dg-stage-order').value=d.stageOrder||0;document.getElementById('dg-boss').value=d.bossCardName||'';document.getElementById('dg-power').value=d.requiredPower||0;document.getElementById('dg-score').value=d.rewardScore||0;document.getElementById('dg-energy').value=d.rewardEnergy||0;document.getElementById('dg-chance').value=d.rewardDrawChance||0;document.getElementById('dg-draw-times').value=d.rewardDrawTimes||0;document.getElementById('dg-active').value=d.isActive?'1':'0';document.getElementById('dg-unlock-type').value=d.unlockType||'NONE';document.getElementById('dg-unlock-value').value=d.unlockValue||'';document.getElementById('dg-name').scrollIntoView({behavior:'smooth',block:'center'});}
+async function saveDungeon(){try{await rpc('adminUpsertRpgDungeon',[{key:val('dg-key'),name:val('dg-name'),description:val('dg-desc'),chapterKey:val('dg-chapter'),stageOrder:num('dg-stage-order'),bossCardName:val('dg-boss'),requiredPower:num('dg-power'),rewardScore:num('dg-score'),rewardEnergy:num('dg-energy'),rewardDrawChance:num('dg-chance'),rewardDrawTimes:num('dg-draw-times'),isActive:val('dg-active')==='1',unlockType:val('dg-unlock-type'),unlockValue:val('dg-unlock-value')}]); await loadAll(); clearDungeonForm();}catch(e){setMsg(e.message,false);}}
+async function toggleDungeon(key,active){try{await rpc('adminSetRpgDungeonActive',[key,!!active]); await loadAll();}catch(e){setMsg(e.message,false);}}
+function val(id){return document.getElementById(id).value.trim()} function num(id){return Number(document.getElementById(id).value||0)}
+if(token){document.getElementById('login-panel').style.display='none';document.getElementById('main').style.display='block';loadAll();}
+</script>
+</body>
+</html>
