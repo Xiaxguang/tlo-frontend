@@ -3479,16 +3479,69 @@ function showCollectionHistory() {
       if (el) el.innerHTML = '<span style="color:' + (good ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(text || '') + '</span>';
     }
 
+    function loadScriptOnce(id, src, readyCheck, cb, onError) {
+      try {
+        if (readyCheck && readyCheck()) { cb && cb(); return; }
+        var existing = document.getElementById(id);
+        if (existing) {
+          var waited = 0;
+          var timer = setInterval(function(){
+            waited += 100;
+            if (readyCheck && readyCheck()) { clearInterval(timer); cb && cb(); }
+            else if (waited >= 10000) { clearInterval(timer); onError && onError(new Error('載入逾時：' + src)); }
+          }, 100);
+          return;
+        }
+        var script = document.createElement('script');
+        script.id = id;
+        script.src = src;
+        script.async = false;
+        script.onload = function(){
+          if (!readyCheck) { cb && cb(); return; }
+          var waited = 0;
+          var timer = setInterval(function(){
+            waited += 100;
+            if (readyCheck()) { clearInterval(timer); cb && cb(); }
+            else if (waited >= 10000) { clearInterval(timer); onError && onError(new Error('載入完成但物件尚未就緒：' + src)); }
+          }, 100);
+        };
+        script.onerror = function(){ onError && onError(new Error('載入失敗：' + src)); };
+        document.body.appendChild(script);
+      } catch (err) {
+        onError && onError(err);
+      }
+    }
+
+    function waitForEcpayReady(cb, onError) {
+      var waited = 0;
+      var timer = setInterval(function(){
+        waited += 100;
+        if (window.ECPay && typeof window.ECPay.initialize === 'function' && typeof window.ECPay.createPayment === 'function' && typeof window.ECPay.getPayToken === 'function') {
+          clearInterval(timer);
+          cb && cb();
+        } else if (waited >= 10000) {
+          clearInterval(timer);
+          onError && onError(new Error('綠界 SDK 尚未準備完成，請確認 jQuery、node-forge 與 sdk-1.0.0.js 是否都已成功載入。'));
+        }
+      }, 100);
+    }
+
     function loadEcpaySdk(sdkUrl, cb) {
-      if (window.ECPay) { cb(); return; }
-      var old = document.getElementById('ecpay-sdk-js');
-      if (old) old.remove();
-      var script = document.createElement('script');
-      script.id = 'ecpay-sdk-js';
-      script.src = sdkUrl;
-      script.onload = cb;
-      script.onerror = function(){ setEcpayMsg('綠界 SDK 載入失敗，請檢查網路或 SDK 網址。', false); };
-      document.body.appendChild(script);
+      var fail = function(err){
+        setEcpayMsg('綠界 SDK 載入失敗：' + escapeHtml(err && err.message ? err.message : err), false);
+      };
+      if (!sdkUrl) {
+        setEcpayMsg('綠界 SDK 網址為空，請檢查後端 ECPay 設定。', false);
+        return;
+      }
+      if (window.ECPay && typeof window.ECPay.initialize === 'function') { cb(); return; }
+      loadScriptOnce('ecpay-jquery-js', 'https://code.jquery.com/jquery-3.5.1.min.js', function(){ return !!window.jQuery; }, function(){
+        loadScriptOnce('ecpay-forge-js', 'https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js', function(){ return !!window.forge; }, function(){
+          loadScriptOnce('ecpay-sdk-js', sdkUrl, function(){ return !!(window.ECPay && typeof window.ECPay.initialize === 'function'); }, function(){
+            waitForEcpayReady(cb, fail);
+          }, fail);
+        }, fail);
+      }, fail);
     }
 
     function openEcpayModal(order) {
@@ -3504,10 +3557,10 @@ function showCollectionHistory() {
       loadEcpaySdk(ecpay.sdkUrl, function() {
         try {
           var serverType = ecpay.serverType || 'Stage';
-          ECPay.initialize(serverType, 1, function(errMsg) {
+          window.ECPay.initialize(serverType, 1, function(errMsg) {
             if (errMsg) { setEcpayMsg('綠界初始化失敗：' + errMsg, false); return; }
-            var lang = (ECPay.Language && ECPay.Language.zhTW) ? ECPay.Language.zhTW : 'zh-TW';
-            ECPay.createPayment(order.token, lang, function(errMsg2) {
+            var lang = (window.ECPay.Language && window.ECPay.Language.zhTW) ? window.ECPay.Language.zhTW : 'zh-TW';
+            window.ECPay.createPayment(order.token, lang, function(errMsg2) {
               if (errMsg2) { setEcpayMsg('付款畫面建立失敗：' + errMsg2, false); return; }
               setEcpayMsg('請選擇付款方式並填寫資料，完成後按「確認送出付款」。', true);
             }, 'V2');
@@ -3529,9 +3582,9 @@ function showCollectionHistory() {
 
     function submitEcpayCheckout() {
       if (!currentEcpayOrder) { setEcpayMsg('尚未建立付款訂單。', false); return; }
-      if (!window.ECPay || !ECPay.getPayToken) { setEcpayMsg('綠界 SDK 尚未準備完成。', false); return; }
+      if (!window.ECPay || typeof window.ECPay.getPayToken !== 'function') { setEcpayMsg('綠界 SDK 尚未準備完成，請重新開啟付款視窗再試。', false); return; }
       setEcpayMsg('正在取得付款代碼...', true);
-      ECPay.getPayToken(function(paymentInfo, errMsg) {
+      window.ECPay.getPayToken(function(paymentInfo, errMsg) {
         if (errMsg) { setEcpayMsg('取得付款代碼失敗：' + errMsg, false); return; }
         var paymentType = paymentInfo && paymentInfo.PaymentType;
         var payToken = paymentInfo && paymentInfo.PayToken;
