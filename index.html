@@ -3564,11 +3564,74 @@ function showCollectionHistory() {
       }, fail);
     }
 
+    function resetEcpayPaymentContainer() {
+      var oldPay = document.getElementById('ECPayPayment');
+      if (!oldPay || !oldPay.parentNode) return oldPay;
+      var fresh = oldPay.cloneNode(false);
+      fresh.innerHTML = '';
+      oldPay.parentNode.replaceChild(fresh, oldPay);
+      return fresh;
+    }
+
+    function ecpayPaymentHasRendered() {
+      var pay = document.getElementById('ECPayPayment');
+      if (!pay) return false;
+      var html = (pay.innerHTML || '').trim();
+      if (pay.children && pay.children.length > 0) return true;
+      if (html.length > 20) return true;
+      return false;
+    }
+
+    function markEcpayPaymentReadyFromDom(reason) {
+      if (!currentEcpayOrder) return;
+      setEcpaySubmitReady(true, '送出付款 / 取得繳費代碼');
+      setEcpayMsg('付款畫面已載入' + (reason ? '（' + reason + '）' : '') + '。請在上方選擇付款方式並填寫資料，完成後按下方按鈕送出。', true);
+      var shopMsg = document.getElementById('shop-msg');
+      if (shopMsg) shopMsg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">付款畫面已開啟，請在彈窗選擇付款方式並按送出。</span>';
+    }
+
+    function watchEcpayPaymentRender(doneRef) {
+      var pay = document.getElementById('ECPayPayment');
+      if (!pay) return function(){};
+      var stopped = false;
+      var finish = function(reason) {
+        if (stopped || doneRef.done) return;
+        if (!ecpayPaymentHasRendered()) return;
+        doneRef.done = true;
+        stopped = true;
+        try { observer && observer.disconnect(); } catch(e) {}
+        try { clearInterval(timer); } catch(e) {}
+        try { clearTimeout(timeout); } catch(e) {}
+        markEcpayPaymentReadyFromDom(reason);
+      };
+      var observer = null;
+      try {
+        observer = new MutationObserver(function(){ finish('畫面偵測'); });
+        observer.observe(pay, { childList: true, subtree: true });
+      } catch(e) {}
+      var timer = setInterval(function(){ finish('畫面偵測'); }, 300);
+      var timeout = setTimeout(function(){
+        if (doneRef.done) return;
+        doneRef.done = true;
+        stopped = true;
+        try { observer && observer.disconnect(); } catch(e) {}
+        try { clearInterval(timer); } catch(e) {}
+        setEcpaySubmitReady(false, '付款畫面載入逾時');
+        setEcpayMsg('付款畫面載入逾時。請關閉彈窗後重新建立付款訂單；若連續發生，請按 Ctrl + F5 強制重新整理後再測。', false);
+      }, 18000);
+      return function(){
+        stopped = true;
+        try { observer && observer.disconnect(); } catch(e) {}
+        try { clearInterval(timer); } catch(e) {}
+        try { clearTimeout(timeout); } catch(e) {}
+      };
+    }
+
     function openEcpayModal(order) {
       currentEcpayOrder = order;
       var modal = document.getElementById('ecpay-modal');
       var info = document.getElementById('ecpay-order-info');
-      var pay = document.getElementById('ECPayPayment');
+      var pay = resetEcpayPaymentContainer();
       var debug = document.getElementById('ecpay-debug-info');
       if (pay) pay.innerHTML = '';
       setEcpaySubmitReady(false, '付款畫面載入中...');
@@ -3579,18 +3642,36 @@ function showCollectionHistory() {
       setEcpayMsg('正在載入綠界付款畫面...', true);
       loadEcpaySdk(ecpay.sdkUrl, function() {
         try {
+          if (!order.token) {
+            setEcpaySubmitReady(false, '付款 Token 遺失');
+            setEcpayMsg('付款 Token 遺失，請重新建立付款訂單。', false);
+            return;
+          }
+          var readyRef = { done: false };
+          var stopWatch = watchEcpayPaymentRender(readyRef);
           var serverType = ecpay.serverType || 'Stage';
-          // 綠界官方範例使用 ECPay.initialize(serverType, callback)。
-          // 站內付 2.0 SDK 某些版本用三參數時會把第二參數誤當 callback，導致 i is not a function。
+          // 綠界官方範例使用 ECPay.initialize(serverType, callback)。初始化完成後才 createPayment。
           window.ECPay.initialize(serverType, function(errMsg) {
-            if (errMsg) { setEcpayMsg('綠界初始化失敗：' + errMsg, false); setEcpaySubmitReady(false, '初始化失敗'); return; }
+            if (errMsg) {
+              readyRef.done = true;
+              stopWatch();
+              setEcpayMsg('綠界初始化失敗：' + errMsg, false);
+              setEcpaySubmitReady(false, '初始化失敗');
+              return;
+            }
             var lang = (window.ECPay.Language && window.ECPay.Language.zhTW) ? window.ECPay.Language.zhTW : 'zh-TW';
             window.ECPay.createPayment(order.token, lang, function(errMsg2) {
-              if (errMsg2) { setEcpayMsg('付款畫面建立失敗：' + errMsg2, false); setEcpaySubmitReady(false, '付款畫面建立失敗'); return; }
-              setEcpaySubmitReady(true, '送出付款 / 取得繳費代碼');
-              setEcpayMsg('請先在上方選擇付款方式並填寫資料，填完後一定要按下方「送出付款 / 取得繳費代碼」。信用卡可能會再跳轉 3D 驗證頁。', true);
-              var shopMsg = document.getElementById('shop-msg');
-              if (shopMsg) shopMsg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">付款畫面已開啟，請在彈窗選擇付款方式並按送出。</span>';
+              if (readyRef.done && !errMsg2) return;
+              if (errMsg2) {
+                readyRef.done = true;
+                stopWatch();
+                setEcpayMsg('付款畫面建立失敗：' + errMsg2, false);
+                setEcpaySubmitReady(false, '付款畫面建立失敗');
+                return;
+              }
+              readyRef.done = true;
+              stopWatch();
+              markEcpayPaymentReadyFromDom('綠界回呼');
             }, 'V2');
           });
         } catch (e) {
@@ -3680,6 +3761,11 @@ function showCollectionHistory() {
             setEcpayMsg(doneMsg, true);
             var shopMsg2 = document.getElementById('shop-msg');
             if (shopMsg2) shopMsg2.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">' + escapeHtml(doneMsg) + '</span>';
+            setEcpaySubmitReady(false, '交易已送出');
+            loadShopDashboard();
+            loadHomeState();
+            setTimeout(function(){ closeEcpayModal({ keepShopMsg: true }); }, 1200);
+            return;
           }
           setEcpaySubmitReady(false, '交易已送出');
           loadShopDashboard();
