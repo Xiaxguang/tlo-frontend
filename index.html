@@ -223,6 +223,7 @@
 
     .battle-arena { display: none; margin-top: 15px; background: #111; border: 2px solid #ff007f; border-radius: 12px; padding: 15px; position: relative; overflow: hidden; }
     .hp-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
+    .hp-container.hp-hidden { display: none !important; }
     .hp-bar-wrapper { flex: 1; background: #333; height: 16px; border-radius: 8px; border: 1px solid #555; overflow: hidden; position: relative; }
     .hp-bar-fill { height: 100%; width: 100%; transition: width 0.3s ease-out; }
     .hp-player { background: linear-gradient(90deg, #00fff0, #00ff7f); }
@@ -2103,6 +2104,7 @@
       document.getElementById('boss-info-panel').style.display = "flex"; 
       document.getElementById('battle-arena-panel').style.display = "none";
       document.getElementById('battle-arena-panel').classList.remove('turn-mode');
+      setBattleHpVisible('battle', false);
       const turnBanner = document.getElementById('battle-turn-banner');
       const turnLog = document.getElementById('battle-turn-log');
       if (turnBanner) { turnBanner.style.display = 'none'; turnBanner.innerText = '準備進入回合制戰鬥...'; }
@@ -2153,9 +2155,42 @@
 
     function setHpBar(fillEl, textEl, hp, maxHp) {
       const percent = maxHp > 0 ? Math.max(0, Math.min(100, Math.round((Number(hp || 0) / maxHp) * 100))) : 0;
-      fillEl.style.width = percent + "%";
-      fillEl.classList.toggle('turn-low', percent > 0 && percent <= 25);
-      textEl.innerText = `${Math.max(0, Number(hp || 0)).toLocaleString()} / ${Number(maxHp || 0).toLocaleString()} (${percent}%)`;
+      if (fillEl) {
+        fillEl.style.width = percent + "%";
+        fillEl.classList.toggle('turn-low', percent > 0 && percent <= 25);
+      }
+      if (textEl) textEl.innerText = `${Math.max(0, Number(hp || 0)).toLocaleString()} / ${Number(maxHp || 0).toLocaleString()} (${percent}%)`;
+    }
+
+    function getBattleHpContainer(prefix) {
+      const arenaId = prefix === 'battle' ? 'battle-arena-panel' : `${prefix}-arena-panel`;
+      const arena = document.getElementById(arenaId);
+      return arena ? arena.querySelector('.hp-container') : null;
+    }
+
+    function setBattleHpVisible(prefix, visible) {
+      const hp = getBattleHpContainer(prefix);
+      if (!hp) return;
+      hp.classList.toggle('hp-hidden', !visible);
+    }
+
+    function hideAllBattleHpBars() {
+      ['battle', 'pvp', 'rpg'].forEach(function(prefix) {
+        setBattleHpVisible(prefix, false);
+      });
+    }
+
+    function resetBattleHpBars(prefix) {
+      const playerFill = document.getElementById(prefix === 'battle' ? 'hp-player-fill' : `${prefix}-hp-player-fill`);
+      const bossFill = document.getElementById(prefix === 'battle' ? 'hp-boss-fill' : `${prefix}-hp-boss-fill`);
+      const playerText = document.getElementById(prefix === 'battle' ? 'hp-player-text' : `${prefix}-hp-player-text`);
+      const bossText = document.getElementById(prefix === 'battle' ? 'hp-boss-text' : `${prefix}-hp-boss-text`);
+      if (playerFill) playerFill.style.width = '100%';
+      if (bossFill) bossFill.style.width = '100%';
+      if (playerFill) playerFill.classList.remove('turn-low');
+      if (bossFill) bossFill.classList.remove('turn-low');
+      if (playerText) playerText.innerText = '戰鬥準備中...';
+      if (bossText) bossText.innerText = '戰鬥準備中...';
     }
 
     function showDamageNumber(target, amount, actor, turn) {
@@ -2239,6 +2274,7 @@
       const banner = document.getElementById('battle-turn-banner');
       const log = document.getElementById('battle-turn-log');
 
+      setBattleHpVisible('battle', true);
       if (banner) { banner.style.display = 'block'; banner.innerText = `⚔️ ${battle.stageName || 'T-LO 回合制戰鬥'} 開始！`; }
       if (log) { log.style.display = 'block'; log.innerHTML = ''; }
       setHpBar(hpPlayerFill, hpPlayerText, battle.playerMaxHp, battle.playerMaxHp);
@@ -2273,6 +2309,7 @@
       }
 
       if (banner) banner.innerText = res && res.success ? '🏆 戰鬥勝利！結算獎勵中...' : '💥 戰鬥失敗！Boss 擊退了玩家軍團';
+      setBattleHpVisible('battle', false);
       return battle;
     }
 
@@ -2431,6 +2468,7 @@
       setMiniBattleAvatar(prefix, 'boss', opts.bossName || battle.bossName || '敵方', opts.bossImage);
       arena.style.display = 'block';
       arena.classList.add('turn-mode');
+      setBattleHpVisible(prefix, true);
       if (banner) { banner.style.display = 'block'; banner.innerText = `⚔️ ${battle.stageName || opts.stageName || '回合制戰鬥'} 開始！`; }
       if (log) { log.style.display = 'block'; log.innerHTML = ''; }
       setHpBar(hpPlayerFill, hpPlayerText, battle.playerMaxHp, battle.playerMaxHp);
@@ -2462,6 +2500,7 @@
         await sleepTurn(170);
       }
       if (banner) banner.innerText = (res && res.win) ? '🏆 勝利！結算獎勵中...' : '💥 失敗！戰鬥結束';
+      setBattleHpVisible(prefix, false);
       return battle;
     }
 
@@ -2519,6 +2558,8 @@
       resultMsg.innerHTML = '';
 
       if (infoPanel) infoPanel.style.display = 'none';
+      resetBattleHpBars('battle');
+      setBattleHpVisible('battle', true);
       if (arenaPanel) arenaPanel.style.display = 'block';
 
       if (clashZone) {
@@ -2541,6 +2582,7 @@
           } catch (e) {
             console.warn('戰鬥動畫播放失敗，改為直接顯示結果：', e);
           }
+          setBattleHpVisible('battle', false);
 
           if (battleResult && battleResult.success) {
             resultMsg.innerHTML =
@@ -2584,6 +2626,7 @@
           }
         })
         .withFailureHandler(function(err) {
+          setBattleHpVisible('battle', false);
           resultMsg.innerHTML =
             `<span style="color:#ff4444;">
               戰鬥失敗：${safeText(err && err.message ? err.message : err)}
@@ -3234,6 +3277,7 @@ function showCollectionHistory() {
       document.getElementById('pvp-modal').style.display = 'flex';
       const arena = document.getElementById('pvp-arena-panel');
       if (arena) arena.style.display = 'none';
+      setBattleHpVisible('pvp', false);
       loadPvpDashboard();
     }
 
@@ -3302,6 +3346,8 @@ function showCollectionHistory() {
       btn.disabled = true;
       btn.innerText = '⚡ 配對與戰鬥計算中...';
       result.innerHTML = '';
+      resetBattleHpBars('pvp');
+      setBattleHpVisible('pvp', false);
       if (arena) arena.style.display = 'none';
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
       google.script.run.withSuccessHandler(async function(res) {
@@ -3309,6 +3355,7 @@ function showCollectionHistory() {
         btn.disabled = false;
         btn.innerText = '⚔️ 開始配對對戰';
         if (!res || !res.success) {
+          setBattleHpVisible('pvp', false);
           result.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '對戰失敗')}</span>`;
           if (res && res.dashboard) renderPvpDashboard(res.dashboard);
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
@@ -3330,6 +3377,7 @@ function showCollectionHistory() {
         syncBattleCommonUiAfterReward(res);
         if (res.dashboard) renderPvpDashboard(res.dashboard); else loadPvpDashboard();
       }).withFailureHandler(function(err) {
+        setBattleHpVisible('pvp', false);
         btn.disabled = false;
         btn.innerText = '⚔️ 開始配對對戰';
         result.innerHTML = '<span style="color:#ff4444;">PVP 系統繁忙，請稍後再試。</span>';
@@ -4589,6 +4637,7 @@ function showCollectionHistory() {
       document.getElementById('rpg-msg').innerHTML = '';
       const arena = document.getElementById('rpg-arena-panel');
       if (arena) arena.style.display = 'none';
+      setBattleHpVisible('rpg', false);
       const preview = document.getElementById('rpg-party-preview');
       if (preview) preview.classList.remove('adventure-running');
       showRpgRechallengeButton(false);
@@ -4762,6 +4811,8 @@ function showCollectionHistory() {
       const names = getSelectedRpgNames();
       msg.innerHTML = isRepeat ? '再次征討準備中...' : '遠征異世界隊伍出發中...';
       if (preview) preview.classList.add('adventure-running');
+      resetBattleHpBars('rpg');
+      setBattleHpVisible('rpg', false);
       if (arena) {
         arena.style.display = 'block';
         const title = document.getElementById('rpg-arena-title');
@@ -4776,6 +4827,7 @@ function showCollectionHistory() {
         registerCardImages(res);
         if (preview) preview.classList.remove('adventure-running');
         if (!res || !res.success) {
+          setBattleHpVisible('rpg', false);
           rpgAdventureRunning = false;
           setRpgAdventureButtonsDisabled(false);
           if (res && res.dashboard) renderRpgDashboard(res.dashboard);
@@ -4814,6 +4866,7 @@ function showCollectionHistory() {
         showRpgRechallengeButton(true);
         if (!res.dashboard) loadRpgDashboard(true);
       }).withFailureHandler(function(err) {
+        setBattleHpVisible('rpg', false);
         rpgAdventureRunning = false;
         setRpgAdventureButtonsDisabled(false);
         if (preview) preview.classList.remove('adventure-running');
