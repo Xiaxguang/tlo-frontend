@@ -825,6 +825,11 @@
       margin: 0 !important;
       gap: 10px !important;
     }
+    .gacha-pool-picker { margin-bottom:14px; padding:14px; border:1px solid rgba(0,255,240,.35); border-radius:14px; background:rgba(0,255,240,.06); }
+    .gacha-pool-picker label { display:block; color:#00fff0; font-size:12px; font-weight:900; margin-bottom:6px; }
+    .gacha-pool-picker select { width:100%; padding:11px 12px; border-radius:10px; border:1px solid #555; background:#111; color:#fff; font-weight:900; }
+    .gacha-pool-info { display:flex; gap:12px; align-items:center; margin-top:10px; color:#aaa; font-size:12px; line-height:1.55; }
+    .gacha-pool-info img { width:76px; height:54px; object-fit:cover; border-radius:10px; border:1px solid #444; }
 
     .gacha-action-card .btn-gacha,
     .gacha-action-card .btn-gacha10 {
@@ -1150,7 +1155,7 @@
         <h3>今日行動</h3>
         <div class="screen-sub">選擇你今天要做的事：開盒、冒險、簽到或領取活動補償。</div>
         <div class="hero-actions">
-          <button class="game-big-btn btn-neon-pink" onclick="showGameScreen('gacha')">🎁 前往抽卡<small>單抽、十連、查看機率與抽卡紀錄</small></button>
+          <button class="game-big-btn btn-neon-pink" onclick="showGameScreen('gacha')">🎁 前往抽卡<small>選擇卡池、單抽、十連與查看抽卡紀錄</small></button>
           <button class="game-big-btn btn-neon-cyan" onclick="showGameScreen('battle')">⚔️ 前往戰鬥<small>爭霸戰、遠征異世界、PVP 與升星</small></button>
           <button class="game-big-btn btn-neon-gold" onclick="showGameScreen('shop')">🛒 前往商城<small>能量商店、訓練總分商店與儲值商品</small></button>
         </div>
@@ -1163,7 +1168,6 @@
           <button class="feature-btn" onclick="openTrainingModal()"><span>🎁</span>簽到 / 排行榜<small>每日獎勵與玩家分數排名</small></button>
           <button class="feature-btn" onclick="openRedeemModal()"><span>🎟️</span>兌換碼<small>輸入活動碼或補償碼</small></button>
           <button class="feature-btn" onclick="openMissionModal()"><span>🎁</span>開服福利 / 任務<small>7日福利、每日任務、新手任務</small></button>
-          <button class="feature-btn" onclick="openProbabilityModal()"><span>📊</span>機率表<small>查看盲盒角色出貨機率</small></button>
           <button class="feature-btn" onclick="openMemoryModal()"><span>🧠</span>記憶翻牌<small>挑戰記憶小遊戲</small></button>
           <button class="feature-btn" onclick="openAchievementModal()"><span>🏆</span>成就系統<small>收集、戰鬥、養成里程碑</small></button>
           <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
@@ -1212,6 +1216,11 @@
 
       <div class="game-card gacha-action-card">
         <h3>開盒操作</h3>
+        <div class="gacha-pool-picker">
+          <label for="gacha-pool-select">選擇抽卡池</label>
+          <select id="gacha-pool-select" onchange="selectGachaPool(this.value)"><option value="">正在讀取卡池...</option></select>
+          <div class="gacha-pool-info" id="gacha-pool-info">正在同步 GM 卡池設定...</div>
+        </div>
         <div class="btn-group">
           <button class="btn btn-gacha" id="gacha-btn" onclick="startGacha()">消耗 1 次．單抽開盒</button>
           <button class="btn btn-gacha10" id="gacha10-btn" onclick="startGacha10()">消耗 10 次．十連開盒</button>
@@ -1738,6 +1747,8 @@
     let latestPersonalDashboard = null;
     let latestSocialDashboard = null;
     let activeShopCategory = 'ENERGY';
+    let gachaPools = [];
+    let selectedGachaPoolKey = 'permanent';
 
     loadPublicSettings();
 
@@ -1776,8 +1787,58 @@
     if (window.TLO_IS_AUTHENTICATED) {
       updateButtonState();
       loadHomeState();
+      loadGachaPools();
       // 留言板延後一點載入，讓首頁與抽卡按鈕先出現。
       setTimeout(loadMessageBoard, 400);
+    }
+
+    function renderGachaPoolPicker() {
+      const select = document.getElementById('gacha-pool-select');
+      const info = document.getElementById('gacha-pool-info');
+      if (!select || !info) return;
+      if (!gachaPools.length) {
+        select.innerHTML = '<option value="">目前沒有開放中的卡池</option>';
+        info.innerHTML = '<span style="color:#ff7777">目前沒有可抽取的卡池，請稍後再試。</span>';
+        selectedGachaPoolKey = '';
+        updateButtonState();
+        return;
+      }
+      const selected = gachaPools.find(pool => pool.key === selectedGachaPoolKey) || gachaPools.find(pool => pool.isDefault) || gachaPools[0];
+      selectedGachaPoolKey = selected.key;
+      select.innerHTML = gachaPools.map(pool => `<option value="${escapeHtml(pool.key)}" ${pool.key === selected.key ? 'selected' : ''}>${escapeHtml(pool.name)}${pool.isDefault ? '｜常駐／預設' : ''}</option>`).join('');
+      const period = `${selected.startsAt ? new Date(selected.startsAt).toLocaleString() : '立即開放'} ～ ${selected.endsAt ? new Date(selected.endsAt).toLocaleString() : '不限期'}`;
+      const image = selected.bannerUrl ? `<img src="${escapeHtml(selected.bannerUrl)}" alt="${escapeHtml(selected.name)}" onerror="this.style.display='none'">` : '';
+      info.innerHTML = `${image}<div><b style="color:#fff">${escapeHtml(selected.name)}</b><br>${escapeHtml(selected.description || 'GM 尚未填寫卡池說明')}<br>可抽卡牌 ${Number(selected.cardCount || 0)} 張｜${escapeHtml(period)}</div>`;
+      try { localStorage.setItem('TLO_GACHA_POOL', selectedGachaPoolKey); } catch (_) {}
+      updateButtonState();
+    }
+
+    function selectGachaPool(poolKey) {
+      if (!gachaPools.some(pool => pool.key === poolKey)) return;
+      selectedGachaPoolKey = poolKey;
+      renderGachaPoolPicker();
+      const stage = document.getElementById('card-stage');
+      const pool = gachaPools.find(item => item.key === poolKey);
+      if (stage && pool) stage.innerHTML = `<p>已切換至「${escapeHtml(pool.name)}」，點擊下方按鈕開始開盒！</p>`;
+    }
+
+    function loadGachaPools(force) {
+      if (!window.TLO_IS_AUTHENTICATED || typeof google === 'undefined' || !google.script || !google.script.run) return;
+      if (gachaPools.length && !force) { renderGachaPoolPicker(); return; }
+      google.script.run.withSuccessHandler(function(response) {
+        gachaPools = response && Array.isArray(response.pools) ? response.pools : [];
+        let saved = '';
+        try { saved = localStorage.getItem('TLO_GACHA_POOL') || ''; } catch (_) {}
+        selectedGachaPoolKey = gachaPools.some(pool => pool.key === saved)
+          ? saved
+          : (response.defaultPoolKey || gachaPools.find(pool => pool.isDefault)?.key || gachaPools[0]?.key || '');
+        renderGachaPoolPicker();
+      }).withFailureHandler(function(err) {
+        const info = document.getElementById('gacha-pool-info');
+        selectedGachaPoolKey = '';
+        if (info) info.innerHTML = '<span style="color:#ff7777">卡池讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+        updateButtonState();
+      }).getGachaPools(playerUID);
     }
 
     // === 🟢 新增：玩家手動切換本命英雄立繪功能 ===
@@ -1803,7 +1864,8 @@
       const status = document.getElementById('prob-status');
       const body = document.getElementById('prob-table-body');
       if (modal) modal.style.display = 'flex';
-      if (status) status.innerText = '正在讀取最新 GM 卡池設定...';
+      const selectedPool = gachaPools.find(pool => pool.key === selectedGachaPoolKey);
+      if (status) status.innerText = `正在讀取「${selectedPool ? selectedPool.name : '目前卡池'}」最新設定...`;
       if (body) body.innerHTML = '<tr><td colspan="3" style="color:#aaa;">同步中...</td></tr>';
       if (typeof google === "undefined" || !google.script || !google.script.run) return;
       google.script.run.withSuccessHandler(function(response) {
@@ -1815,7 +1877,7 @@
         registerCardImages(response);
         updateCardCacheFromResponse(response);
         const groups = response.groups || [];
-        if (status) status.innerText = `目前可抽卡片 ${Number(response.totalCards || 0)} 張，總權重 ${Number(response.totalWeight || 0)}。此表會依 GM 後台 cards 表即時更新。`;
+        if (status) status.innerText = `「${response.pool && response.pool.name ? response.pool.name : '目前卡池'}」可抽卡片 ${Number(response.totalCards || 0)} 張，總權重 ${Number(response.totalWeight || 0)}。`;
         let html = '';
         groups.forEach(function(group) {
           const cards = group.cards || [];
@@ -1831,7 +1893,7 @@
       }).withFailureHandler(function(err) {
         if (status) status.innerText = '卡池機率讀取失敗。';
         if (body) body.innerHTML = '<tr><td colspan="3" style="color:#ff7777;">' + escapeHtml(err && err.message ? err.message : err) + '</td></tr>';
-      }).getCardProbabilityTable(playerUID);
+      }).getCardProbabilityTable(playerUID, selectedGachaPoolKey || 'permanent');
     }
 
     function openCollectionModal() { document.getElementById('collection-modal').style.display = 'flex'; renderCollectionWall(); }
@@ -2659,7 +2721,7 @@
     }
 
     function startGacha() {
-      if (currentCount <= 0) { if (window.TLOAudio) window.TLOAudio.playSfx('error'); return; }
+      if (!selectedGachaPoolKey || currentCount <= 0) { if (window.TLOAudio) window.TLOAudio.playSfx('error'); return; }
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
 
       disableAllButtons("🔒 鎖定中...");
@@ -2702,11 +2764,11 @@
         document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${escapeHtml(err && err.message ? err.message : err)}</p>`;
         if (window.TLOAudio) window.TLOAudio.playSfx('error');
         updateButtonState();
-      }).executeGacha(playerUID);
+      }).executeGacha(playerUID, selectedGachaPoolKey);
     }
 
     function startGacha10() {
-      if (currentCount < 10) { if (window.TLOAudio) window.TLOAudio.playSfx('error'); return; }
+      if (!selectedGachaPoolKey || currentCount < 10) { if (window.TLOAudio) window.TLOAudio.playSfx('error'); return; }
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
 
       disableAllButtons("🔮 十連注入中...");
@@ -2753,7 +2815,7 @@
         document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${escapeHtml(err && err.message ? err.message : err)}</p>`;
         if (window.TLOAudio) window.TLOAudio.playSfx('error');
         updateButtonState();
-      }).executeGacha10(playerUID);
+      }).executeGacha10(playerUID, selectedGachaPoolKey);
     }
 
     function updateButtonState() {
@@ -2761,6 +2823,7 @@
       const b1 = document.getElementById('gacha-btn'); 
       const b2 = document.getElementById('gacha10-btn'); 
       const noticeBox = document.getElementById('notice-box');
+      const hasPool = !!selectedGachaPoolKey;
 
       // 無論次數多少，我們讓 noticeBox 永遠保持顯示 (block)
       if (noticeBox) {
@@ -2768,11 +2831,11 @@
       }
 
       // 處理單抽按鈕
-      if (currentCount <= 0) { 
+      if (!hasPool || currentCount <= 0) {
         b1.disabled = true; 
         b1.style.background = "#555"; 
         b1.style.color = "#888"; 
-        b1.innerText = "❌ 次數用盡"; 
+        b1.innerText = hasPool ? "❌ 次數用盡" : "❌ 無可用卡池";
       } else { 
         b1.disabled = false; 
         b1.style.background = "linear-gradient(45deg, #ff007f, #7f00ff)"; 
@@ -2781,11 +2844,11 @@
       }
 
       // 處理十連抽按鈕
-      if (currentCount < 10) { 
+      if (!hasPool || currentCount < 10) {
         b2.disabled = true; 
         b2.style.background = "#444"; 
         b2.style.color = "#666"; 
-        b2.innerText = "🔒 不足 10 次"; 
+        b2.innerText = hasPool ? "🔒 不足 10 次" : "❌ 無可用卡池";
       } else { 
         b2.disabled = false; 
         b2.style.background = "linear-gradient(45deg, #7f00ff, #ff00ff)"; 
@@ -5149,6 +5212,7 @@ function showCollectionHistory() {
       if (screenName === 'shop') loadShopDashboard();
       if (screenName === 'profile') loadPersonalDashboard();
       if (screenName === 'social') loadSocialDashboard();
+      if (screenName === 'gacha') loadGachaPools(false);
       scheduleOptimizeTloImages(document);
       try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
     };

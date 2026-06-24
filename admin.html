@@ -80,7 +80,7 @@
 
       <div class="tabs">
         <button class="tab active" onclick="showTab('players', this)">玩家管理</button>
-        <button class="tab" onclick="showTab('cards', this); loadCards();">卡牌管理</button>
+        <button class="tab" onclick="showTab('cards', this); loadCardAdmin();">卡牌管理</button>
         <button class="tab" onclick="showTab('stages', this); loadStageAdmin();">關卡管理</button>
         <button class="tab" onclick="showTab('shop', this); loadShopAdmin();">商城管理</button>
         <button class="tab" onclick="showTab('redeem', this); loadRedeemCodes();">兌換碼</button>
@@ -175,7 +175,7 @@
 
       <div id="tab-cards" class="hide panel">
         <h2>🃏 卡牌 / 卡池管理</h2>
-        <div class="muted">可新增卡牌、設定圖片網址、稀有度、抽卡權重與是否進入卡池。圖片檔請先上傳到 GitHub 前端 repo，例如 <b>images/cards/yeli.png</b>，再填入 <b>./images/cards/yeli.png</b>。</div>
+        <div class="muted">卡牌資料與卡池設定分開管理：先建立卡牌，再於下方卡池編輯器選擇要加入的卡牌與各自權重。圖片檔請先上傳到 GitHub 前端 repo，例如 <b>images/cards/yeli.png</b>。</div>
         <div class="split">
           <div class="panel" style="box-shadow:none">
             <h3>➕ 新增 / 修改卡牌</h3>
@@ -185,12 +185,12 @@
             </div>
             <div class="row3">
               <div><label>稀有度</label><select id="newCardRarity"><option>NORMAL</option><option>RARE</option><option>SUPER RARE</option><option>SSR</option><option>UR</option><option>BOSS</option></select></div>
-              <div><label>抽卡權重</label><input id="newCardWeight" type="number" min="0" value="0"></div>
+              <div><label>常駐池預設權重</label><input id="newCardWeight" type="number" min="0" value="0"></div>
               <div><label>排序</label><input id="newCardSort" type="number" min="0" placeholder="空白自動"></div>
             </div>
             <label>圖片網址 / 路徑</label><input id="newCardImage" placeholder="例如 ./images/cards/yeli.png 或 https://...png">
             <div class="row" style="grid-template-columns:1fr auto;align-items:end">
-              <div><label>是否進入抽卡池</label><select id="newCardDrawable"><option value="1">可抽</option><option value="0">不可抽 / Boss 專用</option></select></div>
+              <div><label>是否允許放入卡池</label><select id="newCardDrawable"><option value="1">可抽卡牌</option><option value="0">不可抽 / Boss 專用</option></select></div>
               <button class="primary" onclick="saveNewCard()">新增 / 儲存卡牌</button>
             </div>
             <div class="muted">提醒：Boss 專用卡建議設為「不可抽」且權重 0；一般抽卡角色請設為「可抽」並填權重。</div>
@@ -203,6 +203,45 @@
         </div>
         <div id="cardsMsg" class="msg"></div>
         <div id="cardsTable"></div>
+
+        <hr style="border:0;border-top:1px solid #333;margin:24px 0">
+        <div class="panel" style="box-shadow:none">
+          <div class="row" style="grid-template-columns:1fr auto;align-items:center">
+            <div>
+              <h3 style="margin:0">🎁 多卡池管理</h3>
+              <div class="muted">常駐池會自動保留；可新增活動池、限定池，分別設定卡牌與權重。</div>
+            </div>
+            <button class="ghost" onclick="clearGachaPoolForm()">新增卡池</button>
+          </div>
+          <div class="row3">
+            <div><label>卡池 Key（空白自動產生）</label><input id="gachaPoolKey" placeholder="例如 summer_2026"></div>
+            <div><label>卡池名稱</label><input id="gachaPoolName" placeholder="例如 2026 夏日限定池"></div>
+            <div><label>排序</label><input id="gachaPoolSort" type="number" min="0" value="10"></div>
+          </div>
+          <label>玩家端說明</label><input id="gachaPoolDescription" maxlength="500" placeholder="簡短說明卡池內容或活動期間">
+          <label>卡池圖片（可留空）</label><input id="gachaPoolBanner" placeholder="例如 ./images/banners/summer.jpg 或 https://...">
+          <div class="row">
+            <div><label>開始時間（可留空）</label><input id="gachaPoolStartsAt" type="datetime-local"></div>
+            <div><label>結束時間（可留空）</label><input id="gachaPoolEndsAt" type="datetime-local"></div>
+          </div>
+          <div class="row3">
+            <div><label>狀態</label><select id="gachaPoolActive"><option value="1">上架</option><option value="0">下架</option></select></div>
+            <div><label>預設卡池</label><select id="gachaPoolDefault"><option value="0">否</option><option value="1">是</option></select></div>
+            <div style="display:flex;align-items:end"><button class="primary" style="width:100%" onclick="saveGachaPool()">儲存卡池資料</button></div>
+          </div>
+          <div id="gachaPoolsMsg" class="msg"></div>
+          <div id="gachaPoolsTable"></div>
+        </div>
+
+        <div class="panel" style="box-shadow:none;margin-top:16px">
+          <h3 id="gachaPoolCardsTitle">🧩 卡池卡牌與權重</h3>
+          <div class="row" style="grid-template-columns:1fr auto">
+            <input id="gachaPoolCardFilter" placeholder="搜尋卡片名稱或稀有度" oninput="captureGachaPoolCardDraft();renderGachaPoolCards()">
+            <button class="primary" onclick="saveGachaPoolCards()">儲存全部卡牌設定</button>
+          </div>
+          <div id="gachaPoolCardsMsg" class="msg">請先從上方選擇一個卡池。</div>
+          <div id="gachaPoolCardsTable"></div>
+        </div>
       </div>
 
       
@@ -411,6 +450,8 @@
             <option value="player_assets">player_assets 玩家資產</option>
             <option value="player_collection">player_collection 玩家卡盒</option>
             <option value="gacha_logs">gacha_logs 抽卡紀錄</option>
+            <option value="gacha_pools">gacha_pools 卡池</option>
+            <option value="gacha_pool_cards">gacha_pool_cards 卡池卡牌</option>
             <option value="training_profiles">training_profiles 排行榜</option>
             <option value="cards">cards 卡池</option>
             <option value="redeem_codes">redeem_codes 兌換碼</option>
@@ -473,6 +514,9 @@ const TOKEN_KEY = 'TLO_ADMIN_TOKEN';
 const ADMIN_KEY = 'TLO_ADMIN_INFO';
 let currentPlayerUid = '';
 let cardRows = [];
+let gachaPoolRows = [];
+let gachaPoolCardRows = [];
+let selectedGachaPoolKey = '';
 let bossStageRows = [];
 let battleChapterRows = [];
 let rpgDungeonRows = [];
@@ -657,6 +701,11 @@ async function loadCards(showMessage=true){
     if(showMessage) msg('cardsMsg', `已載入 ${cardRows.length} 張卡片`, true);
   }catch(e){ msg('cardsMsg', e.message); }
 }
+
+async function loadCardAdmin(){
+  await loadCards(false);
+  await loadGachaPools(true);
+}
 function renderCardsTable(){
   if(!$('cardsTable')) return;
   $('cardsTable').innerHTML = `<table><thead><tr><th>卡片</th><th>圖片</th><th>稀有度</th><th>權重</th><th>可抽</th><th>操作</th></tr></thead><tbody>` +
@@ -722,6 +771,154 @@ async function saveCard(i){
   const c = cardRows[i]; if(!c) return;
   if(!confirm(`確定要修改「${c.name}」卡池設定？`)) return;
   try{ const data = await rpc('adminUpdateCardSettings', [c.name, {weight:$('cw'+i).value, isDrawable:$('cd'+i).value === '1'}, 'GM後台卡池設定']); msg('cardsMsg', data.msg, true); await loadCards(false); }catch(e){ msg('cardsMsg', e.message); }
+}
+
+function toLocalDateTimeInput(value){
+  if(!value) return '';
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0,16);
+}
+
+function localDateTimeInputToIso(value){
+  if(!value) return '';
+  const date=new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
+
+function clearGachaPoolForm(){
+  selectedGachaPoolKey = '';
+  ['gachaPoolKey','gachaPoolName','gachaPoolDescription','gachaPoolBanner','gachaPoolStartsAt','gachaPoolEndsAt'].forEach(id => { if($(id)) $(id).value=''; });
+  if($('gachaPoolSort')) $('gachaPoolSort').value='10';
+  if($('gachaPoolActive')) $('gachaPoolActive').value='1';
+  if($('gachaPoolDefault')) $('gachaPoolDefault').value='0';
+  if($('gachaPoolKey')) $('gachaPoolKey').disabled=false;
+  gachaPoolCardRows=[];
+  if($('gachaPoolCardsTitle')) $('gachaPoolCardsTitle').textContent='🧩 卡池卡牌與權重';
+  if($('gachaPoolCardsTable')) $('gachaPoolCardsTable').innerHTML='';
+  msg('gachaPoolCardsMsg','請先儲存新卡池，再設定其中的卡牌與權重。');
+}
+
+async function loadGachaPools(showMessage=true){
+  try{
+    const data = await rpc('adminListGachaPools', []);
+    gachaPoolRows = data.rows || [];
+    renderGachaPools();
+    if(showMessage) msg('gachaPoolsMsg', `已載入 ${gachaPoolRows.length} 個卡池`, true);
+    const preferred = gachaPoolRows.find(p => p.key === selectedGachaPoolKey) || gachaPoolRows.find(p => p.isDefault) || gachaPoolRows[0];
+    if(preferred) await editGachaPool(preferred.key, false);
+  }catch(e){ msg('gachaPoolsMsg', e.message); }
+}
+
+function renderGachaPools(){
+  if(!$('gachaPoolsTable')) return;
+  $('gachaPoolsTable').innerHTML = `<table><thead><tr><th>卡池</th><th>卡牌</th><th>總權重</th><th>期間</th><th>狀態</th><th>操作</th></tr></thead><tbody>` +
+    gachaPoolRows.map(p => `<tr>
+      <td><b>${esc(p.name)}</b>${p.isDefault?' <span class="badge">預設</span>':''}<br><span class="muted">${esc(p.key)}</span></td>
+      <td>${fmt(p.cardCount)}</td><td>${fmt(p.totalWeight)}</td>
+      <td><span class="muted">${p.startsAt?esc(new Date(p.startsAt).toLocaleString()):'立即'}<br>～ ${p.endsAt?esc(new Date(p.endsAt).toLocaleString()):'不限期'}</span></td>
+      <td>${p.isActive?'<span class="good">上架</span>':'<span class="muted">下架</span>'}</td>
+      <td><button class="primary" onclick="editGachaPool('${p.key}')">編輯</button><br><button class="${p.isActive?'danger':'warn'}" style="margin-top:6px" onclick="toggleGachaPool('${p.key}', ${p.isActive?'false':'true'})">${p.isActive?'下架':'上架'}</button></td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+
+async function editGachaPool(key, scroll=true){
+  try{
+    const data = await rpc('adminGetGachaPool', [key]);
+    const p = data.pool || {};
+    selectedGachaPoolKey = p.key || key;
+    $('gachaPoolKey').value = p.key || '';
+    $('gachaPoolKey').disabled = true;
+    $('gachaPoolName').value = p.name || '';
+    $('gachaPoolDescription').value = p.description || '';
+    $('gachaPoolBanner').value = p.bannerUrl || '';
+    $('gachaPoolSort').value = p.sortOrder || 0;
+    $('gachaPoolActive').value = p.isActive ? '1' : '0';
+    $('gachaPoolDefault').value = p.isDefault ? '1' : '0';
+    $('gachaPoolStartsAt').value = toLocalDateTimeInput(p.startsAt);
+    $('gachaPoolEndsAt').value = toLocalDateTimeInput(p.endsAt);
+    gachaPoolCardRows = data.cards || [];
+    if($('gachaPoolCardsTitle')) $('gachaPoolCardsTitle').textContent = `🧩 ${p.name || key}｜卡牌與權重`;
+    renderGachaPoolCards();
+    msg('gachaPoolCardsMsg', `已載入 ${gachaPoolCardRows.length} 張卡牌，勾選後權重必須大於 0。`, true);
+    if(scroll) $('gachaPoolName').scrollIntoView({behavior:'smooth',block:'center'});
+  }catch(e){ msg('gachaPoolCardsMsg', e.message); }
+}
+
+async function saveGachaPool(){
+  try{
+    const payload={
+      key:$('gachaPoolKey').value.trim(), name:$('gachaPoolName').value.trim(),
+      description:$('gachaPoolDescription').value.trim(), bannerUrl:$('gachaPoolBanner').value.trim(),
+      sortOrder:$('gachaPoolSort').value, isActive:$('gachaPoolActive').value==='1',
+      isDefault:$('gachaPoolDefault').value==='1', startsAt:localDateTimeInputToIso($('gachaPoolStartsAt').value),
+      endsAt:localDateTimeInputToIso($('gachaPoolEndsAt').value)
+    };
+    if(!payload.name){ msg('gachaPoolsMsg','請輸入卡池名稱'); return; }
+    const data=await rpc('adminUpsertGachaPool',[payload]);
+    selectedGachaPoolKey=data.poolKey || payload.key;
+    msg('gachaPoolsMsg',data.msg,true);
+    await loadGachaPools(false);
+  }catch(e){ msg('gachaPoolsMsg',e.message); }
+}
+
+async function toggleGachaPool(key, active){
+  if(!confirm(`確定要${active?'上架':'下架'}這個卡池？`)) return;
+  try{
+    const data=await rpc('adminSetGachaPoolActive',[key,active]);
+    selectedGachaPoolKey=key;
+    msg('gachaPoolsMsg',data.msg,true);
+    await loadGachaPools(false);
+  }catch(e){ msg('gachaPoolsMsg',e.message); }
+}
+
+function renderGachaPoolCards(){
+  if(!$('gachaPoolCardsTable')) return;
+  if(!selectedGachaPoolKey){ $('gachaPoolCardsTable').innerHTML=''; return; }
+  const filter=String($('gachaPoolCardFilter')?.value||'').trim().toLowerCase();
+  const rows=gachaPoolCardRows.map((card,index)=>({card,index})).filter(x => !filter || `${x.card.name} ${x.card.rarity}`.toLowerCase().includes(filter));
+  $('gachaPoolCardsTable').innerHTML=`<table><thead><tr><th>加入</th><th>卡牌</th><th>稀有度</th><th>權重</th><th>排序</th></tr></thead><tbody>`+
+    rows.map(({card,index})=>`<tr>
+      <td><input id="gpcInclude${index}" type="checkbox" style="width:auto" ${card.included?'checked':''} ${!card.globallyDrawable?'disabled':''}></td>
+      <td><b>${esc(card.name)}</b><br><span class="muted">${esc(card.id)}${card.globallyDrawable?'':'｜此卡在卡牌管理中設為不可抽'}</span></td>
+      <td>${esc(card.rarity)}</td>
+      <td><input id="gpcWeight${index}" type="number" min="0" value="${esc(card.weight||0)}" ${!card.globallyDrawable?'disabled':''}></td>
+      <td><input id="gpcSort${index}" type="number" min="0" value="${esc(card.sortOrder||0)}" ${!card.globallyDrawable?'disabled':''}></td>
+    </tr>`).join('')+`</tbody></table>`;
+}
+
+function captureGachaPoolCardDraft(){
+  gachaPoolCardRows.forEach((card,index)=>{
+    const includeEl=$('gpcInclude'+index), weightEl=$('gpcWeight'+index), sortEl=$('gpcSort'+index);
+    if(includeEl) card.included=includeEl.checked;
+    if(weightEl) card.weight=weightEl.value;
+    if(sortEl) card.sortOrder=sortEl.value;
+  });
+}
+
+async function saveGachaPoolCards(){
+  if(!selectedGachaPoolKey){ msg('gachaPoolCardsMsg','請先選擇卡池。'); return; }
+  captureGachaPoolCardDraft();
+  const entries=gachaPoolCardRows.map((card,index)=>{
+    const includeEl=$('gpcInclude'+index), weightEl=$('gpcWeight'+index), sortEl=$('gpcSort'+index);
+    return {
+      cardId:card.id,
+      included:card.globallyDrawable && (includeEl ? includeEl.checked : card.included),
+      weight:weightEl ? weightEl.value : card.weight,
+      sortOrder:sortEl ? sortEl.value : card.sortOrder
+    };
+  });
+  const invalid=entries.some(entry=>entry.included && Number(entry.weight)<=0);
+  if(invalid){ msg('gachaPoolCardsMsg','已勾選的卡牌權重必須大於 0。'); return; }
+  if(!confirm('確定儲存此卡池全部卡牌與權重？')) return;
+  try{
+    const data=await rpc('adminSaveGachaPoolCards',[selectedGachaPoolKey,entries]);
+    gachaPoolCardRows=data.cards||[];
+    renderGachaPoolCards();
+    msg('gachaPoolCardsMsg',data.msg,true);
+    await loadGachaPools(false);
+  }catch(e){ msg('gachaPoolCardsMsg',e.message); }
 }
 
 

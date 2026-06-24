@@ -48,6 +48,7 @@
     "getPublicSettings",
     "getHomeState",
     "getPlayerCollection",
+    "getGachaPools",
     "getBattleDashboard",
     "getCardProbabilityTable",
     "getRpgDashboard",
