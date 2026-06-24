@@ -1461,11 +1461,11 @@
       <div class="modal-h3">🎴 我的潮流卡盒 (集卡冊)</div>
       <div class="collection-stat" id="collection-progress-text">讀取收集進度中...</div>
       <div class="collection-filter-box">
-        <div class="collection-filter-title">分類</div>
+        <div class="collection-filter-title">卡盒顯示方式</div>
         <div class="collection-filter-tabs" id="collection-pool-tabs">
           <button type="button" class="collection-filter-tab active" onclick="selectCollectionPool('all')">全部卡牌</button>
         </div>
-        <div class="collection-filter-hint" id="collection-filter-hint">可依照卡池，切換查看收集進度。</div>
+        <div class="collection-filter-hint" id="collection-filter-hint">可依照 GM 目前開放的卡池，切換查看各卡池的收集進度。</div>
       </div>
       <div class="collection-grid" id="collection-grid-container"></div>
     </div>
@@ -2427,8 +2427,7 @@
         const limit = response.dailyLimits || {};
         const chips = [];
         if (limit.challengeLimit) chips.push(`🎟️ 今日挑戰券 ${Number(limit.challengeRemaining || 0)} / ${Number(limit.challengeLimit || 0)}`);
-        if (limit.normalFirstClearLimit) chips.push(`普通首通 ${Number(limit.normalFirstClearUsed || 0)} / ${Number(limit.normalFirstClearLimit || 0)}`);
-        if (limit.hardFirstClearLimit) chips.push(`困難首通 ${Number(limit.hardFirstClearUsed || 0)} / ${Number(limit.hardFirstClearLimit || 0)}`);
+        // 爭霸戰已取消「每日普通/困難首通關數」限制；只顯示挑戰券。
         note.innerText = `目前解鎖到第 ${unlocked} / ${maxStage} 關；${hardText}。${chips.length ? '｜' + chips.join('｜') : ''}`;
       }
       tabs.innerHTML = chapters.map(function(ch) {
@@ -3130,7 +3129,7 @@
             }
             syncBattleCommonUiAfterReward(battleResult);
             btn.disabled = !!(battleResult && battleResult.limitBlocked);
-            btn.innerText = battleResult && battleResult.limitBlocked ? '今日限制已達上限' : '🔄 重新挑戰此關 🔄';
+            btn.innerText = battleResult && battleResult.limitBlocked ? '今日挑戰券已用完' : '🔄 重新挑戰此關 🔄';
             btn.style.background = battleResult && battleResult.limitBlocked ? 'linear-gradient(45deg, #555, #333)' : 'linear-gradient(45deg, #ff5500, #ff0000)';
             btn.onclick = window.startChallenge;
           }
