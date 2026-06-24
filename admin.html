@@ -295,6 +295,47 @@
           <div id="rpgChaptersTable"></div>
         </div>
 
+        <div class="panel" style="box-shadow:none">
+          <h3>👿 魔王挑戰章節</h3>
+          <div class="row3">
+            <div><label>章節 Key，英文/數字，可空白自動產生</label><input id="demonChapterKey" placeholder="例如 demon_origin"></div>
+            <div><label>章節名稱</label><input id="demonChapterName" placeholder="例如 魔王降臨"></div>
+            <div><label>排序</label><input id="demonChapterSort" type="number" min="0" value="10"></div>
+          </div>
+          <label>章節描述</label><input id="demonChapterDesc" placeholder="顯示給玩家看的魔王章節說明">
+          <label>狀態</label><select id="demonChapterActive"><option value="1">啟用</option><option value="0">停用</option></select>
+          <button class="primary" onclick="saveDemonChapter()" style="margin-top:10px">新增 / 儲存魔王章節</button>
+          <button class="ghost" onclick="clearDemonChapterForm()" style="margin-top:10px">清空章節表單</button>
+          <div id="demonChapterMsg" class="msg"></div>
+          <div id="demonChaptersTable"></div>
+        </div>
+
+        <div class="panel" style="box-shadow:none">
+          <h3>🔥 魔王挑戰關卡</h3>
+          <div class="row3">
+            <div><label>關卡 Key</label><input id="demonStageKey" placeholder="例如 demon_origin_1"></div>
+            <div><label>所屬章節</label><select id="demonStageChapter"></select></div>
+            <div><label>章內排序</label><input id="demonStageOrder" type="number" min="0" value="10"></div>
+          </div>
+          <div class="row3">
+            <div><label>關卡名稱</label><input id="demonStageName" placeholder="例如 終焉魔王"></div>
+            <div><label>指定魔王卡牌</label><select id="demonBossCard"></select></div>
+            <div><label>魔王戰力</label><input id="demonBossPower" type="number" min="1" value="5000"></div>
+          </div>
+          <div class="row3">
+            <div><label>難度</label><select id="demonDifficulty"><option value="EASY">簡單</option><option value="NORMAL" selected>普通</option><option value="HARD">困難</option><option value="NIGHTMARE">惡夢</option><option value="EVENT">活動</option></select></div>
+            <div><label>狀態</label><select id="demonStageActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
+            <div></div>
+          </div>
+          <label>關卡說明</label><input id="demonStageDesc" placeholder="顯示給玩家看的關卡說明">
+          <label>掉落獎勵（最多 5 項）</label>
+          <div id="demonRewardEditor"></div>
+          <button class="primary" onclick="saveDemonStage()" style="margin-top:10px">新增 / 儲存魔王關卡</button>
+          <button class="ghost" onclick="clearDemonStageForm()" style="margin-top:10px">清空關卡表單</button>
+          <div id="demonStageMsg" class="msg"></div>
+          <div id="demonStagesTable"></div>
+        </div>
+
         <div class="split">
           <div class="panel" style="box-shadow:none">
             <h3>👑 潮流爭霸戰關卡</h3>
@@ -385,8 +426,9 @@
               <div><label>標籤</label><input id="shopTag" placeholder="每日限購"></div>
             </div>
             <label>商品描述</label><textarea id="shopDescription" placeholder="商品說明"></textarea>
-            <label>商品獎勵 JSON</label><textarea id="shopRewards" placeholder='[{"rewardType":"DRAW_TIMES","rewardValue":1},{"rewardType":"CARD","cardName":"夏日小梅","rewardValue":1}]'></textarea>
-            <div class="muted">可用 rewardType：DRAW_TIMES、ENERGY、POINTS、SKILL_EXP、BATTLE_TICKET、RPG_TICKET、ITEM、CARD。魔王挑戰卷使用 ITEM，cardName 填 DEMON_CHALLENGE_TICKET。</div>
+            <label>商品內容（最多 5 項）</label>
+            <div id="shopRewardEditor"></div>
+            <div class="muted">直接選擇抽卡次數、資源、挑戰券、遊戲道具或指定卡牌，並輸入出售數量。</div>
             <button class="primary" onclick="saveShopItem()">儲存商品</button>
             <button class="ghost" onclick="clearShopForm()">清空</button>
             <div id="shopMsg" class="msg"></div>
@@ -464,6 +506,9 @@
             <option value="boss_stages">boss_stages 爭霸戰關卡</option>
             <option value="rpg_dungeons">rpg_dungeons 遠征關卡</option>
             <option value="rpg_adventure_logs">rpg_adventure_logs RPG紀錄</option>
+            <option value="demon_challenge_chapters">demon_challenge_chapters 魔王章節</option>
+            <option value="demon_challenge_stages">demon_challenge_stages 魔王關卡</option>
+            <option value="demon_challenge_stage_rewards">demon_challenge_stage_rewards 魔王掉落</option>
             <option value="shop_items">shop_items 商城商品</option>
             <option value="shop_item_rewards">shop_item_rewards 商城獎勵</option>
             <option value="shop_purchase_logs">shop_purchase_logs 商城購買紀錄</option>
@@ -524,6 +569,9 @@ let bossStageRows = [];
 let battleChapterRows = [];
 let rpgDungeonRows = [];
 let rpgChapterRows = [];
+let demonChapterRows = [];
+let demonStageRows = [];
+let rewardCatalog = {types:[], items:[], cards:[]};
 let shopItemRows = [];
 let shopFilter = 'ALL';
 
@@ -533,6 +581,70 @@ function fmt(n){ return Number(n || 0).toLocaleString(); }
 function msg(id, text, good=false){ const el=$(id); if(!el)return; el.textContent=text||''; el.className='msg'+(good?' good':''); }
 function token(){ return sessionStorage.getItem(TOKEN_KEY) || ''; }
 function note(){ return $('adminNote') ? $('adminNote').value.trim() : ''; }
+
+async function loadRewardCatalog(){
+  if((rewardCatalog.types || []).length) return rewardCatalog;
+  rewardCatalog = await rpc('adminGetRewardCatalog', []);
+  return rewardCatalog;
+}
+
+function managedRewardTypeOptions(selected){
+  return '<option value="">不使用</option>' + (rewardCatalog.types || []).map(row =>
+    `<option value="${esc(row.key)}" ${row.key===selected?'selected':''}>${esc(row.label)}｜${esc(row.key)}</option>`
+  ).join('');
+}
+
+function managedRewardTargetOptions(type, selected){
+  if(type === 'ITEM') return (rewardCatalog.items || []).map(row =>
+    `<option value="${esc(row.key)}" ${row.key===selected?'selected':''}>${esc(row.name)}｜${esc(row.key)}</option>`
+  ).join('') || '<option value="">目前沒有可用道具</option>';
+  if(type === 'CARD') return (rewardCatalog.cards || cardRows || []).map(row => {
+    const name = row.name || '';
+    return `<option value="${esc(name)}" ${name===selected?'selected':''}>${esc(name)}｜${esc(row.rarity || '')}</option>`;
+  }).join('') || '<option value="">目前沒有卡牌</option>';
+  return '<option value="">此類型不需指定內容</option>';
+}
+
+function renderManagedRewardEditor(containerId, prefix, rewards, includeChance){
+  const box = $(containerId); if(!box) return;
+  const source = Array.isArray(rewards) ? rewards.slice(0,5) : [];
+  while(source.length < 5) source.push({});
+  box.innerHTML = source.map((row,i) => {
+    const type = row.rewardType || row.reward_type || '';
+    const target = row.cardName || row.card_name || row.itemKey || '';
+    const amount = Number(row.rewardValue ?? row.reward_value ?? 1) || 1;
+    const chance = Number(row.dropChance ?? row.drop_chance ?? 100);
+    return `<div class="row3" style="align-items:end;border:1px solid #333;border-radius:10px;padding:8px;margin:7px 0;">
+      <div><label>第 ${i+1} 項內容</label><select id="${prefix}Type${i}" onchange="syncManagedRewardTarget('${prefix}',${i})">${managedRewardTypeOptions(type)}</select></div>
+      <div><label>道具／指定卡牌</label><select id="${prefix}Target${i}" ${type==='ITEM'||type==='CARD'?'':'disabled'}>${managedRewardTargetOptions(type,target)}</select></div>
+      <div><label>數量${includeChance?'／掉落率':''}</label><div style="display:flex;gap:6px"><input id="${prefix}Amount${i}" type="number" min="1" value="${amount}">${includeChance?`<input id="${prefix}Chance${i}" type="number" min="0" max="100" value="${Number.isFinite(chance)?chance:100}" title="掉落率 %">`:''}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function syncManagedRewardTarget(prefix, index){
+  const typeEl = $(`${prefix}Type${index}`), targetEl = $(`${prefix}Target${index}`);
+  if(!typeEl || !targetEl) return;
+  const type = typeEl.value;
+  targetEl.innerHTML = managedRewardTargetOptions(type, '');
+  targetEl.disabled = type !== 'ITEM' && type !== 'CARD';
+}
+
+function readManagedRewards(prefix, includeChance){
+  const rewards = [];
+  for(let i=0;i<5;i+=1){
+    const type = ($(`${prefix}Type${i}`)||{}).value || '';
+    if(!type) continue;
+    const target = ($(`${prefix}Target${i}`)||{}).value || '';
+    const amount = Number(($(`${prefix}Amount${i}`)||{}).value || 0);
+    if(amount < 1) throw new Error(`第 ${i+1} 項獎勵數量至少為 1。`);
+    const row = {rewardType:type,rewardValue:amount,cardName:target,sortOrder:(i+1)*10};
+    if(includeChance) row.dropChance = Math.min(100,Math.max(0,Number(($(`${prefix}Chance${i}`)||{}).value || 0)));
+    rewards.push(row);
+  }
+  if(!rewards.length) throw new Error('請至少設定 1 項獎勵。');
+  return rewards;
+}
 
 async function rpc(method, args=[], auth=true){
   const headers = {'Content-Type':'application/json'};
@@ -929,23 +1041,32 @@ async function saveGachaPoolCards(){
 async function loadStageAdmin(){
   try{
     if(!cardRows.length) await loadCards(false);
+    await loadRewardCatalog();
     syncRedeemCardOptions();
-    const [battleChapters, boss, chapters, rpg] = await Promise.all([rpc('adminListBattleChapters', []), rpc('adminListBossStages', []), rpc('adminListRpgChapters', []), rpc('adminListRpgDungeons', [])]);
+    const [battleChapters, boss, chapters, rpg, demonChapters, demonStages] = await Promise.all([rpc('adminListBattleChapters', []), rpc('adminListBossStages', []), rpc('adminListRpgChapters', []), rpc('adminListRpgDungeons', []), rpc('adminListDemonChapters', []), rpc('adminListDemonStages', [])]);
     battleChapterRows = battleChapters.rows || [];
     bossStageRows = boss.rows || [];
     rpgChapterRows = chapters.rows || [];
     rpgDungeonRows = rpg.rows || [];
+    demonChapterRows = demonChapters.rows || [];
+    demonStageRows = demonStages.rows || [];
     renderBattleChapterSelect();
     renderBattleChapters();
     renderBossStages();
     renderRpgChapterSelect();
     renderRpgChapters();
     renderRpgDungeons();
+    renderDemonChapterSelect();
+    renderDemonChapters();
+    renderDemonStages();
+    if(!$('demonRewardEditor').children.length) renderManagedRewardEditor('demonRewardEditor','demonReward',[{rewardType:'POINTS',rewardValue:300,dropChance:100},{rewardType:'ENERGY',rewardValue:150,dropChance:100}],true);
     msg('battleChapterMsg', `已載入 ${battleChapterRows.length} 個爭霸戰章節`, true);
     msg('bossStageMsg', `已載入 ${bossStageRows.length} 個爭霸戰關卡`, true);
     msg('rpgChapterMsg', `已載入 ${rpgChapterRows.length} 個遠征章節`, true);
     msg('rpgStageMsg', `已載入 ${rpgDungeonRows.length} 個遠征關卡`, true);
-  }catch(e){ msg('battleChapterMsg', e.message); msg('bossStageMsg', e.message); msg('rpgChapterMsg', e.message); msg('rpgStageMsg', e.message); }
+    msg('demonChapterMsg', `已載入 ${demonChapterRows.length} 個魔王章節`, true);
+    msg('demonStageMsg', `已載入 ${demonStageRows.length} 個魔王關卡`, true);
+  }catch(e){ msg('battleChapterMsg', e.message); msg('bossStageMsg', e.message); msg('rpgChapterMsg', e.message); msg('rpgStageMsg', e.message); msg('demonChapterMsg', e.message); msg('demonStageMsg', e.message); }
 }
 
 
@@ -1192,11 +1313,71 @@ async function toggleRpgDungeon(i){
 }
 
 
+function renderDemonChapterSelect(){
+  const sel = $('demonStageChapter'); if(!sel) return;
+  sel.innerHTML = (demonChapterRows || []).map(c => `<option value="${esc(c.key)}">${esc(c.name)}｜${esc(c.key)}</option>`).join('') || '<option value="">請先新增章節</option>';
+}
+function clearDemonChapterForm(){
+  ['demonChapterKey','demonChapterName','demonChapterDesc'].forEach(id => { if($(id)) $(id).value=''; });
+  $('demonChapterSort').value=10; $('demonChapterActive').value='1';
+}
+function renderDemonChapters(){
+  if(!$('demonChaptersTable')) return;
+  $('demonChaptersTable').innerHTML = `<table><thead><tr><th>章節</th><th>描述</th><th>關卡數</th><th>狀態</th><th>操作</th></tr></thead><tbody>` +
+    (demonChapterRows || []).map((c,i)=>`<tr><td><b>${esc(c.name)}</b><br><span class="muted">${esc(c.key)}｜排序 ${fmt(c.sortOrder)}</span></td><td>${esc(c.description||'')}</td><td>${fmt(c.stageCount)}</td><td>${c.isActive?'啟用':'停用'}</td><td><button class="primary" onclick="editDemonChapter(${i})">載入編輯</button><br><button class="${c.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleDemonChapter(${i})">${c.isActive?'停用':'啟用'}</button></td></tr>`).join('') + '</tbody></table>';
+}
+function editDemonChapter(i){
+  const c=demonChapterRows[i]; if(!c)return;
+  $('demonChapterKey').value=c.key||''; $('demonChapterName').value=c.name||''; $('demonChapterDesc').value=c.description||''; $('demonChapterSort').value=c.sortOrder||0; $('demonChapterActive').value=c.isActive?'1':'0';
+  $('demonChapterName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function saveDemonChapter(){
+  try{
+    const payload={key:$('demonChapterKey').value.trim(),name:$('demonChapterName').value.trim(),description:$('demonChapterDesc').value.trim(),sortOrder:$('demonChapterSort').value,isActive:$('demonChapterActive').value==='1'};
+    if(!payload.name){msg('demonChapterMsg','請輸入魔王章節名稱');return;}
+    const data=await rpc('adminUpsertDemonChapter',[payload]); msg('demonChapterMsg',data.msg,true); clearDemonChapterForm(); await loadStageAdmin();
+  }catch(e){msg('demonChapterMsg',e.message);}
+}
+async function toggleDemonChapter(i){
+  const c=demonChapterRows[i]; if(!c)return;
+  if(!confirm(`確定要${c.isActive?'停用':'啟用'}「${c.name}」？`))return;
+  try{const data=await rpc('adminSetDemonChapterActive',[c.key,!c.isActive]);msg('demonChapterMsg',data.msg,true);await loadStageAdmin();}catch(e){msg('demonChapterMsg',e.message);}
+}
+function clearDemonStageForm(){
+  ['demonStageKey','demonStageName','demonStageDesc'].forEach(id=>{if($(id))$(id).value='';});
+  $('demonStageOrder').value=10; $('demonBossPower').value=5000; $('demonDifficulty').value='NORMAL'; $('demonStageActive').value='1';
+  renderManagedRewardEditor('demonRewardEditor','demonReward',[{rewardType:'POINTS',rewardValue:300,dropChance:100},{rewardType:'ENERGY',rewardValue:150,dropChance:100}],true);
+}
+function renderDemonStages(){
+  if(!$('demonStagesTable'))return;
+  $('demonStagesTable').innerHTML=`<table><thead><tr><th>章節／關卡</th><th>魔王</th><th>難度</th><th>掉落獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>`+
+    (demonStageRows||[]).map((s,i)=>`<tr><td><b>${esc(s.name)}</b><br><span class="muted">${esc(s.chapterName||'')}｜${esc(s.key)}｜排序 ${fmt(s.stageOrder)}</span><br><span class="muted">${esc(s.description||'')}</span></td><td>${esc(s.bossCardName)}<br>戰力 ${fmt(s.bossPower)}</td><td>${esc(s.difficultyLabel||s.difficulty)}</td><td>${(s.rewards||[]).map(r=>`${esc(r.rewardText||r.rewardType)}（${fmt(r.dropChance)}%）`).join('<br>')||'未設定'}</td><td>${s.isActive?'啟用':'停用'}</td><td><button class="primary" onclick="editDemonStage(${i})">載入編輯</button><br><button class="${s.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleDemonStage(${i})">${s.isActive?'停用':'啟用'}</button></td></tr>`).join('')+'</tbody></table>';
+}
+function editDemonStage(i){
+  const s=demonStageRows[i];if(!s)return;
+  $('demonStageKey').value=s.key||'';$('demonStageChapter').value=s.chapterKey||'';$('demonStageOrder').value=s.stageOrder||0;$('demonStageName').value=s.name||'';$('demonStageDesc').value=s.description||'';$('demonBossCard').value=s.bossCardName||'';$('demonBossPower').value=s.bossPower||1;$('demonDifficulty').value=s.difficulty||'NORMAL';$('demonStageActive').value=s.isActive?'1':'0';
+  renderManagedRewardEditor('demonRewardEditor','demonReward',s.rewards||[],true);$('demonStageName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function saveDemonStage(){
+  try{
+    const payload={key:$('demonStageKey').value.trim(),chapterKey:$('demonStageChapter').value,stageOrder:$('demonStageOrder').value,name:$('demonStageName').value.trim(),description:$('demonStageDesc').value.trim(),bossCardName:$('demonBossCard').value,bossPower:$('demonBossPower').value,difficulty:$('demonDifficulty').value,isActive:$('demonStageActive').value==='1',rewards:readManagedRewards('demonReward',true)};
+    if(!payload.name||!payload.bossCardName){msg('demonStageMsg','請輸入關卡名稱並指定魔王卡牌');return;}
+    const data=await rpc('adminUpsertDemonStage',[payload]);msg('demonStageMsg',data.msg,true);clearDemonStageForm();await loadStageAdmin();
+  }catch(e){msg('demonStageMsg',e.message);}
+}
+async function toggleDemonStage(i){
+  const s=demonStageRows[i];if(!s)return;
+  if(!confirm(`確定要${s.isActive?'停用':'啟用'}「${s.name}」？`))return;
+  try{const data=await rpc('adminSetDemonStageActive',[s.key,!s.isActive]);msg('demonStageMsg',data.msg,true);await loadStageAdmin();}catch(e){msg('demonStageMsg',e.message);}
+}
+
 async function loadShopAdmin(){
   try{
+    await loadRewardCatalog();
     const data = await rpc('adminListShopItems', []);
     shopItemRows = data.rows || [];
     renderShopItems();
+    if(!$('shopRewardEditor').children.length) renderManagedRewardEditor('shopRewardEditor','shopReward',[{rewardType:'BATTLE_TICKET',rewardValue:5}],false);
     msg('shopMsg', `已載入 ${shopItemRows.length} 個商品`, true);
   }catch(e){ msg('shopMsg', e.message); }
 }
@@ -1228,7 +1409,7 @@ function clearShopForm(){
   if($('shopSortOrder')) $('shopSortOrder').value=10;
   if($('shopActive')) $('shopActive').value='1';
   if($('shopPaymentEnabled')) $('shopPaymentEnabled').value='0';
-  if($('shopRewards')) $('shopRewards').value='[{"rewardType":"BATTLE_TICKET","rewardValue":5}]';
+  renderManagedRewardEditor('shopRewardEditor','shopReward',[{rewardType:'BATTLE_TICKET',rewardValue:5}],false);
 }
 function editShopItem(i){
   const it = shopItemRows[i]; if(!it) return;
@@ -1244,13 +1425,12 @@ function editShopItem(i){
   $('shopPaymentEnabled').value = it.isPaymentEnabled ? '1' : '0';
   $('shopTag').value = it.tag || '';
   $('shopDescription').value = it.description || '';
-  $('shopRewards').value = JSON.stringify((it.rewards || []).map(r => ({rewardType:r.rewardType, rewardValue:r.rewardValue, cardName:r.cardName || ''})), null, 2);
+  renderManagedRewardEditor('shopRewardEditor','shopReward',it.rewards || [],false);
   $('shopProductName').scrollIntoView({behavior:'smooth',block:'center'});
 }
 async function saveShopItem(){
   try{
-    let rewards=[];
-    try{ rewards = JSON.parse($('shopRewards').value || '[]'); }catch(e){ msg('shopMsg','獎勵 JSON 格式錯誤：' + e.message); return; }
+    const rewards = readManagedRewards('shopReward',false);
     const payload = {productKey:$('shopProductKey').value.trim(), name:$('shopProductName').value.trim(), category:$('shopCategory').value, description:$('shopDescription').value.trim(), priceType:$('shopPriceType').value, priceAmount:$('shopPriceAmount').value, limitType:$('shopLimitType').value, limitCount:$('shopLimitCount').value, isActive:$('shopActive').value==='1', isPaymentEnabled:$('shopPaymentEnabled').value==='1', sortOrder:$('shopSortOrder').value, tag:$('shopTag').value.trim(), rewards};
     if(!payload.name){ msg('shopMsg','請輸入商品名稱'); return; }
     const data = await rpc('adminUpsertShopItem', [payload]);
@@ -1282,6 +1462,7 @@ function syncRedeemCardOptions(){
   if($('bossStageCard')) $('bossStageCard').innerHTML = options;
   if($('rpgBossCard')) $('rpgBossCard').innerHTML = options;
   if($('rpgRewardCard')) $('rpgRewardCard').innerHTML = '<option value="">不指定</option>' + options;
+  if($('demonBossCard')) $('demonBossCard').innerHTML = options;
 }
 
 async function loadRedeemCodes(){

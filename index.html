@@ -6,8 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7488995057784607"
-     crossorigin="anonymous"></script>
   <title>T-LO 潮流盲盒開榜現場</title>
   <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
   <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -1811,6 +1809,9 @@
       <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">使用遠征異世界已儲存的 3 張卡牌，再選擇 1 位好友代表卡協力出戰。每日免費 5 次，之後每次自動消耗 1 張魔王挑戰卷。</div>
       <div class="collection-stat" id="demon-daily-status">今日挑戰：讀取中...</div>
       <div class="collection-stat" id="demon-team-status">隊伍戰力：讀取中...</div>
+      <label style="display:block;color:#ff7777;font-size:13px;font-weight:900;margin:10px 0 6px;">選擇魔王章節／關卡</label>
+      <select id="demon-stage-select" class="player-deck-select" onchange="renderDemonStagePreview()"></select>
+      <div class="collection-stat" id="demon-stage-status">魔王關卡：讀取中...</div>
       <label style="display:block;color:#00fff0;font-size:13px;font-weight:900;margin:10px 0 6px;">選擇好友代表卡</label>
       <select id="demon-friend-select" class="player-deck-select" onchange="renderDemonPartyPreview()"></select>
       <div id="demon-party-preview" class="rpg-party-preview" style="margin-top:10px;"></div>
@@ -5355,6 +5356,7 @@ function showCollectionHistory() {
       const dailyEl = document.getElementById('demon-daily-status');
       const teamEl = document.getElementById('demon-team-status');
       const select = document.getElementById('demon-friend-select');
+      const stageSelect = document.getElementById('demon-stage-select');
       const msg = document.getElementById('demon-msg');
       if (dailyEl) dailyEl.innerText = `今日免費剩餘：${Number(daily.freeRemaining || 0)} / ${Number(daily.freeLimit || 5)}｜魔王挑戰卷：${Number(daily.ticketCount || 0)}`;
       if (teamEl) teamEl.innerText = `自己的遠征隊伍：${(res.party || []).length} / 3 張｜戰力 ${Number(res.ownTeamPower || 0).toLocaleString()}`;
@@ -5366,18 +5368,40 @@ function showCollectionHistory() {
         }).join('');
         if (friends.some(function(friend) { return friend.uid === oldValue; })) select.value = oldValue;
       }
+      if (stageSelect) {
+        const oldStage = stageSelect.value;
+        stageSelect.innerHTML = (res.chapters || []).map(function(chapter) {
+          return `<optgroup label="${escapeHtml(chapter.name || chapter.key || '魔王挑戰')}">${(chapter.stages || []).map(function(stage) {
+            return `<option value="${escapeHtml(stage.key || '')}">${escapeHtml(stage.name || '')}｜${escapeHtml(stage.difficultyLabel || '')}｜戰力 ${Number(stage.bossPower || 0).toLocaleString()}</option>`;
+          }).join('')}</optgroup>`;
+        }).join('');
+        const stageKeys = (res.stages || []).map(function(stage) { return stage.key; });
+        stageSelect.value = stageKeys.includes(oldStage) ? oldStage : (res.selectedStageKey || stageKeys[0] || '');
+      }
+      renderDemonStagePreview();
       renderDemonPartyPreview();
       const logs = document.getElementById('demon-log-list');
       if (logs) {
         logs.innerHTML = (res.logs || []).map(function(row) {
-          return `<div class="pvp-log-item"><b class="${row.result === 'WIN' ? 'pvp-win' : 'pvp-lose'}">${escapeHtml(row.result || '')}</b>｜好友 ${escapeHtml(row.friendUid || '')}（${escapeHtml(row.friendCardName || '')}）｜我方 ${Number(row.teamPower || 0).toLocaleString()} / 魔王 ${Number(row.enemyPower || 0).toLocaleString()}<br><span style="color:#aaa;">${escapeHtml(row.rewardSummary || '')}${row.usedTicket ? '｜已消耗魔王挑戰卷' : ''}｜${escapeHtml(row.createdAt || '')}</span></div>`;
+          return `<div class="pvp-log-item"><b class="${row.result === 'WIN' ? 'pvp-win' : 'pvp-lose'}">${escapeHtml(row.result || '')}</b>｜${escapeHtml(row.stageName || '魔王挑戰')}（${escapeHtml(row.bossCardName || '魔王')}）｜好友 ${escapeHtml(row.friendUid || '')}<br><span style="color:#aaa;">我方 ${Number(row.teamPower || 0).toLocaleString()} / 魔王 ${Number(row.enemyPower || 0).toLocaleString()}｜${escapeHtml(row.rewardSummary || '')}${row.usedTicket ? '｜已消耗魔王挑戰卷' : ''}｜${escapeHtml(row.createdAt || '')}</span></div>`;
         }).join('') || '<div style="color:#888;">暫無魔王挑戰紀錄。</div>';
       }
-      const canFight = (res.party || []).length === 3 && (res.friends || []).length > 0 && Number(daily.totalAvailable || 0) > 0;
+      const canFight = (res.party || []).length === 3 && (res.friends || []).length > 0 && (res.stages || []).length > 0 && Number(daily.totalAvailable || 0) > 0;
       const btn = document.getElementById('demon-battle-btn');
       if (btn) btn.disabled = !canFight || demonChallengeRunning;
       if (msg) msg.innerHTML = canFight ? '<span style="color:#00fff0;">選擇好友後即可挑戰。</span>' : '<span style="color:#ffdd77;">請先設定完整遠征隊伍、好友代表卡，並確認尚有次數或挑戰卷。</span>';
       scheduleOptimizeTloImages(document.getElementById('demon-challenge-modal'));
+    }
+
+    function renderDemonStagePreview() {
+      const status = document.getElementById('demon-stage-status');
+      const select = document.getElementById('demon-stage-select');
+      if (!status || !latestDemonDashboard) return;
+      const key = select ? select.value : '';
+      const stage = (latestDemonDashboard.stages || []).find(function(row) { return row.key === key; });
+      if (!stage) { status.innerText = '目前沒有啟用中的魔王關卡。'; return; }
+      const rewards = (stage.rewards || []).map(function(row) { return `${row.rewardText || row.rewardType} ${Number(row.dropChance ?? 100)}%`; }).join('、') || '未設定掉落';
+      status.innerText = `${stage.chapterName}｜${stage.name}｜${stage.difficultyLabel}｜魔王 ${stage.bossCardName}｜戰力 ${Number(stage.bossPower || 0).toLocaleString()}｜掉落：${rewards}`;
     }
 
     function renderDemonPartyPreview() {
@@ -5397,8 +5421,11 @@ function showCollectionHistory() {
       if (demonChallengeRunning) return;
       const select = document.getElementById('demon-friend-select');
       const friendUid = select ? select.value : '';
+      const stageSelect = document.getElementById('demon-stage-select');
+      const stageKey = stageSelect ? stageSelect.value : '';
       const msg = document.getElementById('demon-msg');
       if (!friendUid) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請先選擇好友代表卡。</span>'; return; }
+      if (!stageKey) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請先選擇魔王關卡。</span>'; return; }
       demonChallengeRunning = true;
       const btn = document.getElementById('demon-battle-btn');
       if (btn) { btn.disabled = true; btn.innerText = '⚡ 魔王戰鬥演算中...'; }
@@ -5418,9 +5445,9 @@ function showCollectionHistory() {
           bossPower: res.enemyPower,
           playerName: '好友協作隊伍',
           playerImage: first.imageUrl || placeholderBattleImage('協作隊伍', '#123a3a', '#00fff0'),
-          bossName: '終焉魔王',
-          bossImage: placeholderBattleImage('終焉魔王', '#3a1616', '#ff7777'),
-          stageName: '魔王挑戰'
+          bossName: res.bossName || '魔王',
+          bossImage: res.bossImageUrl || placeholderBattleImage(res.bossName || '魔王', '#3a1616', '#ff7777'),
+          stageName: res.stageName || '魔王挑戰'
         });
         demonChallengeRunning = false;
         if (btn) { btn.disabled = false; btn.innerText = '👿 開始魔王挑戰'; }
@@ -5431,7 +5458,7 @@ function showCollectionHistory() {
         demonChallengeRunning = false;
         if (btn) { btn.disabled = false; btn.innerText = '👿 開始魔王挑戰'; }
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">挑戰失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
-      }).executeDemonChallenge(playerUID, friendUid);
+      }).executeDemonChallenge(playerUID, friendUid, stageKey);
     }
 
     // ─── 遠征資料同步修正：角色升級 / 升星 / 技能強化後，立刻刷新編隊資料 ───
