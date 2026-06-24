@@ -49,6 +49,9 @@
     .hide{display:none!important}
     .badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#252535;color:#ddd;font-size:11px;margin:1px}
     .ok{color:#00ff90}.bad{color:#ff7777}.cyan{color:#00fff0}.yellow{color:#ffc107}
+    .admin-card-thumb,.admin-card-preview{display:block;box-sizing:border-box;aspect-ratio:2/3;object-fit:contain;object-position:center;background:#090909;padding:2px;border:1px solid #444}
+    .admin-card-thumb{width:56px;border-radius:8px}
+    .admin-card-preview{width:min(180px,100%);margin:0 auto;border-radius:16px;padding:6px}
     @media(max-width:900px){.grid,.split,.row,.row3{grid-template-columns:1fr}.statgrid{grid-template-columns:repeat(2,1fr)}.top{display:block}.top button{margin-top:8px;width:100%}}
   </style>
 </head>
@@ -711,7 +714,7 @@ function renderCardsTable(){
   $('cardsTable').innerHTML = `<table><thead><tr><th>卡片</th><th>圖片</th><th>稀有度</th><th>權重</th><th>可抽</th><th>操作</th></tr></thead><tbody>` +
     cardRows.map((c,i)=>`<tr>
       <td><b>${esc(c.name)}</b><br><span class="muted">ID：${esc(c.id||'')}</span><br><span class="muted">排序：${fmt(c.sortOrder)}</span></td>
-      <td>${c.imageUrl ? `<img src="${esc(c.imageUrl)}" style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid #333" onerror="this.style.display='none'">` : '<span class="muted">無圖</span>'}</td>
+      <td>${c.imageUrl ? `<img src="${esc(c.imageUrl)}" class="admin-card-thumb" onerror="this.style.display='none'">` : '<span class="muted">無圖</span>'}</td>
       <td>${esc(c.rarity)}</td>
       <td><input id="cw${i}" type="number" min="0" value="${esc(c.weight)}"></td>
       <td><select id="cd${i}"><option value="1" ${c.isDrawable?'selected':''}>可抽</option><option value="0" ${!c.isDrawable?'selected':''}>不可抽</option></select></td>
@@ -722,7 +725,7 @@ function renderCardsTable(){
 function previewNewCardImage(){
   const url = $('newCardImage') ? $('newCardImage').value.trim() : '';
   if(!url){ $('cardPreview').innerHTML = '<span class="muted">請先填入圖片網址 / 路徑。</span>'; return; }
-  $('cardPreview').innerHTML = `<img src="${esc(url)}" style="max-width:180px;width:100%;border-radius:16px;border:1px solid #444;background:#111;padding:6px" onerror="this.replaceWith(document.createTextNode('圖片載入失敗，請檢查路徑或大小寫。'))">`;
+  $('cardPreview').innerHTML = `<img src="${esc(url)}" class="admin-card-preview" onerror="this.replaceWith(document.createTextNode('圖片載入失敗，請檢查路徑或大小寫。'))">`;
 }
 
 function clearCardForm(){
