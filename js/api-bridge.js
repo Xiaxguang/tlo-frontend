@@ -64,6 +64,7 @@
     "getSocialDashboard",
     "getPvpDashboard",
     "getTrainingDashboard",
+    "getLeaderboardDashboard",
     "getStarShopDashboard",
     "getCharacterGrowthDashboard",
     "getMissionDashboard",

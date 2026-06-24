@@ -1588,8 +1588,15 @@
         <div id="training-quiz-msg" style="margin-top:8px; font-size:13px; font-weight:bold; text-align:center;"></div>
       </div>
 
-      <div class="modal-h3" style="font-size:16px; margin-top:15px;">🏆 訓練排行榜</div>
+      <div class="modal-h3" style="font-size:16px; margin-top:15px;">🏆 玩家排行榜</div>
+      <div class="tabs" style="display:flex;gap:7px;margin:8px 0 10px;overflow-x:auto;">
+        <button class="tab active" id="leaderboard-tab-training" onclick="switchLeaderboardView('training')">訓練總分榜</button>
+        <button class="tab" id="leaderboard-tab-battle" onclick="switchLeaderboardView('battle')">爭霸戰通關榜</button>
+        <button class="tab" id="leaderboard-tab-power" onclick="switchLeaderboardView('power')">角色戰力榜</button>
+      </div>
       <div id="training-leaderboard-list">正在讀取排行榜...</div>
+      <div id="battle-leaderboard-list" style="display:none;">正在讀取通關榜...</div>
+      <div id="power-leaderboard-list" style="display:none;">正在讀取戰力榜...</div>
     </div>
   </div>
 
@@ -4722,7 +4729,63 @@ function showCollectionHistory() {
         renderTrainingProfile(res.profile);
         renderTrainingQuiz(res.quiz);
         renderTrainingLeaderboard(res.leaderboard || []);
+        loadExtendedLeaderboards();
       }).getTrainingDashboard(playerUID);
+    }
+
+    function switchLeaderboardView(view) {
+      ['training','battle','power'].forEach(function(key) {
+        const panel = document.getElementById(key === 'training' ? 'training-leaderboard-list' : key + '-leaderboard-list');
+        const tab = document.getElementById('leaderboard-tab-' + key);
+        if (panel) panel.style.display = key === view ? 'block' : 'none';
+        if (tab) tab.classList.toggle('active', key === view);
+      });
+    }
+
+    function loadExtendedLeaderboards() {
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) return;
+        renderBattleProgressLeaderboard(res.battleProgress || []);
+        renderCharacterPowerLeaderboard(res.characterPower || []);
+      }).withFailureHandler(function(err) {
+        const text = escapeHtml(err && err.message ? err.message : '排行榜讀取失敗');
+        const battle = document.getElementById('battle-leaderboard-list');
+        const power = document.getElementById('power-leaderboard-list');
+        if (battle) battle.innerHTML = `<div style="color:#ff7777;text-align:center;">${text}</div>`;
+        if (power) power.innerHTML = `<div style="color:#ff7777;text-align:center;">${text}</div>`;
+      }).getLeaderboardDashboard(playerUID);
+    }
+
+    function leaderboardRowHtml(row, detail, value) {
+      const ownStyle = row.isSelf ? 'border:1px solid #00fff0;background:rgba(0,255,240,.08);' : '';
+      const separator = row.isSelf && Number(row.rank || 0) > 10 ? '<div style="text-align:center;color:#00fff0;font-size:11px;margin:7px 0;">— 我的目前排名 —</div>' : '';
+      return separator + `<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px;${ownStyle}">
+        <div><b style="color:#ffdd77;">#${Number(row.rank || 0)}</b> <span class="hist-uid">${escapeHtml(row.displayName || row.uid || '')}</span>${row.isSelf ? ' <span style="color:#00fff0;font-size:11px;">（我）</span>' : ''}<br><span style="color:#aaa;font-size:12px;">${detail}</span></div>
+        <div style="color:#fff;font-weight:bold;text-align:right;">${value}</div>
+      </div>`;
+    }
+
+    function renderBattleProgressLeaderboard(rows) {
+      const box = document.getElementById('battle-leaderboard-list'); if (!box) return;
+      if (!rows.length) { box.innerHTML = '<div style="text-align:center;color:#aaa;">目前還沒有通關資料。</div>'; return; }
+      box.innerHTML = rows.map(function(row) {
+        return leaderboardRowHtml(row, `目前關卡 ${Number(row.currentStageId || 1)}`, `爭霸戰 ${Number(row.clearedStages || 0)} 關`);
+      }).join('');
+    }
+
+    function compactBattlePower(value) {
+      const power = Math.max(0, Number(value || 0));
+      if (power < 10000) return power.toLocaleString();
+      const w = power / 10000;
+      return (w >= 100 || Math.abs(w - Math.round(w)) < 0.05 ? Math.round(w).toString() : w.toFixed(1)) + 'W';
+    }
+
+    function renderCharacterPowerLeaderboard(rows) {
+      const box = document.getElementById('power-leaderboard-list'); if (!box) return;
+      if (!rows.length) { box.innerHTML = '<div style="text-align:center;color:#aaa;">目前還沒有角色戰力資料。</div>'; return; }
+      box.innerHTML = rows.map(function(row) {
+        return leaderboardRowHtml(row, escapeHtml(row.cardName || '尚未持有角色'), `${compactBattlePower(row.power)} 戰力`);
+      }).join('');
     }
 
     function renderTrainingProfile(profile) {
