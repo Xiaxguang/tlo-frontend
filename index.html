@@ -245,6 +245,14 @@
     .lock-icon { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); font-size: 18px; color: rgba(255,255,255,0.4); z-index: 5; pointer-events: none; }
     .collection-stat { font-size: 13px; color: #ff007f; font-weight: bold; text-align: center; margin-bottom: 10px; background: #111; padding: 8px; border-radius: 6px; border: 1px solid #333; }
 
+    .collection-filter-box { background: rgba(0,255,240,.055); border: 1px solid rgba(0,255,240,.25); border-radius: 14px; padding: 10px; margin: 8px 0 12px; }
+    .collection-filter-title { color: #00fff0; font-size: 12px; font-weight: 900; margin-bottom: 7px; text-align: left; }
+    .collection-filter-tabs { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+    .collection-filter-tab { flex: 0 0 auto; border: 1px solid #444; background: #171717; color: #aaa; border-radius: 999px; padding: 8px 10px; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; }
+    .collection-filter-tab.active { border-color: #00fff0; background: linear-gradient(45deg,#00fff0,#00ff7f); color: #061214; box-shadow: 0 0 12px rgba(0,255,240,.24); }
+    .collection-filter-hint { color: #aaa; font-size: 11px; line-height: 1.45; margin-top: 7px; text-align: left; }
+    .collection-pool-empty { grid-column: 1 / -1; color: #aaa; text-align: center; font-size: 13px; line-height: 1.6; padding: 18px 8px; }
+
     .battle-vs-box { background: #111; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #444; }
     .power-display { font-size: 24px; font-weight: 900; letter-spacing: 1px; margin: 10px 0; text-shadow: 0 0 10px rgba(0,255,240,0.5); }
     
@@ -1452,6 +1460,13 @@
       <button onclick="showCollectionHistory()" class="btn-collection" style="margin: 0 0 15px 0;">📜 查看我的抽卡歷史清單</button>
       <div class="modal-h3">🎴 我的潮流卡盒 (集卡冊)</div>
       <div class="collection-stat" id="collection-progress-text">讀取收集進度中...</div>
+      <div class="collection-filter-box">
+        <div class="collection-filter-title">卡盒顯示方式</div>
+        <div class="collection-filter-tabs" id="collection-pool-tabs">
+          <button type="button" class="collection-filter-tab active" onclick="selectCollectionPool('all')">全部卡牌</button>
+        </div>
+        <div class="collection-filter-hint" id="collection-filter-hint">可依照 GM 目前開放的卡池，切換查看各卡池的收集進度。</div>
+      </div>
       <div class="collection-grid" id="collection-grid-container"></div>
     </div>
   </div>
@@ -1779,6 +1794,8 @@
     let activeShopCategory = 'ENERGY';
     let gachaPools = [];
     let selectedGachaPoolKey = 'permanent';
+    let selectedCollectionPoolKey = 'all';
+    let latestCollectionResponse = null;
 
     loadPublicSettings();
 
@@ -2126,53 +2143,133 @@
       });
     }
 
-    function openCollectionModal() { document.getElementById('collection-modal').style.display = 'flex'; renderCollectionWall(); }
+    function getCollectionPools() {
+      return (gachaPools || []).filter(function(pool) {
+        return pool && pool.key && pool.isActive !== false && pool.isHidden !== true;
+      });
+    }
 
-    function renderCollectionWall() {
-  const container = document.getElementById('collection-grid-container');
-  const progressText = document.getElementById('collection-progress-text');
-  if (!container) return;
+    function getSelectedCollectionPool() {
+      if (selectedCollectionPoolKey === 'all') return null;
+      return getCollectionPools().find(function(pool) { return String(pool.key) === String(selectedCollectionPoolKey); }) || null;
+    }
 
-  container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#aaa; font-size:13px;">正在連線讀取最新卡盒資料...</p>';
+    function renderCollectionPoolTabs() {
+      const tabs = document.getElementById('collection-pool-tabs');
+      const hint = document.getElementById('collection-filter-hint');
+      if (!tabs) return;
 
-  google.script.run.withSuccessHandler(function(response) {
-    if (response && response.success) {
-      registerCardImages(response);
-      updateCardCacheFromResponse(response);
-
-      const ownedMap = response.ownedCardsMap || {};
-      const uCount = Number(response.uniqueCount || 0);
-
-      let cardList = [];
-
-      if (Array.isArray(response.cards) && response.cards.length) {
-        cardList = response.cards.map(function(card) {
-          return {
-            name: card.name || card.cardName || card.npcName || '',
-            rarity: card.rarity || '',
-            count: Number(card.count || card.quantity || 0),
-            imageUrl: card.imageUrl || card.image_url || '',
-            sortOrder: Number(card.sortOrder || card.sort_order || 9999)
-          };
-        });
-      } else {
-        const fallbackNames = getDynamicCardPool().length ? getDynamicCardPool() : Object.keys(ownedMap);
-        cardList = fallbackNames.map(function(cardName) {
-          return {
-            name: cardName,
-            rarity: getKnownCardRarity(cardName),
-            count: Number(ownedMap[cardName] || 0),
-            imageUrl: getRawCardImageUrl(cardName),
-            sortOrder: 9999
-          };
-        });
+      const pools = getCollectionPools();
+      if (selectedCollectionPoolKey !== 'all' && !pools.some(function(pool) { return String(pool.key) === String(selectedCollectionPoolKey); })) {
+        selectedCollectionPoolKey = 'all';
       }
 
-      let html = '';
+      let html = `<button type="button" class="collection-filter-tab ${selectedCollectionPoolKey === 'all' ? 'active' : ''}" onclick="selectCollectionPool('all')">全部卡牌</button>`;
+      pools.forEach(function(pool) {
+        const active = String(pool.key) === String(selectedCollectionPoolKey);
+        const label = (pool.name || pool.key || '未命名卡池') + (pool.isDefault ? '｜常駐' : '');
+        const poolKeyArg = encodeURIComponent(String(pool.key));
+        html += `<button type="button" class="collection-filter-tab ${active ? 'active' : ''}" onclick="selectCollectionPool(decodeURIComponent('${poolKeyArg}'))">${escapeHtml(label)}</button>`;
+      });
+      tabs.innerHTML = html;
 
-      cardList.forEach(function(card) {
-        const cardName = card.name;
-        const count = Number(card.count || ownedMap[cardName] || 0);
+      if (hint) {
+        hint.innerText = pools.length
+          ? '可依照 GM 目前開放的卡池，切換查看各卡池的持有狀態。'
+          : '尚未讀到開放卡池清單，會先顯示全部卡牌。';
+      }
+    }
+
+    function ensureCollectionPoolsLoaded(callback) {
+      if (gachaPools.length) {
+        renderCollectionPoolTabs();
+        if (typeof callback === 'function') callback();
+        return;
+      }
+
+      const tabs = document.getElementById('collection-pool-tabs');
+      if (tabs) tabs.innerHTML = '<button type="button" class="collection-filter-tab active">讀取卡池中...</button>';
+
+      readRpcForCurrentViewer('getGachaPools', [playerUID], 'getGachaPools', [])
+        .then(function(response) {
+          gachaPools = response && Array.isArray(response.pools) ? response.pools : [];
+          renderCollectionPoolTabs();
+        })
+        .catch(function(err) {
+          const hint = document.getElementById('collection-filter-hint');
+          if (hint) hint.innerText = '卡池清單讀取失敗，先顯示全部卡牌：' + (err && err.message ? err.message : err);
+          renderCollectionPoolTabs();
+        })
+        .finally(function() {
+          if (typeof callback === 'function') callback();
+        });
+    }
+
+    function selectCollectionPool(poolKey) {
+      selectedCollectionPoolKey = poolKey || 'all';
+      renderCollectionPoolTabs();
+      renderCollectionWall();
+    }
+
+    function openCollectionModal() {
+      const modal = document.getElementById('collection-modal');
+      if (modal) modal.style.display = 'flex';
+      renderCollectionPoolTabs();
+      ensureCollectionPoolsLoaded(function() { renderCollectionWall(); });
+    }
+
+    function normalizeCollectionCards(response) {
+      const ownedMap = response.ownedCardsMap || {};
+      if (Array.isArray(response.cards) && response.cards.length) {
+        return response.cards.map(function(card) {
+          const name = card.name || card.cardName || card.npcName || '';
+          return {
+            name: name,
+            cardName: name,
+            npcName: name,
+            rarity: card.rarity || '',
+            count: Number(card.count || card.quantity || ownedMap[name] || 0),
+            quantity: Number(card.count || card.quantity || ownedMap[name] || 0),
+            imageUrl: card.imageUrl || card.image_url || '',
+            image_url: card.imageUrl || card.image_url || '',
+            sortOrder: Number(card.sortOrder || card.sort_order || 9999)
+          };
+        }).filter(function(card) { return !!card.name; });
+      }
+
+      const fallbackNames = getDynamicCardPool().length ? getDynamicCardPool() : Object.keys(ownedMap);
+      return fallbackNames.map(function(cardName) {
+        return {
+          name: cardName,
+          cardName: cardName,
+          npcName: cardName,
+          rarity: getKnownCardRarity(cardName),
+          count: Number(ownedMap[cardName] || 0),
+          quantity: Number(ownedMap[cardName] || 0),
+          imageUrl: getRawCardImageUrl(cardName),
+          image_url: getRawCardImageUrl(cardName),
+          sortOrder: 9999
+        };
+      });
+    }
+
+    function renderCollectionCards(cardList, response, poolInfo) {
+      const container = document.getElementById('collection-grid-container');
+      const progressText = document.getElementById('collection-progress-text');
+      if (!container) return;
+
+      const ownedMap = response.ownedCardsMap || {};
+      const cards = (cardList || []).slice().sort(function(a, b) {
+        const orderA = Number(a.sortOrder || a.sort_order || 9999);
+        const orderB = Number(b.sortOrder || b.sort_order || 9999);
+        if (orderA !== orderB) return orderA - orderB;
+        return String(a.name || '').localeCompare(String(b.name || ''), 'zh-Hant');
+      });
+
+      let html = '';
+      cards.forEach(function(card) {
+        const cardName = card.name || card.cardName || card.npcName || '';
+        const count = Number(card.count || card.quantity || ownedMap[cardName] || 0);
         const isOwned = count > 0;
         const imgUrl = getCardImageUrl(card);
         const badgeHtml = isOwned
@@ -2189,18 +2286,108 @@
         `;
       });
 
+      if (!html) {
+        html = '<div class="collection-pool-empty">目前這個卡池沒有可顯示的卡牌。</div>';
+      }
       container.innerHTML = html;
 
-      const totalCards = Number(response.totalCollectibleCards || response.totalCards || cardList.length || 0);
-      progressText.innerText = `收集進度：${uCount} / ${totalCards} 張 (${Math.round((uCount / Math.max(1, totalCards)) * 100)}%)`;
-      setCollectionSummary(uCount, totalCards);
-    } else {
-      container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#ff7777;">卡盒讀取失敗，請稍後再試。</p>';
+      const ownedCount = poolInfo
+        ? cards.filter(function(card) {
+            const cardName = card.name || card.cardName || card.npcName || '';
+            return Number(card.count || card.quantity || ownedMap[cardName] || 0) > 0;
+          }).length
+        : Number(response.uniqueCount || response.collectionUniqueCount || 0);
+      const totalCards = poolInfo
+        ? cards.length
+        : Number(response.totalCollectibleCards || response.totalCards || cards.length || 0);
+      const percent = Math.round((ownedCount / Math.max(1, totalCards)) * 100);
+      if (progressText) {
+        progressText.innerText = poolInfo
+          ? `「${poolInfo.name || poolInfo.key || '目前卡池'}」收集進度：${ownedCount} / ${totalCards} 張 (${percent}%)`
+          : `全部卡牌收集進度：${ownedCount} / ${totalCards} 張 (${percent}%)`;
+      }
+
+      if (!poolInfo) setCollectionSummary(ownedCount, totalCards);
     }
-  }).withFailureHandler(function(err) {
-    container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#ff7777;">卡盒讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</p>';
-  }).getPlayerCollection(playerUID);
-}
+
+    function renderCollectionPoolCards(response, poolInfo) {
+      const container = document.getElementById('collection-grid-container');
+      if (!container) return;
+      container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#aaa; font-size:13px;">正在讀取此卡池卡牌...</p>';
+
+      readRpcForCurrentViewer(
+        'getCardProbabilityTable',
+        [playerUID, poolInfo.key],
+        'getCardProbabilityTable',
+        ['', poolInfo.key]
+      ).then(function(poolResponse) {
+        if (!poolResponse || !poolResponse.success) {
+          container.innerHTML = '<div class="collection-pool-empty">此卡池資料讀取失敗，請稍後再試。</div>';
+          return;
+        }
+        registerCardImages(poolResponse);
+        updateCardCacheFromResponse(poolResponse);
+
+        const ownedMap = response.ownedCardsMap || {};
+        const allOwnedCards = normalizeCollectionCards(response);
+        const byName = new Map();
+        allOwnedCards.forEach(function(card) {
+          const name = card.name || card.cardName || card.npcName || '';
+          if (name) byName.set(name, card);
+        });
+
+        const poolCards = Array.isArray(poolResponse.cards) ? poolResponse.cards : [];
+        const mergedCards = poolCards.map(function(poolCard, index) {
+          const name = poolCard.name || poolCard.cardName || poolCard.npcName || '';
+          const owned = byName.get(name) || {};
+          const count = Number(owned.count || owned.quantity || ownedMap[name] || 0);
+          return {
+            name: name,
+            cardName: name,
+            npcName: name,
+            rarity: poolCard.rarity || owned.rarity || '',
+            count: count,
+            quantity: count,
+            imageUrl: poolCard.imageUrl || poolCard.image_url || owned.imageUrl || owned.image_url || '',
+            image_url: poolCard.imageUrl || poolCard.image_url || owned.imageUrl || owned.image_url || '',
+            sortOrder: Number(poolCard.sortOrder || poolCard.sort_order || owned.sortOrder || owned.sort_order || index + 1)
+          };
+        }).filter(function(card) { return !!card.name; });
+
+        renderCollectionCards(mergedCards, response, poolResponse.pool || poolInfo);
+      }).catch(function(err) {
+        container.innerHTML = '<div class="collection-pool-empty" style="color:#ff7777;">卡池資料讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</div>';
+      });
+    }
+
+    function renderCollectionWall() {
+      const container = document.getElementById('collection-grid-container');
+      const progressText = document.getElementById('collection-progress-text');
+      if (!container) return;
+
+      renderCollectionPoolTabs();
+      container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#aaa; font-size:13px;">正在連線讀取最新卡盒資料...</p>';
+      if (progressText) progressText.innerText = '讀取收集進度中...';
+
+      google.script.run.withSuccessHandler(function(response) {
+        latestCollectionResponse = response;
+        if (response && response.success) {
+          registerCardImages(response);
+          updateCardCacheFromResponse(response);
+
+          const selectedPool = getSelectedCollectionPool();
+          if (selectedPool) {
+            renderCollectionPoolCards(response, selectedPool);
+          } else {
+            renderCollectionCards(normalizeCollectionCards(response), response, null);
+          }
+        } else {
+          container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#ff7777;">卡盒讀取失敗，請稍後再試。</p>';
+        }
+      }).withFailureHandler(function(err) {
+        container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#ff7777;">卡盒讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</p>';
+      }).getPlayerCollection(playerUID);
+    }
 
 
     function refreshCollectionCount() {
