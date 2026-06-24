@@ -1203,7 +1203,7 @@
           <button class="feature-btn" onclick="openCollectionModal()"><span>🎴</span>我的卡盒<small>查看角色收集進度</small></button>
           <button class="feature-btn" onclick="openTrainingModal()"><span>🎁</span>簽到 / 排行榜<small>每日獎勵與玩家分數排名</small></button>
           <button class="feature-btn" onclick="openRedeemModal()"><span>🎟️</span>兌換碼<small>輸入活動碼或補償碼</small></button>
-          <button class="feature-btn" onclick="openMissionModal()"><span>🎁</span>開服福利 / 任務<small>7日福利、每日任務、新手任務</small></button>
+          <button class="feature-btn" onclick="openMissionModal()"><span>🎁</span>開服福利 / 任務<small>每日、新手、主線與一鍵領取</small></button>
           <button class="feature-btn" onclick="openMemoryModal()"><span>🧠</span>記憶翻牌<small>挑戰記憶小遊戲</small></button>
           <button class="feature-btn" onclick="openAchievementModal()"><span>🏆</span>成就系統<small>收集、戰鬥、養成里程碑</small></button>
           <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
@@ -1304,6 +1304,12 @@
       </div>
 
       <div class="scene-panel">
+        <h3>👿 魔王挑戰</h3>
+        <p>自己的遠征 3 人隊伍，加上 1 位好友代表卡，共同討伐終焉魔王。每日免費 5 次。</p>
+        <button class="scene-btn btn-neon-pink" onclick="openDemonChallengeModal()">進入魔王挑戰<small>好友協作副本與魔王挑戰卷</small></button>
+      </div>
+
+      <div class="scene-panel">
         <h3>🌟 角色養成 / 10 星升星</h3>
         <p>使用潮流能量培養角色等級、技能等級與星級。星級最高可提升到 10 星。</p>
         <button class="scene-btn btn-neon-green" onclick="openCharacterGrowthModal()">角色養成<small>等級、經驗、技能強化與戰力提升</small></button>
@@ -1401,6 +1407,16 @@
           <button class="social-action-btn" style="flex:0 0 auto;" onclick="sendFriendRequestUI()">送出邀請</button>
         </div>
         <div id="social-msg" style="font-size:13px;color:#aaa;line-height:1.6;margin-top:8px;"></div>
+      </div>
+
+      <div class="game-card">
+        <h3>🎟️ 玩家邀請碼</h3>
+        <div id="my-invite-code" style="font-size:22px;font-weight:1000;color:#00fff0;letter-spacing:2px;margin:8px 0;">讀取中...</div>
+        <div id="invite-code-status" style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:8px;">好友註冊或在社交頁輸入你的邀請碼後，雙方各獲得抽卡次數 +5。</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="social-input" id="referral-code-input" maxlength="20" placeholder="輸入其他玩家的邀請碼">
+          <button class="social-action-btn" id="referral-code-submit" style="flex:0 0 auto;" onclick="submitInviteCodeUI()">套用</button>
+        </div>
       </div>
 
       <div class="game-card">
@@ -1609,6 +1625,7 @@
           完成收集、戰鬥、遠征、PVP、養成里程碑即可領獎。
         </div>
         <div id="achievement-status" style="color:#aaa; font-size:13px; margin-top:10px;">正在讀取成就...</div>
+        <button class="btn btn-full btn-roulette" id="achievement-claim-all-btn" onclick="claimAllAchievementRewards()">🎁 一鍵領取全部可領成就</button>
         <div id="achievement-summary" class="achievement-summary"></div>
         <div id="achievement-list" class="mission-list"></div>
       </div>
@@ -1689,7 +1706,7 @@
       <div class="modal-h3">🌟 角色養成中心</div>
       <div class="collection-stat" id="growth-energy-text">潮流能量：讀取中...</div>
       <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">
-        戰鬥、遠征異世界、PVP 會給出戰角色經驗。你也可以消耗潮流能量進行特訓、升級技能，星級最高可到 10 星。所有養成都只影響遊戲內戰力，不影響實體卡片與兌獎資格。
+        戰鬥、遠征異世界、PVP 會給出戰角色經驗。角色特訓消耗潮流能量；技能升級只消耗技能經驗，不會以潮流能量補差額。星級最高可到 10 星。
       </div>
       <div id="growth-rule-text" style="font-size:12px;color:#888;margin-bottom:10px;"></div>
       <div id="growth-card-list" style="display:flex;flex-direction:column;gap:10px;">正在讀取角色養成資料...</div>
@@ -1715,9 +1732,10 @@
       <div class="modal-h3">🎁 開服福利 / 任務中心</div>
       <div id="mission-wallet" class="collection-stat">讀取中...</div>
       <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:12px;">
-        開服 7 日福利可每日領取 1 份；每日任務與新手任務可獲得潮流能量、技能經驗、訓練分數。
+        開服 7 日福利可每日領取 1 份；每日、新手與主線任務可領取養成資源，並支援一鍵領取。
       </div>
       <div id="mission-msg" style="min-height:22px;font-weight:900;color:#aaa;margin-bottom:10px;"></div>
+      <button class="btn btn-full btn-roulette" id="mission-claim-all-btn" onclick="claimAllMissionRewards()">🎁 一鍵領取全部可領任務</button>
 
       <div class="mission-section">
         <div class="mission-section-title">🎉 開服 7 日福利</div>
@@ -1732,6 +1750,11 @@
       <div class="mission-section">
         <div class="mission-section-title">🌱 新手任務</div>
         <div id="newbie-mission-list" class="mission-list">正在讀取...</div>
+      </div>
+
+      <div class="mission-section">
+        <div class="mission-section-title">📖 主線任務</div>
+        <div id="main-mission-list" class="mission-list">正在讀取...</div>
       </div>
     </div>
   </div>
@@ -1779,12 +1802,45 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="demon-challenge-modal" onclick="if(event.target.id==='demon-challenge-modal') this.style.display='none';">
+    <div class="modal-content" style="max-width:760px;">
+      <span class="modal-close" onclick="document.getElementById('demon-challenge-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">👿 魔王挑戰</div>
+      <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px;">使用遠征異世界已儲存的 3 張卡牌，再選擇 1 位好友代表卡協力出戰。每日免費 5 次，之後每次自動消耗 1 張魔王挑戰卷。</div>
+      <div class="collection-stat" id="demon-daily-status">今日挑戰：讀取中...</div>
+      <div class="collection-stat" id="demon-team-status">隊伍戰力：讀取中...</div>
+      <label style="display:block;color:#00fff0;font-size:13px;font-weight:900;margin:10px 0 6px;">選擇好友代表卡</label>
+      <select id="demon-friend-select" class="player-deck-select" onchange="renderDemonPartyPreview()"></select>
+      <div id="demon-party-preview" class="rpg-party-preview" style="margin-top:10px;"></div>
+      <button class="btn-fight" id="demon-battle-btn" onclick="startDemonChallenge()">👿 開始魔王挑戰</button>
+      <div id="demon-msg" style="min-height:24px;margin:10px 0;font-weight:900;color:#aaa;"></div>
+      <div class="battle-arena turn-mode" id="demon-arena-panel" style="display:none;">
+        <div class="mini-battle-title" id="demon-arena-title">👿 終焉魔王協作戰</div>
+        <div class="hp-container">
+          <div style="flex:1;text-align:left;"><b style="color:#00fff0;">協作隊伍 HP</b><div class="hp-bar-wrapper"><div id="demon-hp-player-fill" class="hp-bar-fill hp-player"></div></div><div id="demon-hp-player-text" class="hp-text">--</div></div>
+          <div style="flex:1;text-align:right;"><b style="color:#ff7777;">魔王 HP</b><div class="hp-bar-wrapper"><div id="demon-hp-boss-fill" class="hp-bar-fill hp-boss"></div></div><div id="demon-hp-boss-text" class="hp-text">--</div></div>
+        </div>
+        <div class="clash-zone">
+          <div class="clash-card card-p" id="demon-fighter-player"><span id="demon-player-name-label">協作隊伍</span><img id="demon-player-avatar-img" class="clash-avatar tlo-card-art" src="" alt="協作隊伍"></div>
+          <div style="font-size:22px;color:#ffc107;font-weight:1000;">VS</div>
+          <div class="clash-card card-b" id="demon-fighter-boss"><span id="demon-boss-name-label">終焉魔王</span><img id="demon-boss-avatar-img" class="clash-avatar tlo-card-art" src="" alt="終焉魔王"></div>
+        </div>
+        <div class="turn-banner" id="demon-turn-banner">魔王挑戰開始...</div>
+        <div class="turn-battle-log" id="demon-turn-log"></div>
+      </div>
+      <div class="modal-h3" style="font-size:17px;margin-top:14px;">最近挑戰紀錄</div>
+      <div id="demon-log-list">正在讀取紀錄...</div>
+    </div>
+  </div>
+
 
   <script>
     const playerUID = window.TLO_PLAYER_UID || "";
     let currentCount = parseInt(window.TLO_INITIAL_TIMES || "0") || 0;
     let globalPlayerPower = 0; 
     let latestRpgDashboard = null;
+    let latestDemonDashboard = null;
+    let demonChallengeRunning = false;
     let latestRpgDashboardLoadedAt = 0;
     let lastRpgAdventureKey = "";
     let selectedRpgChapterKey = "";
@@ -2749,7 +2805,7 @@
     }
 
     function hideAllBattleHpBars() {
-      ['battle', 'pvp', 'rpg'].forEach(function(prefix) {
+      ['battle', 'pvp', 'rpg', 'demon'].forEach(function(prefix) {
         setBattleHpVisible(prefix, false);
       });
     }
@@ -3865,6 +3921,22 @@ function showCollectionHistory() {
       }).claimAchievementReward(playerUID, key);
     }
 
+    function claimAllAchievementRewards() {
+      const status = document.getElementById('achievement-status');
+      const btn = document.getElementById('achievement-claim-all-btn');
+      if (btn) btn.disabled = true;
+      if (status) status.innerText = '正在一鍵領取成就獎勵...';
+      google.script.run.withSuccessHandler(function(res) {
+        if (btn) btn.disabled = false;
+        if (res && res.dashboard) renderAchievementDashboard(res.dashboard);
+        if (status) status.innerText = res && res.msg ? res.msg : '目前沒有可領取的成就獎勵。';
+        if (res && res.success) loadHomeState();
+      }).withFailureHandler(function() {
+        if (btn) btn.disabled = false;
+        if (status) status.innerText = '系統繁忙，請稍後再試。';
+      }).claimAllAchievementRewards(playerUID);
+    }
+
     function openFortuneModal() {
       document.getElementById('fortune-modal').style.display = 'flex';
       document.getElementById('fortune-title').innerText = '等待抽籤';
@@ -4333,6 +4405,42 @@ function showCollectionHistory() {
           return socialRow(p, `<button class="social-action-btn warn" onclick="removeFriendUI('${escapeHtml(jsString(p.uid || ''))}')">解除</button>`);
         }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前還沒有好友，先新增一位玩家吧。</div>';
       }
+      var referral = res.referral || {};
+      var codeEl = document.getElementById('my-invite-code');
+      var statusEl = document.getElementById('invite-code-status');
+      var codeInput = document.getElementById('referral-code-input');
+      var codeBtn = document.getElementById('referral-code-submit');
+      if (codeEl) codeEl.textContent = referral.inviteCode || '尚未建立';
+      if (statusEl) {
+        statusEl.textContent = referral.hasUsedInviteCode
+          ? `你已使用 ${referral.inviterUid || '好友'} 的邀請碼；目前成功邀請 ${Number(referral.invitedCount || 0)} 人。`
+          : `好友使用你的邀請碼後雙方各獲得抽卡次數 +${Number(referral.rewardDrawTimes || 5)}；目前成功邀請 ${Number(referral.invitedCount || 0)} 人。`;
+      }
+      if (codeInput) codeInput.disabled = !!referral.hasUsedInviteCode;
+      if (codeBtn) {
+        codeBtn.disabled = !!referral.hasUsedInviteCode;
+        codeBtn.textContent = referral.hasUsedInviteCode ? '已套用' : '套用';
+      }
+    }
+
+    function submitInviteCodeUI() {
+      var input = document.getElementById('referral-code-input');
+      var msg = document.getElementById('social-msg');
+      var code = input ? input.value.trim() : '';
+      if (!code) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請輸入邀請碼。</span>'; return; }
+      var btn = document.getElementById('referral-code-submit');
+      if (btn) btn.disabled = true;
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在套用邀請碼...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderSocialDashboard(res.dashboard);
+        if (res && res.success && input) input.value = '';
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '套用失敗') + '</span>';
+        if (btn && !(res && res.dashboard && res.dashboard.referral && res.dashboard.referral.hasUsedInviteCode)) btn.disabled = false;
+        if (res && res.success) loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (btn) btn.disabled = false;
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">套用失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).submitInviteCode(playerUID, code);
     }
 
     function loadSocialDashboard() {
@@ -4455,6 +4563,7 @@ function showCollectionHistory() {
       renderOpeningRewards(res.openingRewards || []);
       renderMissionList('daily-mission-list', res.dailyMissions || [], 'daily');
       renderMissionList('newbie-mission-list', res.newbieMissions || [], 'newbie');
+      renderMissionList('main-mission-list', res.mainMissions || [], 'main');
     }
 
     function renderOpeningRewards(list) {
@@ -4575,6 +4684,22 @@ function showCollectionHistory() {
         if (window.TLOAudio) window.TLOAudio.playSfx('error');
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">領取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
       }).claimMissionReward(playerUID, group, key);
+    }
+
+    function claimAllMissionRewards() {
+      var msg = document.getElementById('mission-msg');
+      var btn = document.getElementById('mission-claim-all-btn');
+      if (btn) btn.disabled = true;
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在一鍵領取...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (btn) btn.disabled = false;
+        if (res && res.dashboard) renderMissionDashboard(res.dashboard);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '目前沒有可領獎勵') + '</span>';
+        if (res && res.success) loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (btn) btn.disabled = false;
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">領取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).claimAllMissionRewards(playerUID, 'all');
     }
 
     function openTrainingModal() {
@@ -5027,7 +5152,7 @@ function showCollectionHistory() {
         const power = Number(card.power || 0);
         const levelText = level >= maxLevel ? '已滿級' : `${exp.toLocaleString()} / ${expToNext.toLocaleString()} EXP`;
         const trainDisabled = level >= maxLevel || energy < trainCost;
-        const skillDisabled = skillLevel >= maxSkill || (energy + skillExpWallet) < skillCost;
+        const skillDisabled = skillLevel >= maxSkill || skillExpWallet < skillCost;
         html += `
           <div style="background:linear-gradient(135deg,#101010,#181225);border:1px solid #3a3a3a;border-radius:14px;padding:12px;display:flex;gap:12px;align-items:flex-start;text-align:left;">
             <div style="width:74px;flex:0 0 74px;">
@@ -5041,7 +5166,7 @@ function showCollectionHistory() {
               ${level >= maxLevel ? renderGrowthBar(1, 1) : renderGrowthBar(exp, expToNext)}
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
                 <button class="btn-collection" style="margin:0;padding:8px 10px;${trainDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${trainDisabled ? 'disabled' : ''} onclick="trainCharacterLevel('${escapeJsString(name)}')">特訓升級${level >= maxLevel ? '' : `<small style='display:block;font-size:10px;'>${trainCost.toLocaleString()}能量</small>`}</button>
-                <button class="btn-collection" style="margin:0;padding:8px 10px;${skillDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${skillDisabled ? 'disabled' : ''} onclick="upgradeCharacterSkill('${escapeJsString(name)}')">技能升級${skillLevel >= maxSkill ? '' : `<small style='display:block;font-size:10px;'>${skillCost.toLocaleString()}技能經驗/能量</small>`}</button>
+                <button class="btn-collection" style="margin:0;padding:8px 10px;${skillDisabled ? 'filter:grayscale(1);opacity:.55;' : ''}" ${skillDisabled ? 'disabled' : ''} onclick="upgradeCharacterSkill('${escapeJsString(name)}')">技能升級${skillLevel >= maxSkill ? '' : `<small style='display:block;font-size:10px;'>${skillCost.toLocaleString()}技能經驗</small>`}</button>
                 <button class="btn-collection" style="margin:0;padding:8px 10px;" onclick="document.getElementById('character-growth-modal').style.display='none'; openStarModal();">10星升星</button>
                 <button class="btn-collection" style="margin:0;padding:8px 10px;${canReset ? 'background:linear-gradient(135deg,#5b2cff,#00fff0);' : 'filter:grayscale(1);opacity:.55;'}" ${canReset ? '' : 'disabled'} onclick="useCardResetTicketUI('${escapeJsString(name)}', ${star}, ${skillLevel}, ${resetRefundEnergy}, ${resetRefundSkillExp})">重置${resetTickets ? '' : `<small style='display:block;font-size:10px;'>需重置券</small>`}</button>
               </div>
@@ -5197,6 +5322,115 @@ function showCollectionHistory() {
         mo.observe(document.body, { childList: true, subtree: true });
       });
     } catch (_) {}
+
+    // ─── 魔王挑戰：遠征三人隊伍 + 好友代表卡 ───
+    function openDemonChallengeModal() {
+      const modal = document.getElementById('demon-challenge-modal');
+      if (modal) modal.style.display = 'flex';
+      const arena = document.getElementById('demon-arena-panel');
+      if (arena) arena.style.display = 'none';
+      setBattleHpVisible('demon', false);
+      loadDemonChallengeDashboard();
+    }
+
+    function loadDemonChallengeDashboard() {
+      const msg = document.getElementById('demon-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在讀取魔王挑戰資料...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (msg) msg.innerHTML = '<span style="color:#ff7777;">魔王挑戰資料讀取失敗。</span>';
+          return;
+        }
+        renderDemonChallengeDashboard(res);
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).getDemonChallengeDashboard(playerUID);
+    }
+
+    function renderDemonChallengeDashboard(res) {
+      latestDemonDashboard = res;
+      const daily = res.daily || {};
+      const dailyEl = document.getElementById('demon-daily-status');
+      const teamEl = document.getElementById('demon-team-status');
+      const select = document.getElementById('demon-friend-select');
+      const msg = document.getElementById('demon-msg');
+      if (dailyEl) dailyEl.innerText = `今日免費剩餘：${Number(daily.freeRemaining || 0)} / ${Number(daily.freeLimit || 5)}｜魔王挑戰卷：${Number(daily.ticketCount || 0)}`;
+      if (teamEl) teamEl.innerText = `自己的遠征隊伍：${(res.party || []).length} / 3 張｜戰力 ${Number(res.ownTeamPower || 0).toLocaleString()}`;
+      if (select) {
+        const oldValue = select.value;
+        const friends = res.friends || [];
+        select.innerHTML = '<option value="">請選擇好友代表卡</option>' + friends.map(function(friend) {
+          return `<option value="${escapeHtml(friend.uid || '')}">${escapeHtml(friend.displayName || friend.uid || '')}｜${escapeHtml(friend.cardName || '')}｜戰力 ${Number(friend.cardPower || 0).toLocaleString()}</option>`;
+        }).join('');
+        if (friends.some(function(friend) { return friend.uid === oldValue; })) select.value = oldValue;
+      }
+      renderDemonPartyPreview();
+      const logs = document.getElementById('demon-log-list');
+      if (logs) {
+        logs.innerHTML = (res.logs || []).map(function(row) {
+          return `<div class="pvp-log-item"><b class="${row.result === 'WIN' ? 'pvp-win' : 'pvp-lose'}">${escapeHtml(row.result || '')}</b>｜好友 ${escapeHtml(row.friendUid || '')}（${escapeHtml(row.friendCardName || '')}）｜我方 ${Number(row.teamPower || 0).toLocaleString()} / 魔王 ${Number(row.enemyPower || 0).toLocaleString()}<br><span style="color:#aaa;">${escapeHtml(row.rewardSummary || '')}${row.usedTicket ? '｜已消耗魔王挑戰卷' : ''}｜${escapeHtml(row.createdAt || '')}</span></div>`;
+        }).join('') || '<div style="color:#888;">暫無魔王挑戰紀錄。</div>';
+      }
+      const canFight = (res.party || []).length === 3 && (res.friends || []).length > 0 && Number(daily.totalAvailable || 0) > 0;
+      const btn = document.getElementById('demon-battle-btn');
+      if (btn) btn.disabled = !canFight || demonChallengeRunning;
+      if (msg) msg.innerHTML = canFight ? '<span style="color:#00fff0;">選擇好友後即可挑戰。</span>' : '<span style="color:#ffdd77;">請先設定完整遠征隊伍、好友代表卡，並確認尚有次數或挑戰卷。</span>';
+      scheduleOptimizeTloImages(document.getElementById('demon-challenge-modal'));
+    }
+
+    function renderDemonPartyPreview() {
+      const box = document.getElementById('demon-party-preview');
+      if (!box || !latestDemonDashboard) return;
+      const party = latestDemonDashboard.party || [];
+      const uid = (document.getElementById('demon-friend-select') || {}).value || '';
+      const friend = (latestDemonDashboard.friends || []).find(function(row) { return row.uid === uid; });
+      const cards = party.map(function(card) { return { name: card.name, imageUrl: card.imageUrl, label: '我的隊伍' }; });
+      if (friend) cards.push({ name: friend.cardName, imageUrl: friend.imageUrl, label: friend.displayName || friend.uid });
+      box.innerHTML = `<div class="rpg-party-members">${cards.map(function(card) {
+        return `<div class="rpg-mini-card"><img class="tlo-card-art" src="${escapeHtml(card.imageUrl || placeholderBattleImage(card.name, '#123a3a', '#00fff0'))}" alt="${escapeHtml(card.name || '')}"><div class="name">${escapeHtml(card.name || '')}</div><div style="font-size:10px;color:#aaa;">${escapeHtml(card.label || '')}</div></div>`;
+      }).join('')}${cards.length < 4 ? '<div class="rpg-mini-card empty"><div style="font-size:28px;color:#00fff0;margin-top:22px;">＋</div><div class="name">好友支援</div></div>' : ''}</div>`;
+    }
+
+    function startDemonChallenge() {
+      if (demonChallengeRunning) return;
+      const select = document.getElementById('demon-friend-select');
+      const friendUid = select ? select.value : '';
+      const msg = document.getElementById('demon-msg');
+      if (!friendUid) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請先選擇好友代表卡。</span>'; return; }
+      demonChallengeRunning = true;
+      const btn = document.getElementById('demon-battle-btn');
+      if (btn) { btn.disabled = true; btn.innerText = '⚡ 魔王戰鬥演算中...'; }
+      resetBattleHpBars('demon');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在進入魔王挑戰...</span>';
+      google.script.run.withSuccessHandler(async function(res) {
+        if (!res || !res.success) {
+          demonChallengeRunning = false;
+          if (btn) { btn.disabled = false; btn.innerText = '👿 開始魔王挑戰'; }
+          if (res && res.dashboard) renderDemonChallengeDashboard(res.dashboard);
+          if (msg) msg.innerHTML = '<span style="color:#ff7777;">' + escapeHtml(res && res.msg ? res.msg : '挑戰失敗') + '</span>';
+          return;
+        }
+        const first = (res.party || [])[0] || {};
+        await playMiniTurnBattle('demon', res, {
+          playerPower: res.teamPower,
+          bossPower: res.enemyPower,
+          playerName: '好友協作隊伍',
+          playerImage: first.imageUrl || placeholderBattleImage('協作隊伍', '#123a3a', '#00fff0'),
+          bossName: '終焉魔王',
+          bossImage: placeholderBattleImage('終焉魔王', '#3a1616', '#ff7777'),
+          stageName: '魔王挑戰'
+        });
+        demonChallengeRunning = false;
+        if (btn) { btn.disabled = false; btn.innerText = '👿 開始魔王挑戰'; }
+        if (res.dashboard) renderDemonChallengeDashboard(res.dashboard);
+        if (msg) msg.innerHTML = `<span style="color:${res.win ? '#00ff7f' : '#ff7777'};">${escapeHtml(res.msg || '')}</span>${formatGrowthRewards(res.growthRewards)}`;
+        syncBattleCommonUiAfterReward(res);
+      }).withFailureHandler(function(err) {
+        demonChallengeRunning = false;
+        if (btn) { btn.disabled = false; btn.innerText = '👿 開始魔王挑戰'; }
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">挑戰失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).executeDemonChallenge(playerUID, friendUid);
+    }
 
     // ─── 遠征資料同步修正：角色升級 / 升星 / 技能強化後，立刻刷新編隊資料 ───
     function isRpgModalOpen() {

@@ -68,6 +68,7 @@
     "getCharacterGrowthDashboard",
     "getMissionDashboard",
     "getAchievementDashboard",
+    "getDemonChallengeDashboard",
     "getMessageBoard",
     "getPlayerHistory"
   ]);
@@ -245,6 +246,8 @@
             <input class="tlo-auth-input" id="tlo-register-uid" placeholder="例如：tlo123 或你的暱稱">
             <label class="tlo-auth-label">顯示名稱</label>
             <input class="tlo-auth-input" id="tlo-register-name" placeholder="可不填，預設同 UID">
+            <label class="tlo-auth-label">好友邀請碼（選填）</label>
+            <input class="tlo-auth-input" id="tlo-register-invite-code" maxlength="20" autocomplete="off" placeholder="輸入後雙方各獲得抽卡次數 +5">
             <label class="tlo-auth-label">設定密碼</label>
             <input class="tlo-auth-input" id="tlo-register-password" type="password" placeholder="至少 8 碼">
             <label class="tlo-auth-label">再次輸入密碼</label>
@@ -334,12 +337,13 @@
     try {
       var uid = document.getElementById("tlo-register-uid").value.trim();
       var name = document.getElementById("tlo-register-name").value.trim();
+      var inviteCode = document.getElementById("tlo-register-invite-code").value.trim();
       var pw = document.getElementById("tlo-register-password").value;
       var pw2 = document.getElementById("tlo-register-password2").value;
       if (!uid || !pw) throw new Error("請輸入 UID 與密碼。");
       if (pw !== pw2) throw new Error("兩次輸入的密碼不一致。");
       setAuthMsg("註冊中...", true);
-      var data = await rawRpc("registerAccount", [uid, pw, name], { auth: false });
+      var data = await rawRpc("registerAccount", [uid, pw, name, inviteCode], { auth: false });
       saveAuth(data);
       if (window.TLOAudio) window.TLOAudio.playSfx("login");
       setAuthMsg("註冊成功，正在進入遊戲...", true);

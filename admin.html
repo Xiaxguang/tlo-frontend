@@ -386,7 +386,7 @@
             </div>
             <label>商品描述</label><textarea id="shopDescription" placeholder="商品說明"></textarea>
             <label>商品獎勵 JSON</label><textarea id="shopRewards" placeholder='[{"rewardType":"DRAW_TIMES","rewardValue":1},{"rewardType":"CARD","cardName":"夏日小梅","rewardValue":1}]'></textarea>
-            <div class="muted">可用 rewardType：DRAW_TIMES、ENERGY、POINTS、SKILL_EXP、BATTLE_TICKET、RPG_TICKET、CARD。指定卡片請填 cardName。</div>
+            <div class="muted">可用 rewardType：DRAW_TIMES、ENERGY、POINTS、SKILL_EXP、BATTLE_TICKET、RPG_TICKET、ITEM、CARD。魔王挑戰卷使用 ITEM，cardName 填 DEMON_CHALLENGE_TICKET。</div>
             <button class="primary" onclick="saveShopItem()">儲存商品</button>
             <button class="ghost" onclick="clearShopForm()">清空</button>
             <div id="shopMsg" class="msg"></div>
