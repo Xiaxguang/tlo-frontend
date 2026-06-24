@@ -1229,13 +1229,13 @@
       </div>
 
       <div class="message-board-box" id="home-message-board">
-        <div class="message-board-title">💬 T-LO 聊天</div>
+        <div class="message-board-title">💬 T-LO 玩家留言板</div>
         <div id="message-board-list" class="message-list">正在讀取玩家留言...</div>
         <div class="message-input-row">
           <input id="message-input" class="message-input" maxlength="50" placeholder="留下你的潮流宣言，最多50字">
           <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
         </div>
-        <div id="message-board-msg" style="font-size:12px;color:#888;margin-top:6px;text-align:center;">留言，僅顯示最近 30 則。</div>
+        <div id="message-board-msg" style="font-size:12px;color:#888;margin-top:6px;text-align:center;">留言每日限量，僅顯示最近 15 則。</div>
       </div>
     </section>
 
@@ -1465,7 +1465,7 @@
         <div class="collection-filter-tabs" id="collection-pool-tabs">
           <button type="button" class="collection-filter-tab active" onclick="selectCollectionPool('all')">全部卡牌</button>
         </div>
-        <div class="collection-filter-hint" id="collection-filter-hint">可依照 GM 目前開放的卡池，切換查看各卡池的收集進度。</div>
+        <div class="collection-filter-hint" id="collection-filter-hint">可依照卡池，切換查看各卡池的收集進度。</div>
       </div>
       <div class="collection-grid" id="collection-grid-container"></div>
     </div>
@@ -1538,6 +1538,9 @@
 
       <button class="btn-fight" id="fight-btn" onclick="window.startChallenge()">⚔️ 代表出戰 ⚔️</button>
       <div id="battle-result-msg" style="margin-top:12px; text-align:center; font-size:13px; font-weight:bold;"></div>
+      <div class="rpg-rechallenge-wrap" id="battle-repeat-wrap" style="display:none;">
+        <button class="btn-rpg-rechallenge" id="battle-repeat-btn" onclick="repeatBattleStage()">🔁 再次挑戰本關</button>
+      </div>
     </div>
   </div>
 
@@ -1986,6 +1989,7 @@
     let TLO_CARD_RARITIES = {};
     let TLO_CARD_POOL = [];
     let selectedBattleStageId = 0;
+    let lastBattleRepeatStageId = 0;
 
     function setCollectionSummary(uniqueCount, totalCount) {
       const countEl = document.getElementById('collection-summary-count');
@@ -2597,11 +2601,80 @@
     }
 
 
+    function hideBattleRepeatButton() {
+      const wrap = document.getElementById('battle-repeat-wrap');
+      const btn = document.getElementById('battle-repeat-btn');
+      if (wrap) wrap.style.display = 'none';
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = '🔁 再次挑戰本關';
+      }
+    }
+
+    function showBattleRepeatButton(stageId, disabled) {
+      const wrap = document.getElementById('battle-repeat-wrap');
+      const btn = document.getElementById('battle-repeat-btn');
+      const sid = Number(stageId || 0);
+      if (!wrap || !btn || !sid) return;
+      lastBattleRepeatStageId = sid;
+      wrap.style.display = 'block';
+      btn.disabled = !!disabled;
+      btn.innerText = disabled ? '今日挑戰券已用完，無法再次挑戰' : `🔁 再次挑戰第 ${sid} 關`;
+      btn.onclick = function() { repeatBattleStage(sid); };
+    }
+
+    window.repeatBattleStage = function repeatBattleStage(stageId) {
+      const targetStageId = Number(stageId || lastBattleRepeatStageId || 0);
+      const resultMsg = document.getElementById('battle-result-msg');
+      const repeatBtn = document.getElementById('battle-repeat-btn');
+      if (!targetStageId) {
+        if (resultMsg) resultMsg.innerHTML = '<span style="color:#ff7777;">找不到剛才挑戰的關卡，請重新點選關卡。</span>';
+        return;
+      }
+
+      hideBattleRepeatButton();
+      if (repeatBtn) repeatBtn.disabled = true;
+      if (resultMsg) resultMsg.innerHTML = '<span style="color:#00fff0;">正在重新讀取原關卡，準備再次挑戰...</span>';
+
+      selectedBattleStageId = targetStageId;
+      google.script.run.withSuccessHandler(function(response) {
+        if (!response || !response.success) {
+          if (resultMsg) resultMsg.innerHTML = `<span style="color:#ff7777;">原關卡讀取失敗：${escapeHtml(response && response.msg ? response.msg : '請稍後再試')}</span>`;
+          showBattleRepeatButton(targetStageId, false);
+          return;
+        }
+
+        response.selectedStageId = targetStageId;
+        applyBattleDashboard(response);
+        showBattleBossInfoPanel();
+
+        const limit = response.dailyLimits || {};
+        const noBattleTickets = Number(limit.challengeLimit || 0) > 0 && Number(limit.challengeRemaining || 0) <= 0;
+        if (noBattleTickets || !response.battleRepresentative) {
+          if (resultMsg) {
+            resultMsg.innerHTML = noBattleTickets
+              ? '<span style="color:#ffcc66;">今日挑戰券已用完，無法再次挑戰。</span>'
+              : '<span style="color:#ffcc66;">請先固定爭霸代表後再挑戰。</span>';
+          }
+          showBattleRepeatButton(targetStageId, noBattleTickets);
+          return;
+        }
+
+        setTimeout(function() {
+          if (typeof window.startChallenge === 'function') window.startChallenge(targetStageId);
+        }, 180);
+      }).withFailureHandler(function(err) {
+        if (resultMsg) resultMsg.innerHTML = `<span style="color:#ff4444;">原關卡讀取失敗：${escapeHtml(err && err.message ? err.message : err)}</span>`;
+        showBattleRepeatButton(targetStageId, false);
+      }).getBattleDashboard(playerUID, targetStageId);
+    };
+
     function openBattleModal(stageId) {
       if (stageId) selectedBattleStageId = Number(stageId || 1);
       if (window.TLOAudio) window.TLOAudio.playBgm('battle');
       document.getElementById('battle-modal').style.display = 'flex';
       document.getElementById('battle-result-msg').innerHTML = "";
+      hideBattleRepeatButton();
       document.getElementById('boss-info-panel').style.display = "flex"; 
       document.getElementById('battle-arena-panel').style.display = "none";
       document.getElementById('battle-arena-panel').classList.remove('turn-mode');
@@ -3032,7 +3105,10 @@
 
     // === 潮流爭霸戰：全域出戰函式修正版 ===
     // 重點：後端可以先算完，但前端會先播放動畫，動畫結束後才顯示勝負結果。
-    window.startChallenge = async function startChallenge() {
+    window.startChallenge = async function startChallenge(stageIdOverride) {
+      const challengeStageId = Number(stageIdOverride || selectedBattleStageId || 1);
+      if (challengeStageId) selectedBattleStageId = challengeStageId;
+      hideBattleRepeatButton();
       const btn = document.getElementById('fight-btn');
       const infoPanel = document.getElementById('boss-info-panel');
       const arenaPanel = document.getElementById('battle-arena-panel');
@@ -3098,6 +3174,7 @@
 
             if (window.TLOAudio) window.TLOAudio.playSfx('win');
 
+            const justChallengedStageId = challengeStageId;
             selectedBattleStageId = Number(battleResult.nextStageId || selectedBattleStageId || 1);
             if (battleResult.dashboard) {
               // 連續戰鬥修正：後端已回傳下一關 dashboard 時，不要停留在戰鬥動畫畫面；
@@ -3105,11 +3182,15 @@
               battleResult.dashboard.selectedStageId = Number(battleResult.nextStageId || battleResult.dashboard.selectedStageId || battleResult.dashboard.currentStageId || selectedBattleStageId || 1);
               applyBattleDashboard(battleResult.dashboard);
               showBattleBossInfoPanel();
+              const updatedLimit = battleResult.dashboard.dailyLimits || {};
+              const repeatBlocked = Number(updatedLimit.challengeLimit || 0) > 0 && Number(updatedLimit.challengeRemaining || 0) <= 0;
+              showBattleRepeatButton(justChallengedStageId, repeatBlocked);
               try {
                 const bossPanel = document.getElementById('boss-info-panel');
                 if (bossPanel) bossPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
               } catch (_) {}
             } else {
+              showBattleRepeatButton(justChallengedStageId, false);
               btn.disabled = false;
               btn.innerText = '✅ 已突破此關，重新讀取下一關...';
               setTimeout(function() { if (typeof openBattleModal === 'function') openBattleModal(selectedBattleStageId); }, 600);
@@ -3147,7 +3228,7 @@
 
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
         })
-        .executeBattle(playerUID, selectedBattleStageId || undefined);
+        .executeBattle(playerUID, challengeStageId || undefined);
     };
 
 
