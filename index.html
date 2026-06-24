@@ -2389,6 +2389,28 @@
       return true;
     }
 
+    function showBattleBossInfoPanel() {
+      const infoPanel = document.getElementById('boss-info-panel');
+      const arenaPanel = document.getElementById('battle-arena-panel');
+      if (arenaPanel) {
+        arenaPanel.style.display = 'none';
+        arenaPanel.classList.remove('turn-mode');
+      }
+      if (infoPanel) infoPanel.style.display = 'flex';
+      if (typeof setBattleHpVisible === 'function') setBattleHpVisible('battle', false);
+      const turnBanner = document.getElementById('battle-turn-banner');
+      const turnLog = document.getElementById('battle-turn-log');
+      if (turnBanner) {
+        turnBanner.style.display = 'none';
+        turnBanner.innerText = '準備進入回合制戰鬥...';
+      }
+      if (turnLog) {
+        turnLog.style.display = 'none';
+        turnLog.innerHTML = '';
+      }
+    }
+
+
     function openBattleModal(stageId) {
       if (stageId) selectedBattleStageId = Number(stageId || 1);
       if (window.TLOAudio) window.TLOAudio.playBgm('battle');
@@ -2892,11 +2914,19 @@
 
             selectedBattleStageId = Number(battleResult.nextStageId || selectedBattleStageId || 1);
             if (battleResult.dashboard) {
+              // 連續戰鬥修正：後端已回傳下一關 dashboard 時，不要停留在戰鬥動畫畫面；
+              // 直接套用下一關資料，並切回 BOSS 情報卡，才能看到下一關 BOSS 戰力。
+              battleResult.dashboard.selectedStageId = Number(battleResult.nextStageId || battleResult.dashboard.selectedStageId || battleResult.dashboard.currentStageId || selectedBattleStageId || 1);
               applyBattleDashboard(battleResult.dashboard);
+              showBattleBossInfoPanel();
+              try {
+                const bossPanel = document.getElementById('boss-info-panel');
+                if (bossPanel) bossPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              } catch (_) {}
             } else {
               btn.disabled = false;
               btn.innerText = '✅ 已突破此關，重新讀取下一關...';
-              setTimeout(function() { if (typeof openBattleModal === 'function') openBattleModal(); }, 600);
+              setTimeout(function() { if (typeof openBattleModal === 'function') openBattleModal(selectedBattleStageId); }, 600);
             }
 
           } else {
