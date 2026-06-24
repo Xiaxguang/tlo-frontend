@@ -2560,7 +2560,7 @@
       const battleLimit = response.dailyLimits || {};
       const noBattleTickets = Number(battleLimit.challengeLimit || 0) > 0 && Number(battleLimit.challengeRemaining || 0) <= 0;
       if (btn) {
-        btn.onclick = window.startChallenge;
+        btn.onclick = function() { window.startChallenge(selectedBattleStageId); };
         btn.disabled = !response.battleRepresentative || noBattleTickets;
         if (noBattleTickets) {
           btn.innerText = "今日挑戰券已用完";
@@ -3106,8 +3106,19 @@
     // === 潮流爭霸戰：全域出戰函式修正版 ===
     // 重點：後端可以先算完，但前端會先播放動畫，動畫結束後才顯示勝負結果。
     window.startChallenge = async function startChallenge(stageIdOverride) {
-      const challengeStageId = Number(stageIdOverride || selectedBattleStageId || 1);
-      if (challengeStageId) selectedBattleStageId = challengeStageId;
+      // 修正：當 btn.onclick = window.startChallenge 時，瀏覽器會把 click Event 當成第一個參數傳進來。
+      // 如果直接 Number(Event) 會變成 NaN，後端收到 undefined 後就會改打目前最高解鎖關卡，
+      // 造成玩家明明選舊關卡，實際卻打到卡住的最新關卡。
+      if (stageIdOverride && typeof stageIdOverride === 'object') {
+        if (typeof stageIdOverride.preventDefault === 'function') stageIdOverride.preventDefault();
+        stageIdOverride = null;
+      }
+      const parsedOverrideStageId = Math.floor(Number(stageIdOverride || 0));
+      const parsedSelectedStageId = Math.floor(Number(selectedBattleStageId || 0));
+      const challengeStageId = (Number.isFinite(parsedOverrideStageId) && parsedOverrideStageId > 0)
+        ? parsedOverrideStageId
+        : ((Number.isFinite(parsedSelectedStageId) && parsedSelectedStageId > 0) ? parsedSelectedStageId : 1);
+      selectedBattleStageId = challengeStageId;
       hideBattleRepeatButton();
       const btn = document.getElementById('fight-btn');
       const infoPanel = document.getElementById('boss-info-panel');
@@ -3212,7 +3223,7 @@
             btn.disabled = !!(battleResult && battleResult.limitBlocked);
             btn.innerText = battleResult && battleResult.limitBlocked ? '今日挑戰券已用完' : '🔄 重新挑戰此關 🔄';
             btn.style.background = battleResult && battleResult.limitBlocked ? 'linear-gradient(45deg, #555, #333)' : 'linear-gradient(45deg, #ff5500, #ff0000)';
-            btn.onclick = window.startChallenge;
+            btn.onclick = function() { window.startChallenge(selectedBattleStageId); };
           }
         })
         .withFailureHandler(function(err) {
@@ -3224,7 +3235,7 @@
 
           btn.disabled = false;
           btn.innerText = '⚔️ 重新挑戰';
-          btn.onclick = window.startChallenge;
+          btn.onclick = function() { window.startChallenge(selectedBattleStageId); };
 
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
         })
