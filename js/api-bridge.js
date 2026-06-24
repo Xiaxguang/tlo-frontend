@@ -2,6 +2,7 @@
   var AUTH_UID_KEY = "TLO_AUTH_UID";
   var AUTH_TOKEN_KEY = "TLO_AUTH_TOKEN";
   var AUTH_PLAYER_KEY = "TLO_AUTH_PLAYER";
+  var GUEST_MODE_KEY = "TLO_GUEST_MODE";
 
   function getApiBaseUrl() {
     var cfg = window.TLO_CONFIG || {};
@@ -29,6 +30,7 @@
     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
     localStorage.setItem(AUTH_PLAYER_KEY, JSON.stringify(data.player));
     localStorage.setItem("TLO_UID", data.player.uid); // 保留舊版相容
+    sessionStorage.removeItem(GUEST_MODE_KEY);
   }
 
   function clearAuth() {
@@ -39,6 +41,8 @@
 
   var currentAuth = getAuth();
   window.TLO_IS_AUTHENTICATED = !!(currentAuth.uid && currentAuth.token);
+  if (window.TLO_IS_AUTHENTICATED) sessionStorage.removeItem(GUEST_MODE_KEY);
+  window.TLO_IS_GUEST = !window.TLO_IS_AUTHENTICATED && sessionStorage.getItem(GUEST_MODE_KEY) === "1";
   window.TLO_PLAYER_UID = window.TLO_IS_AUTHENTICATED ? currentAuth.uid : "";
   window.TLO_AUTH_TOKEN = window.TLO_IS_AUTHENTICATED ? currentAuth.token : "";
   window.TLO_INITIAL_TIMES = "0";
@@ -53,6 +57,7 @@
     "getCardProbabilityTable",
     "getRpgDashboard",
     "getShopDashboard",
+    "getGuestShopCatalog",
     "getPersonalDashboard",
     "getSocialDashboard",
     "getPvpDashboard",
@@ -127,7 +132,8 @@
 
   async function callRpc(method, args) {
     if (!window.TLO_IS_AUTHENTICATED) {
-      throw new Error("請先登入或註冊帳號。");
+      if (window.TLO_IS_GUEST) showAuthScreen("遊客模式僅供瀏覽；抽卡、購買與玩家操作前請先登入或註冊。");
+      throw new Error(window.TLO_IS_GUEST ? "此功能需要登入玩家帳號。" : "請先登入或註冊帳號。");
     }
     return rawRpc(method, args, { auth: true });
   }
@@ -193,6 +199,8 @@
       .tlo-auth-input{width:100%;box-sizing:border-box;border:1px solid #444;background:#111;color:#fff;border-radius:12px;padding:13px;font-size:16px;outline:none;}
       .tlo-auth-input:focus{border-color:#00fff0;box-shadow:0 0 12px rgba(0,255,240,.25);}
       .tlo-auth-main-btn{width:100%;border:none;border-radius:14px;background:linear-gradient(45deg,#00fff0,#7f00ff);color:#fff;padding:14px;font-size:17px;font-weight:900;margin-top:14px;cursor:pointer;box-shadow:0 0 18px rgba(0,255,240,.3);}
+      .tlo-auth-guest-btn{width:100%;border:1px solid rgba(255,221,119,.65);border-radius:14px;background:#17130a;color:#ffdd77;padding:13px;font-size:15px;font-weight:900;margin-top:12px;cursor:pointer;}
+      .tlo-auth-divider{display:flex;align-items:center;gap:10px;color:#777;font-size:11px;margin-top:14px;}.tlo-auth-divider:before,.tlo-auth-divider:after{content:'';height:1px;background:#333;flex:1;}
       .tlo-auth-note{background:#241b08;border:1px solid #ffc107;color:#ffdd77;border-radius:12px;padding:10px;font-size:12px;line-height:1.5;margin-top:12px;}
       .tlo-auth-msg{font-size:13px;text-align:center;margin-top:10px;min-height:18px;color:#ff7777;line-height:1.4;}
       .tlo-auth-small-btn{border:1px solid #555;background:#191919;color:#ddd;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:900;cursor:pointer;margin:4px;}
@@ -200,6 +208,7 @@
       .tlo-auth-force{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.86);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
       .tlo-auth-force .tlo-auth-card{border-color:#ffc107;box-shadow:0 0 35px rgba(255,193,7,.35);}
       .tlo-auth-warning{color:#ffc107;font-size:13px;line-height:1.5;background:#2a210b;border:1px solid #ffc107;border-radius:12px;padding:10px;margin:10px 0;}
+      .tlo-guest-banner{background:linear-gradient(135deg,rgba(255,221,119,.14),rgba(0,255,240,.10));border:1px solid rgba(255,221,119,.55);color:#ffecaa;border-radius:14px;padding:11px 13px;margin:10px 0;font-size:12px;line-height:1.6;text-align:center;}
     `;
     document.head.appendChild(style);
   }
@@ -237,6 +246,9 @@
             <button class="tlo-auth-main-btn" id="tlo-register-btn" type="button">註冊並開始遊戲</button>
             <div class="tlo-auth-note">新用戶會建立全新資料，不會覆蓋內測玩家資料。</div>
           </div>
+          <div class="tlo-auth-divider">免登入瀏覽</div>
+          <button class="tlo-auth-guest-btn" id="tlo-guest-btn" type="button">👀 遊客／綠界審核人員直接進入</button>
+          <div style="color:#999;font-size:11px;line-height:1.5;text-align:center;margin-top:7px;">遊客可查看遊戲、卡池與商城；抽卡、付款及玩家資料操作仍需登入。</div>
           <div class="tlo-auth-msg" id="tlo-auth-msg"></div>
         </div>
       </div>
@@ -286,6 +298,13 @@
     document.getElementById("tlo-register-tab").onclick = function () { switchAuthTab("register"); };
     document.getElementById("tlo-login-btn").onclick = handleLogin;
     document.getElementById("tlo-register-btn").onclick = handleRegister;
+    document.getElementById("tlo-guest-btn").onclick = handleGuestEntry;
+  }
+
+  function handleGuestEntry() {
+    clearAuth();
+    sessionStorage.setItem(GUEST_MODE_KEY, "1");
+    location.reload();
   }
 
   async function handleLogin() {
@@ -341,6 +360,33 @@
 
     document.getElementById("tlo-change-password-btn").onclick = function () { showChangePasswordModal(false); };
     document.getElementById("tlo-logout-btn").onclick = handleLogout;
+  }
+
+  function addGuestControls() {
+    var info = document.querySelector(".asset-info");
+    if (info && !document.getElementById("tlo-auth-userbar")) {
+      var controls = document.createElement("div");
+      controls.id = "tlo-auth-userbar";
+      controls.className = "tlo-auth-userbar";
+      controls.innerHTML = '<span style="color:#ffdd77;font-size:12px;font-weight:900;">目前為遊客瀏覽</span><br><button class="tlo-auth-small-btn" type="button" id="tlo-guest-login-btn">🔐 登入玩家帳號</button>';
+      info.appendChild(controls);
+      document.getElementById("tlo-guest-login-btn").onclick = function () {
+        sessionStorage.removeItem(GUEST_MODE_KEY);
+        location.reload();
+      };
+    }
+    var container = document.querySelector(".container");
+    if (container && !document.getElementById("tlo-guest-banner")) {
+      var banner = document.createElement("div");
+      banner.id = "tlo-guest-banner";
+      banner.className = "tlo-guest-banner";
+      banner.innerHTML = '<b>👀 遊客／綠界審核瀏覽模式</b><br>可查看遊戲內容、卡池與商城；抽卡、購買、領獎、留言及玩家資料操作需登入。';
+      var header = container.querySelector("header");
+      if (header) header.insertAdjacentElement("afterend", banner);
+      else container.insertAdjacentElement("afterbegin", banner);
+    }
+    var uidEl = document.getElementById("display-uid");
+    if (uidEl) uidEl.textContent = "遊客";
   }
 
   async function handleLogout() {
@@ -409,12 +455,16 @@
   document.addEventListener("DOMContentLoaded", function () {
     injectAuthStyle();
 
-    if (!window.TLO_IS_AUTHENTICATED) {
+    if (!window.TLO_IS_AUTHENTICATED && !window.TLO_IS_GUEST) {
       showAuthScreen("");
       return;
     }
 
     hideAuthScreen();
+    if (window.TLO_IS_GUEST) {
+      addGuestControls();
+      return;
+    }
     addUserControls();
 
     var uidEl = document.getElementById("display-uid");
@@ -425,4 +475,10 @@
       setTimeout(function () { showChangePasswordModal(true); }, 700);
     }
   });
+
+  window.TLO_SHOW_LOGIN = function (message) {
+    sessionStorage.removeItem(GUEST_MODE_KEY);
+    window.TLO_IS_GUEST = false;
+    showAuthScreen(message || "請登入或註冊玩家帳號後繼續。");
+  };
 })();

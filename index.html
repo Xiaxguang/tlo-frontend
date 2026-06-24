@@ -1752,6 +1752,16 @@
 
     loadPublicSettings();
 
+    function readRpcForCurrentViewer(playerMethod, playerArgs, guestMethod, guestArgs) {
+      if (!window.TLO_RAW_RPC) return Promise.reject(new Error('API 尚未準備完成。'));
+      const isGuest = !!window.TLO_IS_GUEST;
+      return window.TLO_RAW_RPC(
+        isGuest ? guestMethod : playerMethod,
+        isGuest ? (guestArgs || []) : (playerArgs || []),
+        { auth: !isGuest }
+      );
+    }
+
     // 卡池資料一律以後端 cards 表為主；GM 新增卡片後，收藏、翻牌、機率表會自動跟著更新。
     let TLO_CARD_RARITIES = {};
     let TLO_CARD_POOL = [];
@@ -1790,6 +1800,14 @@
       loadGachaPools();
       // 留言板延後一點載入，讓首頁與抽卡按鈕先出現。
       setTimeout(loadMessageBoard, 400);
+    } else if (window.TLO_IS_GUEST) {
+      currentCount = 0;
+      updateButtonState();
+      loadGachaPools();
+      const history = document.getElementById('history-list');
+      if (history) history.innerHTML = '<div style="color:#ffdd77;">遊客可瀏覽卡池；登入後才能抽卡與查看個人紀錄。</div>';
+      const board = document.getElementById('message-board-list');
+      if (board) board.innerHTML = '<div style="color:#aaa;text-align:center;">遊客模式不載入玩家留言；登入後可查看及留言。</div>';
     }
 
     function renderGachaPoolPicker() {
@@ -1823,9 +1841,9 @@
     }
 
     function loadGachaPools(force) {
-      if (!window.TLO_IS_AUTHENTICATED || typeof google === 'undefined' || !google.script || !google.script.run) return;
+      if (!window.TLO_IS_AUTHENTICATED && !window.TLO_IS_GUEST) return;
       if (gachaPools.length && !force) { renderGachaPoolPicker(); return; }
-      google.script.run.withSuccessHandler(function(response) {
+      readRpcForCurrentViewer('getGachaPools', [playerUID], 'getGachaPools', []).then(function(response) {
         gachaPools = response && Array.isArray(response.pools) ? response.pools : [];
         let saved = '';
         try { saved = localStorage.getItem('TLO_GACHA_POOL') || ''; } catch (_) {}
@@ -1833,12 +1851,12 @@
           ? saved
           : (response.defaultPoolKey || gachaPools.find(pool => pool.isDefault)?.key || gachaPools[0]?.key || '');
         renderGachaPoolPicker();
-      }).withFailureHandler(function(err) {
+      }).catch(function(err) {
         const info = document.getElementById('gacha-pool-info');
         selectedGachaPoolKey = '';
         if (info) info.innerHTML = '<span style="color:#ff7777">卡池讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
         updateButtonState();
-      }).getGachaPools(playerUID);
+      });
     }
 
     // === 🟢 新增：玩家手動切換本命英雄立繪功能 ===
@@ -1867,8 +1885,12 @@
       const selectedPool = gachaPools.find(pool => pool.key === selectedGachaPoolKey);
       if (status) status.innerText = `正在讀取「${selectedPool ? selectedPool.name : '目前卡池'}」最新設定...`;
       if (body) body.innerHTML = '<tr><td colspan="3" style="color:#aaa;">同步中...</td></tr>';
-      if (typeof google === "undefined" || !google.script || !google.script.run) return;
-      google.script.run.withSuccessHandler(function(response) {
+      readRpcForCurrentViewer(
+        'getCardProbabilityTable',
+        [playerUID, selectedGachaPoolKey || 'permanent'],
+        'getCardProbabilityTable',
+        ['', selectedGachaPoolKey || 'permanent']
+      ).then(function(response) {
         if (!response || !response.success) {
           if (status) status.innerText = '卡池機率讀取失敗。';
           if (body) body.innerHTML = '<tr><td colspan="3" style="color:#ff7777;">卡池機率讀取失敗，請稍後再試。</td></tr>';
@@ -1890,10 +1912,10 @@
           html += `<tr class="table-summary"><td>${escapeHtml(group.rarity || '')} 級別總計機率</td><td>${escapeHtml(group.totalProbabilityText || '0.00%')}</td></tr>`;
         });
         if (body) body.innerHTML = html || '<tr><td colspan="3" style="color:#aaa;">目前沒有可抽卡片。</td></tr>';
-      }).withFailureHandler(function(err) {
+      }).catch(function(err) {
         if (status) status.innerText = '卡池機率讀取失敗。';
         if (body) body.innerHTML = '<tr><td colspan="3" style="color:#ff7777;">' + escapeHtml(err && err.message ? err.message : err) + '</td></tr>';
-      }).getCardProbabilityTable(playerUID, selectedGachaPoolKey || 'permanent');
+      });
     }
 
     function openCollectionModal() { document.getElementById('collection-modal').style.display = 'flex'; renderCollectionWall(); }
@@ -2830,6 +2852,18 @@
         noticeBox.style.display = "block"; 
       }
 
+      if (window.TLO_IS_GUEST) {
+        b1.disabled = true;
+        b1.style.background = "#555";
+        b1.style.color = "#bbb";
+        b1.innerText = "🔐 登入後可單抽";
+        b2.disabled = true;
+        b2.style.background = "#444";
+        b2.style.color = "#aaa";
+        b2.innerText = "🔐 登入後可十連抽";
+        return;
+      }
+
       // 處理單抽按鈕
       if (!hasPool || currentCount <= 0) {
         b1.disabled = true; 
@@ -3573,8 +3607,7 @@ function showCollectionHistory() {
       var grid = document.getElementById('shop-grid');
       if (msg) msg.innerHTML = '<span style="color:#aaa;">正在讀取商城資料...</span>';
       if (grid) grid.innerHTML = '';
-      if (typeof google === "undefined" || !google.script || !google.script.run) return;
-      google.script.run.withSuccessHandler(function(res) {
+      readRpcForCurrentViewer('getShopDashboard', [playerUID], 'getGuestShopCatalog', []).then(function(res) {
         if (!res || !res.success) {
           if (msg) msg.innerHTML = '<span style="color:#ff7777;">商城資料讀取失敗。</span>';
           return;
@@ -3584,9 +3617,9 @@ function showCollectionHistory() {
         var notice = document.getElementById('shop-payment-notice');
         if (notice) notice.innerText = res.paymentNotice || '儲值商城目前尚未開放正式付款。';
         renderShopDashboard();
-      }).withFailureHandler(function(err) {
+      }).catch(function(err) {
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">商城資料讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
-      }).getShopDashboard(playerUID);
+      });
     }
 
     function renderShopDashboard() {
@@ -3596,7 +3629,7 @@ function showCollectionHistory() {
       var res = latestShopDashboard || {};
       var items = (res.items || []).filter(function(item){ return item.category === activeShopCategory; });
       var title = activeShopCategory === 'ENERGY' ? '能量商店' : activeShopCategory === 'POINTS' ? '訓練總分商店' : '儲值商城';
-      if (msg) msg.innerHTML = '<b style="color:#ffdd77;">' + escapeHtml(title) + '</b>｜商品與限購由 GM 後台管理。';
+      if (msg) msg.innerHTML = '<b style="color:#ffdd77;">' + escapeHtml(title) + '</b>｜' + (res.guestPreview ? '遊客唯讀瀏覽，登入後才能購買。' : '商品與限購由 GM 後台管理。');
       if (!items.length) {
         grid.innerHTML = '<div style="color:#aaa;grid-column:1/-1;text-align:center;padding:20px;">此分類目前沒有上架商品。</div>';
         return;
@@ -3609,7 +3642,7 @@ function showCollectionHistory() {
         var disabled = !item.canBuy;
         var isCash = item.priceType === 'CASH';
         var note = item.paymentNote ? '<div class="shop-note">' + escapeHtml(item.paymentNote || '') + '</div>' : '';
-        var btnText = isCash && !item.paymentDisabled ? '前往綠界付款頁' : (item.paymentDisabled ? '付款尚未開放' : (disabled ? '已達限購 / 無法購買' : '購買'));
+        var btnText = item.requiresLogin ? '登入後購買' : (isCash && !item.paymentDisabled ? '前往綠界付款頁' : (item.paymentDisabled ? '付款尚未開放' : (disabled ? '已達限購 / 無法購買' : '購買')));
         return `<div class="shop-item-card ${disabled ? 'off' : ''}">
           <div class="shop-item-head"><div class="shop-item-name">${escapeHtml(item.name || '')}</div><span class="shop-tag">${escapeHtml(item.tag || limitText)}</span></div>
           <div class="shop-desc">${escapeHtml(item.description || '')}</div>
@@ -3648,6 +3681,10 @@ function showCollectionHistory() {
 
     function buyShopItem(productKey) {
       var msg = document.getElementById('shop-msg');
+      if (window.TLO_IS_GUEST) {
+        if (window.TLO_SHOW_LOGIN) window.TLO_SHOW_LOGIN('遊客可查看商城；建立訂單或購買商品前請先登入玩家帳號。');
+        return;
+      }
       var item = null;
       if (latestShopDashboard && latestShopDashboard.items) {
         item = latestShopDashboard.items.find(function(x){ return x.productKey === productKey; });
@@ -5080,7 +5117,7 @@ function showCollectionHistory() {
       }
 
       function getContextBgm() {
-        if (!window.TLO_IS_AUTHENTICATED || document.getElementById('tlo-auth-overlay')) return 'login';
+        if ((!window.TLO_IS_AUTHENTICATED && !window.TLO_IS_GUEST) || document.getElementById('tlo-auth-overlay')) return 'login';
         var active = document.querySelector('.game-screen.active');
         var screen = active ? active.getAttribute('data-screen') : 'home';
         if (screen === 'gacha') return 'gacha';
