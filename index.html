@@ -1762,6 +1762,179 @@
       );
     }
 
+    const GUEST_DEMO_STATE_KEY = 'TLO_GUEST_DEMO_STATE';
+    const GUEST_STARTING_DRAW_TIMES = 30;
+
+    function makeGuestDemoState() {
+      return { drawTimes: GUEST_STARTING_DRAW_TIMES, collection: {}, history: [], score: 0, energy: 0, memoryGames: 0, sequence: 0, changed: false };
+    }
+
+    function loadGuestDemoState() {
+      if (!window.TLO_IS_GUEST) return makeGuestDemoState();
+      try {
+        const parsed = JSON.parse(sessionStorage.getItem(GUEST_DEMO_STATE_KEY) || 'null');
+        if (!parsed || typeof parsed !== 'object') return makeGuestDemoState();
+        return {
+          drawTimes: Math.max(0, Number(parsed.drawTimes ?? GUEST_STARTING_DRAW_TIMES)),
+          collection: parsed.collection && typeof parsed.collection === 'object' ? parsed.collection : {},
+          history: Array.isArray(parsed.history) ? parsed.history.slice(0, 200) : [],
+          score: Math.max(0, Number(parsed.score || 0)),
+          energy: Math.max(0, Number(parsed.energy || 0)),
+          memoryGames: Math.max(0, Number(parsed.memoryGames || 0)),
+          sequence: Math.max(0, Number(parsed.sequence || 0)),
+          changed: !!parsed.changed
+        };
+      } catch (_) {
+        return makeGuestDemoState();
+      }
+    }
+
+    let guestDemoState = loadGuestDemoState();
+
+    function saveGuestDemoState() {
+      if (!window.TLO_IS_GUEST) return;
+      guestDemoState.changed = true;
+      sessionStorage.setItem(GUEST_DEMO_STATE_KEY, JSON.stringify(guestDemoState));
+      currentCount = Math.max(0, Number(guestDemoState.drawTimes || 0));
+      const energyEl = document.getElementById('display-energy');
+      const scoreEl = document.getElementById('display-points');
+      if (energyEl) energyEl.innerText = Number(guestDemoState.energy || 0).toLocaleString();
+      if (scoreEl) scoreEl.innerText = Number(guestDemoState.score || 0).toLocaleString();
+      setCollectionSummary(Object.keys(guestDemoState.collection || {}).length, Object.keys(guestDemoState.collection || {}).length);
+      updateButtonState();
+    }
+
+    window.TLO_GUEST_HAS_PROGRESS = function () {
+      return !!(window.TLO_IS_GUEST && guestDemoState && guestDemoState.changed);
+    };
+
+    function guestHistoryHtml() {
+      if (!guestDemoState.history.length) return '<div>訪客模式目前沒有抽卡紀錄</div>';
+      return guestDemoState.history.slice(0, 10).map(function(item) {
+        return `<div class="history-item">[${escapeHtml(item.date || '')}] 訪客抽到了 <span class="hist-name">${escapeHtml(item.name || '')}</span></div>`;
+      }).join('');
+    }
+
+    function guestWeightedDraw(cards) {
+      const pool = (cards || []).filter(card => Number(card.weight || 0) > 0);
+      const total = pool.reduce((sum, card) => sum + Number(card.weight || 0), 0);
+      if (!pool.length || total <= 0) throw new Error('目前卡池沒有可體驗的卡牌。');
+      let roll = Math.random() * total;
+      for (const card of pool) {
+        roll -= Number(card.weight || 0);
+        if (roll < 0) return card;
+      }
+      return pool[pool.length - 1];
+    }
+
+    async function getGuestPoolCardData(poolKey) {
+      const response = await window.TLO_RAW_RPC('getCardProbabilityTable', ['', poolKey || 'permanent'], { auth: false });
+      if (!response || !response.success || !Array.isArray(response.cards)) throw new Error('訪客卡池資料讀取失敗。');
+      registerCardImages(response);
+      updateCardCacheFromResponse(response);
+      return response;
+    }
+
+    function guestCollectionResponse(poolData) {
+      const poolCards = Array.isArray(poolData && poolData.cards) ? poolData.cards : [];
+      const cardsByName = new Map();
+      poolCards.forEach(card => cardsByName.set(card.name, card));
+      Object.keys(guestDemoState.collection).forEach(name => {
+        const owned = guestDemoState.collection[name] || {};
+        if (!cardsByName.has(name)) cardsByName.set(name, owned);
+      });
+      const ownedCardsMap = {};
+      const cards = Array.from(cardsByName.values()).map(function(card) {
+        const name = card.name || card.cardName || card.npcName || '';
+        const owned = guestDemoState.collection[name] || {};
+        const quantity = Math.max(0, Number(owned.quantity || 0));
+        if (quantity > 0) ownedCardsMap[name] = quantity;
+        return {
+          id: card.id || owned.id || '', name, cardName: name, npcName: name,
+          rarity: card.rarity || owned.rarity || 'NORMAL', count: quantity, quantity,
+          imageUrl: card.imageUrl || card.image_url || owned.imageUrl || '',
+          image_url: card.imageUrl || card.image_url || owned.imageUrl || '',
+          isDrawable: true, sortOrder: Number(card.sortOrder || owned.sortOrder || 9999)
+        };
+      });
+      return {
+        success: true,
+        guestDemo: true,
+        ownedCardsMap,
+        uniqueCount: Object.keys(ownedCardsMap).length,
+        collectionUniqueCount: Object.keys(ownedCardsMap).length,
+        totalCards: cards.length,
+        totalCollectibleCards: cards.length,
+        cards
+      };
+    }
+
+    window.TLO_GUEST_RPC = async function (method, args) {
+      if (!window.TLO_IS_GUEST) return undefined;
+      if (method === 'executeGacha' || method === 'executeGacha10') {
+        const drawCount = method === 'executeGacha10' ? 10 : 1;
+        if (guestDemoState.drawTimes < drawCount) {
+          return { success: false, msg: drawCount === 10 ? '訪客體驗次數不足 10 次。' : '訪客體驗次數不足。', timesLeft: guestDemoState.drawTimes };
+        }
+        const poolKey = String((args && args[1]) || selectedGachaPoolKey || 'permanent');
+        const poolData = await getGuestPoolCardData(poolKey);
+        const results = [];
+        for (let i = 0; i < drawCount; i++) {
+          const card = guestWeightedDraw(poolData.cards);
+          guestDemoState.sequence += 1;
+          const serial = `DEMO-${String(guestDemoState.sequence).padStart(4, '0')}`;
+          const imageUrl = card.imageUrl || card.image_url || '';
+          const old = guestDemoState.collection[card.name] || {};
+          guestDemoState.collection[card.name] = {
+            id: card.id || old.id || '', name: card.name,
+            rarity: card.rarity || old.rarity || 'NORMAL', imageUrl,
+            sortOrder: Number(card.sortOrder || old.sortOrder || 9999),
+            quantity: Number(old.quantity || 0) + 1
+          };
+          const historyItem = { date: new Date().toLocaleString('zh-TW'), name: card.name, serial, imageUrl };
+          guestDemoState.history.unshift(historyItem);
+          results.push({ npcName: card.name, npcRarity: card.rarityCss || card.rarity || 'NORMAL', serialNumber: serial, imageUrl, image_url: imageUrl });
+        }
+        guestDemoState.history = guestDemoState.history.slice(0, 200);
+        guestDemoState.drawTimes -= drawCount;
+        saveGuestDemoState();
+        const base = {
+          success: true, guestDemo: true, timesLeft: guestDemoState.drawTimes,
+          historyHtml: guestHistoryHtml(),
+          collectionUniqueCount: Object.keys(guestDemoState.collection).length,
+          uniqueCount: Object.keys(guestDemoState.collection).length,
+          totalCollectibleCards: poolData.cards.length,
+          totalCards: poolData.cards.length,
+          pool: poolData.pool || null
+        };
+        return drawCount === 1 ? { ...base, ...results[0] } : { ...base, results };
+      }
+      if (method === 'getPlayerCollection') {
+        const poolData = await getGuestPoolCardData(selectedGachaPoolKey || 'permanent');
+        return guestCollectionResponse(poolData);
+      }
+      if (method === 'getPlayerHistory') return guestDemoState.history.slice();
+      if (method === 'getHomeState') {
+        return {
+          success: true, guestDemo: true, timesLeft: guestDemoState.drawTimes,
+          energy: guestDemoState.energy, skillExp: 0, availablePoints: guestDemoState.score,
+          historyHtml: guestHistoryHtml(),
+          collectionUniqueCount: Object.keys(guestDemoState.collection).length,
+          totalCollectibleCards: Object.keys(guestDemoState.collection).length
+        };
+      }
+      if (method === 'saveMemoryGameScore') {
+        const score = Math.max(0, Math.min(200, Number(args && args[1] || 0)));
+        const energy = Math.max(20, Math.min(80, 20 + Math.floor(score / 4)));
+        guestDemoState.score += score;
+        guestDemoState.energy += energy;
+        guestDemoState.memoryGames += 1;
+        saveGuestDemoState();
+        return { success: true, guestDemo: true, msg: `訪客體驗完成！暫存能量 +${energy}、暫存分數 +${score}；關閉分頁後會消失。` };
+      }
+      return undefined;
+    };
+
     // 卡池資料一律以後端 cards 表為主；GM 新增卡片後，收藏、翻牌、機率表會自動跟著更新。
     let TLO_CARD_RARITIES = {};
     let TLO_CARD_POOL = [];
@@ -1801,13 +1974,17 @@
       // 留言板延後一點載入，讓首頁與抽卡按鈕先出現。
       setTimeout(loadMessageBoard, 400);
     } else if (window.TLO_IS_GUEST) {
-      currentCount = 0;
+      currentCount = Math.max(0, Number(guestDemoState.drawTimes || 0));
       updateButtonState();
       loadGachaPools();
+      const guestEnergy = document.getElementById('display-energy');
+      const guestScore = document.getElementById('display-points');
+      if (guestEnergy) guestEnergy.innerText = Number(guestDemoState.energy || 0).toLocaleString();
+      if (guestScore) guestScore.innerText = Number(guestDemoState.score || 0).toLocaleString();
       const history = document.getElementById('history-list');
-      if (history) history.innerHTML = '<div style="color:#ffdd77;">遊客可瀏覽卡池；登入後才能抽卡與查看個人紀錄。</div>';
+      if (history) history.innerHTML = guestHistoryHtml();
       const board = document.getElementById('message-board-list');
-      if (board) board.innerHTML = '<div style="color:#aaa;text-align:center;">遊客模式不載入玩家留言；登入後可查看及留言。</div>';
+      if (board) board.innerHTML = '<div style="color:#aaa;text-align:center;">訪客模式不載入玩家留言；登入後可查看及留言。</div>';
     }
 
     function renderGachaPoolPicker() {
@@ -1827,6 +2004,7 @@
       const period = `${selected.startsAt ? new Date(selected.startsAt).toLocaleString() : '立即開放'} ～ ${selected.endsAt ? new Date(selected.endsAt).toLocaleString() : '不限期'}`;
       const image = selected.bannerUrl ? `<img src="${escapeHtml(selected.bannerUrl)}" alt="${escapeHtml(selected.name)}" onerror="this.style.display='none'">` : '';
       info.innerHTML = `${image}<div><b style="color:#fff">${escapeHtml(selected.name)}</b><br>${escapeHtml(selected.description || 'GM 尚未填寫卡池說明')}<br>可抽卡牌 ${Number(selected.cardCount || 0)} 張｜${escapeHtml(period)}</div>`;
+      if (window.TLO_IS_GUEST) setCollectionSummary(Object.keys(guestDemoState.collection || {}).length, Number(selected.cardCount || 0));
       try { localStorage.setItem('TLO_GACHA_POOL', selectedGachaPoolKey); } catch (_) {}
       updateButtonState();
     }
@@ -2853,14 +3031,14 @@
       }
 
       if (window.TLO_IS_GUEST) {
-        b1.disabled = true;
-        b1.style.background = "#555";
-        b1.style.color = "#bbb";
-        b1.innerText = "🔐 登入後可單抽";
-        b2.disabled = true;
-        b2.style.background = "#444";
-        b2.style.color = "#aaa";
-        b2.innerText = "🔐 登入後可十連抽";
+        b1.disabled = !hasPool || currentCount <= 0;
+        b1.style.background = b1.disabled ? "#555" : "linear-gradient(45deg, #ff007f, #7f00ff)";
+        b1.style.color = b1.disabled ? "#bbb" : "white";
+        b1.innerText = b1.disabled ? "訪客體驗次數用盡" : "訪客體驗．單抽開盒";
+        b2.disabled = !hasPool || currentCount < 10;
+        b2.style.background = b2.disabled ? "#444" : "linear-gradient(45deg, #7f00ff, #ff00ff)";
+        b2.style.color = b2.disabled ? "#aaa" : "white";
+        b2.innerText = b2.disabled ? "訪客體驗不足 10 次" : "訪客體驗．十連開盒";
         return;
       }
 
@@ -3629,7 +3807,7 @@ function showCollectionHistory() {
       var res = latestShopDashboard || {};
       var items = (res.items || []).filter(function(item){ return item.category === activeShopCategory; });
       var title = activeShopCategory === 'ENERGY' ? '能量商店' : activeShopCategory === 'POINTS' ? '訓練總分商店' : '儲值商城';
-      if (msg) msg.innerHTML = '<b style="color:#ffdd77;">' + escapeHtml(title) + '</b>｜' + (res.guestPreview ? '遊客唯讀瀏覽，登入後才能購買。' : '商品與限購由 GM 後台管理。');
+      if (msg) msg.innerHTML = '<b style="color:#ffdd77;">' + escapeHtml(title) + '</b>｜' + (res.guestPreview ? '訪客唯讀瀏覽，登入後才能購買。' : '商品與限購由 GM 後台管理。');
       if (!items.length) {
         grid.innerHTML = '<div style="color:#aaa;grid-column:1/-1;text-align:center;padding:20px;">此分類目前沒有上架商品。</div>';
         return;
@@ -3682,7 +3860,7 @@ function showCollectionHistory() {
     function buyShopItem(productKey) {
       var msg = document.getElementById('shop-msg');
       if (window.TLO_IS_GUEST) {
-        if (window.TLO_SHOW_LOGIN) window.TLO_SHOW_LOGIN('遊客可查看商城；建立訂單或購買商品前請先登入玩家帳號。');
+        if (window.TLO_SHOW_LOGIN) window.TLO_SHOW_LOGIN('訪客可查看商城；建立訂單或購買商品前請先登入玩家帳號。');
         return;
       }
       var item = null;

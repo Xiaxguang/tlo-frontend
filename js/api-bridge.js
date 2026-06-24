@@ -3,6 +3,7 @@
   var AUTH_TOKEN_KEY = "TLO_AUTH_TOKEN";
   var AUTH_PLAYER_KEY = "TLO_AUTH_PLAYER";
   var GUEST_MODE_KEY = "TLO_GUEST_MODE";
+  var GUEST_DEMO_STATE_KEY = "TLO_GUEST_DEMO_STATE";
 
   function getApiBaseUrl() {
     var cfg = window.TLO_CONFIG || {};
@@ -31,6 +32,7 @@
     localStorage.setItem(AUTH_PLAYER_KEY, JSON.stringify(data.player));
     localStorage.setItem("TLO_UID", data.player.uid); // 保留舊版相容
     sessionStorage.removeItem(GUEST_MODE_KEY);
+    sessionStorage.removeItem(GUEST_DEMO_STATE_KEY);
   }
 
   function clearAuth() {
@@ -132,7 +134,11 @@
 
   async function callRpc(method, args) {
     if (!window.TLO_IS_AUTHENTICATED) {
-      if (window.TLO_IS_GUEST) showAuthScreen("遊客模式僅供瀏覽；抽卡、購買與玩家操作前請先登入或註冊。");
+      if (window.TLO_IS_GUEST && typeof window.TLO_GUEST_RPC === "function") {
+        var guestResult = await window.TLO_GUEST_RPC(String(method || ""), args || []);
+        if (guestResult !== undefined) return guestResult;
+      }
+      if (window.TLO_IS_GUEST) showAuthScreen("訪客可體驗抽卡與記憶翻牌；這項正式玩家功能需要登入或註冊。");
       throw new Error(window.TLO_IS_GUEST ? "此功能需要登入玩家帳號。" : "請先登入或註冊帳號。");
     }
     return rawRpc(method, args, { auth: true });
@@ -247,8 +253,8 @@
             <div class="tlo-auth-note">新用戶會建立全新資料，不會覆蓋內測玩家資料。</div>
           </div>
           <div class="tlo-auth-divider">免登入瀏覽</div>
-          <button class="tlo-auth-guest-btn" id="tlo-guest-btn" type="button">👀 遊客／綠界審核人員直接進入</button>
-          <div style="color:#999;font-size:11px;line-height:1.5;text-align:center;margin-top:7px;">遊客可查看遊戲、卡池與商城；抽卡、付款及玩家資料操作仍需登入。</div>
+          <button class="tlo-auth-guest-btn" id="tlo-guest-btn" type="button">👀 訪客模式免登入</button>
+          <div style="color:#999;font-size:11px;line-height:1.5;text-align:center;margin-top:7px;">訪客可體驗抽卡與記憶翻牌，資料只保存在目前分頁且不會寫入正式帳號。</div>
           <div class="tlo-auth-msg" id="tlo-auth-msg"></div>
         </div>
       </div>
@@ -368,11 +374,12 @@
       var controls = document.createElement("div");
       controls.id = "tlo-auth-userbar";
       controls.className = "tlo-auth-userbar";
-      controls.innerHTML = '<span style="color:#ffdd77;font-size:12px;font-weight:900;">目前為遊客瀏覽</span><br><button class="tlo-auth-small-btn" type="button" id="tlo-guest-login-btn">🔐 登入玩家帳號</button>';
+      controls.innerHTML = '<span style="color:#ffdd77;font-size:12px;font-weight:900;">目前為訪客體驗模式</span><br><button class="tlo-auth-small-btn" type="button" id="tlo-guest-login-btn">🔐 綁定／登入帳號</button>';
       info.appendChild(controls);
       document.getElementById("tlo-guest-login-btn").onclick = function () {
-        sessionStorage.removeItem(GUEST_MODE_KEY);
-        location.reload();
+        var hasProgress = typeof window.TLO_GUEST_HAS_PROGRESS === "function" && window.TLO_GUEST_HAS_PROGRESS();
+        if (hasProgress && !confirm("訪客體驗資料無法轉移到正式帳號。現在登入／註冊後，可永久保存之後的遊戲進度。確定前往登入嗎？")) return;
+        window.TLO_SHOW_LOGIN("請登入或註冊帳號；訪客體驗資料不會匯入正式帳號。登入後的進度才會永久保存。");
       };
     }
     var container = document.querySelector(".container");
@@ -380,13 +387,13 @@
       var banner = document.createElement("div");
       banner.id = "tlo-guest-banner";
       banner.className = "tlo-guest-banner";
-      banner.innerHTML = '<b>👀 遊客／綠界審核瀏覽模式</b><br>可查看遊戲內容、卡池與商城；抽卡、購買、領獎、留言及玩家資料操作需登入。';
+      banner.innerHTML = '<b>👀 訪客模式免登入</b><br>可體驗抽卡與記憶翻牌並查看商城；資料只暫存在此分頁，關閉後消失，且不會轉移到正式帳號。';
       var header = container.querySelector("header");
       if (header) header.insertAdjacentElement("afterend", banner);
       else container.insertAdjacentElement("afterbegin", banner);
     }
     var uidEl = document.getElementById("display-uid");
-    if (uidEl) uidEl.textContent = "遊客";
+    if (uidEl) uidEl.textContent = "訪客";
   }
 
   async function handleLogout() {
@@ -481,4 +488,11 @@
     window.TLO_IS_GUEST = false;
     showAuthScreen(message || "請登入或註冊玩家帳號後繼續。");
   };
+
+  window.addEventListener("beforeunload", function (event) {
+    if (!window.TLO_IS_GUEST) return;
+    if (typeof window.TLO_GUEST_HAS_PROGRESS !== "function" || !window.TLO_GUEST_HAS_PROGRESS()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
 })();
