@@ -2,6 +2,8 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>T-LO GM 管理後台</title>
   <script src="js/config.js"></script>
@@ -402,7 +404,7 @@
 
       <div id="tab-backup" class="hide panel">
         <h2>💾 備份 / 匯出資料</h2>
-        <div class="muted">匯出的是目前 Turso 資料庫中的 JSON 檔。建議正式營運後每天至少手動備份一次。</div>
+          <div class="muted">匯出的是目前 Supabase 資料庫中的 JSON 檔。建議正式營運後每天至少手動備份一次。</div>
         <div class="row" style="grid-template-columns:1fr auto auto">
           <select id="exportTableName">
             <option value="players">players 玩家</option>
@@ -482,7 +484,7 @@ function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
 function fmt(n){ return Number(n || 0).toLocaleString(); }
 function msg(id, text, good=false){ const el=$(id); if(!el)return; el.textContent=text||''; el.className='msg'+(good?' good':''); }
-function token(){ return localStorage.getItem(TOKEN_KEY) || ''; }
+function token(){ return sessionStorage.getItem(TOKEN_KEY) || ''; }
 function note(){ return $('adminNote') ? $('adminNote').value.trim() : ''; }
 
 async function rpc(method, args=[], auth=true){
@@ -496,7 +498,7 @@ async function rpc(method, args=[], auth=true){
 
 function boot(){
   const t = token();
-  const admin = JSON.parse(localStorage.getItem(ADMIN_KEY) || 'null');
+  const admin = JSON.parse(sessionStorage.getItem(ADMIN_KEY) || 'null');
   if(t && admin){
     $('loginPanel').classList.add('hide');
     $('appPanel').classList.remove('hide');
@@ -509,8 +511,8 @@ async function login(){
   try{
     msg('loginMsg','登入中...',true);
     const data = await rpc('adminLogin', [$('loginUser').value.trim(), $('loginPass').value], false);
-    localStorage.setItem(TOKEN_KEY, data.token);
-    localStorage.setItem(ADMIN_KEY, JSON.stringify(data.admin || {}));
+    sessionStorage.setItem(TOKEN_KEY, data.token);
+    sessionStorage.setItem(ADMIN_KEY, JSON.stringify(data.admin || {}));
     msg('loginMsg','登入成功',true);
     setTimeout(() => location.reload(), 300);
   }catch(e){ msg('loginMsg', e.message); }
@@ -518,7 +520,7 @@ async function login(){
 
 async function logout(){
   try{ if(token()) await rpc('adminLogout', [], true); }catch(e){}
-  localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(ADMIN_KEY); location.reload();
+  sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(ADMIN_KEY); location.reload();
 }
 
 function openGame(){ location.href = './'; }

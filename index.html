@@ -4,6 +4,8 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; upgrade-insecure-requests">
   <title>T-LO 潮流盲盒開榜現場</title>
   <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
   <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -1888,7 +1890,7 @@
         html += `
           <div class="collection-item">
             ${isOwned ? '' : '<div class="lock-icon">🔒</div>'}
-            <img src="${imgUrl}" class="collection-item-img ${isOwned ? '' : 'locked'}" alt="${escapeHtml(cardName)}" loading="lazy">
+            <img src="${escapeHtml(imgUrl)}" class="collection-item-img ${isOwned ? '' : 'locked'}" alt="${escapeHtml(cardName)}" loading="lazy">
             <div class="collection-name" style="color: ${isOwned ? '#00fff0' : '#555'};">${escapeHtml(cardName)}</div>
             ${badgeHtml}
           </div>
@@ -2116,7 +2118,7 @@
       google.script.run.withSuccessHandler(function(response) {
         applyBattleDashboard(response);
       }).withFailureHandler(function(err) {
-        document.getElementById('battle-result-msg').innerHTML = `<span style="color:#ff4444;">戰鬥資料讀取失敗：${err && err.message ? err.message : err}</span>`;
+        document.getElementById('battle-result-msg').innerHTML = `<span style="color:#ff4444;">戰鬥資料讀取失敗：${escapeHtml(err && err.message ? err.message : err)}</span>`;
         btn.disabled = true;
         btn.innerText = "⚠️ 暫時無法挑戰";
       }).getBattleDashboard(playerUID, selectedBattleStageId || undefined);
@@ -2670,14 +2672,19 @@
 
           registerCardImages(response);
           let githubImgUrl = getCardImageUrl({ name: response.npcName, npcName: response.npcName, imageUrl: response.imageUrl, image_url: response.image_url });
+          const safeName = escapeHtml(response.npcName || '');
+          const safeSerial = escapeHtml(response.serialNumber || '');
+          const rarityClass = String(response.npcRarity || '').replace(/[^a-z0-9_-]/gi, '');
+          const safeRarity = escapeHtml(response.npcRarity || '');
+          const downloadName = safeFileName(`T-LO_${response.npcName || ''}_${response.serialNumber || ''}`);
           let imgHtml = githubImgUrl
-            ? `<div class="card-wrapper" id="single-card"><div class="card-serial-badge">${response.serialNumber}</div><img src="${githubImgUrl}" class="card-img" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('single-card', 'T-LO_${response.npcName}_${response.serialNumber}', false)" class="btn-download">📥 下載卡片</button>`
+            ? `<div class="card-wrapper" id="single-card"><div class="card-serial-badge">${safeSerial}</div><img src="${escapeHtml(githubImgUrl)}" class="card-img" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('single-card', '${downloadName}', false)" class="btn-download">📥 下載卡片</button>`
             : '<p>(無圖)</p>';
 
           let now = new Date();
           let timeStr = now.getFullYear() + '/' + (now.getMonth()+1) + '/' + now.getDate() + ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
 
-          document.getElementById('card-stage').innerHTML = `<div class="rarity-tag rarity-${response.npcRarity}">${response.npcRarity}</div><div style="display:flex; flex-direction:column; align-items:center; width:100%; margin:5px 0;">${imgHtml}</div><h1 style="color: #00fff0; margin: 5px 0;">🎉 【${response.npcName}】 🎉</h1><p style="font-size: 12px; color: #888;">開盒時間：${timeStr}</p>`;
+          document.getElementById('card-stage').innerHTML = `<div class="rarity-tag rarity-${rarityClass}">${safeRarity}</div><div style="display:flex; flex-direction:column; align-items:center; width:100%; margin:5px 0;">${imgHtml}</div><h1 style="color: #00fff0; margin: 5px 0;">🎉 【${safeName}】 🎉</h1><p style="font-size: 12px; color: #888;">開盒時間：${timeStr}</p>`;
           document.getElementById('history-list').innerHTML = response.historyHtml || "";
           if (window.TLOAudio) window.TLOAudio.playCardRarity(response.npcRarity);
 
@@ -2686,13 +2693,13 @@
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
-          document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${response && response.msg ? response.msg : "抽卡失敗，請稍後再試"}</p>`;
+          document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${escapeHtml(response && response.msg ? response.msg : "抽卡失敗，請稍後再試")}</p>`;
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
         }
 
         updateButtonState();
       }).withFailureHandler(function(err) {
-        document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${err && err.message ? err.message : err}</p>`;
+        document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${escapeHtml(err && err.message ? err.message : err)}</p>`;
         if (window.TLOAudio) window.TLOAudio.playSfx('error');
         updateButtonState();
       }).executeGacha(playerUID);
@@ -2713,11 +2720,16 @@
           response.results.forEach(function(item, index) {
             registerCardImages(item);
             let githubImgUrl = getCardImageUrl({ name: item.npcName, npcName: item.npcName, imageUrl: item.imageUrl, image_url: item.image_url });
+            const safeItemName = escapeHtml(item.npcName || '');
+            const safeItemSerial = escapeHtml(item.serialNumber || '');
+            const itemRarityClass = String(item.npcRarity || '').replace(/[^a-z0-9_-]/gi, '');
+            const safeItemRarity = escapeHtml(item.npcRarity || '');
+            const itemDownloadName = safeFileName(`T-LO_${item.npcName || ''}_${item.serialNumber || ''}`);
             let cardImgHtml = githubImgUrl
-              ? `<div class="card-wrapper" id="card10-${index}" style="margin:5px 0;"><div class="card-serial-badge badge-sm">${item.serialNumber}</div><img src="${githubImgUrl}" class="card-img-sm" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('card10-${index}', 'T-LO_${item.npcName}_${item.serialNumber}', false)" class="btn-download">📥 下載</button>`
+              ? `<div class="card-wrapper" id="card10-${index}" style="margin:5px 0;"><div class="card-serial-badge badge-sm">${safeItemSerial}</div><img src="${escapeHtml(githubImgUrl)}" class="card-img-sm" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('card10-${index}', '${itemDownloadName}', false)" class="btn-download">📥 下載</button>`
               : '<p>(無圖)</p>';
 
-            gridHtml += `<div class="gacha10-card"><div class="rarity-tag-sm rarity-${item.npcRarity}">${item.npcRarity}</div>${cardImgHtml}<div style="color: #00fff0; font-weight:bold; font-size:12px; margin-top:4px; text-align:center;">#${index+1} ${item.npcName}</div></div>`;
+            gridHtml += `<div class="gacha10-card"><div class="rarity-tag-sm rarity-${itemRarityClass}">${safeItemRarity}</div>${cardImgHtml}<div style="color: #00fff0; font-weight:bold; font-size:12px; margin-top:4px; text-align:center;">#${index+1} ${safeItemName}</div></div>`;
           });
 
           gridHtml += '</div></div>';
@@ -2732,13 +2744,13 @@
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
-          document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${response && response.msg ? response.msg : "十連抽失敗，請稍後再試"}</p>`;
+          document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${escapeHtml(response && response.msg ? response.msg : "十連抽失敗，請稍後再試")}</p>`;
           if (window.TLOAudio) window.TLOAudio.playSfx('error');
         }
 
         updateButtonState();
       }).withFailureHandler(function(err) {
-        document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${err && err.message ? err.message : err}</p>`;
+        document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">系統繁忙，請稍後再試：${escapeHtml(err && err.message ? err.message : err)}</p>`;
         if (window.TLOAudio) window.TLOAudio.playSfx('error');
         updateButtonState();
       }).executeGacha10(playerUID);
@@ -2955,7 +2967,7 @@ function showCollectionHistory() {
     // ===============================
     // T-LO 圖片讀取統一工具
     // 讀取優先順序：
-    // 1. Turso cards.image_url / API 回傳 imageUrl
+// 1. 資料庫 cards.image_url / API 回傳 imageUrl
     // 2. 前端暫存 window.TLO_CARD_IMAGE_MAP
     // 3. 舊圖片表 window.NPC_IMAGES
     // 4. 預設佔位圖
@@ -3089,7 +3101,7 @@ function showCollectionHistory() {
     function getRawCardImageUrl(cardOrName) {
       var name = tloGetCardName(cardOrName);
 
-      // 物件本身如果有 Turso / API 圖片欄位，永遠最優先。
+  // 物件本身如果有資料庫 / API 圖片欄位，永遠最優先。
       var directUrl = tloPickImageUrl(cardOrName);
       if (directUrl) {
         if (name) tloCacheCardImage(name, directUrl);
@@ -3127,7 +3139,7 @@ function showCollectionHistory() {
 
 
     function safeFileName(text) {
-      return String(text || '').replace(/[\\/:*?"<>|\s]+/g, '_');
+      return String(text || '').replace(/[^\p{L}\p{N}_.-]+/gu, '_').slice(0, 100);
     }
 
     function escapeHtml(text) {
@@ -3702,7 +3714,7 @@ function showCollectionHistory() {
       if (friends) {
         var flist = res.friends || [];
         friends.innerHTML = flist.length ? flist.map(function(p){
-          return socialRow(p, `<button class="social-action-btn warn" onclick="removeFriendUI('${jsString(p.uid || '')}')">解除</button>`);
+          return socialRow(p, `<button class="social-action-btn warn" onclick="removeFriendUI('${escapeHtml(jsString(p.uid || ''))}')">解除</button>`);
         }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前還沒有好友，先新增一位玩家吧。</div>';
       }
     }
@@ -4017,7 +4029,7 @@ function showCollectionHistory() {
       qBox.innerText = quiz.question;
       let html = '';
       quiz.options.forEach(function(opt, idx) {
-        html += `<button class="btn-collection" style="display:block; width:100%; margin:8px 0;" onclick="answerTrainingQuiz(${idx})">${idx + 1}. ${opt}</button>`;
+        html += `<button class="btn-collection" style="display:block; width:100%; margin:8px 0;" onclick="answerTrainingQuiz(${idx})">${idx + 1}. ${escapeHtml(opt)}</button>`;
       });
       optBox.innerHTML = html;
     }
@@ -4049,7 +4061,7 @@ function showCollectionHistory() {
       rows.forEach(function(row, index) {
         html += `
           <div class="history-item" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px;">
-            <div><b style="color:#ffdd77;">#${index + 1}</b> <span class="hist-uid">${row.uid}</span><br><span style="color:#00fff0; font-size:12px;">${row.title || '潮流新人'}｜連簽 ${row.streak || 0} 天</span></div>
+            <div><b style="color:#ffdd77;">#${index + 1}</b> <span class="hist-uid">${escapeHtml(row.uid || '')}</span><br><span style="color:#00fff0; font-size:12px;">${escapeHtml(row.title || '潮流新人')}｜連簽 ${Number(row.streak || 0)} 天</span></div>
             <div style="color:#fff; font-weight:bold;">${Number(row.totalScore || 0).toLocaleString()} 分</div>
           </div>
         `;
@@ -4901,14 +4913,14 @@ function showCollectionHistory() {
           battle: './audio/bgm-battle.mp3'
         },
         sfx: {
-          click: './audio/sfx-click.mp3.mp3',
-          login: './audio/sfx-login.mp3.mp3',
-          gachaStart: './audio/sfx-gacha-start.mp3.mp3',
-          cardNormal: './audio/sfx-card-normal.mp3.mp3',
-          cardRare: './audio/sfx-card-rare.mp3.mp3',
-          cardSsr: './audio/sfx-card-ssr.mp3.mp3',
-          win: './audio/sfx-win.mp3.mp3',
-          error: './audio/sfx-error.mp3.mp3'
+          click: './audio/sfx-click.mp3',
+          login: './audio/sfx-login.mp3',
+          gachaStart: './audio/sfx-gacha-start.mp3',
+          cardNormal: './audio/sfx-card-normal.mp3',
+          cardRare: './audio/sfx-card-rare.mp3',
+          cardSsr: './audio/sfx-card-ssr.mp3',
+          win: './audio/sfx-win.mp3',
+          error: './audio/sfx-error.mp3'
         }
       };
 

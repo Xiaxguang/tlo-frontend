@@ -219,9 +219,9 @@
             <label class="tlo-auth-label">玩家 UID / 玩家代碼</label>
             <input class="tlo-auth-input" id="tlo-login-uid" value="${escapeAttr(urlUid)}" placeholder="輸入你的內測 UID">
             <label class="tlo-auth-label">密碼</label>
-            <input class="tlo-auth-input" id="tlo-login-password" type="password" placeholder="內測預設密碼 aaa123456">
+            <input class="tlo-auth-input" id="tlo-login-password" type="password" placeholder="輸入你的密碼">
             <button class="tlo-auth-main-btn" id="tlo-login-btn" type="button">登入遊戲</button>
-            <div class="tlo-auth-note">內測玩家已自動建立帳號，第一次登入請用原本 UID，預設密碼：<b>aaa123456</b>。進入後可以更改密碼。</div>
+            <div class="tlo-auth-note">請使用自己的玩家 UID 與密碼登入。若無法登入，請聯繫管理員重設密碼。</div>
           </div>
 
           <div id="tlo-register-panel" style="display:none;">
@@ -291,7 +291,7 @@
     try {
       var uid = document.getElementById("tlo-login-uid").value.trim();
       var pw = document.getElementById("tlo-login-password").value;
-      if (!uid || !pw) throw new Error("請輸入 UID 與密碼。多數內測玩家預設密碼是 aaa123456。");
+      if (!uid || !pw) throw new Error("請輸入 UID 與密碼。");
       setAuthMsg("登入中...", true);
       var data = await rawRpc("loginAccount", [uid, pw], { auth: false });
       saveAuth(data);
@@ -362,7 +362,7 @@
           <div class="tlo-auth-title">🔐 更改密碼</div>
           <div class="tlo-auth-warning">${force ? '你目前使用內測預設密碼，請先更改密碼再繼續遊戲。' : '請輸入原密碼與新密碼。'}</div>
           <label class="tlo-auth-label">原密碼</label>
-          <input class="tlo-auth-input" id="tlo-old-password" type="password" placeholder="原密碼，內測預設 aaa123456">
+          <input class="tlo-auth-input" id="tlo-old-password" type="password" placeholder="輸入目前密碼">
           <label class="tlo-auth-label">新密碼</label>
           <input class="tlo-auth-input" id="tlo-new-password" type="password" placeholder="至少 8 碼">
           <label class="tlo-auth-label">再次輸入新密碼</label>
