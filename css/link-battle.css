@@ -957,3 +957,56 @@
   .link-battle-chapter-toggle i{grid-column:2;grid-row:2;min-width:auto;font-size:11px;}
   .link-battle-chapter-toggle b{font-size:18px;}
 }
+
+
+/* v10-scroll-fix：章節展開後，關卡列表可像網頁一樣上下滑動。 */
+.link-battle-stage-select{
+  height:var(--tlo-link-vh, 100dvh);
+  max-height:var(--tlo-link-vh, 100dvh);
+  overflow:hidden!important;
+  align-items:center;
+}
+.link-battle-stage-select-card{
+  height:auto;
+  max-height:calc(var(--tlo-link-vh, 100dvh) - 24px)!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.link-battle-stage-select-content{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:100%!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain;
+  touch-action:pan-y;
+  padding-right:4px;
+}
+.link-battle-stage-select-content::-webkit-scrollbar{
+  width:6px;
+}
+.link-battle-stage-select-content::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,rgba(0,255,240,.7),rgba(127,0,255,.65));
+  border-radius:999px;
+}
+.link-battle-stage-select-content::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.05);
+  border-radius:999px;
+}
+.link-battle-chapter-block.open .link-battle-stage-card-grid{
+  max-height:none!important;
+}
+@media(max-width:560px){
+  .link-battle-stage-select{
+    align-items:stretch;
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom, 0px))!important;
+  }
+  .link-battle-stage-select-card{
+    width:100%!important;
+    max-height:calc(var(--tlo-link-vh, 100dvh) - 16px - env(safe-area-inset-bottom, 0px))!important;
+  }
+  .link-battle-stage-select-content{
+    padding-bottom:10px;
+  }
+}

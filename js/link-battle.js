@@ -19,7 +19,7 @@
     boardMetrics: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v10-chapter-accordion';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v10-card-scale';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -477,8 +477,9 @@
     var layer = Number(tile.layer || 0);
     var row = Number(tile.row || 0);
     var col = Number(tile.col || 0);
-    var x = 9 + (col * m.colStep) + (layer * m.layerOffsetX) + (m.tileW / 2);
-    var y = 9 + ((m.dims.layers - 1 - layer) * m.layerOffsetY) + (row * m.rowStep) + (m.tileH / 2);
+    var inset = Number(m.tileInset || 5);
+    var x = inset + (col * m.colStep) + (layer * m.layerOffsetX) + (m.tileW / 2);
+    var y = inset + ((m.dims.layers - 1 - layer) * m.layerOffsetY) + (row * m.rowStep) + (m.tileH / 2);
     return { x: x, y: y };
   }
 
@@ -488,8 +489,9 @@
     var layer = Number(point.layer == null ? 0 : point.layer);
     var row = Number(point.row || 0);
     var col = Number(point.col || 0);
-    var x = 9 + (col * m.colStep) + (layer * m.layerOffsetX) + (m.tileW / 2);
-    var y = 9 + ((m.dims.layers - 1 - layer) * m.layerOffsetY) + (row * m.rowStep) + (m.tileH / 2);
+    var inset = Number(m.tileInset || 5);
+    var x = inset + (col * m.colStep) + (layer * m.layerOffsetX) + (m.tileW / 2);
+    var y = inset + ((m.dims.layers - 1 - layer) * m.layerOffsetY) + (row * m.rowStep) + (m.tileH / 2);
     // 路徑可走到盤面外圍一格；視覺上把線段裁在操作區內，避免破框。
     x = Math.max(5, Math.min(m.boardW - 5, x));
     y = Math.max(5, Math.min(m.boardH - 5, y));
@@ -580,32 +582,47 @@
     var usableHeight = Math.max(isMobileBrowser ? 205 : 300, wrapHeight - (isMobileBrowser ? 12 : 20));
     var aspect = 1.42;
 
-    // v7 手機瀏覽器版：卡牌必須永遠塞在操作框內，依實際 visible viewport 自動縮放。
-    var colFactor = isMobileBrowser ? 1.12 : 1.10;
-    var rowFactor = isMobileBrowser ? 0.80 : 0.78;
-    var layerXFactor = isMobileBrowser ? 0.38 : 0.40;
-    var layerYFactor = isMobileBrowser ? 0.24 : 0.26;
+    // v10-card-scale：手機瀏覽器版卡牌微放大。
+    // 原則：不超出操作區；透過縮小內部安全邊距與輕微減少排列步距，讓卡牌只放大一點點。
+    var colFactor = isMobileBrowser ? 1.07 : 1.10;
+    var rowFactor = isMobileBrowser ? 0.76 : 0.78;
+    var layerXFactor = isMobileBrowser ? 0.35 : 0.40;
+    var layerYFactor = isMobileBrowser ? 0.21 : 0.26;
+    var fitPadding = isMobileBrowser ? 10 : 18;
     var widthUnits = ((dims.cols - 1) * colFactor) + 1 + ((dims.layers - 1) * layerXFactor);
     var heightUnits = aspect * (((dims.rows - 1) * rowFactor) + 1 + ((dims.layers - 1) * layerYFactor));
-    var tileW = Math.floor(Math.min((usableWidth - 18) / Math.max(1, widthUnits), (usableHeight - 18) / Math.max(1, heightUnits)));
-    tileW = Math.max(isMobileBrowser ? 34 : 40, Math.min(isMobileBrowser ? 66 : 72, tileW));
+    var tileW = Math.floor(Math.min((usableWidth - fitPadding) / Math.max(1, widthUnits), (usableHeight - fitPadding) / Math.max(1, heightUnits)));
+    tileW = Math.max(isMobileBrowser ? 36 : 40, Math.min(isMobileBrowser ? 70 : 72, tileW));
     var tileH = Math.round(tileW * aspect);
     var colStep = Math.round(tileW * colFactor);
     var rowStep = Math.round(tileH * rowFactor);
     var layerOffsetX = Math.round(tileW * layerXFactor);
     var layerOffsetY = Math.round(tileH * layerYFactor);
-    var boardW = 18 + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
-    var boardH = 18 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
+    var boardPadding = isMobileBrowser ? 10 : 18;
+    var boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
+    var boardH = boardPadding + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
     if (boardW > usableWidth || boardH > usableHeight) {
       var scale = Math.min(usableWidth / Math.max(1, boardW), usableHeight / Math.max(1, boardH));
-      tileW = Math.max(isMobileBrowser ? 32 : 38, Math.floor(tileW * Math.min(1, scale)));
+      tileW = Math.max(isMobileBrowser ? 34 : 38, Math.floor(tileW * Math.min(1, scale)));
       tileH = Math.round(tileW * aspect);
       colStep = Math.round(tileW * colFactor);
       rowStep = Math.round(tileH * rowFactor);
       layerOffsetX = Math.round(tileW * layerXFactor);
       layerOffsetY = Math.round(tileH * layerYFactor);
-      boardW = 18 + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
-      boardH = 18 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
+      boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
+      boardH = boardPadding + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
+      // 最後一道保險：極小螢幕時寧可只微縮，也不能讓卡牌超出操作框。
+      if (boardW > usableWidth || boardH > usableHeight) {
+        var exactFitW = Math.floor(Math.min((usableWidth - boardPadding) / Math.max(1, widthUnits), (usableHeight - boardPadding) / Math.max(1, heightUnits)));
+        tileW = Math.max(isMobileBrowser ? 30 : 36, Math.min(tileW, exactFitW));
+        tileH = Math.round(tileW * aspect);
+        colStep = Math.round(tileW * colFactor);
+        rowStep = Math.round(tileH * rowFactor);
+        layerOffsetX = Math.round(tileW * layerXFactor);
+        layerOffsetY = Math.round(tileH * layerYFactor);
+        boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
+        boardH = boardPadding + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
+      }
     }
 
     state.boardMetrics = {
@@ -617,7 +634,8 @@
       layerOffsetX: layerOffsetX,
       layerOffsetY: layerOffsetY,
       boardW: boardW,
-      boardH: boardH
+      boardH: boardH,
+      tileInset: Math.round(boardPadding / 2)
     };
 
     renderTiles.sort(function(a, b) {
@@ -626,10 +644,11 @@
       return a.col - b.col;
     });
 
+    var tileInset = Math.round(boardPadding / 2);
     var html = '<div class="link-battle-stacked-board" style="width:' + boardW + 'px;height:' + boardH + 'px;--tile-w:' + tileW + 'px;--tile-h:' + tileH + 'px;">';
     renderTiles.forEach(function(tile) {
-      var x = 9 + (tile.col * colStep) + (tile.layer * layerOffsetX);
-      var y = 9 + ((dims.layers - 1 - tile.layer) * layerOffsetY) + (tile.row * rowStep);
+      var x = tileInset + (tile.col * colStep) + (tile.layer * layerOffsetX);
+      var y = tileInset + ((dims.layers - 1 - tile.layer) * layerOffsetY) + (tile.row * rowStep);
       var z = (tile.layer * 1000) + (tile.row * 20) + tile.col;
       html += renderTile(tile, 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';--tile-layer:' + tile.layer + ';');
     });
