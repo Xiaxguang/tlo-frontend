@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-layer-rules-v4">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v5">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -730,7 +730,7 @@
     .game-card h3 {
       margin: 0 0 8px 0;
       color: #00fff0;
-      font-size: 17px;
+      font-size: 15px;
     }
 
     .hero-actions {
@@ -975,7 +975,8 @@
     /* 🔊 T-LO 音效 / BGM 控制 */
     .tlo-sound-fab {
       position: fixed;
-      right: 12px;
+      left: 12px;
+      right: auto;
       top: calc(12px + env(safe-area-inset-top));
       bottom: auto;
       z-index: 100002;
@@ -983,10 +984,10 @@
       background: rgba(10,10,14,.9);
       color: #fff;
       border-radius: 999px;
-      width: 38px;
-      height: 38px;
+      width: 34px;
+      height: 34px;
       padding: 0;
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 900;
       cursor: pointer;
       box-shadow: 0 0 14px rgba(0,255,240,.24), inset 0 0 8px rgba(255,255,255,.04);
@@ -1640,7 +1641,7 @@
             <ul>
               <li>連線同一層、同一張卡牌即可攻擊 BOSS。</li>
               <li>表層可選卡保持正常亮度；被壓住的底層卡會稍微變暗且不能選。</li>
-              <li>連線路徑不可穿過其他卡牌，最多允許一次轉彎。</li>
+              <li>連線路徑不可穿過其他卡牌，最多允許 2 次轉彎。</li>
               <li>連續成功會累積 Combo，Combo 越高傷害越高。</li>
               <li>BOSS 怒氣滿會反擊，HP、時間或錯誤次數耗盡就會失敗。</li>
             </ul>
@@ -1674,14 +1675,14 @@
             </div>
           </div>
         </div>
-        <div class="link-battle-actions">
-          <button class="primary" id="link-battle-start-btn" onclick="TLOLinkBattle.startBattle()">開始挑戰</button>
-          <button id="link-battle-hint-btn" onclick="TLOLinkBattle.useHint()">提示 x <span id="link-battle-hint-left">0</span></button>
-          <button class="warn" id="link-battle-shuffle-btn" onclick="TLOLinkBattle.shuffleBoard()">洗牌 x <span id="link-battle-shuffle-left">0</span></button>
-        </div>
         <div class="link-battle-msg" id="link-battle-msg">正在讀取資料...</div>
         <div class="link-battle-board-wrap" id="link-battle-board">
           <div style="color:#aaa;padding:30px;text-align:center;">請先開始挑戰。</div>
+        </div>
+        <div class="link-battle-actions">
+          <button id="link-battle-hint-btn" onclick="TLOLinkBattle.useHint()">💡 提示 x <span id="link-battle-hint-left">0</span></button>
+          <button class="warn" id="link-battle-shuffle-btn" onclick="TLOLinkBattle.shuffleBoard()">🔀 洗牌 x <span id="link-battle-shuffle-left">0</span></button>
+          <button class="primary" id="link-battle-start-btn" onclick="TLOLinkBattle.startOrRetryBattle()">⚔️ 開始挑戰</button>
         </div>
       </div>
     </div>
@@ -6519,6 +6520,6 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260626-layer-rules-v4"></script>
+  <script src="./js/link-battle.js?v=20260626-mobile-v5"></script>
 </body>
 </html>

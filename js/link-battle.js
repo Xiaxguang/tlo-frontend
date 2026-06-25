@@ -14,7 +14,7 @@
     rulesShown: false
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-layer-rules-v4';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v5';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -94,9 +94,14 @@
   function updateShellMode() {
     var shell = $('link-battle-shell');
     if (!shell) return;
-    shell.classList.toggle('in-battle', isBattleActive());
+    var active = isBattleActive();
+    shell.classList.toggle('in-battle', active);
     var startBtn = $('link-battle-start-btn');
-    if (startBtn) startBtn.style.display = isBattleActive() ? 'none' : '';
+    if (startBtn) {
+      startBtn.style.display = active ? 'none' : '';
+      startBtn.innerHTML = state.battle && state.battle.status === 'failed' ? '⚔️ 再次討伐' : '⚔️ 開始挑戰';
+      if (!active) startBtn.disabled = false;
+    }
   }
 
   function openModal() {
@@ -220,6 +225,11 @@
     renderDashboard();
   }
 
+  async function startOrRetryBattle() {
+    if (state.battle && state.battle.status === 'failed') return retryBattle();
+    return startBattle();
+  }
+
   async function startBattle() {
     if (state.isAnimating) return;
     setButtonsDisabled(true);
@@ -239,7 +249,7 @@
       state.hintedIds = new Set();
       renderBattleState();
       startTimer(state.battle.stage && state.battle.stage.timeLimitSeconds);
-      setMsg('連線相同卡牌，合成攻擊 BOSS！', '#00fff0');
+      setMsg('', '#00fff0');
       setButtonsDisabled(false);
     } catch (err) {
       setMsg('開始失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
@@ -319,21 +329,20 @@
     });
 
     var wrapWidth = Math.max(300, wrap.clientWidth || 360);
-    var wrapHeight = Math.max(300, wrap.clientHeight || 330);
-    var usableWidth = Math.max(270, wrapWidth - 28);
-    var usableHeight = Math.max(270, wrapHeight - 28);
+    var wrapHeight = Math.max(340, wrap.clientHeight || 380);
+    var usableWidth = Math.max(270, wrapWidth - 20);
+    var usableHeight = Math.max(300, wrapHeight - 20);
     var aspect = 1.42;
 
-    // 第一正式版：保持堆疊感，但必須完整收在操作區邊框內。
-    // 透過同時檢查寬度與高度自動縮放，避免卡牌距離拉開後破圖。
-    var colFactor = 0.96;
-    var rowFactor = 0.68;
-    var layerXFactor = 0.30;
-    var layerYFactor = 0.20;
+    // v5 手機優先：在不破框的前提下，稍微放大卡牌並增加卡牌間距與層級偏移。
+    var colFactor = 1.05;
+    var rowFactor = 0.75;
+    var layerXFactor = 0.42;
+    var layerYFactor = 0.28;
     var widthUnits = ((dims.cols - 1) * colFactor) + 1 + ((dims.layers - 1) * layerXFactor);
     var heightUnits = aspect * (((dims.rows - 1) * rowFactor) + 1 + ((dims.layers - 1) * layerYFactor));
-    var tileW = Math.floor(Math.min(usableWidth / Math.max(1, widthUnits), usableHeight / Math.max(1, heightUnits)));
-    tileW = Math.max(32, Math.min(54, tileW));
+    var tileW = Math.floor(Math.min((usableWidth - 18) / Math.max(1, widthUnits), (usableHeight - 18) / Math.max(1, heightUnits)));
+    tileW = Math.max(36, Math.min(62, tileW));
     var tileH = Math.round(tileW * aspect);
     var colStep = Math.round(tileW * colFactor);
     var rowStep = Math.round(tileH * rowFactor);
@@ -341,6 +350,17 @@
     var layerOffsetY = Math.round(tileH * layerYFactor);
     var boardW = 18 + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
     var boardH = 18 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
+    if (boardW > usableWidth || boardH > usableHeight) {
+      var scale = Math.min(usableWidth / Math.max(1, boardW), usableHeight / Math.max(1, boardH));
+      tileW = Math.max(34, Math.floor(tileW * Math.min(1, scale)));
+      tileH = Math.round(tileW * aspect);
+      colStep = Math.round(tileW * colFactor);
+      rowStep = Math.round(tileH * rowFactor);
+      layerOffsetX = Math.round(tileW * layerXFactor);
+      layerOffsetY = Math.round(tileH * layerYFactor);
+      boardW = 18 + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
+      boardH = 18 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
+    }
 
     renderTiles.sort(function(a, b) {
       if (a.layer !== b.layer) return a.layer - b.layer;
@@ -420,7 +440,7 @@
       state.battle.status = res.status;
       renderBattleState();
       if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
-      handleBattleEnd(res.status, res.reason);
+      handleBattleEnd(res.status, res.reason, res.rewardSummary);
     } catch (err) {
       setMsg('操作失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     } finally {
@@ -478,18 +498,21 @@
     await sleep(760);
   }
 
-  function handleBattleEnd(status, reason) {
+  function handleBattleEnd(status, reason, rewardSummary) {
     if (status === 'victory') {
       stopTimer();
       playAudio('battle_victory');
-      setMsg('<b style="color:#00ff7f">討伐成功！Combo讓你提前擊破 BOSS。</b>', '#00ff7f');
+      setMsg('<b style="color:#00ff7f">討伐成功！</b>' + (rewardSummary ? '<br><span style="color:#ffdd77">通關獎勵：' + escapeHtml(rewardSummary) + '</span>' : ''), '#00ff7f');
       setButtonsDisabled(true);
       loadDashboard(state.selectedStageId);
     } else if (status === 'failed') {
       stopTimer();
       playAudio('battle_failed');
-      setMsg('<b style="color:#ff7777">挑戰失敗：' + escapeHtml(reason || 'FAILED') + '</b><div class="link-battle-result-actions"><button class="primary" onclick="TLOLinkBattle.retryBattle()">再次討伐</button><button onclick="TLOLinkBattle.loadDashboard()">返回關卡選擇</button></div>', '#ff7777');
+      setMsg('<b style="color:#ff7777">挑戰失敗：' + escapeHtml(reason || 'FAILED') + '</b>', '#ff7777');
       setButtonsDisabled(true);
+      var startBtn = $('link-battle-start-btn');
+      if (startBtn) { startBtn.disabled = false; startBtn.style.display = ''; startBtn.innerHTML = '⚔️ 再次討伐'; }
+      updateShellMode();
     }
   }
 
@@ -512,7 +535,7 @@
       renderBattleState();
       setMsg('已高亮一組可連線卡牌。使用提示會清空 Combo，並增加 BOSS 怒氣。', '#ffdd77');
       if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
-      handleBattleEnd(res.status);
+      handleBattleEnd(res.status, null, res.rewardSummary);
     } catch (err) {
       setMsg('提示失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     } finally {
@@ -533,7 +556,7 @@
       renderBattleState();
       setMsg('已重新洗牌。洗牌會增加 BOSS 怒氣。', '#ffdd77');
       if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
-      handleBattleEnd(res.status);
+      handleBattleEnd(res.status, null, res.rewardSummary);
     } catch (err) {
       setMsg('洗牌失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     } finally {
@@ -555,6 +578,7 @@
     loadDashboard: loadDashboard,
     selectStage: selectStage,
     startBattle: startBattle,
+    startOrRetryBattle: startOrRetryBattle,
     pickTile: pickTile,
     useHint: useHint,
     shuffleBoard: shuffleBoard,

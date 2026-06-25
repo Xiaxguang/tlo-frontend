@@ -102,3 +102,65 @@
 .link-battle-result-actions button{border:1px solid rgba(255,255,255,.18);background:#171724;color:#fff;border-radius:12px;padding:9px 13px;font-weight:900;cursor:pointer;}
 .link-battle-result-actions button.primary{background:linear-gradient(45deg,#00fff0,#7f00ff);}
 @media(max-width:560px){.link-battle-help-btn{width:24px;height:24px;font-size:13px}.link-battle-rules-card{padding:14px}.link-battle-rules-card ul{font-size:12.5px}.link-battle-board-wrap{min-height:318px;padding:8px}}
+
+/* v5：手機正式版方向（示意圖風格）：底部操作列、卡牌區放大、層級更明顯 */
+.link-battle-modal-content{max-width:500px!important;width:96vw!important;max-height:96svh!important;padding:8px!important;background:transparent!important;box-shadow:none!important;border:0!important;overflow:hidden!important;}
+.link-battle-shell{min-height:90svh;max-height:95svh;gap:8px;padding:12px;background:radial-gradient(circle at 50% 0%,rgba(48,17,91,.96) 0,rgba(12,13,27,.98) 42%,#05060d 100%);border:2px solid rgba(0,255,240,.32);border-radius:24px;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 0 28px rgba(0,255,240,.12),0 24px 60px rgba(0,0,0,.8);}
+.link-battle-titlebar{min-height:46px;padding:0 34px 0 34px;margin:0 4px;border:1px solid rgba(120,80,255,.28);border-radius:18px;background:linear-gradient(90deg,rgba(15,13,35,.96),rgba(34,21,74,.9),rgba(10,14,36,.96));box-shadow:inset 0 0 18px rgba(0,255,240,.08),0 0 16px rgba(87,42,255,.18);}
+.link-battle-titlebar .modal-h3{font-size:22px!important;letter-spacing:2px;color:#dffcff!important;text-shadow:0 0 14px rgba(0,255,240,.75),0 0 20px rgba(127,0,255,.45);}
+.link-battle-help-btn{right:8px;top:10px;width:25px;height:25px;background:rgba(0,255,240,.12);}
+.link-battle-stage-list{max-height:34px;margin:0 2px;}
+.link-battle-top{min-height:244px;border-radius:20px;border-color:rgba(255,255,255,.18);box-shadow:0 0 0 1px rgba(0,255,240,.12),inset 0 0 28px rgba(0,0,0,.58);}
+.link-battle-boss-bg{filter:brightness(.64) saturate(1.15);opacity:.9;background-position:center 44%;}
+.link-battle-boss-bg:after{background:linear-gradient(180deg,rgba(0,0,0,.26),rgba(0,0,0,.34) 52%,rgba(0,0,0,.72));}
+.link-battle-boss-ui{min-height:244px;padding:12px;gap:8px;}
+.link-battle-hp-label{font-size:14px;min-width:72px;letter-spacing:.5px;}
+.link-battle-hpbar{height:18px;border-color:rgba(255,255,255,.38);box-shadow:inset 0 0 8px rgba(0,0,0,.72),0 0 10px rgba(255,120,40,.22);}
+.link-battle-stage-name{font-size:14px;text-shadow:0 0 8px rgba(0,255,240,.55);}
+.link-battle-boss-name{font-size:15px;}
+.link-battle-boss-center{min-height:92px;}
+.link-battle-rage{height:10px;background:rgba(255,255,255,.16);}
+.link-battle-mid-status{gap:8px;margin-top:auto;}
+.link-battle-stat{border-radius:16px;padding:9px 5px;background:linear-gradient(180deg,rgba(8,12,22,.88),rgba(0,0,0,.72));border-color:rgba(0,255,240,.42);box-shadow:0 0 12px rgba(0,255,240,.12),inset 0 0 12px rgba(255,255,255,.03);}
+.link-battle-stat span{font-size:11px;}
+.link-battle-stat b{font-size:17px;}
+.link-battle-msg{min-height:0;font-size:11px;line-height:1.25;margin-top:-1px;margin-bottom:-2px;color:#00fff0;}
+.link-battle-msg:empty{display:none;}
+.link-battle-board-wrap{flex:1 1 420px;min-height:395px;padding:10px;border-radius:22px;border:2px solid rgba(0,255,240,.5);background:radial-gradient(circle at center,rgba(18,22,43,.96),#060711 70%);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 0 22px rgba(0,255,240,.12),inset 0 0 30px rgba(0,0,0,.8);overflow:hidden;}
+.link-battle-actions{display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:10px;align-items:stretch;justify-content:stretch;margin-top:2px;flex:0 0 auto;}
+.link-battle-actions button{min-height:52px;border-radius:16px;padding:10px 8px;font-size:15px;border:1px solid rgba(255,255,255,.2);background:linear-gradient(180deg,rgba(35,29,58,.96),rgba(14,14,28,.98));box-shadow:0 8px 18px rgba(0,0,0,.42),inset 0 0 13px rgba(255,255,255,.04);}
+.link-battle-actions button.primary{font-size:17px;background:linear-gradient(135deg,#00fff0,#1688ff 48%,#7f00ff);color:#fff;text-shadow:0 0 10px rgba(0,0,0,.65);box-shadow:0 0 20px rgba(0,255,240,.34),0 10px 22px rgba(0,0,0,.45);}
+.link-battle-actions button.warn{background:linear-gradient(135deg,#5d2dff,#20112f);color:#fff;}
+.link-battle-tile{border-radius:10px;box-shadow:0 12px 19px rgba(0,0,0,.8),0 2px 0 rgba(255,255,255,.26) inset,0 0 0 1px rgba(0,0,0,.7);}
+.link-battle-tile:before{border-radius:10px;border:1px solid rgba(255,255,255,.32);}
+.link-battle-tile img{border-radius:10px;}
+.link-battle-tile.layer-0{box-shadow:0 5px 10px rgba(0,0,0,.86),0 1px 0 rgba(255,255,255,.1) inset;}
+.link-battle-tile.layer-1{box-shadow:0 9px 15px rgba(0,0,0,.84),0 1px 0 rgba(255,255,255,.18) inset,0 0 7px rgba(0,0,0,.8);}
+.link-battle-tile.layer-2,.link-battle-tile.layer-3,.link-battle-tile.layer-4,.link-battle-tile.layer-5{box-shadow:0 14px 22px rgba(0,0,0,.9),0 2px 0 rgba(255,255,255,.25) inset,0 0 12px rgba(0,255,240,.14);}
+.link-battle-tile.selectable{filter:brightness(1.08) saturate(1.08);opacity:1;}
+.link-battle-tile.selectable:after{box-shadow:inset 0 0 0 1px rgba(0,255,240,.28),0 0 12px rgba(0,255,240,.12);}
+.link-battle-tile.covered,.link-battle-tile.locked{filter:grayscale(.38) brightness(.55) saturate(.72);opacity:.72;}
+.link-battle-tile.covered:after,.link-battle-tile.locked:after{background:rgba(0,0,0,.26);box-shadow:inset 0 0 0 1px rgba(0,0,0,.58);}
+.link-battle-rules-card{border-radius:22px;border-color:rgba(0,255,240,.55);background:linear-gradient(180deg,rgba(22,20,44,.98),rgba(5,7,16,.98));}
+.link-battle-result-actions{display:none!important;}
+@media(max-width:560px){
+  .link-battle-modal-content{width:97vw!important;max-height:97svh!important;padding:4px!important;}
+  .link-battle-shell{min-height:92svh;max-height:96svh;padding:10px;gap:7px;border-radius:22px;}
+  .link-battle-titlebar{min-height:42px;padding-left:34px;padding-right:32px;}
+  .link-battle-titlebar .modal-h3{font-size:20px!important;}
+  .link-battle-top{min-height:236px;}
+  .link-battle-boss-ui{min-height:236px;padding:10px;}
+  .link-battle-boss-center{min-height:82px;}
+  .link-battle-board-wrap{min-height:395px;padding:8px;}
+  .link-battle-actions{gap:8px;}
+  .link-battle-actions button{min-height:50px;font-size:14px;padding:8px 5px;}
+  .link-battle-actions button.primary{font-size:16px;}
+}
+@media(max-width:390px){
+  .link-battle-top{min-height:222px;}
+  .link-battle-boss-ui{min-height:222px;}
+  .link-battle-boss-center{min-height:72px;}
+  .link-battle-board-wrap{min-height:370px;}
+  .link-battle-actions button{min-height:46px;font-size:13px;}
+  .link-battle-actions button.primary{font-size:15px;}
+}
