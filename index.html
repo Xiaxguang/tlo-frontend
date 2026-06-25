@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-ux-retry-v3">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-layer-rules-v4">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -975,18 +975,21 @@
     /* 🔊 T-LO 音效 / BGM 控制 */
     .tlo-sound-fab {
       position: fixed;
-      right: 14px;
-      bottom: calc(82px + env(safe-area-inset-bottom));
+      right: 12px;
+      top: calc(12px + env(safe-area-inset-top));
+      bottom: auto;
       z-index: 100002;
       border: 1px solid rgba(0,255,240,.45);
-      background: rgba(10,10,14,.92);
+      background: rgba(10,10,14,.9);
       color: #fff;
       border-radius: 999px;
-      padding: 10px 13px;
-      font-size: 13px;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      font-size: 17px;
       font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 0 18px rgba(0,255,240,.28), inset 0 0 10px rgba(255,255,255,.04);
+      box-shadow: 0 0 14px rgba(0,255,240,.24), inset 0 0 8px rgba(255,255,255,.04);
       backdrop-filter: blur(10px);
       -webkit-tap-highlight-color: transparent;
     }
@@ -999,7 +1002,8 @@
     .tlo-sound-toast {
       position: fixed;
       left: 50%;
-      bottom: calc(136px + env(safe-area-inset-bottom));
+      top: calc(58px + env(safe-area-inset-top));
+      bottom: auto;
       transform: translateX(-50%);
       z-index: 100003;
       background: rgba(0,0,0,.82);
@@ -1152,8 +1156,8 @@
 
 
   </style>
-  <link rel="icon" href="./favicon.ico?v=20260626-formal-ui-v2">
-  <meta name="linkbattle-formal-ui-build" content="20260626-formal-ui-v2">
+  <link rel="icon" href="./favicon.ico?v=20260626-layer-rules-v4">
+  <meta name="linkbattle-formal-ui-build" content="20260626-layer-rules-v4">
 </head>
 <body class="tlo-game-body">
 
@@ -1630,7 +1634,26 @@
       <div class="link-battle-shell" id="link-battle-shell">
         <div class="link-battle-warning" id="link-battle-warning"><div class="link-battle-warning-card"><b>WARNING</b><span>BOSS 即將發動反擊</span></div></div>
         <div class="link-battle-attack-card" id="link-battle-attack-card"></div>
-        <div class="modal-h3" style="margin:0;border:0;padding:2px 28px 0;">🃏 卡牌連線討伐戰</div>
+        <div class="link-battle-rules" id="link-battle-rules">
+          <div class="link-battle-rules-card">
+            <h3>卡牌連線討伐戰規則</h3>
+            <ul>
+              <li>連線同一層、同一張卡牌即可攻擊 BOSS。</li>
+              <li>表層可選卡保持正常亮度；被壓住的底層卡會稍微變暗且不能選。</li>
+              <li>連線路徑不可穿過其他卡牌，最多允許一次轉彎。</li>
+              <li>連續成功會累積 Combo，Combo 越高傷害越高。</li>
+              <li>BOSS 怒氣滿會反擊，HP、時間或錯誤次數耗盡就會失敗。</li>
+            </ul>
+            <div class="link-battle-rules-actions">
+              <button class="primary" onclick="TLOLinkBattle.startFromRules()">開始挑戰</button>
+              <button onclick="TLOLinkBattle.closeRules()">我知道了</button>
+            </div>
+          </div>
+        </div>
+        <div class="link-battle-titlebar">
+          <div class="modal-h3">🃏 卡牌連線討伐戰</div>
+          <button type="button" class="link-battle-help-btn" title="查看規則" aria-label="查看規則" onclick="TLOLinkBattle.openRules()">?</button>
+        </div>
         <div class="link-battle-stage-list" id="link-battle-stage-list"></div>
         <div class="link-battle-top">
           <div class="link-battle-boss-bg" id="link-battle-boss-bg"></div>
@@ -1653,7 +1676,6 @@
         </div>
         <div class="link-battle-actions">
           <button class="primary" id="link-battle-start-btn" onclick="TLOLinkBattle.startBattle()">開始挑戰</button>
-          <button class="primary retry" id="link-battle-retry-btn" style="display:none" onclick="TLOLinkBattle.retryBattle()">再次討伐</button>
           <button id="link-battle-hint-btn" onclick="TLOLinkBattle.useHint()">提示 x <span id="link-battle-hint-left">0</span></button>
           <button class="warn" id="link-battle-shuffle-btn" onclick="TLOLinkBattle.shuffleBoard()">洗牌 x <span id="link-battle-shuffle-left">0</span></button>
         </div>
@@ -6323,7 +6345,8 @@ function showCollectionHistory() {
         var btn = document.getElementById('tlo-sound-toggle');
         if (!btn) return;
         btn.classList.toggle('on', enabled);
-        btn.innerHTML = enabled ? '🔊 音效開' : '🔇 音效關';
+        btn.innerHTML = enabled ? '🔊' : '🔇';
+        btn.title = enabled ? '音效開啟，點擊關閉' : '音效關閉，點擊開啟';
       }
 
       function unlockAudio() {
@@ -6496,6 +6519,6 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260626-ux-retry-v3"></script>
+  <script src="./js/link-battle.js?v=20260626-layer-rules-v4"></script>
 </body>
 </html>
