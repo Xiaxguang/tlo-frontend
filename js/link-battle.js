@@ -19,7 +19,7 @@
     boardMetrics: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v10-card-scale';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v10-inner-scroll-card-plus';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -576,34 +576,35 @@
     });
 
     var isMobileBrowser = (window.matchMedia && window.matchMedia('(max-width: 560px)').matches) || window.innerWidth <= 560;
-    var wrapWidth = Math.max(isMobileBrowser ? 250 : 300, wrap.clientWidth || 360);
-    var wrapHeight = Math.max(isMobileBrowser ? 220 : 340, wrap.clientHeight || 380);
-    var usableWidth = Math.max(isMobileBrowser ? 230 : 270, wrapWidth - (isMobileBrowser ? 12 : 20));
-    var usableHeight = Math.max(isMobileBrowser ? 205 : 300, wrapHeight - (isMobileBrowser ? 12 : 20));
+    var rect = wrap.getBoundingClientRect ? wrap.getBoundingClientRect() : null;
+    var wrapWidth = Math.max(isMobileBrowser ? 250 : 300, Math.floor((rect && rect.width) || wrap.clientWidth || 360));
+    var wrapHeight = Math.max(isMobileBrowser ? 220 : 340, Math.floor((rect && rect.height) || wrap.clientHeight || 380));
+    var usableWidth = Math.max(isMobileBrowser ? 238 : 278, wrapWidth - (isMobileBrowser ? 6 : 12));
+    var usableHeight = Math.max(isMobileBrowser ? 212 : 308, wrapHeight - (isMobileBrowser ? 6 : 12));
     var aspect = 1.42;
 
-    // v10-card-scale：手機瀏覽器版卡牌微放大。
-    // 原則：不超出操作區；透過縮小內部安全邊距與輕微減少排列步距，讓卡牌只放大一點點。
-    var colFactor = isMobileBrowser ? 1.07 : 1.10;
-    var rowFactor = isMobileBrowser ? 0.76 : 0.78;
-    var layerXFactor = isMobileBrowser ? 0.35 : 0.40;
-    var layerYFactor = isMobileBrowser ? 0.21 : 0.26;
-    var fitPadding = isMobileBrowser ? 10 : 18;
+    // v10-inner-scroll-card-plus：只微幅放大操作區卡牌，保留章節內頁可滾動與其他版面設定。
+    // 做法：縮小計算安全邊距與排列步距，讓同一個操作框內卡牌可變大，但最後仍用 boardW/boardH 防止破框。
+    var colFactor = isMobileBrowser ? 1.01 : 1.05;
+    var rowFactor = isMobileBrowser ? 0.71 : 0.75;
+    var layerXFactor = isMobileBrowser ? 0.31 : 0.36;
+    var layerYFactor = isMobileBrowser ? 0.18 : 0.23;
+    var fitPadding = isMobileBrowser ? 4 : 10;
     var widthUnits = ((dims.cols - 1) * colFactor) + 1 + ((dims.layers - 1) * layerXFactor);
     var heightUnits = aspect * (((dims.rows - 1) * rowFactor) + 1 + ((dims.layers - 1) * layerYFactor));
     var tileW = Math.floor(Math.min((usableWidth - fitPadding) / Math.max(1, widthUnits), (usableHeight - fitPadding) / Math.max(1, heightUnits)));
-    tileW = Math.max(isMobileBrowser ? 36 : 40, Math.min(isMobileBrowser ? 70 : 72, tileW));
+    tileW = Math.max(isMobileBrowser ? 38 : 42, Math.min(isMobileBrowser ? 76 : 78, tileW));
     var tileH = Math.round(tileW * aspect);
     var colStep = Math.round(tileW * colFactor);
     var rowStep = Math.round(tileH * rowFactor);
     var layerOffsetX = Math.round(tileW * layerXFactor);
     var layerOffsetY = Math.round(tileH * layerYFactor);
-    var boardPadding = isMobileBrowser ? 10 : 18;
+    var boardPadding = isMobileBrowser ? 6 : 12;
     var boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
     var boardH = boardPadding + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
     if (boardW > usableWidth || boardH > usableHeight) {
       var scale = Math.min(usableWidth / Math.max(1, boardW), usableHeight / Math.max(1, boardH));
-      tileW = Math.max(isMobileBrowser ? 34 : 38, Math.floor(tileW * Math.min(1, scale)));
+      tileW = Math.max(isMobileBrowser ? 36 : 40, Math.floor(tileW * Math.min(1, scale)));
       tileH = Math.round(tileW * aspect);
       colStep = Math.round(tileW * colFactor);
       rowStep = Math.round(tileH * rowFactor);
@@ -614,7 +615,7 @@
       // 最後一道保險：極小螢幕時寧可只微縮，也不能讓卡牌超出操作框。
       if (boardW > usableWidth || boardH > usableHeight) {
         var exactFitW = Math.floor(Math.min((usableWidth - boardPadding) / Math.max(1, widthUnits), (usableHeight - boardPadding) / Math.max(1, heightUnits)));
-        tileW = Math.max(isMobileBrowser ? 30 : 36, Math.min(tileW, exactFitW));
+        tileW = Math.max(isMobileBrowser ? 34 : 38, Math.min(tileW, exactFitW));
         tileH = Math.round(tileW * aspect);
         colStep = Math.round(tileW * colFactor);
         rowStep = Math.round(tileH * rowFactor);

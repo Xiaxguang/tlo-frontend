@@ -1132,3 +1132,14 @@
     max-height: clamp(230px, 46svh, 380px) !important;
   }
 }
+
+
+/* v10-inner-scroll-card-plus：保留章節內頁滾動設定，只讓操作區卡牌計算可用空間稍微增加。 */
+.link-battle-board-wrap {
+  padding: 6px !important;
+}
+@media (max-width: 560px) {
+  .link-battle-board-wrap {
+    padding: 5px !important;
+  }
+}
