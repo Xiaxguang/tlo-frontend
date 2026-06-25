@@ -11,10 +11,12 @@
     timerId: null,
     timeLeft: 0,
     hintedIds: new Set(),
-    rulesShown: false
+    rulesShown: false,
+    linkPath: null,
+    boardMetrics: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v5';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v8-browser-path';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -41,6 +43,28 @@
     });
   }
   function sleep(ms) { return new Promise(function(resolve){ setTimeout(resolve, ms); }); }
+
+
+  // v7：手機瀏覽器實際可視高度修正。
+  // iPhone Safari / Chrome 的網址列會改變可視高度，單純 100vh 容易把底部按鈕擠出畫面。
+  function updateViewportVars() {
+    try {
+      var vv = window.visualViewport;
+      var h = vv && vv.height ? vv.height : window.innerHeight;
+      var w = vv && vv.width ? vv.width : window.innerWidth;
+      if (!h || h < 320) h = window.innerHeight || 720;
+      document.documentElement.style.setProperty('--tlo-link-vh', Math.floor(h) + 'px');
+      document.documentElement.style.setProperty('--tlo-link-vw', Math.floor(w || window.innerWidth || 390) + 'px');
+    } catch (_) {}
+  }
+
+  function scheduleBoardRerender(delay) {
+    clearTimeout(resizeRenderTimer);
+    resizeRenderTimer = setTimeout(function() {
+      updateViewportVars();
+      if (state.battle) renderBoard();
+    }, delay || 120);
+  }
 
   function playAudio(key) {
     try {
@@ -98,15 +122,23 @@
     shell.classList.toggle('in-battle', active);
     var startBtn = $('link-battle-start-btn');
     if (startBtn) {
-      startBtn.style.display = active ? 'none' : '';
-      startBtn.innerHTML = state.battle && state.battle.status === 'failed' ? '⚔️ 再次討伐' : '⚔️ 開始挑戰';
-      if (!active) startBtn.disabled = false;
+      // v8：底部三顆按鈕永遠保留位置，不再隱藏開始 / 再次討伐按鈕。
+      startBtn.style.display = '';
+      if (active) {
+        startBtn.innerHTML = '⚔️ 戰鬥中';
+        startBtn.disabled = true;
+      } else {
+        startBtn.innerHTML = state.battle && state.battle.status === 'failed' ? '⚔️ 再次討伐' : '⚔️ 開始挑戰';
+        startBtn.disabled = false;
+      }
     }
   }
 
   function openModal() {
+    updateViewportVars();
     var modal = $('link-battle-modal');
     if (modal) modal.style.display = 'flex';
+    setTimeout(function(){ scheduleBoardRerender(40); }, 40);
     loadDashboard();
     setTimeout(function() {
       if (!state.rulesShown) {
@@ -247,9 +279,10 @@
       state.battle = res.state;
       state.selectedTileId = null;
       state.hintedIds = new Set();
+      state.linkPath = null;
       renderBattleState();
       startTimer(state.battle.stage && state.battle.stage.timeLimitSeconds);
-      setMsg('', '#00fff0');
+      setMsg('✦ 連線相同卡牌，合成攻擊 BOSS！ ✦', '#d9c7ff');
       setButtonsDisabled(false);
     } catch (err) {
       setMsg('開始失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
@@ -308,6 +341,88 @@
     return tiles;
   }
 
+  function getTileVisualCenter(tile) {
+    var m = state.boardMetrics;
+    if (!m || !tile) return null;
+    var layer = Number(tile.layer || 0);
+    var row = Number(tile.row || 0);
+    var col = Number(tile.col || 0);
+    var x = 9 + (col * m.colStep) + (layer * m.layerOffsetX) + (m.tileW / 2);
+    var y = 9 + ((m.dims.layers - 1 - layer) * m.layerOffsetY) + (row * m.rowStep) + (m.tileH / 2);
+    return { x: x, y: y };
+  }
+
+  function getPathPointCenter(point) {
+    var m = state.boardMetrics;
+    if (!m || !point) return null;
+    var layer = Number(point.layer == null ? 0 : point.layer);
+    var row = Number(point.row || 0);
+    var col = Number(point.col || 0);
+    var x = 9 + (col * m.colStep) + (layer * m.layerOffsetX) + (m.tileW / 2);
+    var y = 9 + ((m.dims.layers - 1 - layer) * m.layerOffsetY) + (row * m.rowStep) + (m.tileH / 2);
+    // 路徑可走到盤面外圍一格；視覺上把線段裁在操作區內，避免破框。
+    x = Math.max(5, Math.min(m.boardW - 5, x));
+    y = Math.max(5, Math.min(m.boardH - 5, y));
+    return { x: x, y: y };
+  }
+
+  function compressPolylinePoints(points) {
+    var out = [];
+    points.forEach(function(p) {
+      if (!p) return;
+      if (out.length && Math.abs(out[out.length - 1].x - p.x) < 0.5 && Math.abs(out[out.length - 1].y - p.y) < 0.5) return;
+      out.push(p);
+      while (out.length >= 3) {
+        var a = out[out.length - 3];
+        var b = out[out.length - 2];
+        var c = out[out.length - 1];
+        var sameX = Math.abs(a.x - b.x) < 0.5 && Math.abs(b.x - c.x) < 0.5;
+        var sameY = Math.abs(a.y - b.y) < 0.5 && Math.abs(b.y - c.y) < 0.5;
+        if (!sameX && !sameY) break;
+        out.splice(out.length - 2, 1);
+      }
+    });
+    return out;
+  }
+
+  function renderLinkPathOverlay() {
+    var linkPath = state.linkPath;
+    var m = state.boardMetrics;
+    if (!linkPath || !m) return '';
+    var raw = [];
+    if (Array.isArray(linkPath.points) && linkPath.points.length >= 2) {
+      raw = linkPath.points.map(getPathPointCenter).filter(Boolean);
+    } else if (linkPath.tileA && linkPath.tileB) {
+      raw = [getTileVisualCenter(linkPath.tileA), getTileVisualCenter(linkPath.tileB)].filter(Boolean);
+    }
+    var pts = compressPolylinePoints(raw);
+    if (pts.length < 2) return '';
+    var pointText = pts.map(function(p){ return Math.round(p.x) + ',' + Math.round(p.y); }).join(' ');
+    var type = linkPath.type === 'error' ? 'error' : 'success';
+    var html = '<svg class="link-battle-path-overlay ' + type + '" viewBox="0 0 ' + Math.round(m.boardW) + ' ' + Math.round(m.boardH) + '" preserveAspectRatio="none" aria-hidden="true">';
+    html += '<polyline class="link-battle-path-line" points="' + pointText + '"></polyline>';
+    pts.forEach(function(p, idx) {
+      html += '<circle class="link-battle-path-dot ' + (idx === 0 || idx === pts.length - 1 ? 'end' : 'turn') + '" cx="' + Math.round(p.x) + '" cy="' + Math.round(p.y) + '" r="' + (idx === 0 || idx === pts.length - 1 ? 5 : 4) + '"></circle>';
+    });
+    if (type === 'error') {
+      var mid = pts[Math.floor(pts.length / 2)];
+      html += '<text class="link-battle-path-x" x="' + Math.round(mid.x) + '" y="' + Math.round(mid.y + 7) + '" text-anchor="middle">×</text>';
+    }
+    html += '</svg>';
+    return html;
+  }
+
+  function formatLinkBattleInvalidReason(reason) {
+    var map = {
+      EMPTY_TILE: '卡牌不存在',
+      SAME_TILE: '不能選同一張卡牌',
+      COVERED_TILE: '卡牌目前不可選擇，不能連線',
+      DIFFERENT_CARD: '必須選擇同一張卡牌',
+      PATH_BLOCKED: '路徑被其他卡牌阻擋，或超過 2 次轉彎'
+    };
+    return map[String(reason || '')] || String(reason || '連線失敗');
+  }
+
   function renderBoard() {
     var wrap = $('link-battle-board');
     if (!wrap) return;
@@ -328,21 +443,22 @@
       });
     });
 
-    var wrapWidth = Math.max(300, wrap.clientWidth || 360);
-    var wrapHeight = Math.max(340, wrap.clientHeight || 380);
-    var usableWidth = Math.max(270, wrapWidth - 20);
-    var usableHeight = Math.max(300, wrapHeight - 20);
+    var isMobileBrowser = (window.matchMedia && window.matchMedia('(max-width: 560px)').matches) || window.innerWidth <= 560;
+    var wrapWidth = Math.max(isMobileBrowser ? 250 : 300, wrap.clientWidth || 360);
+    var wrapHeight = Math.max(isMobileBrowser ? 220 : 340, wrap.clientHeight || 380);
+    var usableWidth = Math.max(isMobileBrowser ? 230 : 270, wrapWidth - (isMobileBrowser ? 12 : 20));
+    var usableHeight = Math.max(isMobileBrowser ? 205 : 300, wrapHeight - (isMobileBrowser ? 12 : 20));
     var aspect = 1.42;
 
-    // v5 手機優先：在不破框的前提下，稍微放大卡牌並增加卡牌間距與層級偏移。
-    var colFactor = 1.05;
-    var rowFactor = 0.75;
-    var layerXFactor = 0.42;
-    var layerYFactor = 0.28;
+    // v7 手機瀏覽器版：卡牌必須永遠塞在操作框內，依實際 visible viewport 自動縮放。
+    var colFactor = isMobileBrowser ? 1.12 : 1.10;
+    var rowFactor = isMobileBrowser ? 0.80 : 0.78;
+    var layerXFactor = isMobileBrowser ? 0.38 : 0.40;
+    var layerYFactor = isMobileBrowser ? 0.24 : 0.26;
     var widthUnits = ((dims.cols - 1) * colFactor) + 1 + ((dims.layers - 1) * layerXFactor);
     var heightUnits = aspect * (((dims.rows - 1) * rowFactor) + 1 + ((dims.layers - 1) * layerYFactor));
     var tileW = Math.floor(Math.min((usableWidth - 18) / Math.max(1, widthUnits), (usableHeight - 18) / Math.max(1, heightUnits)));
-    tileW = Math.max(36, Math.min(62, tileW));
+    tileW = Math.max(isMobileBrowser ? 34 : 40, Math.min(isMobileBrowser ? 66 : 72, tileW));
     var tileH = Math.round(tileW * aspect);
     var colStep = Math.round(tileW * colFactor);
     var rowStep = Math.round(tileH * rowFactor);
@@ -352,7 +468,7 @@
     var boardH = 18 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
     if (boardW > usableWidth || boardH > usableHeight) {
       var scale = Math.min(usableWidth / Math.max(1, boardW), usableHeight / Math.max(1, boardH));
-      tileW = Math.max(34, Math.floor(tileW * Math.min(1, scale)));
+      tileW = Math.max(isMobileBrowser ? 32 : 38, Math.floor(tileW * Math.min(1, scale)));
       tileH = Math.round(tileW * aspect);
       colStep = Math.round(tileW * colFactor);
       rowStep = Math.round(tileH * rowFactor);
@@ -361,6 +477,18 @@
       boardW = 18 + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
       boardH = 18 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
     }
+
+    state.boardMetrics = {
+      dims: dims,
+      tileW: tileW,
+      tileH: tileH,
+      colStep: colStep,
+      rowStep: rowStep,
+      layerOffsetX: layerOffsetX,
+      layerOffsetY: layerOffsetY,
+      boardW: boardW,
+      boardH: boardH
+    };
 
     renderTiles.sort(function(a, b) {
       if (a.layer !== b.layer) return a.layer - b.layer;
@@ -375,6 +503,7 @@
       var z = (tile.layer * 1000) + (tile.row * 20) + tile.col;
       html += renderTile(tile, 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';--tile-layer:' + tile.layer + ';');
     });
+    html += renderLinkPathOverlay();
     html += '</div>';
     wrap.innerHTML = html;
   }
@@ -431,11 +560,20 @@
     try {
       var res = await callRpc('resolveLinkBattleMove', [window.playerUID || window.TLO_PLAYER_UID || '', state.runId, aId, tileId]);
       if (!res || !res.success) throw new Error((res && res.msg) || '連線失敗');
-      if (res.effects && res.effects.playerAttack) await playPlayerAttack(res.effects.playerAttack, tileA || tileB);
-      if (res.effects && res.effects.invalid) {
-        playAudio('boss_hit_player');
-        setMsg('連線失敗：' + escapeHtml(res.effects.invalid.reason || ''), '#ff7777');
+      if (res.effects && res.effects.playerAttack) {
+        state.linkPath = { type: 'success', points: res.effects.playerAttack.path || [], tileA: tileA, tileB: tileB };
+        renderBoard();
+        await sleep(650);
+        await playPlayerAttack(res.effects.playerAttack, tileA || tileB);
       }
+      if (res.effects && res.effects.invalid) {
+        state.linkPath = { type: 'error', points: res.effects.invalid.path || [], tileA: tileA, tileB: tileB };
+        renderBoard();
+        playAudio('boss_hit_player');
+        setMsg('連線失敗：' + escapeHtml(formatLinkBattleInvalidReason(res.effects.invalid.reason)), '#ff7777');
+        await sleep(700);
+      }
+      state.linkPath = null;
       state.battle = res.state;
       state.battle.status = res.status;
       renderBattleState();
@@ -520,6 +658,7 @@
     if (state.isAnimating) return;
     state.selectedTileId = null;
     state.hintedIds = new Set();
+    state.linkPath = null;
     await startBattle();
   }
 
@@ -532,6 +671,7 @@
       state.battle = res.state;
       state.battle.status = res.status;
       state.hintedIds = new Set([res.hint.tileAId, res.hint.tileBId]);
+      state.linkPath = null;
       renderBattleState();
       setMsg('已高亮一組可連線卡牌。使用提示會清空 Combo，並增加 BOSS 怒氣。', '#ffdd77');
       if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
@@ -553,6 +693,7 @@
       state.battle = res.state;
       state.battle.status = res.status;
       state.hintedIds = new Set();
+      state.linkPath = null;
       renderBattleState();
       setMsg('已重新洗牌。洗牌會增加 BOSS 怒氣。', '#ffdd77');
       if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
@@ -566,11 +707,13 @@
   }
 
   var resizeRenderTimer = null;
-  window.addEventListener('resize', function() {
-    if (!state.battle) return;
-    clearTimeout(resizeRenderTimer);
-    resizeRenderTimer = setTimeout(renderBoard, 120);
-  });
+  updateViewportVars();
+  window.addEventListener('resize', function() { scheduleBoardRerender(120); });
+  window.addEventListener('orientationchange', function() { scheduleBoardRerender(220); });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() { scheduleBoardRerender(120); });
+    window.visualViewport.addEventListener('scroll', function() { updateViewportVars(); });
+  }
 
   window.TLOLinkBattle = {
     openModal: openModal,

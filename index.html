@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v5">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v8-browser-path">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -1639,10 +1639,11 @@
           <div class="link-battle-rules-card">
             <h3>卡牌連線討伐戰規則</h3>
             <ul>
-              <li>連線同一層、同一張卡牌即可攻擊 BOSS。</li>
-              <li>表層可選卡保持正常亮度；被壓住的底層卡會稍微變暗且不能選。</li>
-              <li>連線路徑不可穿過其他卡牌，最多允許 2 次轉彎。</li>
-              <li>連續成功會累積 Combo，Combo 越高傷害越高。</li>
+              <li>選擇兩張相同卡牌進行連線。</li>
+              <li>只要兩張卡牌都可以被選擇，且路徑沒有被其他卡牌阻擋，即可以連線。</li>
+              <li>連線最多允許 2 次轉彎。</li>
+              <li>成功連線後會合成攻擊 BOSS。</li>
+              <li>成功路徑會顯示藍色光線，失敗路徑會顯示紅色提示。</li>
               <li>BOSS 怒氣滿會反擊，HP、時間或錯誤次數耗盡就會失敗。</li>
             </ul>
             <div class="link-battle-rules-actions">
@@ -1668,12 +1669,12 @@
             <div class="link-battle-boss-line"><span class="link-battle-boss-name" id="link-battle-boss-name">連線戰 BOSS</span><span>怒氣</span></div>
             <div class="link-battle-rage"><div class="link-battle-rage-fill" id="link-battle-rage-fill"></div></div>
             <div class="link-battle-boss-center" id="link-battle-boss-center"><span class="link-battle-boss-silhouette">BOSS</span></div>
-            <div class="link-battle-mid-status">
-              <div class="link-battle-stat"><span>玩家 HP</span><b id="link-battle-player-hp">--</b></div>
-              <div class="link-battle-stat"><span>Combo</span><b id="link-battle-combo">0</b></div>
-              <div class="link-battle-stat"><span>錯誤</span><b id="link-battle-error">0 / 0</b></div>
-            </div>
           </div>
+        </div>
+        <div class="link-battle-mid-status">
+          <div class="link-battle-stat"><span>玩家 HP</span><b id="link-battle-player-hp">--</b></div>
+          <div class="link-battle-stat"><span>Combo</span><b id="link-battle-combo">0</b></div>
+          <div class="link-battle-stat"><span>錯誤</span><b id="link-battle-error">0 / 0</b></div>
         </div>
         <div class="link-battle-msg" id="link-battle-msg">正在讀取資料...</div>
         <div class="link-battle-board-wrap" id="link-battle-board">
@@ -6520,6 +6521,6 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260626-mobile-v5"></script>
+  <script src="./js/link-battle.js?v=20260626-mobile-v8-browser-path"></script>
 </body>
 </html>
