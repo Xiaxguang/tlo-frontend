@@ -1,9 +1,6 @@
 (function () {
   'use strict';
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-ux-retry-v3';
-  try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
-
   var state = {
     dashboard: null,
     selectedStageId: null,
@@ -13,8 +10,12 @@
     isAnimating: false,
     timerId: null,
     timeLeft: 0,
-    hintedIds: new Set()
+    hintedIds: new Set(),
+    rulesShown: false
   };
+
+  var TLO_LINK_BATTLE_BUILD = '20260626-layer-rules-v4';
+  try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
   var AUDIO = {
@@ -43,6 +44,7 @@
 
   function playAudio(key) {
     try {
+      if (localStorage.getItem('TLO_SOUND_ENABLED') !== '1') return;
       var src = AUDIO[key];
       if (!src) return;
       var a = new Audio(src);
@@ -89,31 +91,39 @@
     return !!(state.battle && state.battle.status !== 'victory' && state.battle.status !== 'failed');
   }
 
-  function isBattleResult() {
-    return !!(state.battle && (state.battle.status === 'victory' || state.battle.status === 'failed'));
-  }
-
   function updateShellMode() {
     var shell = $('link-battle-shell');
     if (!shell) return;
-    var inBattleView = isBattleActive() || isBattleResult();
-    shell.classList.toggle('in-battle', inBattleView);
-    shell.classList.toggle('battle-failed', !!(state.battle && state.battle.status === 'failed'));
+    shell.classList.toggle('in-battle', isBattleActive());
     var startBtn = $('link-battle-start-btn');
-    if (startBtn) startBtn.style.display = inBattleView ? 'none' : '';
-    var retryBtn = $('link-battle-retry-btn');
-    if (retryBtn) {
-      var showRetry = !!(state.battle && state.battle.status === 'failed');
-      retryBtn.style.display = showRetry ? '' : 'none';
-      retryBtn.disabled = state.isAnimating || !showRetry;
-    }
+    if (startBtn) startBtn.style.display = isBattleActive() ? 'none' : '';
   }
-
 
   function openModal() {
     var modal = $('link-battle-modal');
     if (modal) modal.style.display = 'flex';
     loadDashboard();
+    setTimeout(function() {
+      if (!state.rulesShown) {
+        state.rulesShown = true;
+        openRules();
+      }
+    }, 180);
+  }
+
+  function openRules() {
+    var el = $('link-battle-rules');
+    if (el) el.classList.add('active');
+  }
+
+  function closeRules() {
+    var el = $('link-battle-rules');
+    if (el) el.classList.remove('active');
+  }
+
+  async function startFromRules() {
+    closeRules();
+    await startBattle();
   }
 
   function closeModal() {
@@ -139,10 +149,9 @@
       if (state.timeLeft <= 0) {
         stopTimer();
         state.battle.status = 'failed';
-        setMsg('<b style="color:#ff7777">時間結束，挑戰失敗。</b><br><span style="color:#ffdd77">可以直接點「再次討伐」重打本關。</span>', '#ff7777');
+        setMsg('<b style="color:#ff7777">時間結束，挑戰失敗。</b>', '#ff7777');
         playAudio('battle_failed');
         setButtonsDisabled(true);
-        updateShellMode();
       }
     }, 1000);
   }
@@ -311,25 +320,27 @@
 
     var wrapWidth = Math.max(300, wrap.clientWidth || 360);
     var wrapHeight = Math.max(300, wrap.clientHeight || 330);
-    var usableWidth = Math.max(280, wrapWidth - 28);
-    var usableHeight = Math.max(260, wrapHeight - 28);
-    var colStepFactor = 1.14;
-    var rowStepFactor = 0.88;
-    var layerOffsetXFactor = 0.46;
-    var layerOffsetYFactor = 0.34;
-    var widthDenom = 1 + Math.max(0, dims.cols - 1) * colStepFactor + Math.max(0, dims.layers - 1) * layerOffsetXFactor;
-    var heightDenom = 1.46 + Math.max(0, dims.rows - 1) * 1.46 * rowStepFactor + Math.max(0, dims.layers - 1) * 1.46 * layerOffsetYFactor;
-    var tileWByWidth = usableWidth / Math.max(1, widthDenom);
-    var tileWByHeight = usableHeight / Math.max(1, heightDenom);
-    var tileW = Math.floor(Math.min(tileWByWidth * 1.08, tileWByHeight * 1.14));
-    tileW = Math.max(50, Math.min(68, tileW));
-    var tileH = Math.round(tileW * 1.46);
-    var colStep = Math.round(tileW * colStepFactor);
-    var rowStep = Math.round(tileH * rowStepFactor);
-    var layerOffsetX = Math.round(tileW * layerOffsetXFactor);
-    var layerOffsetY = Math.round(tileH * layerOffsetYFactor);
-    var boardW = 28 + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
-    var boardH = 28 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
+    var usableWidth = Math.max(270, wrapWidth - 28);
+    var usableHeight = Math.max(270, wrapHeight - 28);
+    var aspect = 1.42;
+
+    // 第一正式版：保持堆疊感，但必須完整收在操作區邊框內。
+    // 透過同時檢查寬度與高度自動縮放，避免卡牌距離拉開後破圖。
+    var colFactor = 0.96;
+    var rowFactor = 0.68;
+    var layerXFactor = 0.30;
+    var layerYFactor = 0.20;
+    var widthUnits = ((dims.cols - 1) * colFactor) + 1 + ((dims.layers - 1) * layerXFactor);
+    var heightUnits = aspect * (((dims.rows - 1) * rowFactor) + 1 + ((dims.layers - 1) * layerYFactor));
+    var tileW = Math.floor(Math.min(usableWidth / Math.max(1, widthUnits), usableHeight / Math.max(1, heightUnits)));
+    tileW = Math.max(32, Math.min(54, tileW));
+    var tileH = Math.round(tileW * aspect);
+    var colStep = Math.round(tileW * colFactor);
+    var rowStep = Math.round(tileH * rowFactor);
+    var layerOffsetX = Math.round(tileW * layerXFactor);
+    var layerOffsetY = Math.round(tileH * layerYFactor);
+    var boardW = 18 + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
+    var boardH = 18 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
 
     renderTiles.sort(function(a, b) {
       if (a.layer !== b.layer) return a.layer - b.layer;
@@ -339,10 +350,10 @@
 
     var html = '<div class="link-battle-stacked-board" style="width:' + boardW + 'px;height:' + boardH + 'px;--tile-w:' + tileW + 'px;--tile-h:' + tileH + 'px;">';
     renderTiles.forEach(function(tile) {
-      var x = 14 + (tile.col * colStep) + (tile.layer * layerOffsetX);
-      var y = 14 + ((dims.layers - 1 - tile.layer) * layerOffsetY) + (tile.row * rowStep);
+      var x = 9 + (tile.col * colStep) + (tile.layer * layerOffsetX);
+      var y = 9 + ((dims.layers - 1 - tile.layer) * layerOffsetY) + (tile.row * rowStep);
       var z = (tile.layer * 1000) + (tile.row * 20) + tile.col;
-      html += renderTile(tile, 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';');
+      html += renderTile(tile, 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';--tile-layer:' + tile.layer + ';');
     });
     html += '</div>';
     wrap.innerHTML = html;
@@ -360,7 +371,9 @@
 
   function renderTile(tile, positionStyle) {
     var selectable = tile.selectable != null ? !!tile.selectable : isTileSelectable(tile);
-    var cls = ['link-battle-tile', rarityClass(tile.rarity), 'layer-' + Number(tile.layer || 0)];
+    var cls = ['link-battle-tile', rarityClass(tile.rarity)];
+    cls.push('layer-' + Number(tile.layer || 0));
+    if (selectable) cls.push('selectable');
     if (!selectable) cls.push('covered');
     if (tile.locked_until && new Date(String(tile.locked_until)).getTime() > Date.now()) cls.push('locked');
     if (state.selectedTileId === tile.tile_id) cls.push('selected');
@@ -368,7 +381,7 @@
     var img = tile.image_url
       ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false">'
       : '<div class="link-battle-tile-fallback">🎴</div>';
-    return '<button class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-layer="' + Number(tile.layer || 0) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\')">' + img + '</button>';
+    return '<button class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\')">' + img + '</button>';
   }
 
   function findTile(tileId) {
@@ -475,20 +488,15 @@
     } else if (status === 'failed') {
       stopTimer();
       playAudio('battle_failed');
-      setMsg('<b style="color:#ff7777">挑戰失敗：' + escapeHtml(reason || 'FAILED') + '</b><br><span style="color:#ffdd77">可以直接點「再次討伐」重打本關。</span>', '#ff7777');
+      setMsg('<b style="color:#ff7777">挑戰失敗：' + escapeHtml(reason || 'FAILED') + '</b><div class="link-battle-result-actions"><button class="primary" onclick="TLOLinkBattle.retryBattle()">再次討伐</button><button onclick="TLOLinkBattle.loadDashboard()">返回關卡選擇</button></div>', '#ff7777');
       setButtonsDisabled(true);
-      updateShellMode();
     }
   }
 
   async function retryBattle() {
-    if (state.isAnimating || !state.selectedStageId) return;
-    stopTimer();
-    state.runId = null;
-    state.battle = null;
+    if (state.isAnimating) return;
     state.selectedTileId = null;
     state.hintedIds = new Set();
-    updateShellMode();
     await startBattle();
   }
 
@@ -547,10 +555,13 @@
     loadDashboard: loadDashboard,
     selectStage: selectStage,
     startBattle: startBattle,
-    retryBattle: retryBattle,
     pickTile: pickTile,
     useHint: useHint,
-    shuffleBoard: shuffleBoard
+    shuffleBoard: shuffleBoard,
+    retryBattle: retryBattle,
+    openRules: openRules,
+    closeRules: closeRules,
+    startFromRules: startFromRules
   };
   window.openLinkBattleModal = openModal;
 })();
