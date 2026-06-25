@@ -117,6 +117,8 @@
     updateTimerText();
     if (state.timeLeft <= 0) return;
     state.timerId = setInterval(function() {
+  var TLO_LINK_BATTLE_BUILD = '20260626-formal-ui-v2';
+  try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
       if (!state.battle || state.battle.status === 'victory' || state.battle.status === 'failed') return stopTimer();
       state.timeLeft -= 1;
       updateTimerText();
