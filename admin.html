@@ -86,6 +86,8 @@
         <button class="tab" onclick="showTab('cards', this); loadCardAdmin();">卡牌管理</button>
         <button class="tab" onclick="showTab('stages', this); loadStageAdmin();">關卡管理</button>
         <button class="tab" onclick="showTab('shop', this); loadShopAdmin();">商城管理</button>
+        <button class="tab" onclick="showTab('chat', this); loadChatAdmin();">聊天公告</button>
+        <button class="tab" onclick="showTab('worldboss', this); loadWorldBossAdmin();">世界BOSS</button>
         <button class="tab" onclick="showTab('redeem', this); loadRedeemCodes();">兌換碼</button>
         <button class="tab" onclick="showTab('backup', this);">備份匯出</button>
         <button class="tab" onclick="showTab('settings', this); loadOpsSettings();">公告/維護</button>
@@ -451,6 +453,73 @@
         <div id="shopItemsTable"></div>
       </div>
 
+      <div id="tab-chat" class="hide panel">
+        <h2>💬 聊天公告管理</h2>
+        <div class="muted">世界頻道由玩家發言；系統頻道只有 GM 可發布，玩家端會唯讀顯示。後端已改為頻道架構，日後可擴充公會 / 活動頻道。</div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>發布系統頻道公告</h3>
+            <label>公告內容</label>
+            <textarea id="systemChatMessage" maxlength="300" placeholder="例如：今晚 21:00 開放世界BOSS全服討伐！"></textarea>
+            <button class="primary" onclick="sendSystemChat()" style="width:100%;margin-top:10px">送出系統公告</button>
+            <div id="chatAdminMsg" class="msg"></div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>最近系統公告</h3>
+            <div id="adminSystemChatList" class="muted">尚未讀取。</div>
+          </div>
+        </div>
+        <h3>最近世界頻道</h3>
+        <div id="adminWorldChatList"></div>
+      </div>
+
+      <div id="tab-worldboss" class="hide panel">
+        <h2>🌍 世界BOSS 全服討伐管理</h2>
+        <div class="muted">可設定活動時間、全服共用 HP、每日挑戰次數、前三名獎勵與所有參與玩家安慰獎。玩家造成傷害會即時扣除同一隻 BOSS 的剩餘 HP。</div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>新增 / 編輯世界BOSS</h3>
+            <div class="row">
+              <div><label>活動 Key</label><input id="wbKey" placeholder="例如 wb_2026_summer"></div>
+              <div><label>活動名稱</label><input id="wbName" placeholder="例如 終焉魔王・潮流裂界"></div>
+            </div>
+            <label>活動說明</label><textarea id="wbDesc" placeholder="顯示給玩家看的世界BOSS說明"></textarea>
+            <div class="row">
+              <div><label>BOSS 指定卡片，可空白</label><select id="wbBossCard"><option value="">不指定</option></select></div>
+              <div><label>BOSS 圖片 URL，可空白</label><input id="wbImage" placeholder="可留空，自動使用指定卡片圖片"></div>
+            </div>
+            <div class="row3">
+              <div><label>全服總 HP</label><input id="wbTotalHp" type="number" min="1" value="1000000"></div>
+              <div><label>BOSS 戰力基準</label><input id="wbBossPower" type="number" min="1" value="10000"></div>
+              <div><label>每日挑戰次數</label><input id="wbDailyLimit" type="number" min="1" value="5"></div>
+            </div>
+            <div class="row3">
+              <div><label>參與獎最低傷害</label><input id="wbMinDamage" type="number" min="1" value="1000"></div>
+              <div><label>啟用狀態</label><select id="wbActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
+              <div><label>備註</label><input id="wbNote" placeholder="可空白，方便 GM 記錄"></div>
+            </div>
+            <div class="row">
+              <div><label>開放開始時間</label><input id="wbStartsAt" type="datetime-local"></div>
+              <div><label>開放結束時間</label><input id="wbEndsAt" type="datetime-local"></div>
+            </div>
+            <h3>前三名獎勵</h3>
+            <div id="wbRankRewardEditor"></div>
+            <h3>所有參與玩家安慰獎</h3>
+            <div id="wbParticipationRewardEditor"></div>
+            <button class="primary" onclick="saveWorldBossEvent()" style="margin-top:10px">新增 / 儲存世界BOSS</button>
+            <button class="ghost" onclick="clearWorldBossForm()">清空</button>
+            <div id="worldBossMsg" class="msg"></div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>活動操作提醒</h3>
+            <div class="muted">活動結束或 BOSS 討伐後，請按「結算發獎」。系統會依照玩家累積傷害排名發放排名獎，達最低傷害的玩家會拿到參與獎。每個活動只會結算一次。</div>
+            <div id="worldBossDetail" class="muted" style="margin-top:10px">請從下方列表載入活動。</div>
+          </div>
+        </div>
+        <h3>世界BOSS 活動列表</h3>
+        <div id="worldBossTable"></div>
+      </div>
+
 <div id="tab-redeem" class="hide panel">
         <h2>🎟️ 兌換碼 / 補償碼</h2>
         <div class="muted">可建立活動碼、補償碼。玩家前台輸入後可領抽卡次數、指定卡片、排行榜分數或潮流能量。</div>
@@ -512,6 +581,13 @@
             <option value="shop_items">shop_items 商城商品</option>
             <option value="shop_item_rewards">shop_item_rewards 商城獎勵</option>
             <option value="shop_purchase_logs">shop_purchase_logs 商城購買紀錄</option>
+            <option value="chat_channels">chat_channels 聊天頻道</option>
+            <option value="chat_messages">chat_messages 聊天訊息</option>
+            <option value="friend_greetings">friend_greetings 好友打招呼</option>
+            <option value="world_boss_events">world_boss_events 世界BOSS活動</option>
+            <option value="world_boss_participants">world_boss_participants 世界BOSS參與者</option>
+            <option value="world_boss_damage_logs">world_boss_damage_logs 世界BOSS傷害紀錄</option>
+            <option value="world_boss_rewards">world_boss_rewards 世界BOSS獎勵</option>
             <option value="admin_audit_logs">admin_audit_logs GM操作紀錄</option>
           </select>
           <button class="primary" onclick="exportOneTable()">匯出單表</button>
@@ -574,6 +650,7 @@ let demonStageRows = [];
 let rewardCatalog = {types:[], items:[], cards:[]};
 let shopItemRows = [];
 let shopFilter = 'ALL';
+let worldBossRows = [];
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
@@ -646,6 +723,178 @@ function readManagedRewards(prefix, includeChance){
   return rewards;
 }
 
+function formatLocalDatetimeForInput(value){
+  if(!value) return '';
+  const d = new Date(value);
+  if(!Number.isFinite(d.getTime())) return String(value || '').slice(0,16);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function rewardLabel(row){
+  if(!row) return '';
+  const type = row.rewardType || row.reward_type || '';
+  const val = Number(row.rewardValue ?? row.reward_value ?? 0);
+  const target = row.cardName || row.card_name || row.itemKey || row.item_key || '';
+  return `${type}${target ? ':' + target : ''} x${fmt(val)}`;
+}
+function syncWorldBossRankTarget(index){
+  const typeEl = $(`wbRankType${index}`), targetEl = $(`wbRankTarget${index}`);
+  if(!typeEl || !targetEl) return;
+  const type = typeEl.value;
+  targetEl.innerHTML = managedRewardTargetOptions(type, '');
+  targetEl.disabled = type !== 'ITEM' && type !== 'CARD';
+}
+function renderWorldBossRankRewardEditor(rewards){
+  const box = $('wbRankRewardEditor'); if(!box) return;
+  const source = Array.isArray(rewards) ? rewards.filter(r => (r.rewardScope || r.scope || '').toUpperCase() === 'RANK') : [];
+  const rows = [];
+  for(let i=0;i<3;i+=1){ rows.push(source[i] || {rankFrom:i+1, rankTo:i+1, rewardType:'DRAW_TIMES', rewardValue:i===0?10:i===1?7:5}); }
+  box.innerHTML = rows.map((row,i)=>{
+    const from = Number(row.rankFrom ?? row.rank_from ?? (i+1));
+    const to = Number(row.rankTo ?? row.rank_to ?? from);
+    const type = row.rewardType || row.reward_type || '';
+    const target = row.cardName || row.card_name || row.itemKey || row.item_key || '';
+    const amount = Number(row.rewardValue ?? row.reward_value ?? 1) || 1;
+    return `<div class="row3" style="align-items:end;border:1px solid #333;border-radius:10px;padding:8px;margin:7px 0;">
+      <div><label>排名範圍</label><div style="display:flex;gap:6px"><input id="wbRankFrom${i}" type="number" min="1" value="${from}"><input id="wbRankTo${i}" type="number" min="1" value="${to}"></div></div>
+      <div><label>獎勵內容</label><select id="wbRankType${i}" onchange="syncWorldBossRankTarget(${i})">${managedRewardTypeOptions(type)}</select><select id="wbRankTarget${i}" style="margin-top:6px" ${type==='ITEM'||type==='CARD'?'':'disabled'}>${managedRewardTargetOptions(type,target)}</select></div>
+      <div><label>數量</label><input id="wbRankAmount${i}" type="number" min="1" value="${amount}"></div>
+    </div>`;
+  }).join('');
+}
+function readWorldBossRankRewards(){
+  const rewards = [];
+  for(let i=0;i<3;i+=1){
+    const type = ($(`wbRankType${i}`)||{}).value || '';
+    if(!type) continue;
+    const from = Math.max(1, Number(($(`wbRankFrom${i}`)||{}).value || i+1));
+    const to = Math.max(from, Number(($(`wbRankTo${i}`)||{}).value || from));
+    const amount = Number(($(`wbRankAmount${i}`)||{}).value || 0);
+    if(amount < 1) throw new Error(`第 ${i+1} 項排名獎勵數量至少為 1。`);
+    rewards.push({rankFrom:from, rankTo:to, rewardType:type, rewardValue:amount, cardName:(($(`wbRankTarget${i}`)||{}).value || ''), sortOrder:(i+1)*10});
+  }
+  if(!rewards.length) throw new Error('請至少設定 1 項排名獎勵。');
+  return rewards;
+}
+function syncWorldBossBossCardOptions(selected=''){
+  const el = $('wbBossCard'); if(!el) return;
+  const opts = ['<option value="">不指定</option>'].concat((cardRows || []).map(c => `<option value="${esc(c.name || '')}" ${(c.name||'')===selected?'selected':''}>${esc(c.name || '')}｜${esc(c.rarity || '')}</option>`));
+  el.innerHTML = opts.join('');
+}
+async function loadChatAdmin(){
+  try{
+    msg('chatAdminMsg','讀取聊天資料中...',true);
+    const data = await rpc('adminGetChatDashboard', []);
+    const system = (data.system || data.systemMessages || []);
+    const world = (data.world || data.worldMessages || []);
+    $('adminSystemChatList').innerHTML = system.length ? system.map(m=>`<div class="list-btn"><b>${esc(m.displayName || 'GM')}</b><div class="muted">${esc(m.time || '')}</div><div>${esc(m.message || '')}</div></div>`).join('') : '<div class="muted">目前沒有系統公告。</div>';
+    $('adminWorldChatList').innerHTML = world.length ? `<table><thead><tr><th>玩家</th><th>時間</th><th>訊息</th></tr></thead><tbody>${world.map(m=>`<tr><td>${esc(m.displayName || m.uid || '')}</td><td>${esc(m.time || '')}</td><td>${esc(m.message || '')}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">目前沒有世界頻道訊息。</div>';
+    msg('chatAdminMsg','聊天資料已同步。',true);
+  }catch(e){ msg('chatAdminMsg',e.message); }
+}
+async function sendSystemChat(){
+  try{
+    const text = $('systemChatMessage').value.trim();
+    if(!text){ msg('chatAdminMsg','請輸入系統公告內容。'); return; }
+    const data = await rpc('adminSendSystemChatMessage', [text]);
+    $('systemChatMessage').value = '';
+    msg('chatAdminMsg', data.msg || '系統公告已送出。', true);
+    await loadChatAdmin();
+  }catch(e){ msg('chatAdminMsg', e.message); }
+}
+async function loadWorldBossAdmin(){
+  try{
+    msg('worldBossMsg','讀取世界BOSS資料中...',true);
+    await loadRewardCatalog();
+    if(!(cardRows || []).length) await loadCards(false);
+    syncWorldBossBossCardOptions(($('wbBossCard')||{}).value || '');
+    if(!$('wbRankRewardEditor').children.length) renderWorldBossRankRewardEditor([]);
+    if(!$('wbParticipationRewardEditor').children.length) renderManagedRewardEditor('wbParticipationRewardEditor','wbParticipationReward',[{rewardType:'ENERGY',rewardValue:100}],false);
+    const data = await rpc('adminListWorldBossEvents', []);
+    worldBossRows = data.rows || [];
+    renderWorldBossEvents();
+    msg('worldBossMsg',`已讀取 ${worldBossRows.length} 個世界BOSS活動。`,true);
+  }catch(e){ msg('worldBossMsg',e.message); }
+}
+function clearWorldBossForm(){
+  ['wbKey','wbName','wbDesc','wbImage','wbTotalHp','wbBossPower','wbDailyLimit','wbMinDamage','wbStartsAt','wbEndsAt','wbNote'].forEach(id=>{ if($(id)) $(id).value=''; });
+  if($('wbTotalHp')) $('wbTotalHp').value = 1000000;
+  if($('wbBossPower')) $('wbBossPower').value = 10000;
+  if($('wbDailyLimit')) $('wbDailyLimit').value = 5;
+  if($('wbMinDamage')) $('wbMinDamage').value = 1000;
+  if($('wbActive')) $('wbActive').value = '1';
+  syncWorldBossBossCardOptions('');
+  renderWorldBossRankRewardEditor([]);
+  renderManagedRewardEditor('wbParticipationRewardEditor','wbParticipationReward',[{rewardType:'ENERGY',rewardValue:100}],false);
+  if($('worldBossDetail')) $('worldBossDetail').textContent = '已清空表單，可新增活動。';
+}
+function renderWorldBossEvents(){
+  const box = $('worldBossTable'); if(!box) return;
+  if(!worldBossRows.length){ box.innerHTML = '<div class="muted">目前沒有世界BOSS活動。</div>'; return; }
+  box.innerHTML = `<table><thead><tr><th>活動</th><th>時間 / 狀態</th><th>HP</th><th>排行</th><th>操作</th></tr></thead><tbody>${worldBossRows.map((e,i)=>{
+    const top = (e.ranking || []).map(r=>`#${r.rank} ${esc(r.displayName || r.uid || '')} ${fmt(r.totalDamage)}`).join('<br>') || '<span class="muted">暫無</span>';
+    return `<tr><td><b>${esc(e.name)}</b><br><span class="muted">${esc(e.eventKey || '')}</span><br>${(e.rewards||[]).slice(0,4).map(r=>`<span class="badge">${esc(r.rewardScope || r.scope)} ${esc(r.rewardText || rewardLabel(r))}</span>`).join('')}</td><td>${esc(e.startsAtText || '')} ～ ${esc(e.endsAtText || '')}<br><span class="badge">${esc(e.status || '')}</span> ${e.isActive?'<span class="badge ok">啟用</span>':'<span class="badge bad">停用</span>'} ${e.isSettled?'<span class="badge yellow">已結算</span>':''}</td><td>${fmt(e.remainingHp)} / ${fmt(e.totalHp)}<br>${Number(e.hpPercent || 0).toFixed(2)}%</td><td>${top}</td><td><button class="primary" onclick="editWorldBossEvent(${i})">載入</button><br><button class="ghost" style="margin-top:6px" onclick="toggleWorldBossEvent(${i})">${e.isActive?'停用':'啟用'}</button><br><button class="warn" style="margin-top:6px" onclick="settleWorldBossEvent(${i})">結算發獎</button></td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+function editWorldBossEvent(i){
+  const e = worldBossRows[i]; if(!e) return;
+  $('wbKey').value = e.eventKey || '';
+  $('wbName').value = e.name || '';
+  $('wbDesc').value = e.description || '';
+  syncWorldBossBossCardOptions(e.bossCardName || '');
+  $('wbImage').value = e.imageUrl || '';
+  $('wbTotalHp').value = e.totalHp || 1000000;
+  $('wbBossPower').value = e.bossPower || 10000;
+  $('wbDailyLimit').value = e.dailyLimit || 5;
+  $('wbMinDamage').value = e.participationMinDamage || 1000;
+  $('wbActive').value = e.isActive ? '1' : '0';
+  $('wbStartsAt').value = formatLocalDatetimeForInput(e.startsAt);
+  $('wbEndsAt').value = formatLocalDatetimeForInput(e.endsAt);
+  renderWorldBossRankRewardEditor(e.rewards || []);
+  renderManagedRewardEditor('wbParticipationRewardEditor','wbParticipationReward',(e.rewards || []).filter(r => String(r.rewardScope || r.scope || '').toUpperCase() === 'PARTICIPATION'),false);
+  if($('worldBossDetail')) $('worldBossDetail').innerHTML = `<b>${esc(e.name)}</b><br>狀態：${esc(e.status || '')}｜HP ${fmt(e.remainingHp)} / ${fmt(e.totalHp)}｜已結算：${e.isSettled?'是':'否'}`;
+  $('wbKey').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function saveWorldBossEvent(){
+  try{
+    const rankRewards = readWorldBossRankRewards();
+    let participationRewards = [];
+    try{ participationRewards = readManagedRewards('wbParticipationReward', false); }catch(e){ participationRewards = []; }
+    const payload = {
+      eventKey:$('wbKey').value.trim(), name:$('wbName').value.trim(), description:$('wbDesc').value.trim(), bossCardName:$('wbBossCard').value,
+      imageUrl:$('wbImage').value.trim(), totalHp:Number($('wbTotalHp').value || 0), bossPower:Number($('wbBossPower').value || 0),
+      dailyLimit:Number($('wbDailyLimit').value || 5), participationMinDamage:Number($('wbMinDamage').value || 1000),
+      startsAt:$('wbStartsAt').value, endsAt:$('wbEndsAt').value, isActive:$('wbActive').value === '1', rankRewards, participationRewards
+    };
+    if(!payload.name){ msg('worldBossMsg','請輸入世界BOSS名稱。'); return; }
+    if(!payload.startsAt || !payload.endsAt){ msg('worldBossMsg','請設定開放開始與結束時間。'); return; }
+    if(!confirm(`確定儲存世界BOSS「${payload.name}」？`)) return;
+    const data = await rpc('adminUpsertWorldBossEvent', [payload]);
+    worldBossRows = data.rows || [];
+    renderWorldBossEvents();
+    msg('worldBossMsg', data.msg || '世界BOSS已儲存。', true);
+  }catch(e){ msg('worldBossMsg',e.message); }
+}
+async function toggleWorldBossEvent(i){
+  try{
+    const e = worldBossRows[i]; if(!e) return;
+    const data = await rpc('adminSetWorldBossEventActive', [e.eventKey, !e.isActive]);
+    worldBossRows = data.rows || [];
+    renderWorldBossEvents();
+    msg('worldBossMsg', data.msg || '狀態已更新。', true);
+  }catch(e){ msg('worldBossMsg',e.message); }
+}
+async function settleWorldBossEvent(i){
+  try{
+    const e = worldBossRows[i]; if(!e) return;
+    if(!confirm(`確定結算「${e.name}」並發放排名 / 參與獎？此操作每個活動只應執行一次。`)) return;
+    const data = await rpc('adminSettleWorldBossEvent', [e.eventKey]);
+    worldBossRows = data.rows || [];
+    renderWorldBossEvents();
+    msg('worldBossMsg', data.msg || '世界BOSS已結算。', true);
+  }catch(e){ msg('worldBossMsg',e.message); }
+}
+
 async function rpc(method, args=[], auth=true){
   const headers = {'Content-Type':'application/json'};
   if(auth && token()) headers.Authorization = 'Bearer ' + token();
@@ -684,7 +933,7 @@ async function logout(){
 
 function openGame(){ location.href = './'; }
 function showTab(name, btn){
-  ['players','cards','stages','shop','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
+  ['players','cards','stages','shop','chat','worldboss','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
 }

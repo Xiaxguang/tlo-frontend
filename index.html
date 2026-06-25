@@ -489,6 +489,13 @@
     .message-input-row { display:flex; gap:8px; margin-top:10px; align-items:center; }
     .message-input { flex:1; background:#222; color:white; border:1px solid #444; border-radius:10px; padding:10px; font-size:14px; box-sizing:border-box; }
     .message-send-btn { background:#00fff0; color:#111; border:none; border-radius:10px; padding:10px 12px; font-weight:900; cursor:pointer; }
+    .chat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px;}
+    .chat-tab{border:1px solid #444;background:#181818;color:#aaa;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;cursor:pointer;}
+    .chat-tab.active{border-color:#00fff0;color:#111;background:linear-gradient(45deg,#00fff0,#00ff7f);}
+    .chat-tab:disabled{opacity:.55;cursor:not-allowed;}
+    .worldboss-hp-wrap{height:18px;background:#1f1f28;border:1px solid #444;border-radius:999px;overflow:hidden;margin:8px 0;}
+    .worldboss-hp-fill{height:100%;background:linear-gradient(90deg,#ff007f,#ffdd77);width:0%;transition:width .35s;}
+    .worldboss-rank-row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.08);padding:7px 0;font-size:12px;}
     .mini-panel { background:#111; border:1px solid #333; border-radius:12px; padding:12px; margin:10px 0; text-align:center; }
     .shadow-img-wrap { width:210px; max-width:80%; margin:10px auto; padding:10px; background:#222; border:2px dashed #555; border-radius:12px; }
     .shadow-img { width:100%; height:auto; object-fit:contain; filter:brightness(0) contrast(1.4) drop-shadow(0 0 12px rgba(0,255,240,0.35)); opacity:0.95; }
@@ -1208,6 +1215,7 @@
           <button class="feature-btn" onclick="openAchievementModal()"><span>🏆</span>成就系統<small>收集、戰鬥、養成里程碑</small></button>
           <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
           <button class="feature-btn" onclick="openPvpModal()"><span>🆚</span>玩家對戰<small>設定代表卡並挑戰玩家</small></button>
+          <button class="feature-btn" onclick="openWorldBossModal()"><span>🌍</span>世界BOSS<small>全服同步討伐與傷害排名</small></button>
           <button class="feature-btn" onclick="openCharacterGrowthModal()"><span>🌟</span>角色養成<small>等級、經驗、技能與10星升星</small></button>
           <button class="feature-btn" onclick="showGameScreen('shop')"><span>🛒</span>商城<small>兌換補給與查看儲值商品</small></button>
           <button class="feature-btn" onclick="showGameScreen('profile')"><span>👤</span>個人<small>查看資產、券與自我介紹</small></button>
@@ -1227,13 +1235,17 @@
       </div>
 
       <div class="message-board-box" id="home-message-board">
-        <div class="message-board-title">💬 T-LO 玩家留言板</div>
-        <div id="message-board-list" class="message-list">正在讀取玩家留言...</div>
-        <div class="message-input-row">
-          <input id="message-input" class="message-input" maxlength="50" placeholder="留下你的潮流宣言，最多50字">
+        <div class="message-board-title">💬 T-LO 聊天頻道</div>
+        <div class="chat-tabs">
+          <button class="chat-tab active" id="chat-tab-world" onclick="switchHomeChatChannel('WORLD')">世界頻道</button>
+          <button class="chat-tab" id="chat-tab-system" onclick="switchHomeChatChannel('SYSTEM')">系統頻道</button>
+        </div>
+        <div id="message-board-list" class="message-list">正在讀取聊天訊息...</div>
+        <div class="message-input-row" id="message-input-row">
+          <input id="message-input" class="message-input" maxlength="120" placeholder="在世界頻道發言，最多120字">
           <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
         </div>
-        <div id="message-board-msg" style="font-size:12px;color:#888;margin-top:6px;text-align:center;">留言每日限量，僅顯示最近 15 則。</div>
+        <div id="message-board-msg" style="font-size:12px;color:#888;margin-top:6px;text-align:center;">世界頻道每日限量；系統頻道僅 GM 可發布。</div>
       </div>
     </section>
 
@@ -1305,6 +1317,12 @@
         <h3>👿 魔王挑戰</h3>
         <p>自己的遠征 3 人隊伍，加上 1 位好友代表卡，共同討伐終焉魔王。每日免費 5 次。</p>
         <button class="scene-btn btn-neon-pink" onclick="openDemonChallengeModal()">進入魔王挑戰<small>好友協作副本與魔王挑戰卷</small></button>
+      </div>
+
+      <div class="scene-panel">
+        <h3>🌍 世界BOSS 全服討伐戰</h3>
+        <p>活動時間內全服玩家同步削減同一隻 BOSS 血量，結束後依傷害排名發獎。</p>
+        <button class="scene-btn btn-neon-gold" onclick="openWorldBossModal()">挑戰世界BOSS<small>查看血量、排名與活動時間</small></button>
       </div>
 
       <div class="scene-panel">
@@ -1438,7 +1456,25 @@
 
       <div class="game-card">
         <h3>好友列表</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+          <button class="social-action-btn" onclick="sendAllFriendGreetingsUI()">👋 一鍵打招呼</button>
+          <span id="friend-greeting-status" style="color:#aaa;font-size:12px;align-self:center;"></span>
+        </div>
         <div id="friend-list"><div style="color:#aaa;">正在讀取...</div></div>
+      </div>
+
+      <div class="game-card">
+        <h3>💌 好友私訊</h3>
+        <div class="row" style="display:flex;gap:8px;align-items:center;">
+          <select id="private-chat-friend" class="social-input" style="flex:1;" onchange="loadPrivateChatFromSelect()"><option value="">選擇好友開始私訊</option></select>
+          <button class="social-action-btn" style="flex:0 0 auto;" onclick="loadPrivateChatFromSelect()">讀取</button>
+        </div>
+        <div id="private-chat-list" class="message-list" style="margin-top:10px;">請先選擇好友。</div>
+        <div class="message-input-row">
+          <input id="private-chat-input" class="message-input" maxlength="300" placeholder="輸入好友私訊，最多300字">
+          <button class="message-send-btn" onclick="sendPrivateChatUI()">送出</button>
+        </div>
+        <div id="private-chat-msg" style="font-size:12px;color:#888;margin-top:6px;text-align:center;"></div>
       </div>
     </section>
 
@@ -1841,6 +1877,20 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="world-boss-modal" onclick="if(event.target.id==='world-boss-modal') this.style.display='none';">
+    <div class="modal-content" style="max-width:760px;">
+      <span class="modal-close" onclick="document.getElementById('world-boss-modal').style.display='none';">&times;</span>
+      <div class="modal-h3">🌍 世界BOSS 全服討伐戰</div>
+      <div id="world-boss-msg" style="min-height:24px;margin:8px 0;color:#aaa;font-weight:900;">正在讀取活動...</div>
+      <div id="world-boss-content"></div>
+      <button class="btn-fight" id="world-boss-fight-btn" onclick="startWorldBossBattle()">🌍 挑戰世界BOSS</button>
+      <div class="modal-h3" style="font-size:17px;margin-top:14px;">傷害排行榜</div>
+      <div id="world-boss-ranking" class="message-list">正在讀取排名...</div>
+      <div class="modal-h3" style="font-size:17px;margin-top:14px;">我的挑戰紀錄</div>
+      <div id="world-boss-log-list" class="message-list">正在讀取紀錄...</div>
+    </div>
+  </div>
+
 
   <script>
     const playerUID = window.TLO_PLAYER_UID || "";
@@ -1848,6 +1898,10 @@
     let globalPlayerPower = 0; 
     let latestRpgDashboard = null;
     let latestDemonDashboard = null;
+    let latestWorldBossDashboard = null;
+    let worldBossRunning = false;
+    let currentChatType = 'WORLD';
+    let currentPrivateChatFriendUid = '';
     let demonChallengeRunning = false;
     let latestRpgDashboardLoadedAt = 0;
     let lastRpgAdventureKey = "";
@@ -4106,21 +4160,38 @@ function showCollectionHistory() {
       box.innerHTML = html;
     }
 
+    function switchHomeChatChannel(type) {
+      currentChatType = String(type || 'WORLD').toUpperCase() === 'SYSTEM' ? 'SYSTEM' : 'WORLD';
+      ['WORLD','SYSTEM'].forEach(function(k){
+        var el = document.getElementById(k === 'WORLD' ? 'chat-tab-world' : 'chat-tab-system');
+        if (el) el.classList.toggle('active', currentChatType === k);
+      });
+      var row = document.getElementById('message-input-row');
+      var input = document.getElementById('message-input');
+      if (row) row.style.display = currentChatType === 'SYSTEM' ? 'none' : 'flex';
+      if (input) input.placeholder = currentChatType === 'SYSTEM' ? '系統頻道僅 GM 可發言' : '在世界頻道發言，最多120字';
+      loadMessageBoard();
+    }
+
     function loadMessageBoard() {
-      google.script.run.withSuccessHandler(function(list) {
+      const box = document.getElementById('message-board-list');
+      if (box) box.innerHTML = '<div style="color:#aaa;text-align:center;">正在讀取聊天頻道...</div>';
+      google.script.run.withSuccessHandler(function(res) {
+        const list = Array.isArray(res) ? res : (res && res.messages ? res.messages : []);
         renderMessageBoard(list || []);
       }).withFailureHandler(function() {
-        document.getElementById('message-board-list').innerHTML = '<div style="color:#888; text-align:center;">留言板暫時無法讀取。</div>';
-      }).getMessageBoard();
+        if (box) box.innerHTML = '<div style="color:#888; text-align:center;">聊天頻道暫時無法讀取。</div>';
+      }).getChatDashboard(playerUID, { channelType: currentChatType, limit: 30 });
     }
 
     function submitHomeMessage() {
+      if (currentChatType === 'SYSTEM') return;
       const input = document.getElementById('message-input');
       const btn = document.getElementById('message-send-btn');
       const msg = document.getElementById('message-board-msg');
       const text = input.value.trim();
       if (!text) {
-        msg.innerHTML = '<span style="color:#ff4444;">請先輸入留言。</span>';
+        msg.innerHTML = '<span style="color:#ff4444;">請先輸入訊息。</span>';
         return;
       }
       btn.disabled = true;
@@ -4130,34 +4201,38 @@ function showCollectionHistory() {
         btn.innerText = '送出';
         if (res && res.success) {
           input.value = '';
-          msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg)} 今日剩餘留言 ${res.messageLeftToday} 則。</span>`;
-          renderMessageBoard(res.messages || []);
+          msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg || '訊息已送出')}</span>`;
+          renderMessageBoard((res.dashboard && res.dashboard.messages) || []);
         } else {
-          msg.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '留言失敗')}</span>`;
-          if (res && res.messages) renderMessageBoard(res.messages);
+          msg.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '送出失敗')}</span>`;
+          if (res && res.dashboard && res.dashboard.messages) renderMessageBoard(res.dashboard.messages);
         }
       }).withFailureHandler(function(err) {
         btn.disabled = false;
         btn.innerText = '送出';
-        msg.innerHTML = '<span style="color:#ff4444;">留言板系統繁忙，請稍後再試。</span>';
-      }).submitBoardMessage(playerUID, text);
+        msg.innerHTML = '<span style="color:#ff4444;">聊天系統繁忙：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).sendChatMessage(playerUID, { channelType: 'WORLD', message: text });
     }
 
     function renderMessageBoard(list) {
       const box = document.getElementById('message-board-list');
+      if (!box) return;
       if (!list || list.length === 0) {
-        box.innerHTML = '<div style="color:#888; text-align:center;">目前還沒有留言，搶第一則吧！</div>';
+        box.innerHTML = '<div style="color:#888; text-align:center;">目前還沒有訊息。</div>';
         return;
       }
       let html = '';
       list.forEach(function(item) {
+        const isSystem = String(item.senderType || '').toUpperCase() !== 'PLAYER';
         html += `<div class="message-item">
-          <div class="message-meta"><span class="message-uid">${escapeHtml(item.uid || '玩家')}</span>｜${escapeHtml(item.time || '')}</div>
+          <div class="message-meta"><span class="message-uid" style="color:${isSystem ? '#ffdd77' : '#ff007f'};">${escapeHtml(item.displayName || item.uid || '玩家')}</span>｜${escapeHtml(item.time || '')}</div>
           <div class="message-text">${escapeHtml(item.message || '')}</div>
         </div>`;
       });
       box.innerHTML = html;
+      box.scrollTop = box.scrollHeight;
     }
+
 
     function jsString(text) {
       return String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
@@ -4410,8 +4485,28 @@ function showCollectionHistory() {
       if (friends) {
         var flist = res.friends || [];
         friends.innerHTML = flist.length ? flist.map(function(p){
-          return socialRow(p, `<button class="social-action-btn warn" onclick="removeFriendUI('${escapeHtml(jsString(p.uid || ''))}')">解除</button>`);
+          var safeUid = escapeHtml(jsString(p.uid || ''));
+          var greeted = p.greeting && p.greeting.greetedToday;
+          var greetBtn = `<button class="social-action-btn" ${greeted ? 'disabled' : ''} onclick="sendFriendGreetingUI('${safeUid}')">${greeted ? '已打招呼' : '👋 打招呼'}</button>`;
+          var chatBtn = `<button class="social-action-btn" onclick="openPrivateChatUI('${safeUid}')">私訊</button>`;
+          var removeBtn = `<button class="social-action-btn warn" onclick="removeFriendUI('${safeUid}')">解除</button>`;
+          return socialRow(p, greetBtn + chatBtn + removeBtn);
         }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前還沒有好友，先新增一位玩家吧。</div>';
+      }
+      var greetStatus = document.getElementById('friend-greeting-status');
+      if (greetStatus) {
+        var g = res.greeting || {};
+        greetStatus.innerText = '今日打招呼 ' + Number(g.used || 0).toLocaleString() + ' / ' + Number(g.dailyLimit || 10).toLocaleString() + '｜' + (g.rewardText || '雙方獲得少量能量與挑戰券');
+      }
+      var privateSelect = document.getElementById('private-chat-friend');
+      if (privateSelect) {
+        var oldValue = privateSelect.value || currentPrivateChatFriendUid || '';
+        var opts = ['<option value="">選擇好友開始私訊</option>'];
+        (res.friends || []).forEach(function(p){
+          var uid = escapeHtml(p.uid || '');
+          opts.push('<option value="' + uid + '" ' + (oldValue === (p.uid || '') ? 'selected' : '') + '>' + escapeHtml(p.displayName || p.uid || '玩家') + '｜' + uid + '</option>');
+        });
+        privateSelect.innerHTML = opts.join('');
       }
       var referral = res.referral || {};
       var codeEl = document.getElementById('my-invite-code');
@@ -4503,6 +4598,92 @@ function showCollectionHistory() {
       }).removeFriend(playerUID, friendUid);
     }
 
+    function sendFriendGreetingUI(friendUid) {
+      var msg = document.getElementById('social-msg');
+      if (!friendUid) return;
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在送出好友打招呼...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderSocialDashboard(res.dashboard);
+        if (res && res.assets) updateAssetDisplaysFromShopAssets(res.assets);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '打招呼失敗') + '</span>';
+        if (res && res.success) loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">打招呼失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).sendFriendGreeting(playerUID, friendUid);
+    }
+
+    function sendAllFriendGreetingsUI() {
+      var msg = document.getElementById('social-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在一鍵向好友打招呼...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderSocialDashboard(res.dashboard);
+        if (res && res.assets) updateAssetDisplaysFromShopAssets(res.assets);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '一鍵打招呼失敗') + '</span>';
+        if (res && res.success) loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">一鍵打招呼失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).sendAllFriendGreetings(playerUID);
+    }
+
+    function openPrivateChatUI(friendUid) {
+      currentPrivateChatFriendUid = friendUid || '';
+      var sel = document.getElementById('private-chat-friend');
+      if (sel) sel.value = currentPrivateChatFriendUid;
+      loadPrivateChatFromSelect();
+    }
+
+    function loadPrivateChatFromSelect() {
+      var sel = document.getElementById('private-chat-friend');
+      currentPrivateChatFriendUid = sel ? (sel.value || '') : currentPrivateChatFriendUid;
+      var box = document.getElementById('private-chat-list');
+      if (!currentPrivateChatFriendUid) {
+        if (box) box.innerHTML = '<div style="color:#aaa;text-align:center;">請先選擇好友。</div>';
+        return;
+      }
+      if (box) box.innerHTML = '<div style="color:#aaa;text-align:center;">正在讀取私訊...</div>';
+      google.script.run.withSuccessHandler(function(res) { renderPrivateChat(res); })
+        .withFailureHandler(function(err) { if (box) box.innerHTML = '<div style="color:#ff7777;text-align:center;">私訊讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</div>'; })
+        .getChatDashboard(playerUID, { channelType: 'PRIVATE', friendUid: currentPrivateChatFriendUid, limit: 50 });
+    }
+
+    function renderPrivateChat(res) {
+      var box = document.getElementById('private-chat-list');
+      if (!box) return;
+      var list = (res && res.messages) || [];
+      if (!list.length) {
+        box.innerHTML = '<div style="color:#aaa;text-align:center;">目前沒有私訊，先打聲招呼吧。</div>';
+        return;
+      }
+      box.innerHTML = list.map(function(item){
+        var mine = item.senderUid === playerUID;
+        return `<div class="message-item" style="border-color:${mine ? 'rgba(0,255,240,.25)' : 'rgba(255,255,255,.1)'};">
+          <div class="message-meta"><span class="message-uid" style="color:${mine ? '#00fff0' : '#ffdd77'};">${escapeHtml(item.displayName || item.uid || '')}</span>｜${escapeHtml(item.time || '')}</div>
+          <div class="message-text">${escapeHtml(item.message || '')}</div>
+        </div>`;
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function sendPrivateChatUI() {
+      var input = document.getElementById('private-chat-input');
+      var msg = document.getElementById('private-chat-msg');
+      var text = input ? input.value.trim() : '';
+      if (!currentPrivateChatFriendUid) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請先選擇好友。</span>'; return; }
+      if (!text) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請輸入私訊內容。</span>'; return; }
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success) {
+          if (input) input.value = '';
+          if (msg) msg.innerHTML = '<span style="color:#00ff7f;">私訊已送出。</span>';
+          renderPrivateChat(res.dashboard || res);
+        } else if (msg) {
+          msg.innerHTML = '<span style="color:#ff7777;">' + escapeHtml(res && res.msg ? res.msg : '私訊送出失敗') + '</span>';
+        }
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">私訊送出失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).sendChatMessage(playerUID, { channelType: 'PRIVATE', friendUid: currentPrivateChatFriendUid, message: text });
+    }
+
+
     function setPresenceStatusUI(status) {
       var msg = document.getElementById('social-msg');
       google.script.run.withSuccessHandler(function(res) {
@@ -4513,6 +4694,123 @@ function showCollectionHistory() {
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">切換失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
       }).setPlayerPresenceStatus(playerUID, status);
     }
+
+    function openWorldBossModal() {
+      var modal = document.getElementById('world-boss-modal');
+      if (modal) modal.style.display = 'flex';
+      loadWorldBossDashboard();
+    }
+
+    function loadWorldBossDashboard() {
+      var msg = document.getElementById('world-boss-msg');
+      var content = document.getElementById('world-boss-content');
+      var ranking = document.getElementById('world-boss-ranking');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在讀取世界BOSS活動...</span>';
+      if (content) content.innerHTML = '';
+      if (ranking) ranking.innerHTML = '<div style="color:#aaa;text-align:center;">正在讀取排名...</div>';
+      google.script.run.withSuccessHandler(function(res) {
+        renderWorldBossDashboard(res);
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).getWorldBossDashboard(playerUID);
+    }
+
+    function renderWorldBossDashboard(res) {
+      latestWorldBossDashboard = res || {};
+      var msg = document.getElementById('world-boss-msg');
+      var content = document.getElementById('world-boss-content');
+      var ranking = document.getElementById('world-boss-ranking');
+      var logs = document.getElementById('world-boss-log-list');
+      var btn = document.getElementById('world-boss-fight-btn');
+      if (!res || !res.success) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">世界BOSS資料讀取失敗。</span>';
+        if (btn) btn.disabled = true;
+        return;
+      }
+      var event = res.event;
+      if (!event) {
+        if (msg) msg.innerHTML = '<span style="color:#aaa;">' + escapeHtml(res.msg || '目前沒有開放中的世界BOSS。') + '</span>';
+        if (content) content.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;">請等待 GM 開放全服討伐活動。</div>';
+        if (ranking) ranking.innerHTML = '<div style="color:#aaa;text-align:center;">暫無排名。</div>';
+        if (logs) logs.innerHTML = '<div style="color:#aaa;text-align:center;">暫無紀錄。</div>';
+        if (btn) btn.disabled = true;
+        return;
+      }
+      var hpPct = Math.max(0, Math.min(100, Number(event.hpPercent || 0)));
+      var statusText = event.status === 'OPEN' ? '開放中' : event.status === 'DEFEATED' ? '已討伐' : event.status === 'UPCOMING' ? '尚未開始' : event.status === 'SETTLED' ? '已結算' : '已結束';
+      var my = res.my || {};
+      if (msg) msg.innerHTML = `<span style="color:#ffdd77;">${escapeHtml(event.name || '世界BOSS')}</span>｜${escapeHtml(statusText)}｜今日剩餘 ${Number(my.todayRemaining || 0).toLocaleString()} / ${Number(event.dailyLimit || 0).toLocaleString()} 次`;
+      if (content) {
+        var img = getCardImageUrl({ name: event.bossCardName, imageUrl: event.imageUrl }) || placeholderBattleImage(event.name || '世界BOSS', '#1c1238', '#ffdd77');
+        var partyText = (res.party || []).length ? (res.party || []).map(function(c){ return escapeHtml(c.name || '') + ' Lv.' + Number(c.level || 1); }).join('、') : '尚未編成遠征隊伍';
+        content.innerHTML = `<div class="boss-card" style="text-align:left;margin-bottom:12px;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            <img src="${escapeHtml(img)}" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid rgba(255,221,119,.35);" onerror="this.src='${placeholderBattleImage(event.name || '世界BOSS', '#1c1238', '#ffdd77')}'">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:19px;color:#ffdd77;font-weight:950;">${escapeHtml(event.name || '世界BOSS')}</div>
+              <div style="color:#ccc;font-size:13px;line-height:1.55;">${escapeHtml(event.description || '全服同步討伐，依照累積傷害排名發放獎勵。')}</div>
+              <div style="color:#aaa;font-size:12px;margin-top:5px;">活動：${escapeHtml(event.startsAtText || '')} ～ ${escapeHtml(event.endsAtText || '')}</div>
+            </div>
+          </div>
+          <div class="worldboss-hp-wrap"><div class="worldboss-hp-fill" style="width:${hpPct}%"></div></div>
+          <div style="display:flex;justify-content:space-between;color:#ccc;font-size:12px;font-weight:900;">
+            <span>HP ${Number(event.remainingHp || 0).toLocaleString()} / ${Number(event.totalHp || 0).toLocaleString()}</span><span>${hpPct.toFixed(2)}%</span>
+          </div>
+          <div style="margin-top:8px;color:#aaa;font-size:12px;line-height:1.6;">我的隊伍戰力：${Number(res.teamPower || 0).toLocaleString()}｜隊伍：${partyText}<br>我的累積傷害：${Number(my.totalDamage || 0).toLocaleString()}｜目前排名：${my.rank ? '#' + Number(my.rank).toLocaleString() : '尚未上榜'}</div>
+        </div>`;
+      }
+      if (btn) {
+        btn.disabled = event.status !== 'OPEN' || Number(my.todayRemaining || 0) <= 0 || worldBossRunning;
+        btn.innerText = event.status === 'OPEN' ? '🌍 挑戰世界BOSS' : statusText;
+      }
+      if (ranking) {
+        var rankList = res.ranking || [];
+        ranking.innerHTML = rankList.length ? rankList.map(function(r){
+          return `<div class="worldboss-rank-row"><span>#${Number(r.rank || 0)} ${escapeHtml(r.displayName || r.uid || '')}</span><span>${Number(r.totalDamage || 0).toLocaleString()} 傷害</span></div>`;
+        }).join('') : '<div style="color:#aaa;text-align:center;">目前還沒有傷害排名。</div>';
+      }
+      if (logs) {
+        var logList = res.recentLogs || [];
+        logs.innerHTML = logList.length ? logList.map(function(l){
+          return `<div class="pvp-log-item"><div>${escapeHtml(l.time || '')}｜造成 ${Number(l.damage || 0).toLocaleString()} 傷害</div><div style="color:#aaa;">隊伍戰力 ${Number(l.teamPower || 0).toLocaleString()}</div></div>`;
+        }).join('') : '<div style="color:#aaa;text-align:center;">目前沒有挑戰紀錄。</div>';
+      }
+    }
+
+    async function startWorldBossBattle() {
+      if (worldBossRunning) return;
+      var btn = document.getElementById('world-boss-fight-btn');
+      var msg = document.getElementById('world-boss-msg');
+      worldBossRunning = true;
+      if (btn) { btn.disabled = true; btn.innerText = '戰鬥中...'; }
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在挑戰世界BOSS...</span>';
+      google.script.run.withSuccessHandler(async function(res) {
+        worldBossRunning = false;
+        if (res && res.dashboard) {
+          await playMiniTurnBattle('worldboss', {
+            win: true,
+            damage: res.damage || 0
+          }, {
+            playerName: '全服討伐隊伍',
+            playerImage: placeholderBattleImage('T-LO', '#123a3a', '#00fff0'),
+            bossName: (res.dashboard.event && res.dashboard.event.name) || '世界BOSS',
+            bossImage: getCardImageUrl({ name: res.dashboard.event && res.dashboard.event.bossCardName, imageUrl: res.dashboard.event && res.dashboard.event.imageUrl }) || placeholderBattleImage('BOSS', '#3a1616', '#ffdd77'),
+            stageName: '世界BOSS 全服討伐戰',
+            playerPower: res.dashboard.teamPower || 0,
+            bossPower: res.dashboard.event ? res.dashboard.event.bossPower : 0
+          }).catch(function(){});
+          renderWorldBossDashboard(res.dashboard);
+        } else {
+          renderWorldBossDashboard(res && res.dashboard ? res.dashboard : latestWorldBossDashboard);
+        }
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '挑戰失敗') + '</span>' + (res && res.growthRewards ? formatGrowthRewards(res.growthRewards) : '');
+      }).withFailureHandler(function(err) {
+        worldBossRunning = false;
+        if (btn) { btn.disabled = false; btn.innerText = '🌍 挑戰世界BOSS'; }
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">挑戰失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).executeWorldBossBattle(playerUID);
+    }
+
 
     function loadHomeState() {
       if (typeof google === "undefined" || !google.script || !google.script.run) return;
