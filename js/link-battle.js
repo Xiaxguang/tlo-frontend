@@ -18,10 +18,11 @@
     linkPath: null,
     boardMetrics: null,
     teamPickerOpen: false,
-    teamDraftIds: []
+    teamDraftIds: [],
+    teamPanelOpen: false
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v11-team-lite';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v11-team-card-plus-collapse';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -356,8 +357,19 @@
     var ids = getCurrentTeamIds();
     var bonus = getTeamBonus();
     var bonusText = bonus.summary || ('攻擊 +' + Number(bonus.attackBonusPercent || 0) + '%，HP +' + Number(bonus.hpBonusPercent || 0) + '%');
-    return '<div class="link-battle-prebattle-panel">'
-      + '<div class="link-battle-prebattle-head"><span>出戰編隊</span><b>' + escapeHtml(stage.stageName || '選擇關卡') + '</b></div>'
+    var open = !!state.teamPanelOpen;
+    var cardNames = ids.map(findEligibleCard).filter(Boolean).map(getCardName);
+    var teamText = cardNames.length ? cardNames.join('、') : '尚未編隊';
+    return '<div class="link-battle-prebattle-panel ' + (open ? 'open' : 'collapsed') + '">'
+      + '<button type="button" class="link-battle-prebattle-toggle" onclick="TLOLinkBattle.toggleTeamPanel()">'
+      + '<div><span>出戰編隊</span><b>' + escapeHtml(stage.stageName || '選擇關卡') + '</b><small>' + escapeHtml(teamText) + '</small></div>'
+      + '<em>' + escapeHtml(bonusText) + '</em><i>' + (open ? '收合' : '展開') + '</i>'
+      + '</button>'
+      + '<div class="link-battle-prebattle-compact-actions">'
+      + '<button type="button" onclick="TLOLinkBattle.openTeamPicker()">更換編隊</button>'
+      + '<button type="button" class="primary" onclick="TLOLinkBattle.startSelectedStage()">開始挑戰</button>'
+      + '</div>'
+      + '<div class="link-battle-prebattle-body">'
       + renderTeamSlotsFromIds(ids)
       + '<div class="link-battle-team-bonus">' + escapeHtml(bonusText) + '</div>'
       + '<div class="link-battle-prebattle-actions">'
@@ -365,7 +377,13 @@
       + '<button type="button" onclick="TLOLinkBattle.autoLinkBattleTeam()">自動編隊</button>'
       + '<button type="button" class="primary" onclick="TLOLinkBattle.startSelectedStage()">開始挑戰</button>'
       + '</div>'
+      + '</div>'
       + '</div>';
+  }
+
+  function toggleTeamPanel() {
+    state.teamPanelOpen = !state.teamPanelOpen;
+    renderDashboard();
   }
 
   function renderTeamPicker() {
@@ -524,6 +542,7 @@
 
   function selectStageForTeam(stageId) {
     if (state.isAnimating) return;
+    state.teamPanelOpen = false;
     state.selectedStageId = stageId;
     renderDashboard();
     setMsg('已選擇關卡，確認出戰編隊後即可開始挑戰。', '#d9c7ff');
@@ -779,15 +798,15 @@
 
     // v10-inner-scroll-card-plus：只微幅放大操作區卡牌，保留章節內頁可滾動與其他版面設定。
     // 做法：縮小計算安全邊距與排列步距，讓同一個操作框內卡牌可變大，但最後仍用 boardW/boardH 防止破框。
-    var colFactor = isMobileBrowser ? 1.01 : 1.05;
-    var rowFactor = isMobileBrowser ? 0.71 : 0.75;
-    var layerXFactor = isMobileBrowser ? 0.31 : 0.36;
-    var layerYFactor = isMobileBrowser ? 0.18 : 0.23;
-    var fitPadding = isMobileBrowser ? 4 : 10;
+    var colFactor = isMobileBrowser ? 0.98 : 1.02;
+    var rowFactor = isMobileBrowser ? 0.68 : 0.72;
+    var layerXFactor = isMobileBrowser ? 0.28 : 0.33;
+    var layerYFactor = isMobileBrowser ? 0.16 : 0.21;
+    var fitPadding = isMobileBrowser ? 2 : 8;
     var widthUnits = ((dims.cols - 1) * colFactor) + 1 + ((dims.layers - 1) * layerXFactor);
     var heightUnits = aspect * (((dims.rows - 1) * rowFactor) + 1 + ((dims.layers - 1) * layerYFactor));
     var tileW = Math.floor(Math.min((usableWidth - fitPadding) / Math.max(1, widthUnits), (usableHeight - fitPadding) / Math.max(1, heightUnits)));
-    tileW = Math.max(isMobileBrowser ? 38 : 42, Math.min(isMobileBrowser ? 76 : 78, tileW));
+    tileW = Math.max(isMobileBrowser ? 40 : 44, Math.min(isMobileBrowser ? 80 : 82, tileW));
     var tileH = Math.round(tileW * aspect);
     var colStep = Math.round(tileW * colFactor);
     var rowStep = Math.round(tileH * rowFactor);
@@ -798,7 +817,7 @@
     var boardH = boardPadding + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
     if (boardW > usableWidth || boardH > usableHeight) {
       var scale = Math.min(usableWidth / Math.max(1, boardW), usableHeight / Math.max(1, boardH));
-      tileW = Math.max(isMobileBrowser ? 36 : 40, Math.floor(tileW * Math.min(1, scale)));
+      tileW = Math.max(isMobileBrowser ? 38 : 42, Math.floor(tileW * Math.min(1, scale)));
       tileH = Math.round(tileW * aspect);
       colStep = Math.round(tileW * colFactor);
       rowStep = Math.round(tileH * rowFactor);
@@ -809,7 +828,7 @@
       // 最後一道保險：極小螢幕時寧可只微縮，也不能讓卡牌超出操作框。
       if (boardW > usableWidth || boardH > usableHeight) {
         var exactFitW = Math.floor(Math.min((usableWidth - boardPadding) / Math.max(1, widthUnits), (usableHeight - boardPadding) / Math.max(1, heightUnits)));
-        tileW = Math.max(isMobileBrowser ? 34 : 38, Math.min(tileW, exactFitW));
+        tileW = Math.max(isMobileBrowser ? 36 : 40, Math.min(tileW, exactFitW));
         tileH = Math.round(tileW * aspect);
         colStep = Math.round(tileW * colFactor);
         rowStep = Math.round(tileH * rowFactor);
@@ -1082,6 +1101,7 @@
     chooseStageAndStart: chooseStageAndStart,
     selectStageForTeam: selectStageForTeam,
     startSelectedStage: startSelectedStage,
+    toggleTeamPanel: toggleTeamPanel,
     openTeamPicker: openTeamPicker,
     closeTeamPicker: closeTeamPicker,
     toggleTeamCard: toggleTeamCard,
