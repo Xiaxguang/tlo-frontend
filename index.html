@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-formal-ui-v2">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-ux-retry-v3">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -1653,6 +1653,7 @@
         </div>
         <div class="link-battle-actions">
           <button class="primary" id="link-battle-start-btn" onclick="TLOLinkBattle.startBattle()">開始挑戰</button>
+          <button class="primary retry" id="link-battle-retry-btn" style="display:none" onclick="TLOLinkBattle.retryBattle()">再次討伐</button>
           <button id="link-battle-hint-btn" onclick="TLOLinkBattle.useHint()">提示 x <span id="link-battle-hint-left">0</span></button>
           <button class="warn" id="link-battle-shuffle-btn" onclick="TLOLinkBattle.shuffleBoard()">洗牌 x <span id="link-battle-shuffle-left">0</span></button>
         </div>
@@ -6495,6 +6496,6 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260626-formal-ui-v2"></script>
+  <script src="./js/link-battle.js?v=20260626-ux-retry-v3"></script>
 </body>
 </html>
