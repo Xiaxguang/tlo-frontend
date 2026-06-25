@@ -1010,3 +1010,60 @@
     padding-bottom:10px;
   }
 }
+
+/* v10-true-scroll-fix：章節展開後，只有「關卡清單內容區」負責滾動。
+   前一版只設定 max-height，部分手機瀏覽器會讓內容撐開後被外層裁掉，導致只能看到前兩關。 */
+.link-battle-stage-select.active{
+  display:flex!important;
+  position:absolute!important;
+  inset:0!important;
+  height:var(--tlo-link-vh, 100dvh)!important;
+  max-height:var(--tlo-link-vh, 100dvh)!important;
+  overflow:hidden!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.link-battle-stage-select-card{
+  display:flex!important;
+  flex-direction:column!important;
+  width:min(94vw,470px)!important;
+  height:min(720px, calc(var(--tlo-link-vh, 100dvh) - 26px - env(safe-area-inset-bottom, 0px)))!important;
+  max-height:min(720px, calc(var(--tlo-link-vh, 100dvh) - 26px - env(safe-area-inset-bottom, 0px)))!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.link-battle-stage-select-head,
+.link-battle-stage-select-foot{
+  flex:0 0 auto!important;
+}
+.link-battle-stage-select-content{
+  flex:1 1 0!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-y:scroll!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-y:contain!important;
+  touch-action:pan-y!important;
+  padding-right:6px!important;
+  padding-bottom:18px!important;
+}
+.link-battle-chapter-block.open .link-battle-stage-card-grid{
+  max-height:none!important;
+  overflow:visible!important;
+}
+@media(max-width:560px){
+  .link-battle-stage-select.active{
+    align-items:stretch!important;
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom, 0px))!important;
+  }
+  .link-battle-stage-select-card{
+    width:100%!important;
+    height:calc(var(--tlo-link-vh, 100dvh) - 16px - env(safe-area-inset-bottom, 0px))!important;
+    max-height:calc(var(--tlo-link-vh, 100dvh) - 16px - env(safe-area-inset-bottom, 0px))!important;
+  }
+  .link-battle-stage-select-content{
+    padding-bottom:26px!important;
+  }
+}
