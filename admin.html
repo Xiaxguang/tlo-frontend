@@ -1012,7 +1012,7 @@ async function logout(){
 
 function openGame(){ location.href = './'; }
 function showTab(name, btn){
-  ['players','cards','stages','shop','chat','worldboss','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
+  ['players','cards','stages','linkbattle','shop','chat','worldboss','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
 }
