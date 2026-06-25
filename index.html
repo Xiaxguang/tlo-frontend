@@ -1140,6 +1140,8 @@
     .social-status.offline{border-color:#777;color:#999;}
     .social-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
     .social-action-btn.warn{background:linear-gradient(45deg,#ff6b6b,#ffdd77);}
+    .friend-limit-box{border:1px solid rgba(0,255,240,.25);background:rgba(0,255,240,.06);border-radius:14px;padding:10px;margin:10px 0;color:#aaa;font-size:12px;line-height:1.55;}
+    .friend-limit-box b{color:#00fff0;font-size:15px;}
     .game-bottom-dock{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(470px,calc(100vw - 22px));background:rgba(8,8,14,.9);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:8px;box-sizing:border-box;backdrop-filter:blur(16px);box-shadow:0 14px 42px rgba(0,0,0,.55);z-index:800;}
     .game-menu-toggle{width:100%;border:0;border-radius:16px;background:linear-gradient(135deg,rgba(255,0,127,.45),rgba(0,255,240,.25));color:#fff;padding:10px 12px;font-weight:950;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;}
     .game-menu-current{color:#00fff0;font-size:12px;}
@@ -1429,6 +1431,16 @@
           <button class="social-action-btn" style="flex:0 0 auto;" onclick="sendFriendRequestUI()">送出邀請</button>
         </div>
         <div id="social-msg" style="font-size:13px;color:#aaa;line-height:1.6;margin-top:8px;"></div>
+        <div class="friend-limit-box" id="friend-limit-box">好友上限讀取中...</div>
+      </div>
+
+      <div class="game-card">
+        <h3>推薦可添加好友</h3>
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="color:#aaa;font-size:12px;line-height:1.5;">系統會排除已是好友或等待中的邀請。</div>
+          <button class="social-action-btn" onclick="sendRecommendedFriendRequestsUI()">一鍵添加推薦</button>
+        </div>
+        <div id="friend-recommendation-list"><div style="color:#aaa;">正在讀取推薦玩家...</div></div>
       </div>
 
       <div class="game-card">
@@ -4473,10 +4485,28 @@ function showCollectionHistory() {
       if (!res || !res.success) return;
       latestSocialDashboard = res;
       var msg = document.getElementById('social-msg');
-      if (msg) msg.innerHTML = '<span style="color:#aaa;">' + escapeHtml(res.note || '社交資料已同步。') + '</span>';
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">社交資料已同步。</span>';
+
       var incoming = document.getElementById('incoming-friend-list');
       var outgoing = document.getElementById('outgoing-friend-list');
       var friends = document.getElementById('friend-list');
+      var limitBox = document.getElementById('friend-limit-box');
+      var recBox = document.getElementById('friend-recommendation-list');
+      var friendLimit = res.friendLimit || {};
+
+      if (limitBox) {
+        limitBox.innerHTML = `<b>好友 ${Number(friendLimit.used || 0).toLocaleString()} / ${Number(friendLimit.max || 30).toLocaleString()}</b><br>基礎上限 ${Number(friendLimit.base || 30).toLocaleString()} 人｜好友擴充卡 ${Number(friendLimit.expansionCards || 0).toLocaleString()} 張｜剩餘 ${Number(friendLimit.remaining || 0).toLocaleString()} 名額<br><span style="color:#ffdd77;">好友擴充卡可到訓練總分商店購買，每張 +${Number(friendLimit.expansionSize || 10).toLocaleString()} 人。</span>`;
+      }
+
+      if (recBox) {
+        var recs = res.recommendations || [];
+        recBox.innerHTML = recs.length ? recs.map(function(p) {
+          var safeUid = escapeHtml(jsString(p.uid || ''));
+          var addBtn = `<button class="social-action-btn" onclick="sendFriendRequestUI('${safeUid}')">添加</button>`;
+          return socialRow(p, addBtn);
+        }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前沒有可推薦添加的玩家，或你的好友名額已滿。</div>';
+      }
+
       if (incoming) {
         var list = res.incomingRequests || [];
         incoming.innerHTML = list.length ? list.map(function(p){
@@ -4484,10 +4514,12 @@ function showCollectionHistory() {
           return socialRow(p, `<button class="social-action-btn" onclick="respondFriendRequestUI(${id}, 'ACCEPT')">接受</button><button class="social-action-btn warn" onclick="respondFriendRequestUI(${id}, 'REJECT')">拒絕</button>`);
         }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前沒有好友邀請。</div>';
       }
+
       if (outgoing) {
         var out = res.outgoingRequests || [];
         outgoing.innerHTML = out.length ? out.map(function(p){ return socialRow(p, '<span style="color:#aaa;font-size:12px;">等待同意</span>'); }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前沒有送出的邀請。</div>';
       }
+
       if (friends) {
         var flist = res.friends || [];
         friends.innerHTML = flist.length ? flist.map(function(p){
@@ -4499,11 +4531,13 @@ function showCollectionHistory() {
           return socialRow(p, greetBtn + chatBtn + removeBtn);
         }).join('') : '<div style="color:#aaa;text-align:center;padding:10px;">目前還沒有好友，先新增一位玩家吧。</div>';
       }
+
       var greetStatus = document.getElementById('friend-greeting-status');
       if (greetStatus) {
         var g = res.greeting || {};
-        greetStatus.innerText = '今日打招呼 ' + Number(g.used || 0).toLocaleString() + ' / ' + Number(g.dailyLimit || 10).toLocaleString() + '｜' + (g.rewardText || '雙方獲得少量能量與挑戰券');
+        greetStatus.innerText = '今日打招呼 ' + Number(g.usedToday || g.used || 0).toLocaleString() + ' / ' + Number(g.dailyLimit || 10).toLocaleString() + '｜' + (g.rewardText || '雙方獲得少量能量與挑戰券');
       }
+
       var privateSelect = document.getElementById('private-chat-friend');
       if (privateSelect) {
         var oldValue = privateSelect.value || currentPrivateChatFriendUid || '';
@@ -4514,12 +4548,13 @@ function showCollectionHistory() {
         });
         privateSelect.innerHTML = opts.join('');
       }
+
       var referral = res.referral || {};
       var codeEl = document.getElementById('my-invite-code');
       var statusEl = document.getElementById('invite-code-status');
       var codeInput = document.getElementById('referral-code-input');
       var codeBtn = document.getElementById('referral-code-submit');
-      if (codeEl) codeEl.textContent = referral.inviteCode || '尚未建立';
+      if (codeEl) codeEl.textContent = referral.inviteCode || '產生中';
       if (statusEl) {
         statusEl.textContent = referral.hasUsedInviteCode
           ? `你已使用 ${referral.inviterUid || '好友'} 的邀請碼；目前成功邀請 ${Number(referral.invitedCount || 0)} 人。`
@@ -4528,7 +4563,7 @@ function showCollectionHistory() {
       if (codeInput) codeInput.disabled = !!referral.hasUsedInviteCode;
       if (codeBtn) {
         codeBtn.disabled = !!referral.hasUsedInviteCode;
-        codeBtn.textContent = referral.hasUsedInviteCode ? '已套用' : '套用';
+        codeBtn.textContent = referral.hasUsedInviteCode ? '已使用' : '套用';
       }
     }
 
@@ -4567,19 +4602,30 @@ function showCollectionHistory() {
       }).getSocialDashboard(playerUID);
     }
 
-    function sendFriendRequestUI() {
+    function sendFriendRequestUI(targetUid) {
       var input = document.getElementById('friend-target-uid');
       var msg = document.getElementById('social-msg');
-      var target = input ? input.value.trim() : '';
-      if (!target) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請輸入對方 UID。</span>'; return; }
-      if (msg) msg.innerHTML = '<span style="color:#aaa;">送出邀請中...</span>';
+      var target = String(targetUid || (input ? input.value : '') || '').trim();
+      if (!target) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請輸入玩家 UID。</span>'; return; }
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">送出好友邀請中...</span>';
       google.script.run.withSuccessHandler(function(res) {
         if (res && res.dashboard) renderSocialDashboard(res.dashboard);
-        if (res && res.success && input) input.value = '';
-        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '送出失敗') + '</span>';
+        if (res && res.success && input && !targetUid) input.value = '';
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '送出完成') + '</span>';
       }).withFailureHandler(function(err) {
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">送出失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
       }).sendFriendRequest(playerUID, target);
+    }
+
+    function sendRecommendedFriendRequestsUI() {
+      var msg = document.getElementById('social-msg');
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在一鍵添加推薦好友...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.dashboard) renderSocialDashboard(res.dashboard);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '一鍵添加完成') + '</span>';
+      }).withFailureHandler(function(err) {
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">一鍵添加失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).sendRecommendedFriendRequests(playerUID, 8);
     }
 
     function respondFriendRequestUI(requestId, action) {
