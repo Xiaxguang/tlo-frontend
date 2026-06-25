@@ -14,11 +14,12 @@
     rulesShown: false,
     pendingStageSelectAfterRules: false,
     stageSelectOpen: false,
+    openChapterKey: null,
     linkPath: null,
     boardMetrics: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v9-stage-select';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v10-chapter-accordion';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -170,6 +171,7 @@
 
   function openStageSelect() {
     state.stageSelectOpen = true;
+    state.openChapterKey = null;
     renderStageSelect();
     var el = $('link-battle-stage-select');
     if (el) el.classList.add('active');
@@ -242,6 +244,44 @@
     return m ? Number(m[1]) : 0;
   }
 
+  function getDashboardChapters(dash, stages) {
+    var chapters = (dash && (dash.linkBattleChapters || dash.chapters)) || [];
+    var out = [];
+    if (Array.isArray(chapters) && chapters.length) {
+      out = chapters.map(function(ch) {
+        var key = ch.chapterKey || ch.chapter_key || ch.key || ch.chapterName || ch.name || 'chapter';
+        var stageList = Array.isArray(ch.stages) ? ch.stages : stages.filter(function(s){ return (s.chapterKey || s.chapterName) === key || s.chapterName === (ch.chapterName || ch.name); });
+        return {
+          chapterKey: key,
+          chapterName: ch.chapterName || ch.name || '未命名章節',
+          description: ch.description || '',
+          enabled: ch.enabled !== false,
+          placeholder: !!ch.placeholder,
+          stages: stageList
+        };
+      });
+    } else {
+      var map = new Map();
+      stages.forEach(function(stage) {
+        var chapterName = stage.chapterName || '墮落的熾天使';
+        var chapterKey = stage.chapterKey || chapterName;
+        if (!map.has(chapterKey)) map.set(chapterKey, { chapterKey: chapterKey, chapterName: chapterName, description: '', enabled: true, stages: [] });
+        map.get(chapterKey).stages.push(stage);
+      });
+      out = Array.from(map.values());
+    }
+    var realCount = out.filter(function(ch){ return ch.enabled !== false && !ch.placeholder; }).length;
+    if (realCount <= 1) {
+      out.push({ chapterKey: 'coming_soon', chapterName: '暫未開放', description: '更多連線討伐戰章節準備中。', enabled: false, placeholder: true, stages: [] });
+    }
+    return out;
+  }
+
+  function toggleStageChapter(chapterKey) {
+    state.openChapterKey = state.openChapterKey === chapterKey ? null : chapterKey;
+    renderStageSelect();
+  }
+
   function renderStageSelect() {
     var root = $('link-battle-stage-select-content');
     if (!root) return;
@@ -255,45 +295,45 @@
       root.innerHTML = '<div class="link-battle-stage-select-empty">目前沒有開放的連線討伐戰關卡。</div>';
       return;
     }
-    var groups = [];
-    var map = new Map();
-    stages.forEach(function(stage) {
-      var chapterName = stage.chapterName || '墮落的熾天使';
-      if (!map.has(chapterName)) {
-        var group = { chapterName: chapterName, stages: [] };
-        map.set(chapterName, group);
-        groups.push(group);
+    var chapters = getDashboardChapters(dash, stages);
+    root.innerHTML = chapters.map(function(chapter) {
+      var chapterKey = String(chapter.chapterKey || chapter.chapterName || 'chapter');
+      var isPlaceholder = chapter.placeholder || chapter.enabled === false;
+      var opened = state.openChapterKey === chapterKey && !isPlaceholder;
+      var chStages = chapter.stages || [];
+      var cleared = chStages.filter(function(s){ return !!s.cleared; }).length;
+      var total = chStages.length;
+      var subText = isPlaceholder ? '暫未開放' : (cleared + ' / ' + total + ' 通關');
+      var html = '<section class="link-battle-chapter-block ' + (opened ? 'open ' : '') + (isPlaceholder ? 'coming-soon' : '') + '">'
+        + '<button type="button" class="link-battle-chapter-toggle" ' + (isPlaceholder ? 'disabled' : '') + ' onclick="TLOLinkBattle.toggleStageChapter(\'' + escapeHtml(chapterKey) + '\')">'
+        + '<div><span>章節</span><b>' + escapeHtml(chapter.chapterName || '未命名章節') + '</b>'
+        + (chapter.description ? '<small>' + escapeHtml(chapter.description) + '</small>' : '') + '</div>'
+        + '<em>' + escapeHtml(subText) + '</em>'
+        + '<i>' + (isPlaceholder ? '🔒' : (opened ? '收起 ▲' : '展開 ▼')) + '</i>'
+        + '</button>';
+      if (opened) {
+        html += '<div class="link-battle-stage-card-grid">';
+        html += chStages.map(function(stage) {
+          var boss = stage.boss || {};
+          var n = getStageNumber(stage);
+          var cls = ['link-battle-stage-card'];
+          if (stage.stageId === state.selectedStageId) cls.push('current');
+          if (stage.cleared) cls.push('cleared');
+          if (!stage.unlocked) cls.push('locked');
+          var reward = stage.rewardText || '暫無通關獎勵';
+          var progressText = stage.cleared ? ('已通關' + (stage.progress && stage.progress.clearCount ? ' x ' + Number(stage.progress.clearCount) : '')) : '未通關';
+          return '<button type="button" class="' + cls.join(' ') + '" ' + (!stage.unlocked ? 'disabled' : '') + ' onclick="TLOLinkBattle.chooseStageAndStart(\'' + escapeHtml(stage.stageId) + '\')">'
+            + '<div class="link-battle-stage-card-top"><strong>第 ' + n + ' 關</strong><span>' + escapeHtml(progressText) + '</span></div>'
+            + '<div class="link-battle-stage-card-title">' + escapeHtml(stage.stageName || '卡牌連線討伐') + '</div>'
+            + '<div class="link-battle-stage-card-boss">BOSS：' + escapeHtml(boss.bossName || '連線戰 BOSS') + '</div>'
+            + '<div class="link-battle-stage-card-reward">獎勵：' + escapeHtml(reward) + '</div>'
+            + '<div class="link-battle-stage-card-cta">' + (stage.unlocked ? '開始挑戰' : '尚未解鎖') + '</div>'
+            + '</button>';
+        }).join('');
+        html += '</div>';
       }
-      map.get(chapterName).stages.push(stage);
-    });
-    root.innerHTML = groups.map(function(group) {
-      var cleared = group.stages.filter(function(s){ return !!s.cleared; }).length;
-      var total = group.stages.length;
-      var chapterHtml = '<section class="link-battle-chapter-block">'
-        + '<div class="link-battle-chapter-head">'
-        + '<div><span>章節</span><b>' + escapeHtml(group.chapterName) + '</b></div>'
-        + '<em>' + cleared + ' / ' + total + ' 通關</em>'
-        + '</div>'
-        + '<div class="link-battle-stage-card-grid">';
-      chapterHtml += group.stages.map(function(stage) {
-        var boss = stage.boss || {};
-        var n = getStageNumber(stage);
-        var cls = ['link-battle-stage-card'];
-        if (stage.stageId === state.selectedStageId) cls.push('current');
-        if (stage.cleared) cls.push('cleared');
-        if (!stage.unlocked) cls.push('locked');
-        var reward = stage.rewardText || '暫無通關獎勵';
-        var progressText = stage.cleared ? ('已通關' + (stage.progress && stage.progress.clearCount ? ' x ' + Number(stage.progress.clearCount) : '')) : '未通關';
-        return '<button type="button" class="' + cls.join(' ') + '" ' + (!stage.unlocked ? 'disabled' : '') + ' onclick="TLOLinkBattle.chooseStageAndStart(\'' + escapeHtml(stage.stageId) + '\')">'
-          + '<div class="link-battle-stage-card-top"><strong>第 ' + n + ' 關</strong><span>' + escapeHtml(progressText) + '</span></div>'
-          + '<div class="link-battle-stage-card-title">' + escapeHtml(stage.stageName || '卡牌連線討伐') + '</div>'
-          + '<div class="link-battle-stage-card-boss">BOSS：' + escapeHtml(boss.bossName || '連線戰 BOSS') + '</div>'
-          + '<div class="link-battle-stage-card-reward">獎勵：' + escapeHtml(reward) + '</div>'
-          + '<div class="link-battle-stage-card-cta">' + (stage.unlocked ? '開始挑戰' : '尚未解鎖') + '</div>'
-          + '</button>';
-      }).join('');
-      chapterHtml += '</div></section>';
-      return chapterHtml;
+      html += '</section>';
+      return html;
     }).join('');
   }
 
@@ -825,7 +865,8 @@
     startFromRules: startFromRules,
     openStageSelect: openStageSelect,
     closeStageSelect: closeStageSelect,
-    chooseStageAndStart: chooseStageAndStart
+    chooseStageAndStart: chooseStageAndStart,
+    toggleStageChapter: toggleStageChapter
   };
   window.openLinkBattleModal = openModal;
 })();

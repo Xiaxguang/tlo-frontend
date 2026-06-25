@@ -74,6 +74,7 @@
     "getMessageBoard",
     "getPlayerHistory",
     "adminListLinkBattleStages",
+    "adminListLinkBattleChapters",
     "adminListLinkBattleBosses"
   ]);
 

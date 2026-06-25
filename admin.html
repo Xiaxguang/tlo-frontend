@@ -407,6 +407,23 @@
       <div id="tab-linkbattle" class="hide panel">
         <h2>🃏 卡牌連線討伐戰・關卡管理</h2>
         <div class="muted">玩家圖鑑至少解鎖 4 種卡牌才能進入；BOSS HP 採用「本場卡牌基礎傷害總和 × HP倍率」。倍率越高越難，主線建議 0.90～1.10。</div>
+        <div class="panel" style="box-shadow:none">
+          <h3>新增 / 編輯章節</h3>
+          <div class="row3">
+            <div><label>章節 Key</label><input id="lbChapterKey" placeholder="空白會依名稱自動產生"></div>
+            <div><label>章節名稱</label><input id="lbChapterManageName" placeholder="墮落的熾天使"></div>
+            <div><label>啟用</label><select id="lbChapterActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>排序</label><input id="lbChapterSort" type="number" min="1" value="10"></div>
+            <div><label>章節描述</label><input id="lbChapterDesc" placeholder="可空白，玩家端顯示於章節框下方"></div>
+          </div>
+          <button class="primary" onclick="saveLinkBattleChapter()">新增 / 儲存章節</button>
+          <button class="ghost" onclick="clearLinkBattleChapterForm()">清空</button>
+          <div id="lbChapterMsg" class="msg"></div>
+          <h3>目前章節</h3>
+          <div id="lbChapterTable"></div>
+        </div>
         <div class="split">
           <div class="panel" style="box-shadow:none">
             <h3>新增 / 編輯 BOSS</h3>
@@ -432,7 +449,7 @@
             </div>
             <label>關卡名稱</label><input id="lbStageName" placeholder="第1關・卡牌連線討伐">
             <div class="row">
-              <div><label>章節名稱</label><input id="lbChapterName" placeholder="墮落的熾天使" value="墮落的熾天使"></div>
+              <div><label>所屬章節</label><select id="lbStageChapter"></select></div>
               <div><label>允許轉彎次數</label><input id="lbMaxTurns" type="number" min="0" max="3" value="2"></div>
             </div>
             <div class="row">
@@ -740,6 +757,7 @@ let shopFilter = 'ALL';
 let worldBossRows = [];
 let linkBattleStageRows = [];
 let linkBattleBossRows = [];
+let linkBattleChapterRows = [];
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
@@ -1878,12 +1896,60 @@ async function loadLinkBattleAdmin(){
     const data = await rpc('adminListLinkBattleStages', []);
     linkBattleStageRows = data.rows || [];
     linkBattleBossRows = data.bosses || [];
+    linkBattleChapterRows = data.chapters || [];
+    renderLinkBattleChapterSelect();
+    renderLinkBattleChapters();
     renderLinkBattleBossSelect();
     renderLinkBattleBosses();
     renderLinkBattleStages();
     msg('lbStageMsg', `已載入 ${linkBattleStageRows.length} 個連線討伐戰關卡`, true);
+    msg('lbChapterMsg', `已載入 ${linkBattleChapterRows.length} 個章節`, true);
     msg('lbBossMsg', `已載入 ${linkBattleBossRows.length} 個連線討伐戰 BOSS`, true);
   }catch(e){ msg('lbStageMsg', e.message); msg('lbBossMsg', e.message); }
+}
+
+
+function renderLinkBattleChapterSelect(){
+  const sel=$('lbStageChapter'); if(!sel) return;
+  sel.innerHTML=(linkBattleChapterRows||[]).map(ch=>`<option value="${esc(ch.chapterKey)}">${ch.enabled?'🟢':'⚫'} ${esc(ch.chapterName)}｜${esc(ch.chapterKey)}</option>`).join('') || '<option value="fallen_seraphim">墮落的熾天使</option>';
+}
+function renderLinkBattleChapters(){
+  const box=$('lbChapterTable'); if(!box) return;
+  const rows=linkBattleChapterRows||[];
+  box.innerHTML=`<table><thead><tr><th>章節</th><th>狀態</th><th>排序 / 關卡</th><th>描述</th><th>操作</th></tr></thead><tbody>`+rows.map(ch=>`<tr>
+    <td><b>${esc(ch.chapterName)}</b><br><span class="muted">${esc(ch.chapterKey)}</span></td>
+    <td>${ch.enabled?'<span class="good">啟用</span>':'<span class="muted">停用</span>'}</td>
+    <td>排序 ${fmt(ch.sortOrder)}<br>關卡 ${fmt(ch.stageCount||0)}</td>
+    <td>${esc(ch.description||'')}</td>
+    <td><button class="primary" onclick="editLinkBattleChapter('${esc(ch.chapterKey)}')">編輯</button><br><button class="${ch.enabled?'danger':'warn'}" style="margin-top:6px" onclick="toggleLinkBattleChapter('${esc(ch.chapterKey)}',${ch.enabled?'false':'true'})">${ch.enabled?'停用':'啟用'}</button></td>
+  </tr>`).join('')+`</tbody></table>`;
+}
+function editLinkBattleChapter(chapterKey){
+  const ch=(linkBattleChapterRows||[]).find(x=>x.chapterKey===chapterKey); if(!ch) return;
+  $('lbChapterKey').value=ch.chapterKey||'';
+  $('lbChapterManageName').value=ch.chapterName||'';
+  $('lbChapterActive').value=ch.enabled?'1':'0';
+  $('lbChapterSort').value=ch.sortOrder||10;
+  $('lbChapterDesc').value=ch.description||'';
+  $('lbChapterManageName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function clearLinkBattleChapterForm(){
+  if($('lbChapterKey')) $('lbChapterKey').value='';
+  if($('lbChapterManageName')) $('lbChapterManageName').value='';
+  if($('lbChapterActive')) $('lbChapterActive').value='1';
+  if($('lbChapterSort')) $('lbChapterSort').value=10;
+  if($('lbChapterDesc')) $('lbChapterDesc').value='';
+}
+async function saveLinkBattleChapter(){
+  try{
+    const payload={chapterKey:$('lbChapterKey').value.trim(),chapterName:$('lbChapterManageName').value.trim(),description:$('lbChapterDesc').value.trim(),sortOrder:$('lbChapterSort').value,enabled:$('lbChapterActive').value==='1'};
+    const data=await rpc('adminUpsertLinkBattleChapter',[payload]);
+    msg('lbChapterMsg',data.msg,true); await loadLinkBattleAdmin();
+  }catch(e){ msg('lbChapterMsg',e.message); }
+}
+async function toggleLinkBattleChapter(chapterKey,active){
+  if(!confirm(`確定要${active?'啟用':'停用'}此連線討伐戰章節？停用後玩家端不會顯示此章節。`)) return;
+  try{ const data=await rpc('adminSetLinkBattleChapterActive',[chapterKey,active]); msg('lbChapterMsg',data.msg,true); await loadLinkBattleAdmin(); }catch(e){ msg('lbChapterMsg',e.message); }
 }
 
 function renderLinkBattleBossSelect(){
@@ -1918,10 +1984,10 @@ async function saveLinkBattleBoss(){
     msg('lbBossMsg',data.msg,true); await loadLinkBattleAdmin();
   }catch(e){ msg('lbBossMsg',e.message); }
 }
-function clearLinkBattleStageForm(){ ['lbStageId','lbStageName','lbRewardCardName'].forEach(id=>$(id)&&( $(id).value='' )); if($('lbChapterName')) $('lbChapterName').value='墮落的熾天使'; if($('lbMaxTurns')) $('lbMaxTurns').value=2; if($('lbRewardType')) $('lbRewardType').value='NONE'; if($('lbRewardAmount')) $('lbRewardAmount').value=0; }
+function clearLinkBattleStageForm(){ ['lbStageId','lbStageName','lbRewardCardName'].forEach(id=>$(id)&&( $(id).value='' )); if($('lbStageChapter')) $('lbStageChapter').value=(linkBattleChapterRows[0]&&linkBattleChapterRows[0].chapterKey)||'fallen_seraphim'; if($('lbMaxTurns')) $('lbMaxTurns').value=2; if($('lbRewardType')) $('lbRewardType').value='NONE'; if($('lbRewardAmount')) $('lbRewardAmount').value=0; }
 function editLinkBattleStage(stageId){
   const s=(linkBattleStageRows||[]).find(x=>x.stageId===stageId); if(!s) return;
-  $('lbStageOrder').value=s.stageOrder||1; $('lbStageId').value=s.stageId||''; $('lbStageEnabled').value=s.enabled?'1':'0'; $('lbStageName').value=s.stageName||''; $('lbChapterName').value=s.chapterName||'墮落的熾天使'; $('lbMaxTurns').value=s.maxTurns||2; $('lbStageBoss').value=s.bossId||''; $('lbHpMultiplier').value=s.bossHpMultiplier||1;
+  $('lbStageOrder').value=s.stageOrder||1; $('lbStageId').value=s.stageId||''; $('lbStageEnabled').value=s.enabled?'1':'0'; $('lbStageName').value=s.stageName||''; if($('lbStageChapter')) $('lbStageChapter').value=s.chapterKey||'fallen_seraphim'; $('lbMaxTurns').value=s.maxTurns||2; $('lbStageBoss').value=s.bossId||''; $('lbHpMultiplier').value=s.bossHpMultiplier||1;
   $('lbCardCount').value=s.cardCount||24; $('lbPairCount').value=s.pairCount||12; $('lbLayerCount').value=s.layerCount||2; $('lbRows').value=s.rows||4; $('lbCols').value=s.cols||6; $('lbMinMatches').value=s.minInitialMatches||2;
   $('lbTimeLimit').value=s.timeLimitSeconds||180; $('lbErrorLimit').value=s.errorLimit||8; $('lbBossAttack').value=s.bossAttackDamage||8; $('lbShuffleLimit').value=s.shuffleLimit||3; $('lbHintLimit').value=s.hintLimit||3; $('lbComboWindow').value=s.comboWindowSeconds||5; $('lbMinUnlocked').value=s.minUnlockedCards||4;
   const w=s.rarityWeights||{}; $('lbWeightNormal').value=w.Normal||0; $('lbWeightRare').value=w.RARE||0; $('lbWeightSuperRare').value=w['SUPER RARE']||0; $('lbWeightSsr').value=w.SSR||0; $('lbWeightUr').value=w.UR||0; const r=s.rewardConfig||{}; $('lbRewardType').value=r.type||'NONE'; $('lbRewardAmount').value=r.amount||0; $('lbRewardCardName').value=r.cardName||r.itemKey||'';
@@ -1929,7 +1995,7 @@ function editLinkBattleStage(stageId){
 }
 async function saveLinkBattleStage(){
   try{
-    const rewardType=$('lbRewardType').value; const rewardName=$('lbRewardCardName').value.trim(); const payload={stageOrder:$('lbStageOrder').value,stageId:$('lbStageId').value.trim(),enabled:$('lbStageEnabled').value==='1',stageName:$('lbStageName').value.trim(),chapterName:$('lbChapterName').value.trim()||'墮落的熾天使',maxTurns:$('lbMaxTurns').value,bossId:$('lbStageBoss').value,bossHpMultiplier:$('lbHpMultiplier').value,cardCount:$('lbCardCount').value,pairCount:$('lbPairCount').value,layerCount:$('lbLayerCount').value,rows:$('lbRows').value,cols:$('lbCols').value,minInitialMatches:$('lbMinMatches').value,timeLimitSeconds:$('lbTimeLimit').value,errorLimit:$('lbErrorLimit').value,bossAttackDamage:$('lbBossAttack').value,shuffleLimit:$('lbShuffleLimit').value,hintLimit:$('lbHintLimit').value,comboWindowSeconds:$('lbComboWindow').value,minUnlockedCards:$('lbMinUnlocked').value,rewardConfig:{type:rewardType,amount:$('lbRewardAmount').value,cardName:rewardType==='CARD'?rewardName:'',itemKey:rewardType==='ITEM'?rewardName:''},rarityWeights:{Normal:$('lbWeightNormal').value,RARE:$('lbWeightRare').value,'SUPER RARE':$('lbWeightSuperRare').value,SSR:$('lbWeightSsr').value,UR:$('lbWeightUr').value}};
+    const rewardType=$('lbRewardType').value; const rewardName=$('lbRewardCardName').value.trim(); const payload={stageOrder:$('lbStageOrder').value,stageId:$('lbStageId').value.trim(),enabled:$('lbStageEnabled').value==='1',stageName:$('lbStageName').value.trim(),chapterKey:($('lbStageChapter')&&$('lbStageChapter').value)||'fallen_seraphim',chapterName:(linkBattleChapterRows.find(ch=>ch.chapterKey===(($('lbStageChapter')&&$('lbStageChapter').value)||'fallen_seraphim'))||{}).chapterName||'墮落的熾天使',maxTurns:$('lbMaxTurns').value,bossId:$('lbStageBoss').value,bossHpMultiplier:$('lbHpMultiplier').value,cardCount:$('lbCardCount').value,pairCount:$('lbPairCount').value,layerCount:$('lbLayerCount').value,rows:$('lbRows').value,cols:$('lbCols').value,minInitialMatches:$('lbMinMatches').value,timeLimitSeconds:$('lbTimeLimit').value,errorLimit:$('lbErrorLimit').value,bossAttackDamage:$('lbBossAttack').value,shuffleLimit:$('lbShuffleLimit').value,hintLimit:$('lbHintLimit').value,comboWindowSeconds:$('lbComboWindow').value,minUnlockedCards:$('lbMinUnlocked').value,rewardConfig:{type:rewardType,amount:$('lbRewardAmount').value,cardName:rewardType==='CARD'?rewardName:'',itemKey:rewardType==='ITEM'?rewardName:''},rarityWeights:{Normal:$('lbWeightNormal').value,RARE:$('lbWeightRare').value,'SUPER RARE':$('lbWeightSuperRare').value,SSR:$('lbWeightSsr').value,UR:$('lbWeightUr').value}};
     const data=await rpc('adminUpsertLinkBattleStage',[payload]);
     msg('lbStageMsg',data.msg,true); await loadLinkBattleAdmin();
   }catch(e){ msg('lbStageMsg',e.message); }
