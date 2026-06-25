@@ -12,11 +12,13 @@
     timeLeft: 0,
     hintedIds: new Set(),
     rulesShown: false,
+    pendingStageSelectAfterRules: false,
+    stageSelectOpen: false,
     linkPath: null,
     boardMetrics: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v8-browser-path';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v9-stage-select';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -139,12 +141,12 @@
     var modal = $('link-battle-modal');
     if (modal) modal.style.display = 'flex';
     setTimeout(function(){ scheduleBoardRerender(40); }, 40);
+    state.pendingStageSelectAfterRules = true;
     loadDashboard();
+    // v9：每次進入模式都先顯示規則；關閉規則後再開啟章節與關卡選擇。
     setTimeout(function() {
-      if (!state.rulesShown) {
-        state.rulesShown = true;
-        openRules();
-      }
+      state.rulesShown = true;
+      openRules();
     }, 180);
   }
 
@@ -153,14 +155,30 @@
     if (el) el.classList.add('active');
   }
 
-  function closeRules() {
+  function closeRules(options) {
     var el = $('link-battle-rules');
     if (el) el.classList.remove('active');
+    var shouldOpenSelector = state.pendingStageSelectAfterRules || (options && options.openStageSelect);
+    state.pendingStageSelectAfterRules = false;
+    if (shouldOpenSelector) setTimeout(function(){ openStageSelect(); }, 80);
   }
 
   async function startFromRules() {
-    closeRules();
-    await startBattle();
+    // 保留舊 onclick 名稱，但 v9 流程改為：規則 → 章節與關卡選擇 → 開始挑戰。
+    closeRules({ openStageSelect: true });
+  }
+
+  function openStageSelect() {
+    state.stageSelectOpen = true;
+    renderStageSelect();
+    var el = $('link-battle-stage-select');
+    if (el) el.classList.add('active');
+  }
+
+  function closeStageSelect() {
+    state.stageSelectOpen = false;
+    var el = $('link-battle-stage-select');
+    if (el) el.classList.remove('active');
   }
 
   function closeModal() {
@@ -216,6 +234,77 @@
     }
   }
 
+  function getStageNumber(stage) {
+    var order = Number(stage && stage.stageOrder || 0);
+    if (order > 0) return order;
+    var id = String(stage && stage.stageId || '');
+    var m = id.match(/(\d+)$/);
+    return m ? Number(m[1]) : 0;
+  }
+
+  function renderStageSelect() {
+    var root = $('link-battle-stage-select-content');
+    if (!root) return;
+    var dash = state.dashboard || {};
+    var stages = dash.stages || [];
+    if (!dash.canEnter) {
+      root.innerHTML = '<div class="link-battle-stage-select-empty">' + escapeHtml(dash.msg || '你的圖鑑卡牌不足，暫時無法進入連線討伐戰。').replace(/\n/g, '<br>') + '</div>';
+      return;
+    }
+    if (!stages.length) {
+      root.innerHTML = '<div class="link-battle-stage-select-empty">目前沒有開放的連線討伐戰關卡。</div>';
+      return;
+    }
+    var groups = [];
+    var map = new Map();
+    stages.forEach(function(stage) {
+      var chapterName = stage.chapterName || '墮落的熾天使';
+      if (!map.has(chapterName)) {
+        var group = { chapterName: chapterName, stages: [] };
+        map.set(chapterName, group);
+        groups.push(group);
+      }
+      map.get(chapterName).stages.push(stage);
+    });
+    root.innerHTML = groups.map(function(group) {
+      var cleared = group.stages.filter(function(s){ return !!s.cleared; }).length;
+      var total = group.stages.length;
+      var chapterHtml = '<section class="link-battle-chapter-block">'
+        + '<div class="link-battle-chapter-head">'
+        + '<div><span>章節</span><b>' + escapeHtml(group.chapterName) + '</b></div>'
+        + '<em>' + cleared + ' / ' + total + ' 通關</em>'
+        + '</div>'
+        + '<div class="link-battle-stage-card-grid">';
+      chapterHtml += group.stages.map(function(stage) {
+        var boss = stage.boss || {};
+        var n = getStageNumber(stage);
+        var cls = ['link-battle-stage-card'];
+        if (stage.stageId === state.selectedStageId) cls.push('current');
+        if (stage.cleared) cls.push('cleared');
+        if (!stage.unlocked) cls.push('locked');
+        var reward = stage.rewardText || '暫無通關獎勵';
+        var progressText = stage.cleared ? ('已通關' + (stage.progress && stage.progress.clearCount ? ' x ' + Number(stage.progress.clearCount) : '')) : '未通關';
+        return '<button type="button" class="' + cls.join(' ') + '" ' + (!stage.unlocked ? 'disabled' : '') + ' onclick="TLOLinkBattle.chooseStageAndStart(\'' + escapeHtml(stage.stageId) + '\')">'
+          + '<div class="link-battle-stage-card-top"><strong>第 ' + n + ' 關</strong><span>' + escapeHtml(progressText) + '</span></div>'
+          + '<div class="link-battle-stage-card-title">' + escapeHtml(stage.stageName || '卡牌連線討伐') + '</div>'
+          + '<div class="link-battle-stage-card-boss">BOSS：' + escapeHtml(boss.bossName || '連線戰 BOSS') + '</div>'
+          + '<div class="link-battle-stage-card-reward">獎勵：' + escapeHtml(reward) + '</div>'
+          + '<div class="link-battle-stage-card-cta">' + (stage.unlocked ? '開始挑戰' : '尚未解鎖') + '</div>'
+          + '</button>';
+      }).join('');
+      chapterHtml += '</div></section>';
+      return chapterHtml;
+    }).join('');
+  }
+
+  async function chooseStageAndStart(stageId) {
+    if (state.isAnimating) return;
+    state.selectedStageId = stageId;
+    closeStageSelect();
+    renderDashboard();
+    await startBattle();
+  }
+
   function renderDashboard() {
     var list = $('link-battle-stage-list');
     var dash = state.dashboard || {};
@@ -234,6 +323,7 @@
     var startBtn = $('link-battle-start-btn');
     if (startBtn) startBtn.disabled = !dash.canEnter || !stage || !stage.unlocked;
     updateShellMode();
+    if (state.stageSelectOpen) renderStageSelect();
   }
 
   function renderStagePreview(stage) {
@@ -642,7 +732,11 @@
       playAudio('battle_victory');
       setMsg('<b style="color:#00ff7f">討伐成功！</b>' + (rewardSummary ? '<br><span style="color:#ffdd77">通關獎勵：' + escapeHtml(rewardSummary) + '</span>' : ''), '#00ff7f');
       setButtonsDisabled(true);
-      loadDashboard(state.selectedStageId);
+      // v9：通關後刷新進度，並跳回章節與關卡選擇。
+      setTimeout(function() {
+        state.selectedStageId = null;
+        loadDashboard().then(function(){ openStageSelect(); }).catch(function(){ openStageSelect(); });
+      }, 850);
     } else if (status === 'failed') {
       stopTimer();
       playAudio('battle_failed');
@@ -728,7 +822,10 @@
     retryBattle: retryBattle,
     openRules: openRules,
     closeRules: closeRules,
-    startFromRules: startFromRules
+    startFromRules: startFromRules,
+    openStageSelect: openStageSelect,
+    closeStageSelect: closeStageSelect,
+    chooseStageAndStart: chooseStageAndStart
   };
   window.openLinkBattleModal = openModal;
 })();

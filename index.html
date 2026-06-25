@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v8-browser-path">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v9-stage-select">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -1647,9 +1647,24 @@
               <li>BOSS 怒氣滿會反擊，HP、時間或錯誤次數耗盡就會失敗。</li>
             </ul>
             <div class="link-battle-rules-actions">
-              <button class="primary" onclick="TLOLinkBattle.startFromRules()">開始挑戰</button>
+              <button class="primary" onclick="TLOLinkBattle.startFromRules()">選擇關卡</button>
               <button onclick="TLOLinkBattle.closeRules()">我知道了</button>
             </div>
+          </div>
+        </div>
+        <div class="link-battle-stage-select" id="link-battle-stage-select">
+          <div class="link-battle-stage-select-card">
+            <div class="link-battle-stage-select-head">
+              <div>
+                <span>卡牌連線討伐戰</span>
+                <h3>章節與關卡選擇</h3>
+              </div>
+              <button type="button" onclick="TLOLinkBattle.closeStageSelect()" aria-label="關閉章節選擇">×</button>
+            </div>
+            <div class="link-battle-stage-select-content" id="link-battle-stage-select-content">
+              <div class="link-battle-stage-select-empty">正在讀取關卡資料...</div>
+            </div>
+            <div class="link-battle-stage-select-foot">通關後會自動回到這裡，可選擇下一關或重複挑戰。</div>
           </div>
         </div>
         <div class="link-battle-titlebar">
@@ -6521,6 +6536,6 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260626-mobile-v8-browser-path"></script>
+  <script src="./js/link-battle.js?v=20260626-mobile-v9-stage-select"></script>
 </body>
 </html>
