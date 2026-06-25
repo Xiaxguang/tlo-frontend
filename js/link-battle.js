@@ -312,7 +312,7 @@
         + '<i>' + (isPlaceholder ? '🔒' : (opened ? '收起 ▲' : '展開 ▼')) + '</i>'
         + '</button>';
       if (opened) {
-        html += '<div class="link-battle-stage-card-grid">';
+        html += '<div class="link-battle-stage-scroll-pane"><div class="link-battle-stage-card-grid">';
         html += chStages.map(function(stage) {
           var boss = stage.boss || {};
           var n = getStageNumber(stage);
@@ -330,7 +330,7 @@
             + '<div class="link-battle-stage-card-cta">' + (stage.unlocked ? '開始挑戰' : '尚未解鎖') + '</div>'
             + '</button>';
         }).join('');
-        html += '</div>';
+        html += '</div></div>';
       }
       html += '</section>';
       return html;

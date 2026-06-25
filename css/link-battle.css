@@ -1067,3 +1067,68 @@
     padding-bottom:26px!important;
   }
 }
+
+
+/* v10-inner-stage-scroll-fix：真正讓「章節內的關卡列表」可上下滑動。
+   章節標題固定在上方；展開後的關卡清單獨立滾動，避免只能看到前幾關。 */
+.link-battle-stage-select.active {
+  overflow: hidden !important;
+}
+.link-battle-stage-select-card {
+  overflow: hidden !important;
+}
+.link-battle-stage-select-content {
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+.link-battle-chapter-block.open {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+.link-battle-chapter-block.open .link-battle-chapter-toggle {
+  flex: 0 0 auto !important;
+}
+.link-battle-stage-scroll-pane {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: clamp(300px, 52svh, 520px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+  padding: 10px 8px 14px 10px;
+  border-top: 1px solid rgba(0,255,240,.18);
+  background: linear-gradient(180deg, rgba(5,10,22,.18), rgba(5,6,14,.38));
+}
+.link-battle-stage-scroll-pane::-webkit-scrollbar {
+  width: 7px;
+}
+.link-battle-stage-scroll-pane::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(0,255,240,.85), rgba(127,0,255,.75));
+}
+.link-battle-stage-scroll-pane::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+}
+.link-battle-chapter-block.open .link-battle-stage-card-grid {
+  padding: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+@media (max-width: 560px) {
+  .link-battle-stage-scroll-pane {
+    max-height: clamp(280px, 50svh, 470px) !important;
+    padding: 9px 6px 16px 8px;
+  }
+}
+@media (max-height: 720px) {
+  .link-battle-stage-scroll-pane {
+    max-height: clamp(230px, 46svh, 380px) !important;
+  }
+}
