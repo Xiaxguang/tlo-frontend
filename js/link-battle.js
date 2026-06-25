@@ -82,6 +82,18 @@
     });
   }
 
+  function isBattleActive() {
+    return !!(state.battle && state.battle.status !== 'victory' && state.battle.status !== 'failed');
+  }
+
+  function updateShellMode() {
+    var shell = $('link-battle-shell');
+    if (!shell) return;
+    shell.classList.toggle('in-battle', isBattleActive());
+    var startBtn = $('link-battle-start-btn');
+    if (startBtn) startBtn.style.display = isBattleActive() ? 'none' : '';
+  }
+
   function openModal() {
     var modal = $('link-battle-modal');
     if (modal) modal.style.display = 'flex';
@@ -158,6 +170,7 @@
     if (stage) renderStagePreview(stage);
     var startBtn = $('link-battle-start-btn');
     if (startBtn) startBtn.disabled = !dash.canEnter || !stage || !stage.unlocked;
+    updateShellMode();
   }
 
   function renderStagePreview(stage) {
@@ -172,6 +185,8 @@
     if ($('link-battle-rage-fill')) $('link-battle-rage-fill').style.width = '0%';
     if ($('link-battle-hpfill')) $('link-battle-hpfill').style.width = '100%';
     if ($('link-battle-time')) $('link-battle-time').textContent = formatTime(stage.timeLimitSeconds || 0);
+    var center = $('link-battle-boss-center');
+    if (center) center.innerHTML = '<span class="link-battle-boss-silhouette">BOSS</span>';
   }
 
   function selectStage(stageId) {
@@ -224,10 +239,37 @@
     var rageLimit = Number((b.stage && b.stage.bossRageLimit) || 100);
     var ragePct = Math.max(0, Math.min(100, Math.round(Number(b.bossRage || 0) / rageLimit * 100)));
     if ($('link-battle-rage-fill')) $('link-battle-rage-fill').style.width = ragePct + '%';
+    var center = $('link-battle-boss-center');
+    if (center) center.innerHTML = boss.bossImage || boss.bossBackground ? '' : '<span class="link-battle-boss-silhouette">BOSS</span>';
     renderBoard();
     var active = !state.isAnimating && b.status !== 'victory' && b.status !== 'failed';
     if ($('link-battle-hint-btn')) $('link-battle-hint-btn').disabled = !active || Number(b.hintLeft || 0) <= 0;
     if ($('link-battle-shuffle-btn')) $('link-battle-shuffle-btn').disabled = !active || Number(b.shuffleLeft || 0) <= 0;
+    updateShellMode();
+  }
+
+  function getBoardDimensions(board) {
+    var layers = (board || []).length || 1;
+    var rows = 1;
+    var cols = 1;
+    (board || []).forEach(function(layer) {
+      rows = Math.max(rows, (layer || []).length || 0);
+      (layer || []).forEach(function(row) { cols = Math.max(cols, (row || []).length || 0); });
+    });
+    return { layers: layers, rows: rows, cols: cols };
+  }
+
+  function flattenBoardForRender(board) {
+    var tiles = [];
+    for (var layer = 0; layer < (board || []).length; layer++) {
+      for (var row = 0; row < (board[layer] || []).length; row++) {
+        for (var col = 0; col < (board[layer][row] || []).length; col++) {
+          var tile = board[layer][row][col];
+          if (tile) tiles.push(Object.assign({}, tile, { layer: layer, row: row, col: col, selectable: isTileSelectable(tile) }));
+        }
+      }
+    }
+    return tiles;
   }
 
   function renderBoard() {
@@ -237,25 +279,46 @@
     var data = b.boardData || {};
     var board = (data.board || b.board || []);
     if (!board.length) {
-      wrap.innerHTML = '<div style="color:#aaa;padding:30px;text-align:center;">尚未開始挑戰。</div>';
+      wrap.innerHTML = '<div class="link-battle-board-empty">選擇關卡後開始挑戰。</div>';
       return;
     }
-    var html = '';
-    for (var layer = board.length - 1; layer >= 0; layer--) {
-      var rows = board[layer] || [];
-      var cols = rows[0] ? rows[0].length : 6;
-      html += '<div class="link-battle-layer-title">第 ' + (layer + 1) + ' 層</div>';
-      html += '<div class="link-battle-board-layer" style="grid-template-columns:repeat(' + cols + ',minmax(38px,1fr))">';
-      for (var r = 0; r < rows.length; r++) {
-        for (var c = 0; c < cols; c++) {
-          var tile = rows[r][c];
-          html += '<div class="link-battle-cell">';
-          if (tile) html += renderTile(tile);
-          html += '</div>';
-        }
-      }
-      html += '</div>';
-    }
+
+    var dims = getBoardDimensions(board);
+    var renderTiles = (data.tiles && data.tiles.length ? data.tiles : flattenBoardForRender(board)).map(function(tile) {
+      return Object.assign({}, tile, {
+        layer: Number(tile.layer || 0),
+        row: Number(tile.row || 0),
+        col: Number(tile.col || 0)
+      });
+    });
+
+    var wrapWidth = Math.max(300, wrap.clientWidth || 360);
+    var usableWidth = Math.max(280, wrapWidth - 22);
+    var densityWidth = (dims.cols * 0.84) + (dims.layers * 0.24);
+    var tileW = Math.floor(usableWidth / Math.max(5.2, densityWidth));
+    tileW = Math.max(34, Math.min(58, tileW));
+    var tileH = Math.round(tileW * 1.46);
+    var colStep = Math.round(tileW * 0.82);
+    var rowStep = Math.round(tileH * 0.60);
+    var layerOffsetX = Math.round(tileW * 0.18);
+    var layerOffsetY = Math.round(tileH * 0.13);
+    var boardW = 20 + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
+    var boardH = 20 + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
+
+    renderTiles.sort(function(a, b) {
+      if (a.layer !== b.layer) return a.layer - b.layer;
+      if (a.row !== b.row) return a.row - b.row;
+      return a.col - b.col;
+    });
+
+    var html = '<div class="link-battle-stacked-board" style="width:' + boardW + 'px;height:' + boardH + 'px;--tile-w:' + tileW + 'px;--tile-h:' + tileH + 'px;">';
+    renderTiles.forEach(function(tile) {
+      var x = 10 + (tile.col * colStep) + (tile.layer * layerOffsetX);
+      var y = 10 + ((dims.layers - 1 - tile.layer) * layerOffsetY) + (tile.row * rowStep);
+      var z = (tile.layer * 1000) + (tile.row * 20) + tile.col;
+      html += renderTile(tile, 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';');
+    });
+    html += '</div>';
     wrap.innerHTML = html;
   }
 
@@ -269,15 +332,17 @@
     return 'link-battle-rarity-' + String(rarity || 'Normal').replace(/\s+/g, '-');
   }
 
-  function renderTile(tile) {
-    var selectable = isTileSelectable(tile);
+  function renderTile(tile, positionStyle) {
+    var selectable = tile.selectable != null ? !!tile.selectable : isTileSelectable(tile);
     var cls = ['link-battle-tile', rarityClass(tile.rarity)];
     if (!selectable) cls.push('covered');
     if (tile.locked_until && new Date(String(tile.locked_until)).getTime() > Date.now()) cls.push('locked');
     if (state.selectedTileId === tile.tile_id) cls.push('selected');
     if (state.hintedIds.has(tile.tile_id)) cls.push('hinted');
-    var img = tile.image_url ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '">' : '<div style="font-size:20px">🎴</div>';
-    return '<button class="' + cls.join(' ') + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\')">' + img + '<span>' + escapeHtml(tile.card_name) + '</span></button>';
+    var img = tile.image_url
+      ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false">'
+      : '<div class="link-battle-tile-fallback">🎴</div>';
+    return '<button class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\')">' + img + '</button>';
   }
 
   function findTile(tileId) {
@@ -430,6 +495,13 @@
       renderBattleState();
     }
   }
+
+  var resizeRenderTimer = null;
+  window.addEventListener('resize', function() {
+    if (!state.battle) return;
+    clearTimeout(resizeRenderTimer);
+    resizeRenderTimer = setTimeout(renderBoard, 120);
+  });
 
   window.TLOLinkBattle = {
     openModal: openModal,
