@@ -16,10 +16,12 @@
     stageSelectOpen: false,
     openChapterKey: null,
     linkPath: null,
-    boardMetrics: null
+    boardMetrics: null,
+    teamPickerOpen: false,
+    teamDraftIds: []
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v10-inner-scroll-card-plus';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v11-team-lite';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -44,6 +46,9 @@
     return String(text == null ? '' : text).replace(/[&<>"']/g, function (m) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
     });
+  }
+  function jsArg(value) {
+    return escapeHtml(JSON.stringify(String(value == null ? '' : value)));
   }
   function sleep(ms) { return new Promise(function(resolve){ setTimeout(resolve, ms); }); }
 
@@ -282,6 +287,183 @@
     renderStageSelect();
   }
 
+  function getCardId(card) {
+    return String((card && (card.cardId || card.card_id || card.id)) || '');
+  }
+
+  function getCardName(card) {
+    return String((card && (card.cardName || card.card_name || card.name)) || '未命名角色');
+  }
+
+  function getCardImage(card) {
+    return String((card && (card.imageUrl || card.image_url || card.image)) || '');
+  }
+
+  function getCurrentTeamIds() {
+    var team = (state.dashboard && (state.dashboard.linkBattleTeam || state.dashboard.team)) || {};
+    var ids = Array.isArray(team.cardIds) ? team.cardIds : (Array.isArray(team.cards) ? team.cards.map(getCardId) : []);
+    return ids.map(function(id){ return String(id || '').trim(); }).filter(Boolean).slice(0, 3);
+  }
+
+  function getEligibleCardsSorted() {
+    var cards = ((state.dashboard && state.dashboard.eligibleCards) || []).slice();
+    var rank = { UR: 5, SSR: 4, 'SUPER RARE': 3, RARE: 2, Normal: 1, NORMAL: 1 };
+    cards.sort(function(a, b) {
+      if (Number(b.power || 0) !== Number(a.power || 0)) return Number(b.power || 0) - Number(a.power || 0);
+      var br = rank[String(b.rarity || '').toUpperCase()] || rank[String(b.rarity || '')] || 0;
+      var ar = rank[String(a.rarity || '').toUpperCase()] || rank[String(a.rarity || '')] || 0;
+      if (br !== ar) return br - ar;
+      return getCardName(a).localeCompare(getCardName(b), 'zh-Hant');
+    });
+    return cards;
+  }
+
+  function findEligibleCard(cardId) {
+    var id = String(cardId || '');
+    return getEligibleCardsSorted().find(function(card){ return getCardId(card) === id; }) || null;
+  }
+
+  function getTeamBonus() {
+    var dash = state.dashboard || {};
+    var team = dash.linkBattleTeam || {};
+    return dash.teamBonus || team.bonus || { attackBonusPercent: 0, hpBonusPercent: 0, summary: '攻擊 +0%，HP +0%' };
+  }
+
+  function renderTeamSlot(card, role) {
+    if (!card) {
+      return '<div class="link-battle-team-slot empty"><span>' + escapeHtml(role) + '</span><b>未選擇</b></div>';
+    }
+    var image = getCardImage(card);
+    return '<div class="link-battle-team-slot">'
+      + '<span>' + escapeHtml(role) + '</span>'
+      + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
+      + '<b>' + escapeHtml(getCardName(card)) + '</b>'
+      + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
+      + '</div>';
+  }
+
+  function renderTeamSlotsFromIds(ids) {
+    var list = (ids || []).map(findEligibleCard);
+    var roles = ['隊長', '隊員', '隊員'];
+    var html = '<div class="link-battle-team-slots">';
+    for (var i = 0; i < 3; i += 1) html += renderTeamSlot(list[i], roles[i]);
+    html += '</div>';
+    return html;
+  }
+
+  function renderPreBattlePanel(stage) {
+    if (!stage || !stage.unlocked) return '';
+    var ids = getCurrentTeamIds();
+    var bonus = getTeamBonus();
+    var bonusText = bonus.summary || ('攻擊 +' + Number(bonus.attackBonusPercent || 0) + '%，HP +' + Number(bonus.hpBonusPercent || 0) + '%');
+    return '<div class="link-battle-prebattle-panel">'
+      + '<div class="link-battle-prebattle-head"><span>出戰編隊</span><b>' + escapeHtml(stage.stageName || '選擇關卡') + '</b></div>'
+      + renderTeamSlotsFromIds(ids)
+      + '<div class="link-battle-team-bonus">' + escapeHtml(bonusText) + '</div>'
+      + '<div class="link-battle-prebattle-actions">'
+      + '<button type="button" onclick="TLOLinkBattle.openTeamPicker()">更換編隊</button>'
+      + '<button type="button" onclick="TLOLinkBattle.autoLinkBattleTeam()">自動編隊</button>'
+      + '<button type="button" class="primary" onclick="TLOLinkBattle.startSelectedStage()">開始挑戰</button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  function renderTeamPicker() {
+    var root = $('link-battle-team-picker-content');
+    if (!root) return;
+    var cards = getEligibleCardsSorted();
+    var ids = state.teamDraftIds || [];
+    var selected = new Set(ids);
+    if (!cards.length) {
+      root.innerHTML = '<div class="link-battle-stage-select-empty">目前沒有可出戰的卡片。</div>';
+      return;
+    }
+    var html = '<div class="link-battle-team-picker-summary">'
+      + '<div><span>目前選擇</span><b>' + ids.length + ' / 3</b></div>'
+      + '<em>隊長位會略高權重；編隊只提供小幅攻擊與 HP 加成。</em>'
+      + '</div>';
+    html += renderTeamSlotsFromIds(ids);
+    html += '<div class="link-battle-team-picker-actions">'
+      + '<button type="button" onclick="TLOLinkBattle.autoLinkBattleTeam()">自動編隊</button>'
+      + '<button type="button" class="primary" onclick="TLOLinkBattle.saveTeamDraft()">儲存編隊</button>'
+      + '</div>';
+    html += '<div class="link-battle-team-card-grid">';
+    html += cards.map(function(card) {
+      var id = getCardId(card);
+      var picked = selected.has(id);
+      var image = getCardImage(card);
+      return '<button type="button" class="link-battle-team-card-option ' + (picked ? 'selected' : '') + '" onclick="TLOLinkBattle.toggleTeamCard(' + jsArg(id) + ')">'
+        + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '">' : '<div class="link-battle-team-card-fallback">🎴</div>')
+        + '<strong>' + escapeHtml(getCardName(card)) + '</strong>'
+        + '<span>' + escapeHtml(card.rarity || 'Normal') + '｜★' + Number(card.star || 1) + '</span>'
+        + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
+        + '<i>' + (picked ? '已出戰' : '選擇') + '</i>'
+        + '</button>';
+    }).join('');
+    html += '</div>';
+    root.innerHTML = html;
+  }
+
+  function openTeamPicker() {
+    state.teamPickerOpen = true;
+    state.teamDraftIds = getCurrentTeamIds();
+    renderTeamPicker();
+    var el = $('link-battle-team-picker');
+    if (el) el.classList.add('active');
+  }
+
+  function closeTeamPicker() {
+    state.teamPickerOpen = false;
+    var el = $('link-battle-team-picker');
+    if (el) el.classList.remove('active');
+  }
+
+  function toggleTeamCard(cardId) {
+    var id = String(cardId || '');
+    if (!id) return;
+    var ids = (state.teamDraftIds || []).slice();
+    var index = ids.indexOf(id);
+    if (index >= 0) ids.splice(index, 1);
+    else {
+      if (ids.length >= 3) {
+        setMsg('出戰編隊最多選擇 3 張卡牌。', '#ffdd77');
+        return;
+      }
+      ids.push(id);
+    }
+    state.teamDraftIds = ids;
+    renderTeamPicker();
+  }
+
+  async function saveTeamDraft() {
+    try {
+      var res = await callRpc('setLinkBattleTeam', [window.playerUID || window.TLO_PLAYER_UID || '', state.teamDraftIds || []]);
+      if (!res || !res.success) throw new Error((res && res.msg) || '編隊儲存失敗');
+      if (res.dashboard) state.dashboard = res.dashboard;
+      closeTeamPicker();
+      renderDashboard();
+      setMsg('出戰編隊已儲存。', '#00fff0');
+    } catch (err) {
+      setMsg('編隊儲存失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
+    }
+  }
+
+  async function autoLinkBattleTeam() {
+    try {
+      var cards = getEligibleCardsSorted().slice(0, 3);
+      var ids = cards.map(getCardId).filter(Boolean);
+      var res = await callRpc('setLinkBattleTeam', [window.playerUID || window.TLO_PLAYER_UID || '', ids]);
+      if (!res || !res.success) throw new Error((res && res.msg) || '自動編隊失敗');
+      if (res.dashboard) state.dashboard = res.dashboard;
+      state.teamDraftIds = getCurrentTeamIds();
+      renderDashboard();
+      if (state.teamPickerOpen) renderTeamPicker();
+      setMsg('已自動選擇目前戰力最高的 3 張卡牌。', '#00fff0');
+    } catch (err) {
+      setMsg('自動編隊失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
+    }
+  }
+
   function renderStageSelect() {
     var root = $('link-battle-stage-select-content');
     if (!root) return;
@@ -327,22 +509,35 @@
             + '<div class="link-battle-stage-card-title">' + escapeHtml(stage.stageName || '卡牌連線討伐') + '</div>'
             + '<div class="link-battle-stage-card-boss">BOSS：' + escapeHtml(boss.bossName || '連線戰 BOSS') + '</div>'
             + '<div class="link-battle-stage-card-reward">獎勵：' + escapeHtml(reward) + '</div>'
-            + '<div class="link-battle-stage-card-cta">' + (stage.unlocked ? '開始挑戰' : '尚未解鎖') + '</div>'
+            + '<div class="link-battle-stage-card-cta">' + (stage.unlocked ? (stage.stageId === state.selectedStageId ? '已選擇' : '選擇關卡') : '尚未解鎖') + '</div>'
             + '</button>';
         }).join('');
-        html += '</div></div>';
+        html += '</div>';
+        var selectedInChapter = chStages.find(function(s){ return s.stageId === state.selectedStageId; });
+        if (selectedInChapter) html += renderPreBattlePanel(selectedInChapter);
+        html += '</div>';
       }
       html += '</section>';
       return html;
     }).join('');
   }
 
-  async function chooseStageAndStart(stageId) {
+  function selectStageForTeam(stageId) {
     if (state.isAnimating) return;
     state.selectedStageId = stageId;
+    renderDashboard();
+    setMsg('已選擇關卡，確認出戰編隊後即可開始挑戰。', '#d9c7ff');
+  }
+
+  async function startSelectedStage() {
+    if (state.isAnimating) return;
     closeStageSelect();
     renderDashboard();
     await startBattle();
+  }
+
+  async function chooseStageAndStart(stageId) {
+    selectStageForTeam(stageId);
   }
 
   function renderDashboard() {
@@ -355,7 +550,7 @@
         if (stage.stageId === state.selectedStageId) cls.push('current');
         if (stage.cleared) cls.push('cleared');
         if (!stage.unlocked) cls.push('locked');
-        return '<button class="' + cls.join(' ') + '" ' + (!stage.unlocked ? 'disabled' : '') + ' onclick="TLOLinkBattle.selectStage(\'' + escapeHtml(stage.stageId) + '\')">' + Number(stage.stageOrder || 0) + '</button>';
+        return '<button class="' + cls.join(' ') + '" ' + (!stage.unlocked ? 'disabled' : '') + ' onclick="TLOLinkBattle.selectStage(' + jsArg(stage.stageId) + ')">' + Number(stage.stageOrder || 0) + '</button>';
       }).join('') || '<span class="muted">尚無開放關卡。</span>';
     }
     var stage = stages.find(function(s){ return s.stageId === state.selectedStageId; }) || dash.selectedStage || stages[0];
@@ -383,8 +578,7 @@
   }
 
   function selectStage(stageId) {
-    state.selectedStageId = stageId;
-    renderDashboard();
+    selectStageForTeam(stageId);
   }
 
   async function startOrRetryBattle() {
@@ -886,6 +1080,13 @@
     openStageSelect: openStageSelect,
     closeStageSelect: closeStageSelect,
     chooseStageAndStart: chooseStageAndStart,
+    selectStageForTeam: selectStageForTeam,
+    startSelectedStage: startSelectedStage,
+    openTeamPicker: openTeamPicker,
+    closeTeamPicker: closeTeamPicker,
+    toggleTeamCard: toggleTeamCard,
+    saveTeamDraft: saveTeamDraft,
+    autoLinkBattleTeam: autoLinkBattleTeam,
     toggleStageChapter: toggleStageChapter
   };
   window.openLinkBattleModal = openModal;

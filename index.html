@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v10-inner-scroll-card-plus">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v11-team-lite">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -1664,7 +1664,21 @@
             <div class="link-battle-stage-select-content" id="link-battle-stage-select-content">
               <div class="link-battle-stage-select-empty">正在讀取關卡資料...</div>
             </div>
-            <div class="link-battle-stage-select-foot">通關後會自動回到這裡，可選擇下一關或重複挑戰。</div>
+            <div class="link-battle-stage-select-foot">選擇關卡後可確認出戰編隊，再開始挑戰。</div>
+            <div class="link-battle-team-picker" id="link-battle-team-picker">
+              <div class="link-battle-team-picker-card">
+                <div class="link-battle-team-picker-head">
+                  <div>
+                    <span>出戰編隊</span>
+                    <h3>選擇出戰角色</h3>
+                  </div>
+                  <button type="button" onclick="TLOLinkBattle.closeTeamPicker()" aria-label="關閉編隊選擇">×</button>
+                </div>
+                <div class="link-battle-team-picker-content" id="link-battle-team-picker-content">
+                  <div class="link-battle-stage-select-empty">正在讀取卡片...</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="link-battle-titlebar">
@@ -6536,6 +6550,6 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260626-mobile-v10-inner-scroll-card-plus"></script>
+  <script src="./js/link-battle.js?v=20260626-mobile-v11-team-lite"></script>
 </body>
 </html>

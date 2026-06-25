@@ -1143,3 +1143,302 @@
     padding: 5px !important;
   }
 }
+
+/* v11-team-lite：出戰編隊只放在戰前選關流程，不進入戰鬥操作區。 */
+.link-battle-prebattle-panel{
+  margin-top:10px;
+  padding:11px;
+  border-radius:18px;
+  border:1px solid rgba(255,221,119,.45);
+  background:linear-gradient(180deg,rgba(34,25,58,.96),rgba(9,10,22,.98));
+  box-shadow:0 0 18px rgba(255,221,119,.1),inset 0 0 18px rgba(255,255,255,.04);
+}
+.link-battle-prebattle-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:9px;
+}
+.link-battle-prebattle-head span{
+  display:block;
+  color:#00fff0;
+  font-size:11px;
+  font-weight:1000;
+  letter-spacing:.8px;
+}
+.link-battle-prebattle-head b{
+  color:#fff;
+  font-size:13px;
+  line-height:1.25;
+  text-align:right;
+}
+.link-battle-team-slots{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+.link-battle-team-slot{
+  min-width:0;
+  border:1px solid rgba(0,255,240,.25);
+  border-radius:14px;
+  background:rgba(5,9,20,.72);
+  padding:7px;
+  text-align:center;
+  overflow:hidden;
+}
+.link-battle-team-slot span{
+  display:block;
+  color:#ffdd77;
+  font-size:10px;
+  font-weight:1000;
+  margin-bottom:5px;
+}
+.link-battle-team-slot img,
+.link-battle-team-slot-fallback{
+  width:48px;
+  height:64px;
+  margin:0 auto 5px;
+  object-fit:contain;
+  border-radius:10px;
+  background:#050505;
+  box-shadow:0 0 10px rgba(0,255,240,.16);
+}
+.link-battle-team-slot-fallback{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+}
+.link-battle-team-slot b{
+  display:block;
+  color:#fff;
+  font-size:11px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.link-battle-team-slot em{
+  display:block;
+  color:#cdd3ff;
+  font-size:10px;
+  font-style:normal;
+  margin-top:2px;
+}
+.link-battle-team-slot.empty{
+  opacity:.68;
+  border-style:dashed;
+}
+.link-battle-team-slot.empty b{
+  color:#aaa;
+  padding:30px 0 8px;
+}
+.link-battle-team-bonus{
+  margin-top:9px;
+  text-align:center;
+  color:#ffdd77;
+  font-weight:1000;
+  font-size:13px;
+  text-shadow:0 0 10px rgba(255,221,119,.2);
+}
+.link-battle-prebattle-actions,
+.link-battle-team-picker-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr 1.2fr;
+  gap:8px;
+  margin-top:10px;
+}
+.link-battle-prebattle-actions button,
+.link-battle-team-picker-actions button{
+  border:1px solid rgba(0,255,240,.35);
+  border-radius:13px;
+  background:rgba(12,18,38,.92);
+  color:#fff;
+  min-height:38px;
+  font-weight:1000;
+  cursor:pointer;
+}
+.link-battle-prebattle-actions button.primary,
+.link-battle-team-picker-actions button.primary{
+  border-color:rgba(0,255,240,.75);
+  background:linear-gradient(135deg,#00fff0,#7f00ff);
+  box-shadow:0 0 16px rgba(0,255,240,.22);
+}
+.link-battle-team-picker{
+  position:absolute;
+  inset:0;
+  z-index:9900;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:10px;
+  background:radial-gradient(circle at center,rgba(25,10,50,.82),rgba(0,0,0,.86));
+  backdrop-filter:blur(7px);
+}
+.link-battle-team-picker.active{display:flex;}
+.link-battle-team-picker-card{
+  width:min(96vw,500px);
+  height:min(730px,calc(var(--tlo-link-vh,100dvh) - 24px - env(safe-area-inset-bottom,0px)));
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  overflow:hidden;
+  border-radius:24px;
+  border:1px solid rgba(0,255,240,.5);
+  background:linear-gradient(180deg,rgba(22,18,48,.98),rgba(6,8,18,.99));
+  box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 0 34px rgba(0,255,240,.18),0 24px 70px rgba(0,0,0,.86);
+  padding:13px;
+}
+.link-battle-team-picker-head{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:18px;
+  border:1px solid rgba(127,0,255,.38);
+  background:linear-gradient(90deg,rgba(15,13,35,.95),rgba(50,24,90,.88),rgba(10,15,35,.95));
+}
+.link-battle-team-picker-head span{
+  display:block;
+  color:#00fff0;
+  font-size:12px;
+  font-weight:1000;
+}
+.link-battle-team-picker-head h3{
+  margin:2px 0 0;
+  color:#f6f0ff;
+  font-size:20px;
+  text-shadow:0 0 14px rgba(0,255,240,.52);
+}
+.link-battle-team-picker-head button{
+  width:34px;
+  height:34px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:24px;
+  line-height:1;
+  font-weight:900;
+  cursor:pointer;
+}
+.link-battle-team-picker-content{
+  flex:1 1 0;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  touch-action:pan-y;
+  padding:10px 4px 12px;
+}
+.link-battle-team-picker-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+  color:#d9c7ff;
+  font-size:12px;
+  line-height:1.35;
+}
+.link-battle-team-picker-summary span{
+  display:block;
+  color:#00fff0;
+  font-weight:1000;
+}
+.link-battle-team-picker-summary b{
+  color:#ffdd77;
+  font-size:18px;
+}
+.link-battle-team-picker-summary em{
+  color:#b9b7df;
+  font-style:normal;
+  text-align:right;
+}
+.link-battle-team-card-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+  margin-top:10px;
+}
+.link-battle-team-card-option{
+  position:relative;
+  display:grid;
+  grid-template-columns:56px 1fr;
+  grid-template-rows:auto auto auto auto;
+  column-gap:9px;
+  align-items:center;
+  min-height:82px;
+  text-align:left;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:15px;
+  background:linear-gradient(180deg,rgba(20,24,45,.94),rgba(8,9,18,.98));
+  color:#fff;
+  padding:8px;
+  cursor:pointer;
+  overflow:hidden;
+}
+.link-battle-team-card-option.selected{
+  border-color:#00fff0;
+  box-shadow:0 0 18px rgba(0,255,240,.24);
+}
+.link-battle-team-card-option img,
+.link-battle-team-card-fallback{
+  grid-row:1 / 5;
+  width:56px;
+  height:74px;
+  object-fit:contain;
+  border-radius:10px;
+  background:#050505;
+}
+.link-battle-team-card-fallback{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+}
+.link-battle-team-card-option strong{
+  min-width:0;
+  font-size:13px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.link-battle-team-card-option span,
+.link-battle-team-card-option em{
+  color:#cdd3ff;
+  font-size:11px;
+  font-style:normal;
+}
+.link-battle-team-card-option i{
+  justify-self:start;
+  border-radius:999px;
+  padding:3px 8px;
+  background:rgba(0,255,240,.12);
+  color:#00fff0;
+  font-size:10px;
+  font-style:normal;
+  font-weight:1000;
+}
+.link-battle-team-card-option.selected i{
+  background:linear-gradient(135deg,#00fff0,#7f00ff);
+  color:#fff;
+}
+@media(max-width:420px){
+  .link-battle-team-slot img,
+  .link-battle-team-slot-fallback{width:42px;height:56px;}
+  .link-battle-prebattle-actions{grid-template-columns:1fr;}
+  .link-battle-team-picker-actions{grid-template-columns:1fr 1fr;}
+  .link-battle-team-card-grid{grid-template-columns:1fr;}
+  .link-battle-team-picker-summary{display:block;}
+  .link-battle-team-picker-summary em{display:block;text-align:left;margin-top:4px;}
+}
+.link-battle-stage-scroll-pane .link-battle-prebattle-panel{
+  position:sticky;
+  bottom:0;
+  z-index:3;
+}
