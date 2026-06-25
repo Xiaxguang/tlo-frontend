@@ -54,6 +54,7 @@
     "getPublicSettings",
     "getHomeState",
     "getPlayerCollection",
+    "getLinkBattleDashboard",
     "getGachaPools",
     "getBattleDashboard",
     "getCardProbabilityTable",
@@ -71,7 +72,9 @@
     "getAchievementDashboard",
     "getDemonChallengeDashboard",
     "getMessageBoard",
-    "getPlayerHistory"
+    "getPlayerHistory",
+    "adminListLinkBattleStages",
+    "adminListLinkBattleBosses"
   ]);
 
   function stableRpcKey(method, args, authToken) {

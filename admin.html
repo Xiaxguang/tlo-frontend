@@ -85,6 +85,7 @@
         <button class="tab active" onclick="showTab('players', this)">玩家管理</button>
         <button class="tab" onclick="showTab('cards', this); loadCardAdmin();">卡牌管理</button>
         <button class="tab" onclick="showTab('stages', this); loadStageAdmin();">關卡管理</button>
+        <button class="tab" onclick="showTab('linkbattle', this); loadLinkBattleAdmin();">連線討伐戰</button>
         <button class="tab" onclick="showTab('shop', this); loadShopAdmin();">商城管理</button>
         <button class="tab" onclick="showTab('chat', this); loadChatAdmin();">聊天公告</button>
         <button class="tab" onclick="showTab('worldboss', this); loadWorldBossAdmin();">世界BOSS</button>
@@ -402,6 +403,78 @@
         <div id="rpgDungeonsTable"></div>
       </div>
 
+
+      <div id="tab-linkbattle" class="hide panel">
+        <h2>🃏 卡牌連線討伐戰・關卡管理</h2>
+        <div class="muted">玩家圖鑑至少解鎖 4 種卡牌才能進入；BOSS HP 採用「本場卡牌基礎傷害總和 × HP倍率」。倍率越高越難，主線建議 0.90～1.10。</div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>新增 / 編輯 BOSS</h3>
+            <div class="row">
+              <div><label>BOSS ID</label><input id="lbBossId" placeholder="boss_fallen_guardian"></div>
+              <div><label>BOSS 名稱</label><input id="lbBossName" placeholder="墮天守衛"></div>
+            </div>
+            <label>BOSS 圖片 URL</label><input id="lbBossImage" placeholder="可貼 GitHub raw 圖片網址">
+            <label>BOSS 背景 URL</label><input id="lbBossBackground" placeholder="可空白，預設使用 BOSS 圖片">
+            <label>技能池，用逗號分隔</label><input id="lbBossSkills" value="normal_attack,lock,shuffle_layer,break_combo">
+            <label>說明</label><textarea id="lbBossDesc" placeholder="BOSS 說明"></textarea>
+            <button class="primary" onclick="saveLinkBattleBoss()">儲存 BOSS</button>
+            <div id="lbBossMsg" class="msg"></div>
+            <h3>目前 BOSS</h3>
+            <div id="lbBossTable"></div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>新增 / 編輯關卡</h3>
+            <div class="row3">
+              <div><label>關卡編號</label><input id="lbStageOrder" type="number" min="1" value="1"></div>
+              <div><label>關卡 ID</label><input id="lbStageId" placeholder="空白自動 link_stage_001"></div>
+              <div><label>啟用</label><select id="lbStageEnabled"><option value="1">啟用</option><option value="0">停用</option></select></div>
+            </div>
+            <label>關卡名稱</label><input id="lbStageName" placeholder="第1關・卡牌連線討伐">
+            <div class="row">
+              <div><label>指定 BOSS</label><select id="lbStageBoss"></select></div>
+              <div><label>HP倍率</label><input id="lbHpMultiplier" type="number" min="0.5" max="2" step="0.01" value="1.00"></div>
+            </div>
+            <div class="row3">
+              <div><label>總卡牌數</label><input id="lbCardCount" type="number" min="2" step="2" value="24"></div>
+              <div><label>配對組數</label><input id="lbPairCount" type="number" min="1" value="12"></div>
+              <div><label>層數</label><input id="lbLayerCount" type="number" min="1" max="6" value="2"></div>
+            </div>
+            <div class="row3">
+              <div><label>Rows</label><input id="lbRows" type="number" min="2" value="4"></div>
+              <div><label>Cols</label><input id="lbCols" type="number" min="2" value="6"></div>
+              <div><label>開場最少可連線</label><input id="lbMinMatches" type="number" min="1" value="2"></div>
+            </div>
+            <div class="row3">
+              <div><label>時間秒數</label><input id="lbTimeLimit" type="number" min="10" value="180"></div>
+              <div><label>錯誤上限</label><input id="lbErrorLimit" type="number" min="1" value="8"></div>
+              <div><label>BOSS攻擊</label><input id="lbBossAttack" type="number" min="0" value="8"></div>
+            </div>
+            <div class="row3">
+              <div><label>洗牌</label><input id="lbShuffleLimit" type="number" min="0" value="3"></div>
+              <div><label>提示</label><input id="lbHintLimit" type="number" min="0" value="3"></div>
+              <div><label>Combo秒數</label><input id="lbComboWindow" type="number" min="1" step="0.1" value="6"></div>
+            </div>
+            <h3>稀有度出現權重</h3>
+            <div class="row3">
+              <div><label>Normal</label><input id="lbWeightNormal" type="number" min="0" value="70"></div>
+              <div><label>RARE</label><input id="lbWeightRare" type="number" min="0" value="25"></div>
+              <div><label>SUPER RARE</label><input id="lbWeightSuperRare" type="number" min="0" value="5"></div>
+            </div>
+            <div class="row3">
+              <div><label>SSR</label><input id="lbWeightSsr" type="number" min="0" value="0"></div>
+              <div><label>UR</label><input id="lbWeightUr" type="number" min="0" value="0"></div>
+              <div><label>最低圖鑑數</label><input id="lbMinUnlocked" type="number" min="4" value="4"></div>
+            </div>
+            <button class="primary" onclick="saveLinkBattleStage()">新增 / 儲存關卡</button>
+            <button class="ghost" onclick="clearLinkBattleStageForm()">清空</button>
+            <div id="lbStageMsg" class="msg"></div>
+          </div>
+        </div>
+        <h3>目前連線討伐戰關卡</h3>
+        <div id="lbStageTable"></div>
+      </div>
+
       <div id="tab-shop" class="hide panel">
         <h2>🛒 商城管理</h2>
         <div class="muted">可管理能量商店、訓練總分商店、儲值商城。儲值商城目前仍不真正串接綠界；CASH 商品可先設定價格與獎勵，玩家端不可付款，GM 可測試發獎。</div>
@@ -585,6 +658,10 @@
             <option value="chat_messages">chat_messages 聊天訊息</option>
             <option value="friend_greetings">friend_greetings 好友打招呼</option>
             <option value="world_boss_events">world_boss_events 世界BOSS活動</option>
+            <option value="link_battle_bosses">link_battle_bosses 連線戰BOSS</option>
+            <option value="link_battle_stages">link_battle_stages 連線戰關卡</option>
+            <option value="link_battle_runs">link_battle_runs 連線戰紀錄</option>
+            <option value="link_battle_player_progress">link_battle_player_progress 連線戰進度</option>
             <option value="world_boss_participants">world_boss_participants 世界BOSS參與者</option>
             <option value="world_boss_damage_logs">world_boss_damage_logs 世界BOSS傷害紀錄</option>
             <option value="world_boss_rewards">world_boss_rewards 世界BOSS獎勵</option>
@@ -651,6 +728,8 @@ let rewardCatalog = {types:[], items:[], cards:[]};
 let shopItemRows = [];
 let shopFilter = 'ALL';
 let worldBossRows = [];
+let linkBattleStageRows = [];
+let linkBattleBossRows = [];
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
@@ -1781,6 +1860,72 @@ async function exportAllData(){
     downloadJson(`tlo_full_backup_${new Date().toISOString().slice(0,10)}.json`, data);
     msg('exportMsg', '已完成全部備份匯出', true);
   }catch(e){ msg('exportMsg', e.message); }
+}
+
+
+async function loadLinkBattleAdmin(){
+  try{
+    const data = await rpc('adminListLinkBattleStages', []);
+    linkBattleStageRows = data.rows || [];
+    linkBattleBossRows = data.bosses || [];
+    renderLinkBattleBossSelect();
+    renderLinkBattleBosses();
+    renderLinkBattleStages();
+    msg('lbStageMsg', `已載入 ${linkBattleStageRows.length} 個連線討伐戰關卡`, true);
+    msg('lbBossMsg', `已載入 ${linkBattleBossRows.length} 個連線討伐戰 BOSS`, true);
+  }catch(e){ msg('lbStageMsg', e.message); msg('lbBossMsg', e.message); }
+}
+
+function renderLinkBattleBossSelect(){
+  const sel=$('lbStageBoss'); if(!sel) return;
+  sel.innerHTML=(linkBattleBossRows||[]).map(b=>`<option value="${esc(b.bossId)}">${esc(b.bossName)}｜${esc(b.bossId)}</option>`).join('') || '<option value="boss_fallen_guardian">boss_fallen_guardian</option>';
+}
+function renderLinkBattleBosses(){
+  const box=$('lbBossTable'); if(!box) return;
+  box.innerHTML=`<table><thead><tr><th>BOSS</th><th>技能池</th><th>操作</th></tr></thead><tbody>`+(linkBattleBossRows||[]).map(b=>`<tr><td><b>${esc(b.bossName)}</b><br><span class="muted">${esc(b.bossId)}</span></td><td>${(b.skillPool||[]).map(x=>`<span class="badge">${esc(x)}</span>`).join('')}</td><td><button class="primary" onclick="editLinkBattleBoss('${esc(b.bossId)}')">編輯</button></td></tr>`).join('')+`</tbody></table>`;
+}
+function renderLinkBattleStages(){
+  const box=$('lbStageTable'); if(!box) return;
+  box.innerHTML=`<table><thead><tr><th>關卡</th><th>BOSS / HP</th><th>盤面</th><th>限制</th><th>權重</th><th>操作</th></tr></thead><tbody>`+(linkBattleStageRows||[]).map(s=>`<tr>
+    <td><b>${esc(s.stageName)}</b><br><span class="muted">${esc(s.stageId)}｜第 ${fmt(s.stageOrder)} 關</span><br>${s.enabled?'<span class="good">啟用</span>':'<span class="muted">停用</span>'}</td>
+    <td>${esc((s.boss&&s.boss.bossName)||s.bossId)}<br>HP倍率 <b class="yellow">${Number(s.bossHpMultiplier||1).toFixed(2)}</b></td>
+    <td>${fmt(s.cardCount)}張 / ${fmt(s.pairCount)}組<br>${fmt(s.layerCount)}層｜${fmt(s.rows)}×${fmt(s.cols)}</td>
+    <td>${fmt(s.timeLimitSeconds)}秒｜錯誤 ${fmt(s.errorLimit)}<br>洗牌 ${fmt(s.shuffleLimit)}｜提示 ${fmt(s.hintLimit)}</td>
+    <td>Normal ${fmt(s.rarityWeights?.Normal)} / RARE ${fmt(s.rarityWeights?.RARE)}<br>SR ${fmt(s.rarityWeights?.['SUPER RARE'])} / SSR ${fmt(s.rarityWeights?.SSR)} / UR ${fmt(s.rarityWeights?.UR)}</td>
+    <td><button class="primary" onclick="editLinkBattleStage('${esc(s.stageId)}')">編輯</button><br><button class="${s.enabled?'danger':'warn'}" style="margin-top:6px" onclick="toggleLinkBattleStage('${esc(s.stageId)}',${s.enabled?'false':'true'})">${s.enabled?'停用':'啟用'}</button></td>
+  </tr>`).join('')+`</tbody></table>`;
+}
+function editLinkBattleBoss(bossId){
+  const b=(linkBattleBossRows||[]).find(x=>x.bossId===bossId); if(!b) return;
+  $('lbBossId').value=b.bossId||''; $('lbBossName').value=b.bossName||''; $('lbBossImage').value=b.bossImage||''; $('lbBossBackground').value=b.bossBackground||''; $('lbBossSkills').value=(b.skillPool||[]).join(','); $('lbBossDesc').value=b.description||'';
+  $('lbBossName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function saveLinkBattleBoss(){
+  try{
+    const payload={bossId:$('lbBossId').value.trim(),bossName:$('lbBossName').value.trim(),bossImage:$('lbBossImage').value.trim(),bossBackground:$('lbBossBackground').value.trim(),description:$('lbBossDesc').value.trim(),skillPool:$('lbBossSkills').value.split(',').map(x=>x.trim()).filter(Boolean),enabled:true};
+    const data=await rpc('adminUpsertLinkBattleBoss',[payload]);
+    msg('lbBossMsg',data.msg,true); await loadLinkBattleAdmin();
+  }catch(e){ msg('lbBossMsg',e.message); }
+}
+function clearLinkBattleStageForm(){ ['lbStageId','lbStageName'].forEach(id=>$(id)&&( $(id).value='' )); }
+function editLinkBattleStage(stageId){
+  const s=(linkBattleStageRows||[]).find(x=>x.stageId===stageId); if(!s) return;
+  $('lbStageOrder').value=s.stageOrder||1; $('lbStageId').value=s.stageId||''; $('lbStageEnabled').value=s.enabled?'1':'0'; $('lbStageName').value=s.stageName||''; $('lbStageBoss').value=s.bossId||''; $('lbHpMultiplier').value=s.bossHpMultiplier||1;
+  $('lbCardCount').value=s.cardCount||24; $('lbPairCount').value=s.pairCount||12; $('lbLayerCount').value=s.layerCount||2; $('lbRows').value=s.rows||4; $('lbCols').value=s.cols||6; $('lbMinMatches').value=s.minInitialMatches||2;
+  $('lbTimeLimit').value=s.timeLimitSeconds||180; $('lbErrorLimit').value=s.errorLimit||8; $('lbBossAttack').value=s.bossAttackDamage||8; $('lbShuffleLimit').value=s.shuffleLimit||3; $('lbHintLimit').value=s.hintLimit||3; $('lbComboWindow').value=s.comboWindowSeconds||5; $('lbMinUnlocked').value=s.minUnlockedCards||4;
+  const w=s.rarityWeights||{}; $('lbWeightNormal').value=w.Normal||0; $('lbWeightRare').value=w.RARE||0; $('lbWeightSuperRare').value=w['SUPER RARE']||0; $('lbWeightSsr').value=w.SSR||0; $('lbWeightUr').value=w.UR||0;
+  $('lbStageName').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function saveLinkBattleStage(){
+  try{
+    const payload={stageOrder:$('lbStageOrder').value,stageId:$('lbStageId').value.trim(),enabled:$('lbStageEnabled').value==='1',stageName:$('lbStageName').value.trim(),bossId:$('lbStageBoss').value,bossHpMultiplier:$('lbHpMultiplier').value,cardCount:$('lbCardCount').value,pairCount:$('lbPairCount').value,layerCount:$('lbLayerCount').value,rows:$('lbRows').value,cols:$('lbCols').value,minInitialMatches:$('lbMinMatches').value,timeLimitSeconds:$('lbTimeLimit').value,errorLimit:$('lbErrorLimit').value,bossAttackDamage:$('lbBossAttack').value,shuffleLimit:$('lbShuffleLimit').value,hintLimit:$('lbHintLimit').value,comboWindowSeconds:$('lbComboWindow').value,minUnlockedCards:$('lbMinUnlocked').value,rarityWeights:{Normal:$('lbWeightNormal').value,RARE:$('lbWeightRare').value,'SUPER RARE':$('lbWeightSuperRare').value,SSR:$('lbWeightSsr').value,UR:$('lbWeightUr').value}};
+    const data=await rpc('adminUpsertLinkBattleStage',[payload]);
+    msg('lbStageMsg',data.msg,true); await loadLinkBattleAdmin();
+  }catch(e){ msg('lbStageMsg',e.message); }
+}
+async function toggleLinkBattleStage(stageId,active){
+  if(!confirm(`確定要${active?'啟用':'停用'}此連線討伐戰關卡？`)) return;
+  try{ const data=await rpc('adminSetLinkBattleStageActive',[stageId,active]); msg('lbStageMsg',data.msg,true); await loadLinkBattleAdmin(); }catch(e){ msg('lbStageMsg',e.message); }
 }
 
 async function loadOpsSettings(){

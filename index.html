@@ -76,6 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
+  <link rel="stylesheet" href="./css/link-battle.css">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -1309,6 +1310,12 @@
         <button class="scene-btn btn-neon-cyan" onclick="openBattleModal()">進入爭霸戰<small>開啟 Boss 戰鬥介面</small></button>
       </div>
 
+      <div class="scene-panel link-battle-entry-card">
+        <h3>🃏 卡牌連線討伐戰</h3>
+        <p>使用已解鎖圖鑑卡牌進行中等版連線戰，合成卡牌撞擊 BOSS，維持 Combo 可提前通關。</p>
+        <button class="scene-btn btn-neon-gold" onclick="openLinkBattleModal()">進入連線討伐戰<small>圖鑑至少解鎖 4 種卡牌</small></button>
+      </div>
+
       <div class="scene-panel">
         <h3>🗺️ 遠征異世界</h3>
         <p>選 1～3 張已持有角色組隊，挑戰關卡並取得分數、能量與抽卡掉落。</p>
@@ -1613,6 +1620,47 @@
   </div>
 
 
+
+
+  <div class="modal-overlay" id="link-battle-modal" onclick="if(event.target.id==='link-battle-modal') TLOLinkBattle.closeModal();">
+    <div class="modal-content link-battle-modal-content">
+      <span class="modal-close" onclick="TLOLinkBattle.closeModal();">&times;</span>
+      <div class="link-battle-shell" id="link-battle-shell">
+        <div class="link-battle-warning" id="link-battle-warning"><div class="link-battle-warning-card"><b>WARNING</b><span>BOSS 即將發動反擊</span></div></div>
+        <div class="link-battle-attack-card" id="link-battle-attack-card"></div>
+        <div class="modal-h3" style="margin:0;border:0;padding:2px 28px 0;">🃏 卡牌連線討伐戰</div>
+        <div class="link-battle-stage-list" id="link-battle-stage-list"></div>
+        <div class="link-battle-top">
+          <div class="link-battle-boss-bg" id="link-battle-boss-bg"></div>
+          <div class="link-battle-boss-ui">
+            <div class="link-battle-hp-row">
+              <div class="link-battle-hp-label">BOSS HP</div>
+              <div class="link-battle-hpbar"><div class="link-battle-hpfill" id="link-battle-hpfill"></div></div>
+              <div style="font-size:11px;color:#fff;min-width:112px;text-align:right;" id="link-battle-boss-hp-text">尚未開始</div>
+            </div>
+            <div class="link-battle-boss-line"><span class="link-battle-stage-name" id="link-battle-stage-name">卡牌連線討伐戰</span><span id="link-battle-time">00:00</span></div>
+            <div class="link-battle-boss-line"><span class="link-battle-boss-name" id="link-battle-boss-name">連線戰 BOSS</span><span>怒氣</span></div>
+            <div class="link-battle-rage"><div class="link-battle-rage-fill" id="link-battle-rage-fill"></div></div>
+            <div class="link-battle-boss-center">整個背景是 BOSS 圖卡。BOSS 反擊前會出現 WARNING，反擊時會有震動、紅光與扭曲效果。</div>
+            <div class="link-battle-mid-status">
+              <div class="link-battle-stat"><span>玩家 HP</span><b id="link-battle-player-hp">--</b></div>
+              <div class="link-battle-stat"><span>Combo</span><b id="link-battle-combo">0</b></div>
+              <div class="link-battle-stat"><span>錯誤</span><b id="link-battle-error">0 / 0</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="link-battle-actions">
+          <button class="primary" id="link-battle-start-btn" onclick="TLOLinkBattle.startBattle()">開始挑戰</button>
+          <button id="link-battle-hint-btn" onclick="TLOLinkBattle.useHint()">提示 x <span id="link-battle-hint-left">0</span></button>
+          <button class="warn" id="link-battle-shuffle-btn" onclick="TLOLinkBattle.shuffleBoard()">洗牌 x <span id="link-battle-shuffle-left">0</span></button>
+        </div>
+        <div class="link-battle-msg" id="link-battle-msg">正在讀取資料...</div>
+        <div class="link-battle-board-wrap" id="link-battle-board">
+          <div style="color:#aaa;padding:30px;text-align:center;">請先開始挑戰。</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="training-modal" onclick="if(event.target.id==='training-modal') this.style.display='none';">
     <div class="modal-content">
@@ -6445,5 +6493,6 @@ function showCollectionHistory() {
     };
   </script>
 
+  <script src="./js/link-battle.js"></script>
 </body>
 </html>
