@@ -24,7 +24,7 @@
     bossDefeatAnimationRunId: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v12-boss-defeat';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v12-fail-reason-shuffle-safe';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -217,7 +217,7 @@
       if (state.timeLeft <= 0) {
         stopTimer();
         state.battle.status = 'failed';
-        setMsg('<b style="color:#ff7777">時間結束，挑戰失敗。</b>', '#ff7777');
+        setMsg('<b style="color:#ff7777">時間耗盡，討伐失敗。</b>', '#ff7777');
         playAudio('battle_failed');
         setButtonsDisabled(true);
       }
@@ -800,6 +800,18 @@
     return map[String(reason || '')] || String(reason || '連線失敗');
   }
 
+  function formatLinkBattleEndReason(reason) {
+    var map = {
+      DAMAGE_NOT_ENOUGH: '卡牌已全數消除，但傷害不足，討伐失敗。',
+      PLAYER_HP_ZERO: '玩家 HP 歸零，討伐失敗。',
+      ERROR_LIMIT: '錯誤次數過多，討伐失敗。',
+      NO_MOVES: '沒有可連線組合且洗牌次數已用完，討伐失敗。',
+      TIMEOUT: '時間耗盡，討伐失敗。',
+      FAILED: '討伐失敗。'
+    };
+    return map[String(reason || '')] || '討伐失敗。';
+  }
+
   function renderBoard() {
     var wrap = $('link-battle-board');
     if (!wrap) return;
@@ -1071,7 +1083,7 @@
     } else if (status === 'failed') {
       stopTimer();
       playAudio('battle_failed');
-      setMsg('<b style="color:#ff7777">挑戰失敗：' + escapeHtml(reason || 'FAILED') + '</b>', '#ff7777');
+      setMsg('<b style="color:#ff7777">' + escapeHtml(formatLinkBattleEndReason(reason)) + '</b>', '#ff7777');
       setButtonsDisabled(true);
       var startBtn = $('link-battle-start-btn');
       if (startBtn) { startBtn.disabled = false; startBtn.style.display = ''; startBtn.innerHTML = '⚔️ 再次討伐'; }
@@ -1120,7 +1132,7 @@
       state.hintedIds = new Set();
       state.linkPath = null;
       renderBattleState();
-      setMsg('已重新洗牌。洗牌會增加 BOSS 怒氣。', '#ffdd77');
+      setMsg('已重新洗牌，場上至少保留可連線組合。洗牌會增加 BOSS 怒氣。', '#ffdd77');
       if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
       handleBattleEnd(res.status, null, res.rewardSummary);
     } catch (err) {
