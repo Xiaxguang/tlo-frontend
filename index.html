@@ -497,6 +497,27 @@
     .worldboss-hp-wrap{height:18px;background:#1f1f28;border:1px solid #444;border-radius:999px;overflow:hidden;margin:8px 0;}
     .worldboss-hp-fill{height:100%;background:linear-gradient(90deg,#ff007f,#ffdd77);width:0%;transition:width .35s;}
     .worldboss-rank-row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.08);padding:7px 0;font-size:12px;}
+    .worldboss-battle-stage{position:relative;margin:12px 0 10px;padding:14px;border-radius:18px;border:1px solid rgba(255,221,119,.35);background:radial-gradient(circle at 50% 8%, rgba(255,221,119,.18), transparent 30%),radial-gradient(circle at 50% 88%, rgba(0,255,240,.12), transparent 35%),linear-gradient(180deg,#171221 0%,#080811 100%);box-shadow:0 0 24px rgba(255,193,7,.14), inset 0 0 22px rgba(0,0,0,.45);overflow:hidden;text-align:center;}
+    .worldboss-stage-title{font-size:13px;font-weight:1000;color:#ffdd77;letter-spacing:.08em;margin-bottom:8px;text-shadow:0 0 12px rgba(255,221,119,.35);}
+    .worldboss-boss-visual{position:relative;height:190px;display:flex;align-items:center;justify-content:center;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.18));border:1px solid rgba(255,255,255,.08);overflow:hidden;}
+    .worldboss-boss-visual::before{content:'';position:absolute;inset:-40px;background:radial-gradient(circle at 50% 50%, rgba(255,0,127,.24), transparent 42%),conic-gradient(from 180deg, transparent, rgba(255,221,119,.18), transparent, rgba(0,255,240,.12), transparent);animation:worldbossAuraSpin 6s linear infinite;opacity:.78;}
+    .worldboss-stage-boss-img{position:relative;z-index:1;width:min(165px,46vw);height:165px;object-fit:cover;border-radius:20px;border:2px solid rgba(255,221,119,.48);box-shadow:0 0 26px rgba(255,0,127,.34),0 0 18px rgba(255,221,119,.24);background:#111;}
+    .worldboss-stage-boss-img.is-hit{animation:worldbossHit .42s ease both;}
+    .worldboss-attack-orb{position:absolute;z-index:3;left:16%;bottom:22px;width:30px;height:30px;border-radius:999px;background:radial-gradient(circle,#fff 0%,#00fff0 38%,#006cff 75%);box-shadow:0 0 18px #00fff0,0 0 28px rgba(0,108,255,.65);opacity:0;pointer-events:none;}
+    .worldboss-attack-orb.fire{animation:worldbossOrbFire .8s cubic-bezier(.2,.9,.2,1) both;}
+    .worldboss-damage-pop{position:absolute;z-index:4;top:18px;left:50%;transform:translateX(-50%);font-size:27px;font-weight:1000;color:#ffdd44;text-shadow:0 0 8px #ff0055,0 2px 0 #4a0505;opacity:0;white-space:nowrap;pointer-events:none;}
+    .worldboss-damage-pop.show{animation:worldbossDamagePop 1.05s ease both;}
+    .worldboss-stage-hp-row{margin:10px 0 8px;text-align:left;}
+    .worldboss-stage-hp-meta{display:flex;justify-content:space-between;gap:8px;color:#ddd;font-size:12px;font-weight:900;margin-top:4px;}
+    .worldboss-team-line{display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid rgba(0,255,240,.22);background:rgba(0,255,240,.055);border-radius:12px;padding:9px 10px;color:#ccc;font-size:12px;font-weight:900;}
+    .worldboss-result-line{min-height:22px;margin-top:8px;font-size:13px;font-weight:1000;color:#aaa;}
+    .worldboss-result-line.success{color:#00ff7f;text-shadow:0 0 10px rgba(0,255,127,.25);}
+    .worldboss-result-line.defeated{color:#ffdd44;text-shadow:0 0 12px rgba(255,221,68,.35);}
+    @keyframes worldbossAuraSpin{from{transform:rotate(0deg) scale(1.1);}to{transform:rotate(360deg) scale(1.1);}}
+    @keyframes worldbossHit{0%{transform:translateX(0) scale(1);filter:brightness(1);}20%{transform:translateX(-7px) scale(1.04);filter:brightness(1.7);}44%{transform:translateX(7px) scale(.98);filter:brightness(1.25);}70%{transform:translateX(-3px) scale(1.02);}100%{transform:translateX(0) scale(1);filter:brightness(1);}}
+    @keyframes worldbossOrbFire{0%{opacity:0;transform:translate(0,0) scale(.72);}12%{opacity:1;}72%{opacity:1;transform:translate(58vw,-106px) scale(1.18);}100%{opacity:0;transform:translate(64vw,-116px) scale(.5);}}
+    @keyframes worldbossDamagePop{0%{opacity:0;transform:translate(-50%,16px) scale(.78);}18%{opacity:1;transform:translate(-50%,0) scale(1.14);}72%{opacity:1;transform:translate(-50%,-20px) scale(1);}100%{opacity:0;transform:translate(-50%,-36px) scale(.92);}}
+    @media (max-width:520px){.worldboss-boss-visual{height:170px}.worldboss-stage-boss-img{width:142px;height:142px}.worldboss-damage-pop{font-size:23px}.worldboss-team-line{font-size:11px;align-items:flex-start;flex-direction:column;gap:4px}}
     .mini-panel { background:#111; border:1px solid #333; border-radius:12px; padding:12px; margin:10px 0; text-align:center; }
     .shadow-img-wrap { width:210px; max-width:80%; margin:10px auto; padding:10px; background:#222; border:2px dashed #555; border-radius:12px; }
     .shadow-img { width:100%; height:auto; object-fit:contain; filter:brightness(0) contrast(1.4) drop-shadow(0 0 12px rgba(0,255,240,0.35)); opacity:0.95; }
@@ -2012,7 +2033,20 @@
       <span class="modal-close" onclick="document.getElementById('world-boss-modal').style.display='none';">&times;</span>
       <div class="modal-h3">🌍 世界BOSS 全服討伐戰</div>
       <div id="world-boss-msg" style="min-height:24px;margin:8px 0;color:#aaa;font-weight:900;">正在讀取活動...</div>
-      <div id="world-boss-content"></div>
+      <div id="worldboss-battle-stage" class="worldboss-battle-stage" style="display:none;">
+        <div class="worldboss-stage-title">WORLD BOSS BATTLE</div>
+        <div class="worldboss-boss-visual">
+          <img id="worldboss-stage-boss-img" class="worldboss-stage-boss-img" src="" alt="世界BOSS">
+          <div id="worldboss-attack-orb" class="worldboss-attack-orb"></div>
+          <div id="worldboss-damage-pop" class="worldboss-damage-pop"></div>
+        </div>
+        <div class="worldboss-stage-hp-row">
+          <div class="worldboss-hp-wrap"><div id="worldboss-stage-hp-fill" class="worldboss-hp-fill" style="width:0%"></div></div>
+          <div class="worldboss-stage-hp-meta"><span id="worldboss-stage-hp-text">HP -- / --</span><span id="worldboss-stage-hp-percent">--%</span></div>
+        </div>
+        <div class="worldboss-team-line"><span id="worldboss-stage-team-text">全服討伐隊伍準備中</span><span id="worldboss-stage-count-text">今日剩餘 -- 次</span></div>
+        <div id="worldboss-stage-result" class="worldboss-result-line">按下挑戰後播放戰鬥演出</div>
+      </div>
       <button class="btn-fight" id="world-boss-fight-btn" onclick="startWorldBossBattle()">🌍 挑戰世界BOSS</button>
       <div class="modal-h3" style="font-size:17px;margin-top:14px;">傷害排行榜</div>
       <div id="world-boss-ranking" class="message-list">正在讀取排名...</div>
@@ -4923,6 +4957,7 @@ function showCollectionHistory() {
           <div style="margin-top:8px;color:#aaa;font-size:12px;line-height:1.6;">我的隊伍戰力：${Number(res.teamPower || 0).toLocaleString()}｜隊伍：${partyText}<br>我的累積傷害：${Number(my.totalDamage || 0).toLocaleString()}｜目前排名：${my.rank ? '#' + Number(my.rank).toLocaleString() : '尚未上榜'}</div>
         </div>`;
       }
+      updateWorldBossBattleStage(res, false);
       if (btn) {
         btn.disabled = event.status !== 'OPEN' || Number(my.todayRemaining || 0) <= 0 || worldBossRunning;
         btn.innerText = event.status === 'OPEN' ? '🌍 挑戰世界BOSS' : statusText;
@@ -4941,29 +4976,112 @@ function showCollectionHistory() {
       }
     }
 
+    function updateWorldBossBattleStage(res, keepResult) {
+      var stage = document.getElementById('worldboss-battle-stage');
+      if (!stage) return;
+      var data = res || latestWorldBossDashboard || {};
+      var event = data.event || null;
+      if (!event) {
+        stage.style.display = 'none';
+        return;
+      }
+      stage.style.display = 'block';
+      var img = getCardImageUrl({ name: event.bossCardName, imageUrl: event.imageUrl }) || placeholderBattleImage(event.name || '世界BOSS', '#1c1238', '#ffdd77');
+      var bossImg = document.getElementById('worldboss-stage-boss-img');
+      if (bossImg) {
+        bossImg.src = img;
+        bossImg.onerror = function(){ this.src = placeholderBattleImage(event.name || '世界BOSS', '#1c1238', '#ffdd77'); };
+        bossImg.alt = event.name || '世界BOSS';
+      }
+      var hpPct = Math.max(0, Math.min(100, Number(event.hpPercent || 0)));
+      var fill = document.getElementById('worldboss-stage-hp-fill');
+      var hpText = document.getElementById('worldboss-stage-hp-text');
+      var hpPercent = document.getElementById('worldboss-stage-hp-percent');
+      if (fill) fill.style.width = hpPct + '%';
+      if (hpText) hpText.innerText = 'HP ' + Number(event.remainingHp || 0).toLocaleString() + ' / ' + Number(event.totalHp || 0).toLocaleString();
+      if (hpPercent) hpPercent.innerText = hpPct.toFixed(2) + '%';
+      var my = data.my || {};
+      var team = document.getElementById('worldboss-stage-team-text');
+      var count = document.getElementById('worldboss-stage-count-text');
+      if (team) team.innerText = '我的隊伍戰力：' + Number(data.teamPower || 0).toLocaleString();
+      if (count) count.innerText = '今日剩餘 ' + Number(my.todayRemaining || 0).toLocaleString() + ' / ' + Number(event.dailyLimit || 0).toLocaleString() + ' 次';
+      if (!keepResult) {
+        var result = document.getElementById('worldboss-stage-result');
+        if (result) {
+          result.className = 'worldboss-result-line';
+          result.innerText = event.status === 'OPEN' ? '按下挑戰後播放戰鬥演出' : (event.status === 'DEFEATED' ? '世界BOSS已被討伐' : '活動目前未開放');
+        }
+      }
+    }
+
+    async function playWorldBossVisualBattle(res, beforeDashboard) {
+      var stage = document.getElementById('worldboss-battle-stage');
+      var orb = document.getElementById('worldboss-attack-orb');
+      var bossImg = document.getElementById('worldboss-stage-boss-img');
+      var damagePop = document.getElementById('worldboss-damage-pop');
+      var result = document.getElementById('worldboss-stage-result');
+      var fill = document.getElementById('worldboss-stage-hp-fill');
+      var hpText = document.getElementById('worldboss-stage-hp-text');
+      var hpPercent = document.getElementById('worldboss-stage-hp-percent');
+      if (!stage) return;
+      updateWorldBossBattleStage(beforeDashboard || latestWorldBossDashboard || (res && res.dashboard) || {}, false);
+      stage.style.display = 'block';
+      if (result) {
+        result.className = 'worldboss-result-line';
+        result.innerText = '全服討伐隊伍發動攻擊！';
+      }
+      await sleepTurn(260);
+      if (orb) {
+        orb.classList.remove('fire');
+        void orb.offsetWidth;
+        orb.classList.add('fire');
+      }
+      await sleepTurn(520);
+      if (bossImg) {
+        bossImg.classList.remove('is-hit');
+        void bossImg.offsetWidth;
+        bossImg.classList.add('is-hit');
+      }
+      if (damagePop) {
+        damagePop.classList.remove('show');
+        damagePop.innerText = '-' + Number(res && res.damage || 0).toLocaleString();
+        void damagePop.offsetWidth;
+        damagePop.classList.add('show');
+      }
+      if (window.TLOAudio) {
+        try { window.TLOAudio.playSfx('card_hit_boss'); } catch (_) { try { window.TLOAudio.playSfx('click'); } catch (__) {} }
+      }
+      var afterEvent = res && res.dashboard && res.dashboard.event ? res.dashboard.event : null;
+      if (afterEvent) {
+        var hpPct = Math.max(0, Math.min(100, Number(afterEvent.hpPercent || 0)));
+        if (fill) fill.style.width = hpPct + '%';
+        if (hpText) hpText.innerText = 'HP ' + Number(afterEvent.remainingHp || 0).toLocaleString() + ' / ' + Number(afterEvent.totalHp || 0).toLocaleString();
+        if (hpPercent) hpPercent.innerText = hpPct.toFixed(2) + '%';
+      }
+      await sleepTurn(720);
+      var defeated = !!(afterEvent && (afterEvent.status === 'DEFEATED' || Number(afterEvent.remainingHp || 0) <= 0));
+      if (result) {
+        result.className = 'worldboss-result-line ' + (defeated ? 'defeated' : 'success');
+        result.innerText = defeated ? '世界BOSS 已被全服討伐！' : ('本次造成 ' + Number(res && res.damage || 0).toLocaleString() + ' 傷害');
+      }
+      await sleepTurn(360);
+    }
+
     async function startWorldBossBattle() {
       if (worldBossRunning) return;
       var btn = document.getElementById('world-boss-fight-btn');
       var msg = document.getElementById('world-boss-msg');
+      var beforeDashboard = latestWorldBossDashboard ? JSON.parse(JSON.stringify(latestWorldBossDashboard)) : null;
       worldBossRunning = true;
       if (btn) { btn.disabled = true; btn.innerText = '戰鬥中...'; }
-      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在挑戰世界BOSS...</span>';
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">世界BOSS戰鬥開始...</span>';
+      updateWorldBossBattleStage(beforeDashboard || latestWorldBossDashboard, false);
       google.script.run.withSuccessHandler(async function(res) {
         worldBossRunning = false;
-        if (res && res.dashboard) {
-          await playMiniTurnBattle('worldboss', {
-            win: true,
-            damage: res.damage || 0
-          }, {
-            playerName: '全服討伐隊伍',
-            playerImage: placeholderBattleImage('T-LO', '#123a3a', '#00fff0'),
-            bossName: (res.dashboard.event && res.dashboard.event.name) || '世界BOSS',
-            bossImage: getCardImageUrl({ name: res.dashboard.event && res.dashboard.event.bossCardName, imageUrl: res.dashboard.event && res.dashboard.event.imageUrl }) || placeholderBattleImage('BOSS', '#3a1616', '#ffdd77'),
-            stageName: '世界BOSS 全服討伐戰',
-            playerPower: res.dashboard.teamPower || 0,
-            bossPower: res.dashboard.event ? res.dashboard.event.bossPower : 0
-          }).catch(function(){});
+        if (res && res.success && res.dashboard) {
+          await playWorldBossVisualBattle(res, beforeDashboard).catch(function(){});
           renderWorldBossDashboard(res.dashboard);
+          updateWorldBossBattleStage(res.dashboard, true);
         } else {
           renderWorldBossDashboard(res && res.dashboard ? res.dashboard : latestWorldBossDashboard);
         }
