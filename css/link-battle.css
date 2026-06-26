@@ -1575,3 +1575,122 @@
 .link-battle-tile.selectable{
   z-index:var(--tile-layer,0);
 }
+
+
+/* v12：BOSS HP 歸零時的玩家勝利通知。 */
+.link-battle-boss-defeat{
+  position:absolute;
+  inset:0;
+  z-index:38;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  background:radial-gradient(circle at center, rgba(0,255,180,.22), rgba(127,0,255,.16) 42%, rgba(0,0,0,.22) 72%);
+  backdrop-filter:blur(2px);
+}
+.link-battle-boss-defeat.active{
+  display:flex;
+  animation:linkBattleDefeatFade 2.15s ease-in-out forwards;
+}
+.link-battle-boss-defeat-card{
+  position:relative;
+  width:min(330px,82vw);
+  border:2px solid rgba(0,255,180,.82);
+  border-radius:24px;
+  padding:22px 18px 18px;
+  text-align:center;
+  color:#fff;
+  background:linear-gradient(180deg,rgba(10,24,28,.94),rgba(11,8,26,.96));
+  box-shadow:0 0 26px rgba(0,255,180,.55),0 0 48px rgba(127,0,255,.42),inset 0 0 24px rgba(255,255,255,.08);
+  overflow:hidden;
+  transform:scale(.82);
+  animation:linkBattleDefeatCard 2.15s cubic-bezier(.2,1,.2,1) forwards;
+}
+.link-battle-boss-defeat-card:before,
+.link-battle-boss-defeat-card:after{
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  border:1px solid rgba(0,255,240,.36);
+  animation:linkBattleDefeatRing 1.35s ease-out forwards;
+}
+.link-battle-boss-defeat-card:after{
+  width:150px;
+  height:150px;
+  border-color:rgba(255,221,119,.42);
+  animation-delay:.12s;
+}
+.link-battle-boss-defeat-burst{
+  position:relative;
+  z-index:2;
+  width:58px;
+  height:58px;
+  margin:0 auto 8px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:34px;
+  color:#fff7b8;
+  background:radial-gradient(circle,rgba(255,221,119,.95),rgba(0,255,180,.72) 45%,rgba(127,0,255,.35) 78%);
+  box-shadow:0 0 22px rgba(255,221,119,.7),0 0 34px rgba(0,255,180,.52);
+}
+.link-battle-boss-defeat-card b{
+  position:relative;
+  z-index:2;
+  display:block;
+  font-size:32px;
+  font-weight:1000;
+  letter-spacing:2px;
+  color:#f8fff6;
+  text-shadow:0 0 12px rgba(0,255,180,.9),0 0 24px rgba(255,221,119,.65);
+}
+.link-battle-boss-defeat-card span{
+  position:relative;
+  z-index:2;
+  display:block;
+  margin-top:6px;
+  color:#00fff0;
+  font-size:15px;
+  font-weight:900;
+}
+.link-battle-boss-defeat-card small{
+  position:relative;
+  z-index:2;
+  display:inline-block;
+  margin-top:10px;
+  padding:6px 11px;
+  border-radius:999px;
+  background:rgba(255,221,119,.14);
+  color:#ffdd77;
+  font-size:12px;
+  font-weight:900;
+  border:1px solid rgba(255,221,119,.32);
+}
+@keyframes linkBattleDefeatFade{
+  0%{opacity:0;}
+  10%{opacity:1;}
+  78%{opacity:1;}
+  100%{opacity:0;}
+}
+@keyframes linkBattleDefeatCard{
+  0%{transform:scale(.72) translateY(14px);filter:brightness(1.4);}
+  18%{transform:scale(1.06) translateY(0);}
+  34%,76%{transform:scale(1) translateY(0);}
+  100%{transform:scale(.96) translateY(-6px);}
+}
+@keyframes linkBattleDefeatRing{
+  0%{opacity:.88;transform:translate(-50%,-50%) scale(.32);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.28);}
+}
+@media(max-width:420px){
+  .link-battle-boss-defeat-card{width:min(300px,84vw);padding:20px 14px 16px;}
+  .link-battle-boss-defeat-card b{font-size:28px;}
+  .link-battle-boss-defeat-burst{width:52px;height:52px;font-size:30px;}
+}

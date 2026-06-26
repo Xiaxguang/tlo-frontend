@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v12-grid-next">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v12-boss-defeat">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -1635,6 +1635,14 @@
       <div class="link-battle-shell" id="link-battle-shell">
         <div class="link-battle-warning" id="link-battle-warning"><div class="link-battle-warning-card"><b>WARNING</b><span>BOSS 即將發動反擊</span></div></div>
         <div class="link-battle-attack-card" id="link-battle-attack-card"></div>
+        <div class="link-battle-boss-defeat" id="link-battle-boss-defeat" aria-live="polite">
+          <div class="link-battle-boss-defeat-card">
+            <div class="link-battle-boss-defeat-burst">✦</div>
+            <b>擊敗 BOSS！</b>
+            <span>討伐成功</span>
+            <small id="link-battle-boss-defeat-reward">通關完成</small>
+          </div>
+        </div>
         <div class="link-battle-rules" id="link-battle-rules">
           <div class="link-battle-rules-card">
             <h3>卡牌連線討伐戰規則</h3>
@@ -6550,6 +6558,6 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260626-mobile-v12-grid-next"></script>
+  <script src="./js/link-battle.js?v=20260626-mobile-v12-boss-defeat"></script>
 </body>
 </html>

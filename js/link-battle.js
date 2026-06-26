@@ -20,10 +20,11 @@
     teamPickerOpen: false,
     teamDraftIds: [],
     teamPanelOpen: false,
-    nextStageIdAfterVictory: null
+    nextStageIdAfterVictory: null,
+    bossDefeatAnimationRunId: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v12-next-direct';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v12-boss-defeat';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -1029,10 +1030,35 @@
     return next ? next.stageId : null;
   }
 
+  function showBossDefeatAnimation(rewardSummary) {
+    var overlay = $('link-battle-boss-defeat');
+    var reward = $('link-battle-boss-defeat-reward');
+    if (!overlay) return;
+    if (reward) {
+      reward.innerHTML = rewardSummary ? '通關獎勵：' + escapeHtml(rewardSummary) : '討伐成功';
+    }
+    overlay.classList.remove('active');
+    // 重新觸發動畫
+    void overlay.offsetWidth;
+    overlay.classList.add('active');
+    setTimeout(function() {
+      if (overlay) overlay.classList.remove('active');
+    }, 2200);
+  }
+
+  function maybeShowBossDefeatAnimation(rewardSummary) {
+    if (!state.battle || state.battle.status !== 'victory') return;
+    var runKey = String(state.runId || '') + ':' + String(state.battle.stageId || '');
+    if (state.bossDefeatAnimationRunId === runKey) return;
+    state.bossDefeatAnimationRunId = runKey;
+    showBossDefeatAnimation(rewardSummary);
+  }
+
   function handleBattleEnd(status, reason, rewardSummary) {
     if (status === 'victory') {
       stopTimer();
       playAudio('battle_victory');
+      maybeShowBossDefeatAnimation(rewardSummary);
       setMsg('<b style="color:#00ff7f">討伐成功！</b>' + (rewardSummary ? '<br><span style="color:#ffdd77">通關獎勵：' + escapeHtml(rewardSummary) + '</span>' : ''), '#00ff7f');
       setButtonsDisabled(true);
       state.nextStageIdAfterVictory = null;
