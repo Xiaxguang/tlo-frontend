@@ -23,7 +23,7 @@
     nextStageIdAfterVictory: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v12-grid-next';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v12-next-direct';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -577,7 +577,14 @@
   }
 
   async function chooseStageAndStart(stageId) {
-    selectStageForTeam(stageId);
+    if (state.isAnimating) return;
+    // 下一關：沿用目前已儲存的出戰編隊，直接開始下一關，不再回到編隊確認流程。
+    state.selectedStageId = stageId;
+    state.teamPanelOpen = false;
+    state.nextStageIdAfterVictory = null;
+    closeStageSelect();
+    renderDashboard();
+    await startBattle();
   }
 
   function renderDashboard() {
