@@ -1558,3 +1558,20 @@
     max-width:170px;
   }
 }
+
+/* v12：規矩格子盤面；卡牌尺寸由固定 rows/cols 決定，layer 不再推擠位置。 */
+.link-battle-stacked-board{
+  background:radial-gradient(circle at center, rgba(40,27,72,.36), rgba(3,6,16,.18) 68%);
+  border-radius:18px;
+}
+.link-battle-tile{
+  transform:none!important;
+}
+.link-battle-tile.covered,
+.link-battle-tile.locked{
+  filter:grayscale(.34) brightness(.48) saturate(.7);
+  opacity:.48;
+}
+.link-battle-tile.selectable{
+  z-index:var(--tile-layer,0);
+}

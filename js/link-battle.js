@@ -19,10 +19,11 @@
     boardMetrics: null,
     teamPickerOpen: false,
     teamDraftIds: [],
-    teamPanelOpen: false
+    teamPanelOpen: false,
+    nextStageIdAfterVictory: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v11-team-card-plus-collapse';
+  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v12-grid-next';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -136,6 +137,9 @@
       if (active) {
         startBtn.innerHTML = '⚔️ 戰鬥中';
         startBtn.disabled = true;
+      } else if (state.battle && state.battle.status === 'victory' && state.nextStageIdAfterVictory) {
+        startBtn.innerHTML = '➡️ 下一關';
+        startBtn.disabled = false;
       } else {
         startBtn.innerHTML = state.battle && state.battle.status === 'failed' ? '⚔️ 再次討伐' : '⚔️ 開始挑戰';
         startBtn.disabled = false;
@@ -248,6 +252,22 @@
     var id = String(stage && stage.stageId || '');
     var m = id.match(/(\d+)$/);
     return m ? Number(m[1]) : 0;
+  }
+
+  function parseLinkBattleRewardConfig(config) {
+    if (!config) return {};
+    if (typeof config === 'object') return config;
+    try { return JSON.parse(String(config)); } catch (e) { return {}; }
+  }
+
+  function getStageDrawRewardAmount(stage) {
+    var config = parseLinkBattleRewardConfig(stage && (stage.rewardConfig || stage.reward_config));
+    var type = String(config.type || config.rewardType || config.reward_type || '').toUpperCase();
+    var amount = Math.max(0, Math.floor(Number(config.amount || config.rewardValue || config.reward_value || 0)));
+    if ((type === 'DRAW_TIMES' || type === 'DRAW_ATTEMPTS' || type === 'DRAW') && amount > 0) return amount;
+    var text = String(stage && stage.rewardText || '');
+    var match = text.match(/抽卡次數\s*\+\s*(\d+)/);
+    return match ? Math.max(0, Math.floor(Number(match[1] || 0))) : 0;
   }
 
   function getDashboardChapters(dash, stages) {
@@ -520,13 +540,14 @@
           if (stage.stageId === state.selectedStageId) cls.push('current');
           if (stage.cleared) cls.push('cleared');
           if (!stage.unlocked) cls.push('locked');
-          var reward = stage.rewardText || '暫無通關獎勵';
+          var drawRewardAmount = getStageDrawRewardAmount(stage);
+          var rewardHtml = drawRewardAmount > 0 ? '<div class="link-battle-stage-card-reward">首次獎勵：抽卡次數 +' + drawRewardAmount + '</div>' : '';
           var progressText = stage.cleared ? ('已通關' + (stage.progress && stage.progress.clearCount ? ' x ' + Number(stage.progress.clearCount) : '')) : '未通關';
           return '<button type="button" class="' + cls.join(' ') + '" ' + (!stage.unlocked ? 'disabled' : '') + ' onclick="TLOLinkBattle.chooseStageAndStart(\'' + escapeHtml(stage.stageId) + '\')">'
             + '<div class="link-battle-stage-card-top"><strong>第 ' + n + ' 關</strong><span>' + escapeHtml(progressText) + '</span></div>'
             + '<div class="link-battle-stage-card-title">' + escapeHtml(stage.stageName || '卡牌連線討伐') + '</div>'
             + '<div class="link-battle-stage-card-boss">BOSS：' + escapeHtml(boss.bossName || '連線戰 BOSS') + '</div>'
-            + '<div class="link-battle-stage-card-reward">獎勵：' + escapeHtml(reward) + '</div>'
+            + rewardHtml
             + '<div class="link-battle-stage-card-cta">' + (stage.unlocked ? (stage.stageId === state.selectedStageId ? '已選擇' : '選擇關卡') : '尚未解鎖') + '</div>'
             + '</button>';
         }).join('');
@@ -602,6 +623,10 @@
 
   async function startOrRetryBattle() {
     if (state.battle && state.battle.status === 'failed') return retryBattle();
+    if (state.battle && state.battle.status === 'victory') {
+      if (state.nextStageIdAfterVictory) return chooseStageAndStart(state.nextStageIdAfterVictory);
+      return openStageSelect();
+    }
     return startBattle();
   }
 
@@ -623,6 +648,7 @@
       state.selectedTileId = null;
       state.hintedIds = new Set();
       state.linkPath = null;
+      state.nextStageIdAfterVictory = null;
       renderBattleState();
       startTimer(state.battle.stage && state.battle.stage.timeLimitSeconds);
       setMsg('✦ 連線相同卡牌，合成攻擊 BOSS！ ✦', '#d9c7ff');
@@ -687,24 +713,22 @@
   function getTileVisualCenter(tile) {
     var m = state.boardMetrics;
     if (!m || !tile) return null;
-    var layer = Number(tile.layer || 0);
     var row = Number(tile.row || 0);
     var col = Number(tile.col || 0);
     var inset = Number(m.tileInset || 5);
-    var x = inset + (col * m.colStep) + (layer * m.layerOffsetX) + (m.tileW / 2);
-    var y = inset + ((m.dims.layers - 1 - layer) * m.layerOffsetY) + (row * m.rowStep) + (m.tileH / 2);
+    var x = inset + (col * m.colStep) + (m.tileW / 2);
+    var y = inset + (row * m.rowStep) + (m.tileH / 2);
     return { x: x, y: y };
   }
 
   function getPathPointCenter(point) {
     var m = state.boardMetrics;
     if (!m || !point) return null;
-    var layer = Number(point.layer == null ? 0 : point.layer);
     var row = Number(point.row || 0);
     var col = Number(point.col || 0);
     var inset = Number(m.tileInset || 5);
-    var x = inset + (col * m.colStep) + (layer * m.layerOffsetX) + (m.tileW / 2);
-    var y = inset + ((m.dims.layers - 1 - layer) * m.layerOffsetY) + (row * m.rowStep) + (m.tileH / 2);
+    var x = inset + (col * m.colStep) + (m.tileW / 2);
+    var y = inset + (row * m.rowStep) + (m.tileH / 2);
     // 路徑可走到盤面外圍一格；視覺上把線段裁在操作區內，避免破框。
     x = Math.max(5, Math.min(m.boardW - 5, x));
     y = Math.max(5, Math.min(m.boardH - 5, y));
@@ -792,51 +816,41 @@
     var rect = wrap.getBoundingClientRect ? wrap.getBoundingClientRect() : null;
     var wrapWidth = Math.max(isMobileBrowser ? 250 : 300, Math.floor((rect && rect.width) || wrap.clientWidth || 360));
     var wrapHeight = Math.max(isMobileBrowser ? 220 : 340, Math.floor((rect && rect.height) || wrap.clientHeight || 380));
-    var usableWidth = Math.max(isMobileBrowser ? 238 : 278, wrapWidth - (isMobileBrowser ? 6 : 12));
-    var usableHeight = Math.max(isMobileBrowser ? 212 : 308, wrapHeight - (isMobileBrowser ? 6 : 12));
-    var aspect = 1.42;
+    var usableWidth = Math.max(isMobileBrowser ? 238 : 278, wrapWidth - (isMobileBrowser ? 8 : 14));
+    var usableHeight = Math.max(isMobileBrowser ? 212 : 308, wrapHeight - (isMobileBrowser ? 8 : 14));
+    var aspect = 1.34;
 
-    // v10-inner-scroll-card-plus：只微幅放大操作區卡牌，保留章節內頁可滾動與其他版面設定。
-    // 做法：縮小計算安全邊距與排列步距，讓同一個操作框內卡牌可變大，但最後仍用 boardW/boardH 防止破框。
-    var colFactor = isMobileBrowser ? 0.98 : 1.02;
-    var rowFactor = isMobileBrowser ? 0.68 : 0.72;
-    var layerXFactor = isMobileBrowser ? 0.28 : 0.33;
-    var layerYFactor = isMobileBrowser ? 0.16 : 0.21;
-    var fitPadding = isMobileBrowser ? 2 : 8;
-    var widthUnits = ((dims.cols - 1) * colFactor) + 1 + ((dims.layers - 1) * layerXFactor);
-    var heightUnits = aspect * (((dims.rows - 1) * rowFactor) + 1 + ((dims.layers - 1) * layerYFactor));
-    var tileW = Math.floor(Math.min((usableWidth - fitPadding) / Math.max(1, widthUnits), (usableHeight - fitPadding) / Math.max(1, heightUnits)));
-    tileW = Math.max(isMobileBrowser ? 40 : 44, Math.min(isMobileBrowser ? 80 : 82, tileW));
+    // v12：規矩格子盤面。卡牌大小只由 rows/cols 與操作區大小決定，不再因 layer_count 改變。
+    var boardPadding = isMobileBrowser ? 8 : 12;
+    var gapX = isMobileBrowser ? 4 : 6;
+    var gapY = isMobileBrowser ? 4 : 6;
+    var tileWByWidth = Math.floor((usableWidth - boardPadding - Math.max(0, dims.cols - 1) * gapX) / Math.max(1, dims.cols));
+    var tileHByHeight = Math.floor((usableHeight - boardPadding - Math.max(0, dims.rows - 1) * gapY) / Math.max(1, dims.rows));
+    var tileW = Math.floor(Math.min(tileWByWidth, tileHByHeight / aspect));
+    tileW = Math.max(isMobileBrowser ? 40 : 44, Math.min(isMobileBrowser ? 88 : 96, tileW));
     var tileH = Math.round(tileW * aspect);
-    var colStep = Math.round(tileW * colFactor);
-    var rowStep = Math.round(tileH * rowFactor);
-    var layerOffsetX = Math.round(tileW * layerXFactor);
-    var layerOffsetY = Math.round(tileH * layerYFactor);
-    var boardPadding = isMobileBrowser ? 6 : 12;
-    var boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
-    var boardH = boardPadding + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
-    if (boardW > usableWidth || boardH > usableHeight) {
-      var scale = Math.min(usableWidth / Math.max(1, boardW), usableHeight / Math.max(1, boardH));
-      tileW = Math.max(isMobileBrowser ? 38 : 42, Math.floor(tileW * Math.min(1, scale)));
+    if ((tileH * dims.rows + gapY * Math.max(0, dims.rows - 1) + boardPadding) > usableHeight) {
+      tileW = Math.floor((usableHeight - boardPadding - gapY * Math.max(0, dims.rows - 1)) / Math.max(1, dims.rows) / aspect);
+      tileW = Math.max(isMobileBrowser ? 38 : 42, Math.min(isMobileBrowser ? 88 : 96, tileW));
       tileH = Math.round(tileW * aspect);
-      colStep = Math.round(tileW * colFactor);
-      rowStep = Math.round(tileH * rowFactor);
-      layerOffsetX = Math.round(tileW * layerXFactor);
-      layerOffsetY = Math.round(tileH * layerYFactor);
-      boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
-      boardH = boardPadding + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
-      // 最後一道保險：極小螢幕時寧可只微縮，也不能讓卡牌超出操作框。
-      if (boardW > usableWidth || boardH > usableHeight) {
-        var exactFitW = Math.floor(Math.min((usableWidth - boardPadding) / Math.max(1, widthUnits), (usableHeight - boardPadding) / Math.max(1, heightUnits)));
-        tileW = Math.max(isMobileBrowser ? 36 : 40, Math.min(tileW, exactFitW));
-        tileH = Math.round(tileW * aspect);
-        colStep = Math.round(tileW * colFactor);
-        rowStep = Math.round(tileH * rowFactor);
-        layerOffsetX = Math.round(tileW * layerXFactor);
-        layerOffsetY = Math.round(tileH * layerYFactor);
-        boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW + ((dims.layers - 1) * layerOffsetX);
-        boardH = boardPadding + ((dims.layers - 1) * layerOffsetY) + ((dims.rows - 1) * rowStep) + tileH;
-      }
+    }
+    var colStep = tileW + gapX;
+    var rowStep = tileH + gapY;
+    var layerOffsetX = 0;
+    var layerOffsetY = 0;
+    var boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW;
+    var boardH = boardPadding + ((dims.rows - 1) * rowStep) + tileH;
+    if (boardW > usableWidth || boardH > usableHeight) {
+      var exactFitW = Math.floor(Math.min(
+        (usableWidth - boardPadding - gapX * Math.max(0, dims.cols - 1)) / Math.max(1, dims.cols),
+        ((usableHeight - boardPadding - gapY * Math.max(0, dims.rows - 1)) / Math.max(1, dims.rows)) / aspect
+      ));
+      tileW = Math.max(isMobileBrowser ? 36 : 40, Math.min(tileW, exactFitW));
+      tileH = Math.round(tileW * aspect);
+      colStep = tileW + gapX;
+      rowStep = tileH + gapY;
+      boardW = boardPadding + ((dims.cols - 1) * colStep) + tileW;
+      boardH = boardPadding + ((dims.rows - 1) * rowStep) + tileH;
     }
 
     state.boardMetrics = {
@@ -861,8 +875,8 @@
     var tileInset = Math.round(boardPadding / 2);
     var html = '<div class="link-battle-stacked-board" style="width:' + boardW + 'px;height:' + boardH + 'px;--tile-w:' + tileW + 'px;--tile-h:' + tileH + 'px;">';
     renderTiles.forEach(function(tile) {
-      var x = tileInset + (tile.col * colStep) + (tile.layer * layerOffsetX);
-      var y = tileInset + ((dims.layers - 1 - tile.layer) * layerOffsetY) + (tile.row * rowStep);
+      var x = tileInset + (tile.col * colStep);
+      var y = tileInset + (tile.row * rowStep);
       var z = (tile.layer * 1000) + (tile.row * 20) + tile.col;
       html += renderTile(tile, 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';--tile-layer:' + tile.layer + ';');
     });
@@ -999,17 +1013,28 @@
     await sleep(760);
   }
 
+  function getNextUnlockedStageId(currentStageId) {
+    var stages = (state.dashboard && state.dashboard.stages) || [];
+    var current = stages.find(function(s){ return String(s.stageId) === String(currentStageId); });
+    if (!current) return null;
+    var nextOrder = Number(current.stageOrder || 0) + 1;
+    var next = stages.find(function(s){ return Number(s.stageOrder || 0) === nextOrder; });
+    return next ? next.stageId : null;
+  }
+
   function handleBattleEnd(status, reason, rewardSummary) {
     if (status === 'victory') {
       stopTimer();
       playAudio('battle_victory');
       setMsg('<b style="color:#00ff7f">討伐成功！</b>' + (rewardSummary ? '<br><span style="color:#ffdd77">通關獎勵：' + escapeHtml(rewardSummary) + '</span>' : ''), '#00ff7f');
       setButtonsDisabled(true);
-      // v9：通關後刷新進度，並跳回章節與關卡選擇。
-      setTimeout(function() {
-        state.selectedStageId = null;
-        loadDashboard().then(function(){ openStageSelect(); }).catch(function(){ openStageSelect(); });
-      }, 850);
+      state.nextStageIdAfterVictory = null;
+      loadDashboard().then(function() {
+        state.nextStageIdAfterVictory = getNextUnlockedStageId(state.battle && state.battle.stageId);
+        var startBtn = $('link-battle-start-btn');
+        if (startBtn) { startBtn.disabled = false; startBtn.style.display = ''; startBtn.innerHTML = state.nextStageIdAfterVictory ? '➡️ 下一關' : '📖 回章節'; }
+        updateShellMode();
+      }).catch(function(){ updateShellMode(); });
     } else if (status === 'failed') {
       stopTimer();
       playAudio('battle_failed');
