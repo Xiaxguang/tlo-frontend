@@ -1763,3 +1763,155 @@
   .link-battle-boss-figure.tier-mini{height:54%;width:62%;}
   .link-battle-boss-figure.tier-final{height:62%;width:74%;}
 }
+
+/* v1 編隊輔助技能：卡片技能顯示、戰鬥中技能狀態與浮動提示 */
+.link-battle-card-skill-tag{
+  grid-column:2;
+  display:block;
+  margin-top:2px;
+  padding:5px 7px;
+  border-radius:10px;
+  border:1px solid rgba(0,255,240,.22);
+  background:linear-gradient(135deg,rgba(0,255,240,.08),rgba(127,0,255,.12));
+  color:#dffcff;
+  font-size:10px;
+  line-height:1.25;
+  min-width:0;
+}
+.link-battle-card-skill-tag b{
+  display:block;
+  color:#00fff0;
+  font-size:11px;
+  font-weight:1000;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.link-battle-card-skill-tag span{
+  display:block;
+  margin-top:2px;
+  color:#cdd3ff;
+  font-size:10px;
+  line-height:1.25;
+}
+.link-battle-card-skill-tag.compact{
+  grid-column:auto;
+  margin:5px 0 0;
+  padding:4px 5px;
+  background:rgba(0,255,240,.07);
+}
+.link-battle-card-skill-tag.compact b{font-size:10px;}
+.link-battle-card-skill-tag.compact span{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.link-battle-team-skill-summary{
+  margin-top:8px;
+  border:1px solid rgba(0,255,240,.24);
+  border-radius:14px;
+  padding:8px;
+  background:linear-gradient(135deg,rgba(0,255,240,.07),rgba(127,0,255,.11));
+}
+.link-battle-team-skill-summary span{
+  display:block;
+  color:#00fff0;
+  font-size:11px;
+  font-weight:1000;
+}
+.link-battle-team-skill-summary b{
+  display:block;
+  color:#fff;
+  font-size:12px;
+  line-height:1.35;
+  margin-top:2px;
+}
+.link-battle-team-skill-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:7px;
+}
+.link-battle-team-skill-chips em{
+  border-radius:999px;
+  padding:4px 7px;
+  color:#ffdd77;
+  background:rgba(255,221,119,.08);
+  border:1px solid rgba(255,221,119,.18);
+  font-size:10px;
+  font-style:normal;
+  font-weight:900;
+}
+.link-battle-support-skills{
+  display:flex;
+  gap:5px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  min-height:0;
+  padding:0 1px;
+}
+.link-battle-support-skills:empty{display:none;}
+.link-battle-support-skills span{
+  flex:0 0 auto;
+  border:1px solid rgba(0,255,240,.24);
+  border-radius:999px;
+  background:rgba(0,255,240,.08);
+  color:#dffcff;
+  padding:4px 7px;
+  font-size:10px;
+  line-height:1;
+  font-weight:900;
+  white-space:nowrap;
+}
+.link-battle-float-support-skill{
+  position:absolute;
+  z-index:36;
+  left:50%;
+  top:43%;
+  transform:translateX(-50%);
+  min-width:180px;
+  max-width:86%;
+  text-align:center;
+  border:1px solid rgba(0,255,240,.45);
+  border-radius:16px;
+  padding:8px 12px;
+  background:linear-gradient(135deg,rgba(0,25,35,.94),rgba(50,18,82,.94));
+  color:#fff;
+  box-shadow:0 0 24px rgba(0,255,240,.26),0 12px 28px rgba(0,0,0,.5);
+  animation:linkSupportSkillFloat 1.2s ease forwards;
+  pointer-events:none;
+}
+.link-battle-float-support-skill b{
+  display:block;
+  color:#00fff0;
+  font-size:14px;
+  text-shadow:0 0 10px rgba(0,255,240,.5);
+}
+.link-battle-float-support-skill span{
+  display:block;
+  margin-top:2px;
+  color:#ffdd77;
+  font-size:11px;
+  line-height:1.35;
+}
+@keyframes linkSupportSkillFloat{
+  0%{opacity:0;transform:translate(-50%,10px) scale(.92);}
+  18%{opacity:1;transform:translate(-50%,0) scale(1);}
+  76%{opacity:1;transform:translate(-50%,-12px) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-24px) scale(.98);}
+}
+.link-battle-team-card-option{
+  grid-template-rows:auto auto auto auto auto;
+  min-height:110px;
+}
+.link-battle-team-card-option img,
+.link-battle-team-card-fallback{
+  grid-row:1 / 6;
+}
+@media (max-width:480px){
+  .link-battle-team-card-grid{grid-template-columns:1fr;}
+  .link-battle-team-slots{gap:6px;}
+  .link-battle-card-skill-tag.compact span{display:none;}
+  .link-battle-team-slot{padding:6px 4px;}
+}

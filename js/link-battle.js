@@ -27,7 +27,7 @@
     pendingSceneSecondary: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260627-boss-main-hp-v1';
+  var TLO_LINK_BATTLE_BUILD = '20260627-team-skill-v1';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -322,6 +322,7 @@
         { label: '剩餘 HP', value: Math.max(0, Number(b.playerHp || 0)).toLocaleString() + ' / ' + Number(b.playerMaxHp || 0).toLocaleString() },
         { label: '最高 Combo', value: String(Number(b.maxCombo || b.combo || 0)) },
         { label: '剩餘時間', value: formatTime(state.timeLeft || b.remainingSeconds || 0) },
+        { label: '編隊輔助', value: formatSupportSkillTotals(b) },
         { label: '通關獎勵', value: rewardSummary || '本關無額外獎勵' }
       ],
       primaryText: '關閉',
@@ -344,7 +345,8 @@
         { label: 'BOSS 剩餘 HP', value: Math.max(0, Number(b.bossHp || 0)).toLocaleString() + ' / ' + Number(b.bossMaxHp || 0).toLocaleString() },
         { label: '玩家剩餘 HP', value: Math.max(0, Number(b.playerHp || 0)).toLocaleString() + ' / ' + Number(b.playerMaxHp || 0).toLocaleString() },
         { label: '錯誤次數', value: Number(b.errorCount || 0) + ' / ' + Number(stage.errorLimit || 0) },
-        { label: '最高 Combo', value: String(Number(b.maxCombo || b.combo || 0)) }
+        { label: '最高 Combo', value: String(Number(b.maxCombo || b.combo || 0)) },
+        { label: '編隊輔助', value: formatSupportSkillTotals(b) }
       ],
       primaryText: '再次討伐',
       secondaryText: '關閉',
@@ -649,6 +651,104 @@
     return dash.teamBonus || team.bonus || { attackBonusPercent: 0, hpBonusPercent: 0, summary: '攻擊 +0%，HP +0%' };
   }
 
+  function getTeamSkillProfile() {
+    var dash = state.dashboard || {};
+    var team = dash.linkBattleTeam || {};
+    return team.skillProfile || calculateLocalTeamSkillProfile(getCurrentTeamIds().map(findEligibleCard));
+  }
+
+  function getCardSkill(card) {
+    return (card && (card.linkSkill || card.skill || {
+      skillName: card.skillName || '未設定',
+      icon: '✦',
+      type: '輔助',
+      description: card.skillDescription || '尚未設定技能。',
+      effectText: card.skillEffectText || '此卡尚未設定連線討伐技能。'
+    })) || { skillName: '未設定', icon: '✦', type: '輔助', description: '尚未設定技能。', effectText: '此卡尚未設定連線討伐技能。' };
+  }
+
+  function calculateLocalTeamSkillProfile(cards) {
+    var counts = { assault:0, guard:0, heal:0, insight:0, stability:0, suppress:0 };
+    var list = (cards || []).filter(Boolean).slice(0, 3);
+    list.forEach(function(card){
+      var skill = getCardSkill(card);
+      var id = skill.skillId || 'assault';
+      if (counts[id] == null) counts[id] = 0;
+      counts[id] += 1;
+    });
+    var leaderSkillId = list[0] ? (getCardSkill(list[0]).skillId || '') : '';
+    var effects = {
+      attackBonusPercent: Math.max(0, Math.min(14, counts.assault * 5 + (leaderSkillId === 'assault' ? 2 : 0))),
+      guardReductionPercent: Math.max(0, Math.min(30, counts.guard * 10 + (leaderSkillId === 'guard' ? 5 : 0))),
+      healPercent: counts.heal > 0 ? Math.max(0, Math.min(22, 12 + Math.max(0, counts.heal - 1) * 4 + (leaderSkillId === 'heal' ? 4 : 0))) : 0,
+      extraHints: Math.max(0, Math.min(3, counts.insight + (leaderSkillId === 'insight' ? 1 : 0))),
+      stableCharges: Math.max(0, Math.min(2, counts.stability)),
+      rageReductionPercent: Math.max(0, Math.min(22, counts.suppress * 8 + (leaderSkillId === 'suppress' ? 4 : 0)))
+    };
+    var active = [];
+    if (effects.attackBonusPercent > 0) active.push('連線傷害 +' + effects.attackBonusPercent + '%');
+    if (effects.guardReductionPercent > 0) active.push('BOSS反擊傷害 -' + effects.guardReductionPercent + '%');
+    if (effects.healPercent > 0) active.push('低血量自動回復 ' + effects.healPercent + '%');
+    if (effects.extraHints > 0) active.push('開場提示 +' + effects.extraHints);
+    if (effects.stableCharges > 0) active.push('錯誤抵銷 ' + effects.stableCharges + ' 次');
+    if (effects.rageReductionPercent > 0) active.push('BOSS怒氣 -' + effects.rageReductionPercent + '%');
+    return { effects: effects, summary: active.length ? active.join('｜') : '尚未啟用編隊技能' };
+  }
+
+  function renderCardSkillTag(card, compact) {
+    var skill = getCardSkill(card);
+    return '<div class="link-battle-card-skill-tag ' + (compact ? 'compact' : '') + '">'
+      + '<b>' + escapeHtml(skill.icon || '✦') + ' ' + escapeHtml(skill.skillName || '技能') + '</b>'
+      + '<span>' + escapeHtml(compact ? (skill.description || skill.type || '') : (skill.effectText || skill.description || '')) + '</span>'
+      + '</div>';
+  }
+
+  function renderTeamSkillSummary(profile) {
+    profile = profile || getTeamSkillProfile();
+    var effects = profile.effects || {};
+    var chips = [];
+    if (Number(effects.attackBonusPercent || 0) > 0) chips.push('猛攻 +' + Number(effects.attackBonusPercent || 0) + '% 傷害');
+    if (Number(effects.guardReductionPercent || 0) > 0) chips.push('守護 -' + Number(effects.guardReductionPercent || 0) + '% 反擊傷害');
+    if (Number(effects.healPercent || 0) > 0) chips.push('治癒 低血量回復 ' + Number(effects.healPercent || 0) + '%');
+    if (Number(effects.extraHints || 0) > 0) chips.push('洞察 提示 +' + Number(effects.extraHints || 0));
+    if (Number(effects.stableCharges || 0) > 0) chips.push('穩定 抵銷錯誤 ' + Number(effects.stableCharges || 0) + ' 次');
+    if (Number(effects.rageReductionPercent || 0) > 0) chips.push('壓制 怒氣 -' + Number(effects.rageReductionPercent || 0) + '%');
+    var html = '<div class="link-battle-team-skill-summary"><div><span>編隊技能效果</span><b>' + escapeHtml(profile.summary || '尚未啟用編隊技能') + '</b></div>';
+    html += '<div class="link-battle-team-skill-chips">' + (chips.length ? chips.map(function(text){ return '<em>' + escapeHtml(text) + '</em>'; }).join('') : '<em>選擇持有技能的卡片後生效</em>') + '</div></div>';
+    return html;
+  }
+
+  function renderSupportSkillStatus() {
+    var b = state.battle || {};
+    var profile = b.teamSkillProfile || (b.linkBattleTeam && b.linkBattleTeam.skillProfile) || null;
+    var root = $('link-battle-support-skills');
+    if (!root) return;
+    if (!profile || !profile.effects) { root.innerHTML = ''; return; }
+    var effects = profile.effects || {};
+    var skillState = b.supportSkillState || {};
+    var totals = b.supportSkillTotals || {};
+    var items = [];
+    if (Number(effects.attackBonusPercent || 0) > 0) items.push('⚔️ 猛攻 +' + Number(effects.attackBonusPercent || 0) + '%｜已+' + Number(totals.assaultDamage || 0).toLocaleString());
+    if (Number(effects.guardReductionPercent || 0) > 0) items.push('🛡️ 守護 -' + Number(effects.guardReductionPercent || 0) + '%｜已擋' + Number(totals.guardReducedDamage || 0).toLocaleString());
+    if (Number(effects.healPercent || 0) > 0) items.push('✚ 治癒 ' + (skillState.healUsed ? '已用' : '待命'));
+    if (Number(effects.extraHints || 0) > 0) items.push('👁️ 洞察 提示+' + Number(effects.extraHints || 0));
+    if (Number(effects.stableCharges || 0) > 0) items.push('◇ 穩定 ' + Number(skillState.stableChargesUsed || 0) + '/' + Number(effects.stableCharges || 0));
+    if (Number(effects.rageReductionPercent || 0) > 0) items.push('⛓️ 壓制 -' + Number(effects.rageReductionPercent || 0) + '%');
+    root.innerHTML = items.length ? items.map(function(text){ return '<span>' + escapeHtml(text) + '</span>'; }).join('') : '';
+  }
+
+  function formatSupportSkillTotals(b) {
+    var totals = (b && b.supportSkillTotals) || {};
+    var out = [];
+    if (Number(totals.assaultDamage || 0) > 0) out.push('猛攻追加 ' + Number(totals.assaultDamage || 0).toLocaleString() + ' 傷害');
+    if (Number(totals.guardReducedDamage || 0) > 0) out.push('守護減免 ' + Number(totals.guardReducedDamage || 0).toLocaleString() + ' HP');
+    if (Number(totals.healAmount || 0) > 0) out.push('治癒回復 ' + Number(totals.healAmount || 0).toLocaleString() + ' HP');
+    if (Number(totals.stableBlocked || 0) > 0) out.push('穩定抵銷 ' + Number(totals.stableBlocked || 0) + ' 次錯誤');
+    if (Number(totals.rageReduced || 0) > 0) out.push('壓制減少 ' + Number(totals.rageReduced || 0) + ' 怒氣');
+    if (Number(totals.insightExtraHints || 0) > 0) out.push('洞察開場 +' + Number(totals.insightExtraHints || 0) + ' 提示');
+    return out.length ? out.join('｜') : '本場未觸發輔助效果';
+  }
+
   function renderTeamSlot(card, role) {
     if (!card) {
       return '<div class="link-battle-team-slot empty"><span>' + escapeHtml(role) + '</span><b>未選擇</b></div>';
@@ -659,6 +759,7 @@
       + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
       + '<b>' + escapeHtml(getCardName(card)) + '</b>'
       + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
+      + renderCardSkillTag(card, true)
       + '</div>';
   }
 
@@ -691,6 +792,7 @@
       + '<div class="link-battle-prebattle-body">'
       + renderTeamSlotsFromIds(ids)
       + '<div class="link-battle-team-bonus">' + escapeHtml(bonusText) + '</div>'
+      + renderTeamSkillSummary(calculateLocalTeamSkillProfile(ids.map(findEligibleCard)))
       + '<div class="link-battle-prebattle-actions">'
       + '<button type="button" onclick="TLOLinkBattle.openTeamPicker()">更換編隊</button>'
       + '<button type="button" onclick="TLOLinkBattle.autoLinkBattleTeam()">自動編隊</button>'
@@ -717,9 +819,10 @@
     }
     var html = '<div class="link-battle-team-picker-summary">'
       + '<div><span>目前選擇</span><b>' + ids.length + ' / 3</b></div>'
-      + '<em>隊長位會略高權重；編隊只提供小幅攻擊與 HP 加成。</em>'
+      + '<em>玩家可查看每張卡的連線討伐技能；隊長技會讓同類技能略微提高。</em>'
       + '</div>';
     html += renderTeamSlotsFromIds(ids);
+    html += renderTeamSkillSummary(calculateLocalTeamSkillProfile(ids.map(findEligibleCard)));
     html += '<div class="link-battle-team-picker-actions">'
       + '<button type="button" onclick="TLOLinkBattle.autoLinkBattleTeam()">自動編隊</button>'
       + '<button type="button" class="primary" onclick="TLOLinkBattle.saveTeamDraft()">儲存編隊</button>'
@@ -734,6 +837,7 @@
         + '<strong>' + escapeHtml(getCardName(card)) + '</strong>'
         + '<span>' + escapeHtml(card.rarity || 'Normal') + '｜★' + Number(card.star || 1) + '</span>'
         + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
+        + renderCardSkillTag(card, false)
         + '<i>' + (picked ? '已出戰' : '選擇') + '</i>'
         + '</button>';
     }).join('');
@@ -996,6 +1100,7 @@
     if ($('link-battle-error')) $('link-battle-error').textContent = Number(b.errorCount || 0) + ' / ' + Number((b.stage && b.stage.errorLimit) || 0);
     if ($('link-battle-shuffle-left')) $('link-battle-shuffle-left').textContent = Number(b.shuffleLeft || 0);
     if ($('link-battle-hint-left')) $('link-battle-hint-left').textContent = Number(b.hintLeft || 0);
+    renderSupportSkillStatus();
     var rageLimit = Number((b.stage && b.stage.bossRageLimit) || 100);
     var ragePct = Math.max(0, Math.min(100, Math.round(Number(b.bossRage || 0) / rageLimit * 100)));
     if ($('link-battle-rage-fill')) $('link-battle-rage-fill').style.width = ragePct + '%';
@@ -1281,14 +1386,15 @@
         state.linkPath = { type: 'error', points: res.effects.invalid.path || [], tileA: tileA, tileB: tileB };
         renderBoard();
         playAudio('boss_hit_player');
-        setMsg('連線失敗：' + escapeHtml(formatLinkBattleInvalidReason(res.effects.invalid.reason)), '#ff7777');
+        setMsg((res.effects.invalid.blockedBySkill ? '編隊技能：' : '連線失敗：') + escapeHtml(res.effects.invalid.message || formatLinkBattleInvalidReason(res.effects.invalid.reason)), res.effects.invalid.blockedBySkill ? '#00fff0' : '#ff7777');
         await sleep(700);
       }
       state.linkPath = null;
+      await playSupportSkillEffects(res.effects);
       state.battle = res.state;
       state.battle.status = res.status;
       renderBattleState();
-      if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
+      if (res.effects && res.effects.bossCounter) { await playBossCounter(res.effects.bossCounter); await playSupportSkillEffects({ supportSkills: res.effects.bossCounter.supportSkills || [] }); }
       handleBattleEnd(res.status, res.reason, res.rewardSummary);
     } catch (err) {
       setMsg('操作失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
@@ -1309,7 +1415,7 @@
     }
     await sleep(520);
     playAudio('card_hit_boss');
-    showDamage(effect.damage, effect.comboBonus);
+    showDamage(effect.damage, effect.comboBonus, effect.supportAttackBonusDamage);
     var shell = $('link-battle-shell');
     if (shell) {
       shell.classList.add('boss-shake');
@@ -1320,12 +1426,14 @@
     if (Number(effect.comboBonus || 0) > 0) playAudio('combo_bonus');
   }
 
-  function showDamage(damage, comboBonus) {
+  function showDamage(damage, comboBonus, supportBonus) {
     var shell = $('link-battle-shell');
     if (!shell) return;
     var el = document.createElement('div');
     el.className = 'link-battle-float-damage';
-    el.innerHTML = '-' + Number(damage || 0).toLocaleString() + (Number(comboBonus || 0) > 0 ? '<div style="font-size:13px;color:#ffdd77">Combo Bonus +' + Number(comboBonus || 0).toLocaleString() + '</div>' : '');
+    el.innerHTML = '-' + Number(damage || 0).toLocaleString()
+      + (Number(comboBonus || 0) > 0 ? '<div style="font-size:13px;color:#ffdd77">Combo Bonus +' + Number(comboBonus || 0).toLocaleString() + '</div>' : '')
+      + (Number(supportBonus || 0) > 0 ? '<div style="font-size:12px;color:#00fff0">猛攻 +' + Number(supportBonus || 0).toLocaleString() + '</div>' : '');
     shell.appendChild(el);
     setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 950);
   }
@@ -1359,6 +1467,27 @@
     el.innerHTML = '玩家 HP -' + Number(damage || 0).toLocaleString();
     shell.appendChild(el);
     setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 980);
+  }
+
+
+  function showSupportSkillNotice(effect) {
+    if (!effect) return;
+    var shell = $('link-battle-shell');
+    if (!shell) return;
+    var el = document.createElement('div');
+    el.className = 'link-battle-float-support-skill';
+    el.innerHTML = '<b>' + escapeHtml(effect.skillName || effect.label || '編隊技能') + '</b><span>' + escapeHtml(effect.message || '技能發動') + '</span>';
+    shell.appendChild(el);
+    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 1200);
+  }
+
+  async function playSupportSkillEffects(effects) {
+    var list = (effects && effects.supportSkills) || [];
+    if (!Array.isArray(list) || !list.length) return;
+    list.slice(0, 3).forEach(function(effect, idx){
+      setTimeout(function(){ showSupportSkillNotice(effect); }, idx * 220);
+    });
+    await sleep(Math.min(700, list.length * 220 + 260));
   }
 
   function getNextUnlockedStageId(currentStageId) {
@@ -1441,7 +1570,8 @@
       state.linkPath = null;
       renderBattleState();
       setMsg('已高亮一組可連線卡牌。使用提示會清空 Combo，並增加 BOSS 怒氣。', '#ffdd77');
-      if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
+      await playSupportSkillEffects(res.effects);
+      if (res.effects && res.effects.bossCounter) { await playBossCounter(res.effects.bossCounter); await playSupportSkillEffects({ supportSkills: res.effects.bossCounter.supportSkills || [] }); }
       handleBattleEnd(res.status, null, res.rewardSummary);
     } catch (err) {
       setMsg('提示失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
@@ -1463,7 +1593,8 @@
       state.linkPath = null;
       renderBattleState();
       setMsg('已重新洗牌，場上至少保留可連線組合。洗牌會增加 BOSS 怒氣。', '#ffdd77');
-      if (res.effects && res.effects.bossCounter) await playBossCounter(res.effects.bossCounter);
+      await playSupportSkillEffects(res.effects);
+      if (res.effects && res.effects.bossCounter) { await playBossCounter(res.effects.bossCounter); await playSupportSkillEffects({ supportSkills: res.effects.bossCounter.supportSkills || [] }); }
       handleBattleEnd(res.status, null, res.rewardSummary);
     } catch (err) {
       setMsg('洗牌失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
