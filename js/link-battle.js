@@ -278,7 +278,7 @@
     var tier = getStageTier(stage || {});
     figure.className = 'link-battle-boss-figure tier-' + tier + (visual.bossImage ? ' has-image' : ' no-image');
     if (visual.bossImage) {
-      figure.innerHTML = '<img class="link-battle-boss-main-image tlo-card-art" src="' + escapeHtml(visual.bossImage) + '" alt="' + escapeHtml(getDisplayBossName(stage || {})) + '" loading="eager" decoding="async" fetchpriority="high">';
+      figure.innerHTML = '<img class="link-battle-boss-main-image" src="' + escapeHtml(visual.bossImage) + '" alt="' + escapeHtml(getDisplayBossName(stage || {})) + '" loading="eager" decoding="async" fetchpriority="high">';
       var img = figure.querySelector('img');
       if (img && window.TLOImageLoader && typeof window.TLOImageLoader.enhanceImage === 'function') window.TLOImageLoader.enhanceImage(img);
     } else {
