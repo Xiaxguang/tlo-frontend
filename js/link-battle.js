@@ -27,7 +27,7 @@
     pendingSceneSecondary: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260627-image-loading-v1';
+  var TLO_LINK_BATTLE_BUILD = '20260627-boss-main-hp-v1';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -247,6 +247,42 @@
     }
     if (nodeEl) nodeEl.textContent = getStageNodeLabel(stage);
     if (loreEl) loreEl.textContent = getDisplayBossIntro(stage) || 'BOSS 情報讀取中...';
+  }
+
+
+  function normalizeImageUrlForCompare(url) {
+    return String(url || '').trim().replace(/([?&])v=[^&]*/g, '$1').replace(/[?&]$/, '');
+  }
+
+  function getBossVisual(stage) {
+    var boss = stage && stage.boss || {};
+    var bossImage = String(boss.bossImage || '').trim();
+    var bossBackground = String(boss.bossBackground || '').trim();
+    // 若資料庫舊資料把 boss_image 同時塞進 boss_background，避免同一張圖同時變成背景與主圖。
+    if (bossImage && bossBackground && normalizeImageUrlForCompare(bossImage) === normalizeImageUrlForCompare(bossBackground)) bossBackground = '';
+    return { bossImage: bossImage, bossBackground: bossBackground };
+  }
+
+  function applyBossBackground(stage) {
+    var bg = $('link-battle-boss-bg');
+    if (!bg) return;
+    var visual = getBossVisual(stage);
+    bg.style.backgroundImage = visual.bossBackground ? 'url("' + visual.bossBackground + '")' : '';
+  }
+
+  function renderBossFigure(stage) {
+    var figure = $('link-battle-boss-figure');
+    if (!figure) return;
+    var visual = getBossVisual(stage || {});
+    var tier = getStageTier(stage || {});
+    figure.className = 'link-battle-boss-figure tier-' + tier + (visual.bossImage ? ' has-image' : ' no-image');
+    if (visual.bossImage) {
+      figure.innerHTML = '<img class="link-battle-boss-main-image tlo-card-art" src="' + escapeHtml(visual.bossImage) + '" alt="' + escapeHtml(getDisplayBossName(stage || {})) + '" loading="eager" decoding="async" fetchpriority="high">';
+      var img = figure.querySelector('img');
+      if (img && window.TLOImageLoader && typeof window.TLOImageLoader.enhanceImage === 'function') window.TLOImageLoader.enhanceImage(img);
+    } else {
+      figure.innerHTML = '<span class="link-battle-boss-main-silhouette">BOSS</span>';
+    }
   }
 
   function maybeShowPreBattleStory(stage) {
@@ -880,8 +916,8 @@
 
   function renderStagePreview(stage) {
     var boss = stage.boss || {};
-    var bg = $('link-battle-boss-bg');
-    if (bg) bg.style.backgroundImage = boss.bossBackground || boss.bossImage ? 'url("' + (boss.bossBackground || boss.bossImage) + '")' : '';
+    applyBossBackground(stage);
+    renderBossFigure(stage);
     if ($('link-battle-stage-name')) $('link-battle-stage-name').textContent = getDisplayStageName(stage);
     if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = getDisplayBossName(stage);
     updateBossLorePanel(stage);
@@ -892,7 +928,7 @@
     if ($('link-battle-hpfill')) $('link-battle-hpfill').style.width = '100%';
     if ($('link-battle-time')) $('link-battle-time').textContent = formatTime(stage.timeLimitSeconds || 0);
     var center = $('link-battle-boss-center');
-    if (center) center.innerHTML = '<span class="link-battle-boss-silhouette">BOSS</span>';
+    if (center) center.innerHTML = '';
   }
 
   function selectStage(stageId) {
@@ -946,11 +982,12 @@
   function renderBattleState() {
     var b = state.battle || {};
     var boss = b.boss || (b.stage && b.stage.boss) || {};
-    var bg = $('link-battle-boss-bg');
-    if (bg) bg.style.backgroundImage = boss.bossBackground || boss.bossImage ? 'url("' + (boss.bossBackground || boss.bossImage) + '")' : '';
-    if ($('link-battle-stage-name')) $('link-battle-stage-name').textContent = getDisplayStageName(b.stage);
-    if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = getDisplayBossName(b.stage || { boss: boss });
-    updateBossLorePanel(b.stage || { boss: boss });
+    var visualStage = b.stage || { boss: boss };
+    applyBossBackground(visualStage);
+    renderBossFigure(visualStage);
+    if ($('link-battle-stage-name')) $('link-battle-stage-name').textContent = getDisplayStageName(visualStage);
+    if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = getDisplayBossName(visualStage);
+    updateBossLorePanel(visualStage);
     var hpPct = b.bossMaxHp > 0 ? Math.max(0, Math.min(100, Math.round(Number(b.bossHp || 0) / Number(b.bossMaxHp || 1) * 100))) : 0;
     if ($('link-battle-hpfill')) $('link-battle-hpfill').style.width = hpPct + '%';
     if ($('link-battle-boss-hp-text')) $('link-battle-boss-hp-text').textContent = Math.max(0, Number(b.bossHp || 0)).toLocaleString() + ' / ' + Number(b.bossMaxHp || 0).toLocaleString();
@@ -963,7 +1000,7 @@
     var ragePct = Math.max(0, Math.min(100, Math.round(Number(b.bossRage || 0) / rageLimit * 100)));
     if ($('link-battle-rage-fill')) $('link-battle-rage-fill').style.width = ragePct + '%';
     var center = $('link-battle-boss-center');
-    if (center) center.innerHTML = boss.bossImage || boss.bossBackground ? '' : '<span class="link-battle-boss-silhouette">BOSS</span>';
+    if (center) center.innerHTML = '';
     renderBoard();
     var active = !state.isAnimating && b.status !== 'victory' && b.status !== 'failed';
     if ($('link-battle-hint-btn')) $('link-battle-hint-btn').disabled = !active || Number(b.hintLeft || 0) <= 0;
@@ -1305,9 +1342,23 @@
       shell.classList.add('boss-redflash', 'boss-shake', 'boss-distort');
       setTimeout(function(){ shell.classList.remove('boss-redflash', 'boss-shake', 'boss-distort'); }, 720);
     }
-    if (effect && Number(effect.playerHpDamage || 0) > 0) playAudio('boss_hit_player');
-    setMsg('BOSS反擊：' + escapeHtml(effect.label || effect.skill || '攻擊'), '#ff7777');
+    if (effect && Number(effect.playerHpDamage || 0) > 0) {
+      playAudio('boss_hit_player');
+      showPlayerHpDamage(effect.playerHpDamage);
+    }
+    var damageText = effect && Number(effect.playerHpDamage || 0) > 0 ? '｜玩家 HP -' + Number(effect.playerHpDamage || 0).toLocaleString() : '';
+    setMsg('BOSS反擊：' + escapeHtml(effect.label || effect.skill || '攻擊') + escapeHtml(damageText), '#ff7777');
     await sleep(760);
+  }
+
+  function showPlayerHpDamage(damage) {
+    var shell = $('link-battle-shell');
+    if (!shell) return;
+    var el = document.createElement('div');
+    el.className = 'link-battle-float-player-damage';
+    el.innerHTML = '玩家 HP -' + Number(damage || 0).toLocaleString();
+    shell.appendChild(el);
+    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 980);
   }
 
   function getNextUnlockedStageId(currentStageId) {
