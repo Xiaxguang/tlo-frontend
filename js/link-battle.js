@@ -24,10 +24,11 @@
     bossDefeatAnimationRunId: null,
     lastStoryStageId: null,
     pendingScenePrimary: null,
-    pendingSceneSecondary: null
+    pendingSceneSecondary: null,
+    boardDomStableKey: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260627-team-skill-v1';
+  var TLO_LINK_BATTLE_BUILD = '20260627-board-image-crash-fix-v2';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -756,7 +757,7 @@
     var image = getCardImage(card);
     return '<div class="link-battle-team-slot">'
       + '<span>' + escapeHtml(role) + '</span>'
-      + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
+      + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="eager" decoding="async" fetchpriority="high">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
       + '<b>' + escapeHtml(getCardName(card)) + '</b>'
       + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
       + renderCardSkillTag(card, true)
@@ -833,7 +834,7 @@
       var picked = selected.has(id);
       var image = getCardImage(card);
       return '<button type="button" class="link-battle-team-card-option ' + (picked ? 'selected' : '') + '" onclick="TLOLinkBattle.toggleTeamCard(' + jsArg(id) + ')">'
-        + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-card-fallback">🎴</div>')
+        + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="eager" decoding="async" fetchpriority="high">' : '<div class="link-battle-team-card-fallback">🎴</div>')
         + '<strong>' + escapeHtml(getCardName(card)) + '</strong>'
         + '<span>' + escapeHtml(card.rarity || 'Normal') + '｜★' + Number(card.star || 1) + '</span>'
         + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
@@ -1231,6 +1232,66 @@
     return map[String(reason || '')] || '討伐失敗。';
   }
 
+  function getTileClassName(tile, selectable) {
+    var cls = ['link-battle-tile', rarityClass(tile.rarity)];
+    cls.push('layer-' + Number(tile.layer || 0));
+    if (selectable) cls.push('selectable');
+    if (!selectable) cls.push('covered');
+    if (tile.locked_until && new Date(String(tile.locked_until)).getTime() > Date.now()) cls.push('locked');
+    if (state.selectedTileId === tile.tile_id) cls.push('selected');
+    if (state.hintedIds.has(tile.tile_id)) cls.push('hinted');
+    return cls.join(' ');
+  }
+
+  function normalizeTileImageUrl(tile) {
+    return String(tile && tile.image_url || '').trim();
+  }
+
+  function syncTileButton(btn, tile, positionStyle, selectable) {
+    var tileId = String(tile.tile_id || '');
+    btn.type = 'button';
+    btn.className = getTileClassName(tile, selectable);
+    btn.setAttribute('style', positionStyle || '');
+    btn.title = String(tile.card_name || '');
+    btn.setAttribute('aria-label', String(tile.card_name || ''));
+    btn.dataset.tileId = tileId;
+    btn.disabled = !selectable || !!state.isAnimating;
+    btn.onclick = function(ev) {
+      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+      if (ev && typeof ev.stopPropagation === 'function') ev.stopPropagation();
+      window.TLOLinkBattle.pickTile(tileId);
+      return false;
+    };
+
+    var src = normalizeTileImageUrl(tile);
+    var currentSrc = btn.dataset.imageUrl || '';
+    if (src) {
+      var img = btn.querySelector('img');
+      if (!img) {
+        btn.innerHTML = '';
+        img = document.createElement('img');
+        img.alt = String(tile.card_name || '');
+        img.draggable = false;
+        img.loading = 'eager';
+        img.decoding = 'async';
+        try { img.fetchPriority = 'high'; } catch (_) {}
+        btn.appendChild(img);
+      }
+      img.alt = String(tile.card_name || '');
+      // 操作區卡牌是正在遊玩的核心物件，不能每次狀態更新都重新設定 src。
+      // 只有當同一個按鈕真的換成不同圖片時才更新，避免手機瀏覽器反覆解碼、閃爍、白屏或退回主畫面。
+      if (currentSrc !== src) {
+        img.src = src;
+        btn.dataset.imageUrl = src;
+      }
+    } else {
+      if (currentSrc || !btn.querySelector('.link-battle-tile-fallback')) {
+        btn.innerHTML = '<div class="link-battle-tile-fallback">🎴</div>';
+        btn.dataset.imageUrl = '';
+      }
+    }
+  }
+
   function renderBoard() {
     var wrap = $('link-battle-board');
     if (!wrap) return;
@@ -1238,7 +1299,10 @@
     var data = b.boardData || {};
     var board = (data.board || b.board || []);
     if (!board.length) {
-      wrap.innerHTML = '<div class="link-battle-board-empty">選擇關卡後開始挑戰。</div>';
+      if (!wrap.querySelector('.link-battle-board-empty')) {
+        wrap.innerHTML = '<div class="link-battle-board-empty">選擇關卡後開始挑戰。</div>';
+      }
+      state.boardDomStableKey = null;
       return;
     }
 
@@ -1311,17 +1375,53 @@
       return a.col - b.col;
     });
 
+    var stack = wrap.querySelector('.link-battle-stacked-board');
+    if (!stack) {
+      wrap.innerHTML = '';
+      stack = document.createElement('div');
+      stack.className = 'link-battle-stacked-board';
+      wrap.appendChild(stack);
+    }
+    stack.style.width = boardW + 'px';
+    stack.style.height = boardH + 'px';
+    stack.style.setProperty('--tile-w', tileW + 'px');
+    stack.style.setProperty('--tile-h', tileH + 'px');
+
+    var existing = {};
+    Array.prototype.slice.call(stack.querySelectorAll('.link-battle-tile[data-tile-id]')).forEach(function(btn) {
+      var tileId = String(btn.dataset.tileId || btn.getAttribute('data-tile-id') || '');
+      if (tileId) existing[tileId] = btn;
+    });
+
     var tileInset = Math.round(boardPadding / 2);
-    var html = '<div class="link-battle-stacked-board" style="width:' + boardW + 'px;height:' + boardH + 'px;--tile-w:' + tileW + 'px;--tile-h:' + tileH + 'px;">';
     renderTiles.forEach(function(tile) {
+      var tileId = String(tile.tile_id || '');
       var x = tileInset + (tile.col * colStep);
       var y = tileInset + (tile.row * rowStep);
       var z = (tile.layer * 1000) + (tile.row * 20) + tile.col;
-      html += renderTile(tile, 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';--tile-layer:' + tile.layer + ';');
+      var positionStyle = 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';--tile-layer:' + tile.layer + ';';
+      var selectable = tile.selectable != null ? !!tile.selectable : isTileSelectable(tile);
+      var btn = existing[tileId];
+      if (!btn) {
+        btn = document.createElement('button');
+        btn.type = 'button';
+        stack.appendChild(btn);
+      } else {
+        delete existing[tileId];
+      }
+      syncTileButton(btn, tile, positionStyle, selectable);
     });
-    html += renderLinkPathOverlay();
-    html += '</div>';
-    wrap.innerHTML = html;
+
+    Object.keys(existing).forEach(function(tileId) {
+      var btn = existing[tileId];
+      if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+    });
+
+    Array.prototype.slice.call(stack.querySelectorAll('.link-battle-path-overlay')).forEach(function(el) {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    var overlay = renderLinkPathOverlay();
+    if (overlay) stack.insertAdjacentHTML('beforeend', overlay);
   }
 
   function isTileSelectable(tile) {
@@ -1344,9 +1444,9 @@
     if (state.selectedTileId === tile.tile_id) cls.push('selected');
     if (state.hintedIds.has(tile.tile_id)) cls.push('hinted');
     var img = tile.image_url
-      ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="lazy" decoding="async">'
+      ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="eager" decoding="async" fetchpriority="high">'
       : '<div class="link-battle-tile-fallback">🎴</div>';
-    return '<button class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\')">' + img + '</button>';
+    return '<button type="button" class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="event.preventDefault();TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\');return false;">' + img + '</button>';
   }
 
   function findTile(tileId) {
