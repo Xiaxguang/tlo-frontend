@@ -27,7 +27,7 @@
     pendingSceneSecondary: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260627-mobile-v13-ch1-boss-story-result';
+  var TLO_LINK_BATTLE_BUILD = '20260627-image-loading-v1';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -57,6 +57,44 @@
     return escapeHtml(JSON.stringify(String(value == null ? '' : value)));
   }
   function sleep(ms) { return new Promise(function(resolve){ setTimeout(resolve, ms); }); }
+
+
+  function uniqueImageUrls(urls) {
+    var seen = new Set();
+    return (Array.isArray(urls) ? urls : [urls]).map(function(url){ return String(url || '').trim(); }).filter(function(url){
+      if (!url || seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    });
+  }
+
+  function preloadGameImages(urls, options) {
+    var list = uniqueImageUrls(urls);
+    if (!list.length) return Promise.resolve([]);
+    if (window.TLOImageLoader && typeof window.TLOImageLoader.preload === 'function') {
+      return window.TLOImageLoader.preload(list, options || { timeout: 2600, concurrency: 6, fetchPriority: 'high' });
+    }
+    return Promise.resolve([]);
+  }
+
+  function collectLinkBattleImageUrls(battleState) {
+    var b = battleState || {};
+    var urls = [];
+    var boss = b.boss || (b.stage && b.stage.boss) || {};
+    if (boss.bossImage) urls.push(boss.bossImage);
+    if (boss.bossBackground) urls.push(boss.bossBackground);
+    var tiles = (b.boardData && b.boardData.tiles) || flattenBoardForRender(b.board || []);
+    (tiles || []).forEach(function(tile){ if (tile && tile.image_url) urls.push(tile.image_url); });
+    (b.supportCards || []).forEach(function(card){ if (card && (card.imageUrl || card.image_url)) urls.push(card.imageUrl || card.image_url); });
+    return uniqueImageUrls(urls);
+  }
+
+  function preloadLinkBattleImages(battleState) {
+    var urls = collectLinkBattleImageUrls(battleState);
+    if (!urls.length) return Promise.resolve([]);
+    setMsg('正在預載本場 BOSS 與卡牌圖片...', '#00fff0');
+    return preloadGameImages(urls, { timeout: 2800, concurrency: 8, fetchPriority: 'high' });
+  }
 
 
   var LINK_BATTLE_CH1_CONTENT = {
@@ -582,7 +620,7 @@
     var image = getCardImage(card);
     return '<div class="link-battle-team-slot">'
       + '<span>' + escapeHtml(role) + '</span>'
-      + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
+      + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
       + '<b>' + escapeHtml(getCardName(card)) + '</b>'
       + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
       + '</div>';
@@ -656,7 +694,7 @@
       var picked = selected.has(id);
       var image = getCardImage(card);
       return '<button type="button" class="link-battle-team-card-option ' + (picked ? 'selected' : '') + '" onclick="TLOLinkBattle.toggleTeamCard(' + jsArg(id) + ')">'
-        + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '">' : '<div class="link-battle-team-card-fallback">🎴</div>')
+        + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-card-fallback">🎴</div>')
         + '<strong>' + escapeHtml(getCardName(card)) + '</strong>'
         + '<span>' + escapeHtml(card.rarity || 'Normal') + '｜★' + Number(card.star || 1) + '</span>'
         + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
@@ -888,6 +926,7 @@
         setButtonsDisabled(false);
         return;
       }
+      await preloadLinkBattleImages(res.state).catch(function(){});
       state.runId = res.runId;
       state.battle = res.state;
       state.selectedTileId = null;
@@ -910,8 +949,8 @@
     var bg = $('link-battle-boss-bg');
     if (bg) bg.style.backgroundImage = boss.bossBackground || boss.bossImage ? 'url("' + (boss.bossBackground || boss.bossImage) + '")' : '';
     if ($('link-battle-stage-name')) $('link-battle-stage-name').textContent = getDisplayStageName(b.stage);
-    if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = getDisplayBossName(stage);
-    updateBossLorePanel(stage);
+    if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = getDisplayBossName(b.stage || { boss: boss });
+    updateBossLorePanel(b.stage || { boss: boss });
     var hpPct = b.bossMaxHp > 0 ? Math.max(0, Math.min(100, Math.round(Number(b.bossHp || 0) / Number(b.bossMaxHp || 1) * 100))) : 0;
     if ($('link-battle-hpfill')) $('link-battle-hpfill').style.width = hpPct + '%';
     if ($('link-battle-boss-hp-text')) $('link-battle-boss-hp-text').textContent = Math.max(0, Number(b.bossHp || 0)).toLocaleString() + ' / ' + Number(b.bossMaxHp || 0).toLocaleString();
@@ -1163,7 +1202,7 @@
     if (state.selectedTileId === tile.tile_id) cls.push('selected');
     if (state.hintedIds.has(tile.tile_id)) cls.push('hinted');
     var img = tile.image_url
-      ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false">'
+      ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="lazy" decoding="async">'
       : '<div class="link-battle-tile-fallback">🎴</div>';
     return '<button class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\')">' + img + '</button>';
   }
@@ -1228,7 +1267,7 @@
     playAttackByRarity(effect.rarity);
     var card = $('link-battle-attack-card');
     if (card) {
-      card.innerHTML = tile && tile.image_url ? '<img src="' + escapeHtml(tile.image_url) + '" alt="">' : '<div style="font-size:42px">🎴</div>';
+      card.innerHTML = tile && tile.image_url ? '<img src="' + escapeHtml(tile.image_url) + '" alt="" loading="eager" decoding="async">' : '<div style="font-size:42px">🎴</div>';
       card.className = 'link-battle-attack-card active';
     }
     await sleep(520);

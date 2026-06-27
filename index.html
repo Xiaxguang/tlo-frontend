@@ -76,6 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
+  <script src="./js/tlo-image-loader.js?v=20260627-image-loading-v1"></script>
   <link rel="stylesheet" href="./css/link-battle.css?v=20260626-mobile-v12-fail-reason-shuffle-safe">
   
   <style>
@@ -1605,7 +1606,7 @@
 
       <div class="boss-card" id="boss-info-panel">
         <div style="color:#ff4444; font-weight:bold; font-size:14px;" id="battle-stage-title">正在打探關卡情報...</div>
-        <img src="" class="boss-img-frame tlo-card-art" id="battle-boss-avatar" alt="BOSS頭像">
+        <img src="" class="boss-img-frame tlo-card-art" id="battle-boss-avatar" alt="BOSS頭像" loading="eager" decoding="async">
         <h2 style="margin:4px 0; color:#fff;" id="battle-boss-name">🔒 載入中...</h2>
         <div style="color:#aaa; font-size:13px;">守關 Boss 戰力：<span id="battle-boss-power" style="color:#ff4444; font-weight:bold;">0</span></div>
         <div style="color:#ff8800; font-size:12px; margin-top:5px;" id="battle-stage-reward">通關獎勵：--</div>
@@ -1628,12 +1629,12 @@
         <div class="clash-zone" id="clash-zone-box">
           <div class="clash-card card-p" id="fighter-player">
             <span id="arena-player-name-label">潮流先鋒</span>
-            <img src="https://images.placeholders.dev/?width=80&height=100&text=%E6%BD%AE%E6%B5%81&bgColor=%231a3a3a&textColor=%2300fff0" class="clash-avatar tlo-card-art" id="arena-player-avatar-img">
+            <img src="https://images.placeholders.dev/?width=80&height=100&text=%E6%BD%AE%E6%B5%81&bgColor=%231a3a3a&textColor=%2300fff0" class="clash-avatar tlo-card-art" id="arena-player-avatar-img" loading="lazy" decoding="async">
           </div>
           <div class="vs-text">VS</div>
           <div class="clash-card card-b" id="fighter-boss">
             <span id="arena-boss-name-label">守關 Boss</span>
-            <img src="" class="clash-avatar tlo-card-art" id="arena-boss-avatar-img">
+            <img src="" class="clash-avatar tlo-card-art" id="arena-boss-avatar-img" loading="lazy" decoding="async">
           </div>
         </div>
         <div class="turn-battle-log" id="battle-turn-log"></div>
@@ -1880,9 +1881,9 @@
           <div style="flex:1;text-align:right;"><b style="color:#ff7777;">對手 HP</b><div class="hp-bar-wrapper"><div id="pvp-hp-boss-fill" class="hp-bar-fill hp-boss"></div></div><div id="pvp-hp-boss-text" class="hp-text">--</div></div>
         </div>
         <div class="clash-zone">
-          <div class="clash-card card-p" id="pvp-fighter-player"><span id="pvp-player-name-label">我方代表</span><img id="pvp-player-avatar-img" class="clash-avatar tlo-card-art" src="" alt="我方"></div>
+          <div class="clash-card card-p" id="pvp-fighter-player"><span id="pvp-player-name-label">我方代表</span><img id="pvp-player-avatar-img" class="clash-avatar tlo-card-art" src="" alt="我方" loading="lazy" decoding="async"></div>
           <div style="font-size:22px;color:#ffc107;font-weight:1000;">VS</div>
-          <div class="clash-card card-b" id="pvp-fighter-boss"><span id="pvp-boss-name-label">對手代表</span><img id="pvp-boss-avatar-img" class="clash-avatar tlo-card-art" src="" alt="對手"></div>
+          <div class="clash-card card-b" id="pvp-fighter-boss"><span id="pvp-boss-name-label">對手代表</span><img id="pvp-boss-avatar-img" class="clash-avatar tlo-card-art" src="" alt="對手" loading="lazy" decoding="async"></div>
         </div>
         <div class="turn-banner" id="pvp-turn-banner">PVP 對戰開始...</div>
         <div class="turn-battle-log" id="pvp-turn-log"></div>
@@ -1992,9 +1993,9 @@
           <div style="flex:1;text-align:right;"><b style="color:#ff7777;">敵人 HP</b><div class="hp-bar-wrapper"><div id="rpg-hp-boss-fill" class="hp-bar-fill hp-boss"></div></div><div id="rpg-hp-boss-text" class="hp-text">--</div></div>
         </div>
         <div class="clash-zone">
-          <div class="clash-card card-p" id="rpg-fighter-player"><span id="rpg-player-name-label">遠征隊伍</span><img id="rpg-player-avatar-img" class="clash-avatar tlo-card-art" src="" alt="隊伍"></div>
+          <div class="clash-card card-p" id="rpg-fighter-player"><span id="rpg-player-name-label">遠征隊伍</span><img id="rpg-player-avatar-img" class="clash-avatar tlo-card-art" src="" alt="隊伍" loading="lazy" decoding="async"></div>
           <div style="font-size:22px;color:#ffc107;font-weight:1000;">VS</div>
-          <div class="clash-card card-b" id="rpg-fighter-boss"><span id="rpg-boss-name-label">關卡敵人</span><img id="rpg-boss-avatar-img" class="clash-avatar tlo-card-art" src="" alt="敵人"></div>
+          <div class="clash-card card-b" id="rpg-fighter-boss"><span id="rpg-boss-name-label">關卡敵人</span><img id="rpg-boss-avatar-img" class="clash-avatar tlo-card-art" src="" alt="敵人" loading="lazy" decoding="async"></div>
         </div>
         <div class="turn-banner" id="rpg-turn-banner">遠征異世界開始...</div>
         <div class="turn-battle-log" id="rpg-turn-log"></div>
@@ -2031,9 +2032,9 @@
           <div style="flex:1;text-align:right;"><b style="color:#ff7777;">魔王 HP</b><div class="hp-bar-wrapper"><div id="demon-hp-boss-fill" class="hp-bar-fill hp-boss"></div></div><div id="demon-hp-boss-text" class="hp-text">--</div></div>
         </div>
         <div class="clash-zone">
-          <div class="clash-card card-p" id="demon-fighter-player"><span id="demon-player-name-label">協作隊伍</span><img id="demon-player-avatar-img" class="clash-avatar tlo-card-art" src="" alt="協作隊伍"></div>
+          <div class="clash-card card-p" id="demon-fighter-player"><span id="demon-player-name-label">協作隊伍</span><img id="demon-player-avatar-img" class="clash-avatar tlo-card-art" src="" alt="協作隊伍" loading="lazy" decoding="async"></div>
           <div style="font-size:22px;color:#ffc107;font-weight:1000;">VS</div>
-          <div class="clash-card card-b" id="demon-fighter-boss"><span id="demon-boss-name-label">終焉魔王</span><img id="demon-boss-avatar-img" class="clash-avatar tlo-card-art" src="" alt="終焉魔王"></div>
+          <div class="clash-card card-b" id="demon-fighter-boss"><span id="demon-boss-name-label">終焉魔王</span><img id="demon-boss-avatar-img" class="clash-avatar tlo-card-art" src="" alt="終焉魔王" loading="lazy" decoding="async"></div>
         </div>
         <div class="turn-banner" id="demon-turn-banner">魔王挑戰開始...</div>
         <div class="turn-battle-log" id="demon-turn-log"></div>
@@ -2051,7 +2052,7 @@
       <div id="worldboss-battle-stage" class="worldboss-battle-stage" style="display:none;">
         <div class="worldboss-stage-title">WORLD BOSS BATTLE</div>
         <div class="worldboss-boss-visual">
-          <img id="worldboss-stage-boss-img" class="worldboss-stage-boss-img" src="" alt="世界BOSS">
+          <img id="worldboss-stage-boss-img" class="worldboss-stage-boss-img" src="" alt="世界BOSS" loading="eager" decoding="async">
           <div id="worldboss-attack-orb" class="worldboss-attack-orb"></div>
           <div id="worldboss-damage-pop" class="worldboss-damage-pop"></div>
         </div>
@@ -2350,7 +2351,7 @@
       selectedGachaPoolKey = selected.key;
       select.innerHTML = gachaPools.map(pool => `<option value="${escapeHtml(pool.key)}" ${pool.key === selected.key ? 'selected' : ''}>${escapeHtml(pool.name)}${pool.isDefault ? '｜常駐／預設' : ''}</option>`).join('');
       const period = `${selected.startsAt ? new Date(selected.startsAt).toLocaleString() : '立即開放'} ～ ${selected.endsAt ? new Date(selected.endsAt).toLocaleString() : '不限期'}`;
-      const image = selected.bannerUrl ? `<img src="${escapeHtml(selected.bannerUrl)}" alt="${escapeHtml(selected.name)}" onerror="this.style.display='none'">` : '';
+      const image = selected.bannerUrl ? `<img src="${escapeHtml(selected.bannerUrl)}" alt="${escapeHtml(selected.name)}" onerror="this.style.display='none'" loading="lazy" decoding="async">` : '';
       info.innerHTML = `${image}<div><b style="color:#fff">${escapeHtml(selected.name)}</b><br>${escapeHtml(selected.description || 'GM 尚未填寫卡池說明')}<br>可抽卡牌 ${Number(selected.cardCount || 0)} 張｜${escapeHtml(period)}</div>`;
       if (window.TLO_IS_GUEST) setCollectionSummary(Object.keys(guestDemoState.collection || {}).length, Number(selected.cardCount || 0));
       try { localStorage.setItem('TLO_GACHA_POOL', selectedGachaPoolKey); } catch (_) {}
@@ -2580,7 +2581,7 @@
         html += `
           <div class="collection-item">
             ${isOwned ? '' : '<div class="lock-icon">🔒</div>'}
-            <img src="${escapeHtml(imgUrl)}" class="collection-item-img tlo-card-art ${isOwned ? '' : 'locked'}" alt="${escapeHtml(cardName)}" loading="lazy">
+            <img src="${escapeHtml(imgUrl)}" class="collection-item-img tlo-card-art ${isOwned ? '' : 'locked'}" alt="${escapeHtml(cardName)}" loading="lazy" decoding="async">
             <div class="collection-name" style="color: ${isOwned ? '#00fff0' : '#555'};">${escapeHtml(cardName)}</div>
             ${badgeHtml}
           </div>
@@ -3575,7 +3576,7 @@
           const safeRarity = escapeHtml(response.npcRarity || '');
           const downloadName = safeFileName(`T-LO_${response.npcName || ''}_${response.serialNumber || ''}`);
           let imgHtml = githubImgUrl
-            ? `<div class="card-wrapper" id="single-card"><div class="card-serial-badge">${safeSerial}</div><img src="${escapeHtml(githubImgUrl)}" class="card-img" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('single-card', '${downloadName}', false)" class="btn-download">📥 下載卡片</button>`
+            ? `<div class="card-wrapper" id="single-card"><div class="card-serial-badge">${safeSerial}</div><img src="${escapeHtml(githubImgUrl)}" class="card-img" crossorigin="anonymous" loading="lazy" decoding="async"></div><button onclick="downloadCombinedCard('single-card', '${downloadName}', false)" class="btn-download">📥 下載卡片</button>`
             : '<p>(無圖)</p>';
 
           let now = new Date();
@@ -3623,7 +3624,7 @@
             const safeItemRarity = escapeHtml(item.npcRarity || '');
             const itemDownloadName = safeFileName(`T-LO_${item.npcName || ''}_${item.serialNumber || ''}`);
             let cardImgHtml = githubImgUrl
-              ? `<div class="card-wrapper" id="card10-${index}" style="margin:5px 0;"><div class="card-serial-badge badge-sm">${safeItemSerial}</div><img src="${escapeHtml(githubImgUrl)}" class="card-img-sm tlo-card-art" crossorigin="anonymous"></div><button onclick="downloadCombinedCard('card10-${index}', '${itemDownloadName}', false)" class="btn-download">📥 下載</button>`
+              ? `<div class="card-wrapper" id="card10-${index}" style="margin:5px 0;"><div class="card-serial-badge badge-sm">${safeItemSerial}</div><img src="${escapeHtml(githubImgUrl)}" class="card-img-sm tlo-card-art" crossorigin="anonymous" loading="lazy" decoding="async"></div><button onclick="downloadCombinedCard('card10-${index}', '${itemDownloadName}', false)" class="btn-download">📥 下載</button>`
               : '<p>(無圖)</p>';
 
             gridHtml += `<div class="gacha10-card"><div class="rarity-tag-sm rarity-${itemRarityClass}">${safeItemRarity}</div>${cardImgHtml}<div style="color: #00fff0; font-weight:bold; font-size:12px; margin-top:4px; text-align:center;">#${index+1} ${safeItemName}</div></div>`;
@@ -3832,7 +3833,7 @@ function showCollectionHistory() {
           <div class="rarity-tag rarity-${rarityClass}" style="display:inline-block; margin-bottom:8px;">${escapeHtml(rarity)}</div>
           <div class="card-wrapper">
             <div class="card-serial-badge">${escapeHtml(serial)}</div>
-            <img src="${imgUrl}" class="card-img tlo-card-art" crossorigin="anonymous">
+            <img src="${imgUrl}" class="card-img tlo-card-art" crossorigin="anonymous" loading="lazy" decoding="async">
           </div>
           <div style="color:#00fff0; font-weight:900; font-size:18px; margin-top:8px;">${escapeHtml(name)}</div>
         `;
@@ -4908,6 +4909,29 @@ function showCollectionHistory() {
       }).setPlayerPresenceStatus(playerUID, status);
     }
 
+
+    function getWorldBossImageUrls(data) {
+      data = data || latestWorldBossDashboard || {};
+      var event = data.event || null;
+      if (!event) return [];
+      var urls = [];
+      var main = getCardImageUrl({ name: event.bossCardName, imageUrl: event.imageUrl }) || '';
+      if (main) urls.push(main);
+      if (event.backgroundUrl) urls.push(event.backgroundUrl);
+      return urls.filter(Boolean);
+    }
+
+    function preloadGameImages(urls, options) {
+      if (window.TLOImageLoader && typeof window.TLOImageLoader.preload === 'function') {
+        return window.TLOImageLoader.preload(urls, options || { timeout: 2600, concurrency: 6, fetchPriority: 'high' });
+      }
+      return Promise.resolve([]);
+    }
+
+    function preloadWorldBossImages(data) {
+      return preloadGameImages(getWorldBossImageUrls(data), { timeout: 2600, concurrency: 4, fetchPriority: 'high' });
+    }
+
     function openWorldBossModal() {
       var modal = document.getElementById('world-boss-modal');
       if (modal) modal.style.display = 'flex';
@@ -4958,7 +4982,7 @@ function showCollectionHistory() {
         var partyText = (res.party || []).length ? (res.party || []).map(function(c){ return escapeHtml(c.name || '') + ' Lv.' + Number(c.level || 1); }).join('、') : '尚未編成遠征隊伍';
         content.innerHTML = `<div class="boss-card" style="text-align:left;margin-bottom:12px;">
           <div style="display:flex;gap:12px;align-items:center;">
-            <img src="${escapeHtml(img)}" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid rgba(255,221,119,.35);" onerror="this.src='${placeholderBattleImage(event.name || '世界BOSS', '#1c1238', '#ffdd77')}'">
+            <img src="${escapeHtml(img)}" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid rgba(255,221,119,.35);" onerror="this.src='${placeholderBattleImage(event.name || '世界BOSS', '#1c1238', '#ffdd77')}'" loading="lazy" decoding="async">
             <div style="flex:1;min-width:0;">
               <div style="font-size:19px;color:#ffdd77;font-weight:950;">${escapeHtml(event.name || '世界BOSS')}</div>
               <div style="color:#ccc;font-size:13px;line-height:1.55;">${escapeHtml(event.description || '全服同步討伐，依照累積傷害排名發放獎勵。')}</div>
@@ -4972,7 +4996,7 @@ function showCollectionHistory() {
           <div style="margin-top:8px;color:#aaa;font-size:12px;line-height:1.6;">我的隊伍戰力：${Number(res.teamPower || 0).toLocaleString()}｜隊伍：${partyText}<br>我的累積傷害：${Number(my.totalDamage || 0).toLocaleString()}｜目前排名：${my.rank ? '#' + Number(my.rank).toLocaleString() : '尚未上榜'}</div>
         </div>`;
       }
-      updateWorldBossBattleStage(res, false);
+      preloadWorldBossImages(res).then(function(){ updateWorldBossBattleStage(res, false); }).catch(function(){ updateWorldBossBattleStage(res, false); });
       if (btn) {
         btn.disabled = event.status !== 'OPEN' || Number(my.todayRemaining || 0) <= 0 || worldBossRunning;
         btn.innerText = event.status === 'OPEN' ? '🌍 挑戰世界BOSS' : statusText;
@@ -5004,9 +5028,13 @@ function showCollectionHistory() {
       var img = getCardImageUrl({ name: event.bossCardName, imageUrl: event.imageUrl }) || placeholderBattleImage(event.name || '世界BOSS', '#1c1238', '#ffdd77');
       var bossImg = document.getElementById('worldboss-stage-boss-img');
       if (bossImg) {
+        bossImg.dataset.tloCritical = '1';
+        bossImg.loading = 'eager';
+        bossImg.decoding = 'async';
+        bossImg.dataset.tloOriginalSrc = img;
         bossImg.src = img;
-        bossImg.onerror = function(){ this.src = placeholderBattleImage(event.name || '世界BOSS', '#1c1238', '#ffdd77'); };
         bossImg.alt = event.name || '世界BOSS';
+        if (window.TLOImageLoader && window.TLOImageLoader.enhanceImage) window.TLOImageLoader.enhanceImage(bossImg);
       }
       var hpPct = Math.max(0, Math.min(100, Number(event.hpPercent || 0)));
       var fill = document.getElementById('worldboss-stage-hp-fill');
@@ -5089,9 +5117,11 @@ function showCollectionHistory() {
       var beforeDashboard = latestWorldBossDashboard ? JSON.parse(JSON.stringify(latestWorldBossDashboard)) : null;
       worldBossRunning = true;
       if (btn) { btn.disabled = true; btn.innerText = '戰鬥中...'; }
-      if (msg) msg.innerHTML = '<span style="color:#aaa;">世界BOSS戰鬥開始...</span>';
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在預載世界BOSS圖片...</span>';
       updateWorldBossBattleStage(beforeDashboard || latestWorldBossDashboard, false);
-      google.script.run.withSuccessHandler(async function(res) {
+      preloadWorldBossImages(beforeDashboard || latestWorldBossDashboard).finally(function(){
+        if (msg) msg.innerHTML = '<span style="color:#aaa;">世界BOSS戰鬥開始...</span>';
+        google.script.run.withSuccessHandler(async function(res) {
         worldBossRunning = false;
         if (res && res.success && res.dashboard) {
           await playWorldBossVisualBattle(res, beforeDashboard).catch(function(){});
@@ -5101,11 +5131,12 @@ function showCollectionHistory() {
           renderWorldBossDashboard(res && res.dashboard ? res.dashboard : latestWorldBossDashboard);
         }
         if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '挑戰失敗') + '</span>' + (res && res.growthRewards ? formatGrowthRewards(res.growthRewards) : '');
-      }).withFailureHandler(function(err) {
-        worldBossRunning = false;
-        if (btn) { btn.disabled = false; btn.innerText = '🌍 挑戰世界BOSS'; }
-        if (msg) msg.innerHTML = '<span style="color:#ff7777;">挑戰失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
-      }).executeWorldBossBattle(playerUID);
+        }).withFailureHandler(function(err) {
+          worldBossRunning = false;
+          if (btn) { btn.disabled = false; btn.innerText = '🌍 挑戰世界BOSS'; }
+          if (msg) msg.innerHTML = '<span style="color:#ff7777;">挑戰失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+        }).executeWorldBossBattle(playerUID);
+      });
     }
 
 
@@ -5561,7 +5592,7 @@ function showCollectionHistory() {
       __memoryCards.forEach(function(card, index) {
         const imgUrl = getCardImageUrl(card);
         const cls = card.matched ? 'memory-card matched' : (card.revealed ? 'memory-card revealed' : 'memory-card');
-        html += `<div class="${cls}" onclick="flipMemoryCard(${index})"><img class="tlo-card-art" src="${imgUrl}" alt="${escapeHtml(card.name)}"></div>`;
+        html += `<div class="${cls}" onclick="flipMemoryCard(${index})"><img class="tlo-card-art" src="${imgUrl}" alt="${escapeHtml(card.name)}" loading="lazy" decoding="async"></div>`;
       });
       board.innerHTML = html;
     }
@@ -5719,7 +5750,7 @@ function showCollectionHistory() {
         html += `
           <div style="background:#111; border:1px solid #444; border-radius:10px; padding:10px; display:flex; gap:10px; align-items:center;">
             <div style="width:64px; flex:0 0 64px;">
-              ${imgUrl ? `<img src="${imgUrl}" class="card-art-thumbnail tlo-card-art">` : `<div class="card-art-placeholder">${escapeHtml(name)}</div>`}
+              ${imgUrl ? `<img src="${imgUrl}" class="card-art-thumbnail tlo-card-art" loading="lazy" decoding="async">` : `<div class="card-art-placeholder">${escapeHtml(name)}</div>`}
             </div>
             <div style="flex:1; min-width:0;">
               <div style="font-weight:900; color:#00fff0;">${escapeHtml(name)} <span style="color:#ffc107;">${renderStarText(star, card.maxStar || 10)}</span></div>
@@ -5959,6 +5990,7 @@ function showCollectionHistory() {
           if (!img.getAttribute('loading')) img.setAttribute('loading', 'lazy');
           if (!img.getAttribute('decoding')) img.setAttribute('decoding', 'async');
           img.setAttribute('draggable', 'false');
+          if (window.TLOImageLoader && typeof window.TLOImageLoader.enhanceImage === 'function') window.TLOImageLoader.enhanceImage(img);
         });
       } catch (_) {}
     }
@@ -6069,7 +6101,7 @@ function showCollectionHistory() {
       const cards = party.map(function(card) { return { name: card.name, imageUrl: card.imageUrl, label: '我的隊伍' }; });
       if (friend) cards.push({ name: friend.cardName, imageUrl: friend.imageUrl, label: friend.displayName || friend.uid });
       box.innerHTML = `<div class="rpg-party-members">${cards.map(function(card) {
-        return `<div class="rpg-mini-card"><img class="tlo-card-art" src="${escapeHtml(card.imageUrl || placeholderBattleImage(card.name, '#123a3a', '#00fff0'))}" alt="${escapeHtml(card.name || '')}"><div class="name">${escapeHtml(card.name || '')}</div><div style="font-size:10px;color:#aaa;">${escapeHtml(card.label || '')}</div></div>`;
+        return `<div class="rpg-mini-card"><img class="tlo-card-art" src="${escapeHtml(card.imageUrl || placeholderBattleImage(card.name, '#123a3a', '#00fff0'))}" alt="${escapeHtml(card.name || '')}" loading="lazy" decoding="async"><div class="name">${escapeHtml(card.name || '')}</div><div style="font-size:10px;color:#aaa;">${escapeHtml(card.label || '')}</div></div>`;
       }).join('')}${cards.length < 4 ? '<div class="rpg-mini-card empty"><div style="font-size:28px;color:#00fff0;margin-top:22px;">＋</div><div class="name">好友支援</div></div>' : ''}</div>`;
     }
 
@@ -6319,12 +6351,12 @@ function showCollectionHistory() {
       for (let i = 0; i < 3; i++) {
         const name = names[i] || '';
         if (!name) {
-          html += `<div class="rpg-mini-card empty"><img class="tlo-card-art" src="${placeholderBattleImage('空位', '#222', '#777')}" alt="空位"><div class="name">空位</div></div>`;
+          html += `<div class="rpg-mini-card empty"><img class="tlo-card-art" src="${placeholderBattleImage('空位', '#222', '#777')}" alt="空位" loading="lazy" decoding="async"><div class="name">空位</div></div>`;
           continue;
         }
         const info = findRpgCardInfo(name);
         const img = getCardImageUrl(info) || placeholderBattleImage(name, '#123a3a', '#00fff0');
-        html += `<div class="rpg-mini-card"><img class="tlo-card-art" src="${img}" alt="${escapeHtml(name)}"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★｜Lv.${Number(info.level||1)}</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')} Lv.${Number(info.skillLevel||1)}</div></div>`;
+        html += `<div class="rpg-mini-card"><img class="tlo-card-art" src="${img}" alt="${escapeHtml(name)}" loading="lazy" decoding="async"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★｜Lv.${Number(info.level||1)}</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')} Lv.${Number(info.skillLevel||1)}</div></div>`;
       }
       box.innerHTML = html;
       scheduleOptimizeTloImages(box);
@@ -6691,6 +6723,6 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260626-mobile-v12-fail-reason-shuffle-safe"></script>
+  <script src="./js/link-battle.js?v=20260627-image-loading-v1"></script>
 </body>
 </html>
