@@ -1664,6 +1664,19 @@
             <small id="link-battle-boss-defeat-reward">通關完成</small>
           </div>
         </div>
+        <div class="link-battle-scene-modal" id="link-battle-scene-modal" aria-live="polite">
+          <div class="link-battle-scene-card" id="link-battle-scene-card">
+            <div class="link-battle-scene-badge" id="link-battle-scene-badge">戰前劇情</div>
+            <h3 id="link-battle-scene-title">墮落聖域</h3>
+            <div class="link-battle-scene-subtitle" id="link-battle-scene-subtitle">準備開始討伐。</div>
+            <div class="link-battle-scene-body" id="link-battle-scene-body"></div>
+            <div class="link-battle-scene-summary" id="link-battle-scene-summary"></div>
+            <div class="link-battle-scene-actions">
+              <button type="button" id="link-battle-scene-secondary" onclick="TLOLinkBattle.sceneSecondaryAction()">關閉</button>
+              <button type="button" class="primary" id="link-battle-scene-primary" onclick="TLOLinkBattle.scenePrimaryAction()">開始討伐</button>
+            </div>
+          </div>
+        </div>
         <div class="link-battle-rules" id="link-battle-rules">
           <div class="link-battle-rules-card">
             <h3>卡牌連線討伐戰規則</h3>
@@ -1726,6 +1739,8 @@
             <div class="link-battle-boss-line"><span class="link-battle-stage-name" id="link-battle-stage-name">卡牌連線討伐戰</span><span id="link-battle-time">00:00</span></div>
             <div class="link-battle-boss-line"><span class="link-battle-boss-name" id="link-battle-boss-name">連線戰 BOSS</span><span>怒氣</span></div>
             <div class="link-battle-rage"><div class="link-battle-rage-fill" id="link-battle-rage-fill"></div></div>
+            <div class="link-battle-boss-meta"><span class="link-battle-boss-tier" id="link-battle-stage-badge">一般戰</span><span class="link-battle-boss-node" id="link-battle-stage-node">墮落聖域外廊</span></div>
+            <div class="link-battle-boss-lore" id="link-battle-boss-lore">BOSS 情報讀取中...</div>
             <div class="link-battle-boss-center" id="link-battle-boss-center"><span class="link-battle-boss-silhouette">BOSS</span></div>
           </div>
         </div>

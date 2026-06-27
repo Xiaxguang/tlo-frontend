@@ -21,10 +21,13 @@
     teamDraftIds: [],
     teamPanelOpen: false,
     nextStageIdAfterVictory: null,
-    bossDefeatAnimationRunId: null
+    bossDefeatAnimationRunId: null,
+    lastStoryStageId: null,
+    pendingScenePrimary: null,
+    pendingSceneSecondary: null
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260626-mobile-v12-fail-reason-shuffle-safe';
+  var TLO_LINK_BATTLE_BUILD = '20260627-mobile-v13-ch1-boss-story-result';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -54,6 +57,227 @@
     return escapeHtml(JSON.stringify(String(value == null ? '' : value)));
   }
   function sleep(ms) { return new Promise(function(resolve){ setTimeout(resolve, ms); }); }
+
+
+  var LINK_BATTLE_CH1_CONTENT = {
+    chapterName: '第一章｜墮落的熾天使',
+    chapterTag: '墮落聖域遠征',
+    stages: {
+      1: { stageTitle: '聖域外廊', bossName: '殘翼守望者', bossIntro: '失去羽翼的守望者徘徊在外廊裂口，仍執行早已扭曲的護衛命令。', battleIntro: '外圍結界已經崩落，第一道防線由殘翼守望者把守。先突破這裡，才能真正踏入墮落聖域。', clearStory: '外廊的結界碎片逐漸黯淡。你從守望者的殘破誓言中，得知聖域深處還有更高階的墮化者。', node: '外廊裂口', tier: 'normal' },
+      2: { stageTitle: '斷羽巡禮', bossName: '血印巡戒者', bossIntro: '巡戒者在牆面留下血印標記，任何闖入者都會被視為褻瀆者。', battleIntro: '循著殘翼守望者留下的血痕前進，巡戒者已經察覺你的氣息。', clearStory: '巡戒者的血印失去光芒，通往內環的走廊短暫安靜了下來。', node: '巡戒迴廊', tier: 'normal' },
+      3: { stageTitle: '破碎聖牆', bossName: '斷罪執盾兵', bossIntro: '這名執盾兵以斷裂的聖盾阻絕前路，象徵過去聖域最後的秩序。', battleIntro: '破碎的聖牆仍殘留防禦術式，執盾兵正站在牆前鎮守缺口。', clearStory: '聖盾碎裂後，牆內的封印線路露出來，你看見更深處牢獄區的地圖殘片。', node: '聖牆缺口', tier: 'normal' },
+      4: { stageTitle: '暮鐘走道', bossName: '失序聖堂衛', bossIntro: '昔日守衛聖堂的戰士，如今只會盲目追逐每一次鐘聲。', battleIntro: '暮鐘響起，整條走道的怨念都被喚醒。若不擊倒聖堂衛，鐘聲會不斷召集敵影。', clearStory: '鐘聲戛然而止。走道盡頭的封門開始鬆動，露出一條通往內城的狹縫。', node: '暮鐘走道', tier: 'normal' },
+      5: { stageTitle: '墮翼門廳', bossName: '墮天守門將', bossIntro: '守門將統領外層墮化者，是第一個真正阻攔遠征的精英守門者。', battleIntro: '你抵達聖域內門。墮天守門將展開殘翼，宣告所有外來者都將止步於此。', clearStory: '守門將倒下後，第一道內門終於敞開。你確定這場討伐不是單純的清剿，而是深入聖域核心的遠征。', node: '第一道內門', tier: 'mini' },
+      6: { stageTitle: '鐵鎖迴廊', bossName: '枷鎖司祭', bossIntro: '司祭以鎖鏈代替禱文，把受刑者的哀號編成束縛術。', battleIntro: '越過內門後，空氣變得沉重。鐵鎖迴廊裡滿是用於囚禁叛徒的拘束咒。', clearStory: '枷鎖司祭的鎖鏈斷裂，走廊深處傳來沉重鐵門開啟的回音。', node: '鐵鎖迴廊', tier: 'normal' },
+      7: { stageTitle: '懺罪牢階', bossName: '黑鐵懺罪官', bossIntro: '黑鐵懺罪官專門審判不服從者，並以痛楚迫使靈魂屈服。', battleIntro: '階梯兩側刻滿懺罪文，懺罪官已經將你列入審判名單。', clearStory: '審判台崩裂，牢階之下露出更多囚室，證明這裡曾鎮壓無數異端。', node: '牢階審判台', tier: 'normal' },
+      8: { stageTitle: '縛魂牢域', bossName: '縛魂監視者', bossIntro: '它藉由觀測靈魂波動來封殺逃脫者，是牢域最危險的監控者。', battleIntro: '牢域的燈火逐一亮起，縛魂監視者從高處凝視你的每一步。', clearStory: '監視者熄滅後，困在牢域的殘魂終於稍稍平靜，為你指向主牢方向。', node: '牢域外圈', tier: 'normal' },
+      9: { stageTitle: '聖鎖祭壇', bossName: '聖鎖審問官', bossIntro: '審問官將聖性與刑罰混為一談，讓祭壇成為最殘酷的拷問室。', battleIntro: '祭壇的光芒不再神聖，反而像是專門審問入侵者的牢籠。', clearStory: '祭壇封印鬆動，主牢的真正看守者似乎已經感應到你的到來。', node: '審問祭壇', tier: 'normal' },
+      10: { stageTitle: '獄門終鎖', bossName: '聖鎖獄卒', bossIntro: '獄卒掌控整座牢域的拘束之力，每一條鎖鏈都回應他的號令。', battleIntro: '你終於抵達主牢獄門。聖鎖獄卒從層層鎖鏈間現身，準備親手執行最後的封殺。', clearStory: '獄卒被擊退後，主牢完全解放。殘魂留下關鍵警告：真正扭曲聖域命運的，是一名仍在深層低語的神諭者。', node: '主牢獄門', tier: 'mini' },
+      11: { stageTitle: '祕典前庭', bossName: '狂信詠唱者', bossIntro: '狂信詠唱者不停誦讀失控經文，使整片前庭籠罩在偏執的共鳴中。', battleIntro: '走出牢域後，你踏入記錄聖域歷史的前庭。然而此地經文已被改寫成煽動瘋狂的咒歌。', clearStory: '經文殘頁四散，你從其中拼湊出關於神諭大廳的殘缺紀錄。', node: '祕典前庭', tier: 'normal' },
+      12: { stageTitle: '裂光書庫', bossName: '畸光預言徒', bossIntro: '這名預言徒被異常光芒侵蝕，能在書庫中扭曲視線與方向。', battleIntro: '裂光書庫內的每一道光束都可能是陷阱，預言徒正躲在其中觀察你的失誤。', clearStory: '光束失去控制後，書庫中央的導引星圖重新顯現，為你指出正確路徑。', node: '裂光書庫', tier: 'normal' },
+      13: { stageTitle: '逆位星廳', bossName: '混沌讀星者', bossIntro: '讀星者不再解讀天命，而是將錯亂星象當成武器操弄戰場。', battleIntro: '星廳的天穹全部逆轉。若不擊破讀星者，整個大廳都會變成無法辨識方向的迷宮。', clearStory: '逆位星圖破碎後，你開始看見神諭者留下的真正路標。', node: '逆位星廳', tier: 'normal' },
+      14: { stageTitle: '噤聲觀測台', bossName: '逆位觀測者', bossIntro: '觀測者剝奪一切聲音，讓入侵者在無聲中逐漸失去判斷。', battleIntro: '踏上觀測台時，所有雜音都被抽離，只剩視野中愈發濃烈的異象。', clearStory: '無聲結界消退，遠方終於傳來深層大廳的鐘律。', node: '觀測台', tier: 'normal' },
+      15: { stageTitle: '神諭回廊', bossName: '混沌神諭者', bossIntro: '掌握扭曲預言的神諭者，已經能將命運本身改寫為通往混沌的路徑。', battleIntro: '回廊盡頭，混沌神諭者正等待你的到來。他宣稱聖域的墮落並非災難，而是進化。', clearStory: '神諭者敗退時留下最後一段預言：真正的終末正在上層空域甦醒。你知道遠征已進入後半段。', node: '神諭大廳', tier: 'mini' },
+      16: { stageTitle: '失重回橋', bossName: '虛蝕翼侍', bossIntro: '翼侍在失重空橋間來回穿梭，以虛蝕之力侵蝕來者的意志。', battleIntro: '離開大廳後，道路轉為懸空空橋。稍有失誤，就會墜入下方的虛無裂縫。', clearStory: '空橋恢復穩定，上層聖歌的殘響開始傳入耳中。', node: '失重回橋', tier: 'normal' },
+      17: { stageTitle: '殘歌長廊', bossName: '無光聖歌隊', bossIntro: '這支聖歌隊早已失去光明，只剩無盡低鳴在長廊中迴盪。', battleIntro: '長廊本該是迎接榮光的儀式之路，如今卻成了詭異合唱的巢穴。', clearStory: '殘歌停歇後，長廊兩側的封翼碑開始崩落。', node: '殘歌長廊', tier: 'normal' },
+      18: { stageTitle: '裂界升降座', bossName: '裂界傳令官', bossIntro: '傳令官負責連接各層空域，能驅使裂界之風干擾所有接近者。', battleIntro: '升降座已被裂界風暴包圍。唯有擊倒傳令官，才能上行至更高層。', clearStory: '風暴平息，升降座再次運作，你正式進入聖域最危險的上層空域。', node: '裂界升降座', tier: 'normal' },
+      19: { stageTitle: '空域斷章', bossName: '空域斷章使', bossIntro: '斷章使蒐集破碎祕典，把整片空域變成無序漂浮的記憶殘章。', battleIntro: '半空中漂浮的斷章遮蔽視野，稍一分神就會被捲入無序書頁。', clearStory: '斷章逐一墜落，遠方的王座輪廓開始出現。', node: '斷章空域', tier: 'normal' },
+      20: { stageTitle: '虛空門扉', bossName: '虛無司門者', bossIntro: '司門者看守通往內殿的門扉，是上層空域第一位真正的門關。', battleIntro: '厚重門扉前的光芒被完全抽空。虛無司門者拒絕任何生者繼續前行。', clearStory: '門扉鬆動，內殿的寒意撲面而來。你意識到真正的熾天階層已近在眼前。', node: '虛空門扉', tier: 'mini' },
+      21: { stageTitle: '墮曜中庭', bossName: '墮曜巡禮者', bossIntro: '巡禮者沿著中庭不斷繞行，用墮曜之火焚去一切不潔。', battleIntro: '中庭曾是聖域最莊嚴的朝拜區，如今只剩墮曜火焰與扭曲祈禱。', clearStory: '火焰略微減弱，前往王座庭園的石階終於顯露完整。', node: '中庭火環', tier: 'normal' },
+      22: { stageTitle: '聖骸石階', bossName: '聖骸束縛者', bossIntro: '束縛者以聖骸碎片築成囚牢，讓石階本身也成為陷阱。', battleIntro: '踏上石階後，你發現每一塊階石都藏著束縛術，束縛者就在高處等待。', clearStory: '石階上的骸紋崩碎，通往庭園的視野被打開。', node: '聖骸石階', tier: 'normal' },
+      23: { stageTitle: '灰燼庭園', bossName: '灰燼記錄官', bossIntro: '記錄官焚燒所有不被允許的歷史，讓真相只剩灰燼。', battleIntro: '庭園裡飄散著無數灰燼。每一片都像是被抹去的一段歷史。', clearStory: '你從未燒盡的殘片中，讀到最上層存在一位失名熾翼。', node: '灰燼庭園', tier: 'normal' },
+      24: { stageTitle: '熾翼回廊', bossName: '失名熾翼', bossIntro: '失去名字的熾翼守衛，在回廊中徘徊，只為服從最終王座的意志。', battleIntro: '回廊的羽光不再純白，這裡已成為內殿最後的迴響地帶。', clearStory: '失名熾翼消散後，王座內殿的大門徹底展開。', node: '熾翼回廊', tier: 'normal' },
+      25: { stageTitle: '內殿門衛', bossName: '虛無熾天侍', bossIntro: '熾天侍是最終王座前的高階精英，僅次於真正的熾天使。', battleIntro: '你來到王座內殿門前，虛無熾天侍展翼降臨，宣告凡人不得踏入終焉領域。', clearStory: '熾天侍敗退後，王座廳堂完全顯現。你能感受到核心深處的巨大威壓正在蘇醒。', node: '王座內殿門前', tier: 'mini' },
+      26: { stageTitle: '冠冕迴座', bossName: '空洞冠冕', bossIntro: '失控的冠冕自主意識化，漂浮在王座周圍汲取殘存聖力。', battleIntro: '尚未見到最終敵人前，王座四周的冠冕殘器便率先甦醒。', clearStory: '冠冕墜落地面，王座周圍的力場出現裂隙。', node: '冠冕迴座', tier: 'normal' },
+      27: { stageTitle: '熾翼王座前庭', bossName: '斷章熾翼王', bossIntro: '熾翼王以殘缺榮耀統御前庭，是最終熾天使的最後護衛長。', battleIntro: '前庭的每一道羽痕都像劍鋒，熾翼王不允許任何人接近王座正廳。', clearStory: '護衛長倒下後，王座門扉不再有守護者，只剩令人窒息的靜默。', node: '王座前庭', tier: 'normal' },
+      28: { stageTitle: '深淵聖歌壇', bossName: '深淵鳴奏者', bossIntro: '鳴奏者以深淵聖歌維持王座結界，是終末降臨前最後的儀式者。', battleIntro: '聖歌壇中央的樂律正支撐整個內殿結界，必須先破壞這份演奏。', clearStory: '樂律中斷，結界開始快速鬆動，最終戰的氣息愈發明顯。', node: '聖歌壇', tier: 'normal' },
+      29: { stageTitle: '終末門前', bossName: '終末開門者', bossIntro: '開門者受命迎接終末，握有啟動王座最終儀式的鑰印。', battleIntro: '終末門前只剩最後一位守衛。他要以自己的生命，換取虛無熾天使完全甦醒。', clearStory: '鑰印粉碎後，終末之門終於緩緩開啟。你已站在最終決戰的入口。', node: '終末之門', tier: 'normal' },
+      30: { stageTitle: '終焉王座', bossName: '虛無熾天使．亞薩洛斯', bossIntro: '亞薩洛斯曾是聖域最接近光明的熾天使，如今卻以虛無之力統御整座墮落聖域。', battleIntro: '終焉王座前，虛無熾天使．亞薩洛斯終於現身。他宣稱一切秩序終將歸於虛無，而你正是最後的阻礙。', clearStory: '亞薩洛斯的羽翼逐漸化為光塵，墮落聖域的震動也慢慢平息。第一章告一段落，但聖域深處仍藏著更大的真相。', node: '終焉王座', tier: 'final' }
+    }
+  };
+
+  function getStageNarrative(stageOrNumber) {
+    var n = typeof stageOrNumber === 'number' ? stageOrNumber : getStageNumber(stageOrNumber);
+    return (LINK_BATTLE_CH1_CONTENT.stages && LINK_BATTLE_CH1_CONTENT.stages[n]) || null;
+  }
+
+  function getStageTier(stage) {
+    var content = getStageNarrative(stage);
+    if (content && content.tier) return content.tier;
+    var n = getStageNumber(stage);
+    if (n === 30) return 'final';
+    if (n > 0 && n % 5 === 0) return 'mini';
+    return 'normal';
+  }
+
+  function getStageTierLabel(stage) {
+    var tier = getStageTier(stage);
+    return tier === 'final' ? '章節最終 BOSS' : (tier === 'mini' ? '章節小 BOSS' : '一般戰');
+  }
+
+  function getStageNodeLabel(stage) {
+    var content = getStageNarrative(stage);
+    return (content && content.node) || (stage && stage.chapterName) || '墮落聖域';
+  }
+
+  function getDisplayStageName(stage) {
+    if (!stage) return '卡牌連線討伐戰';
+    var content = getStageNarrative(stage);
+    if (content && content.stageTitle) return '第' + getStageNumber(stage) + '關｜' + content.stageTitle;
+    return stage.stageName || '卡牌連線討伐戰';
+  }
+
+  function getDisplayBossName(stage) {
+    var content = getStageNarrative(stage);
+    if (content && content.bossName) return content.bossName;
+    var boss = stage && stage.boss || {};
+    return boss.bossName || '連線戰 BOSS';
+  }
+
+  function getDisplayBossIntro(stage) {
+    var content = getStageNarrative(stage);
+    if (content && content.bossIntro) return content.bossIntro;
+    return String(stage && stage.boss && stage.boss.description || '');
+  }
+
+  function getBattleIntroText(stage) {
+    var content = getStageNarrative(stage);
+    return (content && content.battleIntro) || '請連線相同卡牌，突破敵陣，向 BOSS 發起討伐。';
+  }
+
+  function getClearStoryText(stage) {
+    var content = getStageNarrative(stage);
+    return (content && content.clearStory) || '你成功突破本關的阻礙，前方道路暫時打開。';
+  }
+
+  function buildSceneSummaryHtml(items) {
+    var list = Array.isArray(items) ? items.filter(Boolean) : [];
+    return list.map(function(item) {
+      return '<div class="item"><span>' + escapeHtml(item.label || '') + '</span><b>' + escapeHtml(item.value || '') + '</b></div>';
+    }).join('');
+  }
+
+  function closeSceneModal() {
+    var modal = $('link-battle-scene-modal');
+    if (modal) modal.classList.remove('active');
+    state.pendingScenePrimary = null;
+    state.pendingSceneSecondary = null;
+  }
+
+  function openSceneModal(options) {
+    options = options || {};
+    var modal = $('link-battle-scene-modal');
+    var card = $('link-battle-scene-card');
+    var badge = $('link-battle-scene-badge');
+    var title = $('link-battle-scene-title');
+    var subtitle = $('link-battle-scene-subtitle');
+    var body = $('link-battle-scene-body');
+    var summary = $('link-battle-scene-summary');
+    var primary = $('link-battle-scene-primary');
+    var secondary = $('link-battle-scene-secondary');
+    if (!modal || !card || !badge || !title || !subtitle || !body || !summary || !primary || !secondary) return;
+    card.className = 'link-battle-scene-card' + (options.type ? ' type-' + options.type : '');
+    badge.textContent = options.badge || '戰鬥資訊';
+    title.textContent = options.title || '討伐資訊';
+    subtitle.textContent = options.subtitle || '';
+    body.innerHTML = String(options.body || '').replace(/\n/g, '<br>');
+    summary.innerHTML = buildSceneSummaryHtml(options.summaryItems || []);
+    primary.textContent = options.primaryText || '確認';
+    secondary.textContent = options.secondaryText || '關閉';
+    state.pendingScenePrimary = typeof options.onPrimary === 'function' ? options.onPrimary : function(){ closeSceneModal(); };
+    state.pendingSceneSecondary = typeof options.onSecondary === 'function' ? options.onSecondary : function(){ closeSceneModal(); };
+    modal.classList.add('active');
+  }
+
+  function scenePrimaryAction() {
+    if (typeof state.pendingScenePrimary === 'function') return state.pendingScenePrimary();
+    closeSceneModal();
+  }
+
+  function sceneSecondaryAction() {
+    if (typeof state.pendingSceneSecondary === 'function') return state.pendingSceneSecondary();
+    closeSceneModal();
+  }
+
+  function updateBossLorePanel(stage) {
+    var badgeEl = $('link-battle-stage-badge');
+    var nodeEl = $('link-battle-stage-node');
+    var loreEl = $('link-battle-boss-lore');
+    if (badgeEl) {
+      badgeEl.textContent = getStageTierLabel(stage);
+      badgeEl.className = 'link-battle-boss-tier' + (getStageTier(stage) === 'mini' ? ' tier-mini' : (getStageTier(stage) === 'final' ? ' tier-final' : ''));
+    }
+    if (nodeEl) nodeEl.textContent = getStageNodeLabel(stage);
+    if (loreEl) loreEl.textContent = getDisplayBossIntro(stage) || 'BOSS 情報讀取中...';
+  }
+
+  function maybeShowPreBattleStory(stage) {
+    return new Promise(function(resolve) {
+      if (!stage) return resolve(true);
+      if (state.lastStoryStageId === stage.stageId) return resolve(true);
+      openSceneModal({
+        type: 'prebattle',
+        badge: '戰前劇情',
+        title: getDisplayStageName(stage),
+        subtitle: getDisplayBossName(stage) + '｜' + getStageTierLabel(stage),
+        body: getBattleIntroText(stage),
+        summaryItems: [
+          { label: '關卡節點', value: getStageNodeLabel(stage) },
+          { label: 'BOSS 目標', value: getDisplayBossName(stage) },
+          { label: '時間限制', value: String(Number(stage.timeLimitSeconds || 0)) + ' 秒' },
+          { label: '盤面規格', value: String(Number(stage.rows || 0)) + ' × ' + String(Number(stage.cols || 0)) + '｜' + String(Number(stage.layerCount || 1)) + ' 層' }
+        ],
+        primaryText: '開始討伐',
+        secondaryText: '略過劇情',
+        onPrimary: function(){ state.lastStoryStageId = stage.stageId; closeSceneModal(); resolve(true); },
+        onSecondary: function(){ state.lastStoryStageId = stage.stageId; closeSceneModal(); resolve(true); }
+      });
+    });
+  }
+
+  function showVictoryScene(rewardSummary) {
+    var b = state.battle || {};
+    var stage = b.stage || {};
+    openSceneModal({
+      type: 'victory',
+      badge: '通關結果',
+      title: '擊敗 ' + getDisplayBossName(stage),
+      subtitle: getDisplayStageName(stage),
+      body: getClearStoryText(stage),
+      summaryItems: [
+        { label: '剩餘 HP', value: Math.max(0, Number(b.playerHp || 0)).toLocaleString() + ' / ' + Number(b.playerMaxHp || 0).toLocaleString() },
+        { label: '最高 Combo', value: String(Number(b.maxCombo || b.combo || 0)) },
+        { label: '剩餘時間', value: formatTime(state.timeLeft || b.remainingSeconds || 0) },
+        { label: '通關獎勵', value: rewardSummary || '本關無額外獎勵' }
+      ],
+      primaryText: '關閉',
+      secondaryText: state.nextStageIdAfterVictory ? '下一關待命' : '返回章節',
+      onPrimary: function(){ closeSceneModal(); },
+      onSecondary: function(){ closeSceneModal(); if (state.nextStageIdAfterVictory) { setMsg('已準備下一關，按下下方「下一關」即可直接挑戰。', '#00fff0'); } else { openStageSelect(); } }
+    });
+  }
+
+  function showFailureScene(reason) {
+    var b = state.battle || {};
+    var stage = b.stage || {};
+    openSceneModal({
+      type: 'failure',
+      badge: '討伐失敗',
+      title: getDisplayStageName(stage),
+      subtitle: '未能擊敗 ' + getDisplayBossName(stage),
+      body: formatLinkBattleEndReason(reason) + '\n\n建議重新整理連線節奏，優先保留可連線路徑，避免過多失誤與無效洗牌。',
+      summaryItems: [
+        { label: 'BOSS 剩餘 HP', value: Math.max(0, Number(b.bossHp || 0)).toLocaleString() + ' / ' + Number(b.bossMaxHp || 0).toLocaleString() },
+        { label: '玩家剩餘 HP', value: Math.max(0, Number(b.playerHp || 0)).toLocaleString() + ' / ' + Number(b.playerMaxHp || 0).toLocaleString() },
+        { label: '錯誤次數', value: Number(b.errorCount || 0) + ' / ' + Number(stage.errorLimit || 0) },
+        { label: '最高 Combo', value: String(Number(b.maxCombo || b.combo || 0)) }
+      ],
+      primaryText: '再次討伐',
+      secondaryText: '關閉',
+      onPrimary: function(){ closeSceneModal(); retryBattle(); },
+      onSecondary: function(){ closeSceneModal(); }
+    });
+  }
 
 
   // v7：手機瀏覽器實際可視高度修正。
@@ -383,7 +607,7 @@
     var teamText = cardNames.length ? cardNames.join('、') : '尚未編隊';
     return '<div class="link-battle-prebattle-panel ' + (open ? 'open' : 'collapsed') + '">'
       + '<button type="button" class="link-battle-prebattle-toggle" onclick="TLOLinkBattle.toggleTeamPanel()">'
-      + '<div><span>出戰編隊</span><b>' + escapeHtml(stage.stageName || '選擇關卡') + '</b><small>' + escapeHtml(teamText) + '</small></div>'
+      + '<div><span>出戰編隊</span><b>' + escapeHtml(getDisplayStageName(stage)) + '</b><small>' + escapeHtml(teamText) + '</small></div>'
       + '<em>' + escapeHtml(bonusText) + '</em><i>' + (open ? '收合' : '展開') + '</i>'
       + '</button>'
       + '<div class="link-battle-prebattle-compact-actions">'
@@ -544,10 +768,17 @@
           var drawRewardAmount = getStageDrawRewardAmount(stage);
           var rewardHtml = drawRewardAmount > 0 ? '<div class="link-battle-stage-card-reward">首次獎勵：抽卡次數 +' + drawRewardAmount + '</div>' : '';
           var progressText = stage.cleared ? ('已通關' + (stage.progress && stage.progress.clearCount ? ' x ' + Number(stage.progress.clearCount) : '')) : '未通關';
+          if (getStageTier(stage) === 'mini') cls.push('stage-mini');
+          if (getStageTier(stage) === 'final') cls.push('stage-final');
           return '<button type="button" class="' + cls.join(' ') + '" ' + (!stage.unlocked ? 'disabled' : '') + ' onclick="TLOLinkBattle.chooseStageAndStart(\'' + escapeHtml(stage.stageId) + '\')">'
             + '<div class="link-battle-stage-card-top"><strong>第 ' + n + ' 關</strong><span>' + escapeHtml(progressText) + '</span></div>'
-            + '<div class="link-battle-stage-card-title">' + escapeHtml(stage.stageName || '卡牌連線討伐') + '</div>'
-            + '<div class="link-battle-stage-card-boss">BOSS：' + escapeHtml(boss.bossName || '連線戰 BOSS') + '</div>'
+            + '<div class="link-battle-stage-card-title">' + escapeHtml(getDisplayStageName(stage)) + '</div>'
+            + '<div class="link-battle-stage-card-boss">BOSS：' + escapeHtml(getDisplayBossName(stage)) + '</div>'
+            + '<div class="link-battle-stage-card-sub">' + escapeHtml(getDisplayBossIntro(stage)) + '</div>'
+            + '<div class="link-battle-stage-card-badges">'
+            + '<span class="link-battle-stage-card-badge ' + (getStageTier(stage) === 'mini' ? 'mini' : (getStageTier(stage) === 'final' ? 'final' : '')) + '">' + escapeHtml(getStageTierLabel(stage)) + '</span>'
+            + '<span class="link-battle-stage-card-badge">' + escapeHtml(getStageNodeLabel(stage)) + '</span>'
+            + '</div>'
             + rewardHtml
             + '<div class="link-battle-stage-card-cta">' + (stage.unlocked ? (stage.stageId === state.selectedStageId ? '已選擇' : '選擇關卡') : '尚未解鎖') + '</div>'
             + '</button>';
@@ -613,8 +844,9 @@
     var boss = stage.boss || {};
     var bg = $('link-battle-boss-bg');
     if (bg) bg.style.backgroundImage = boss.bossBackground || boss.bossImage ? 'url("' + (boss.bossBackground || boss.bossImage) + '")' : '';
-    if ($('link-battle-stage-name')) $('link-battle-stage-name').textContent = stage.stageName || '卡牌連線討伐戰';
-    if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = boss.bossName || '連線戰 BOSS';
+    if ($('link-battle-stage-name')) $('link-battle-stage-name').textContent = getDisplayStageName(stage);
+    if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = getDisplayBossName(stage);
+    updateBossLorePanel(stage);
     if ($('link-battle-boss-hp-text')) $('link-battle-boss-hp-text').textContent = '尚未開始';
     if ($('link-battle-player-hp')) $('link-battle-player-hp').textContent = '--';
     if ($('link-battle-combo')) $('link-battle-combo').textContent = '0';
@@ -638,8 +870,13 @@
     return startBattle();
   }
 
-  async function startBattle() {
+  async function startBattle(options) {
     if (state.isAnimating) return;
+    options = options || {};
+    var dash = state.dashboard || {};
+    var stages = dash.stages || [];
+    var stage = stages.find(function(s){ return s.stageId === state.selectedStageId; }) || dash.selectedStage || stages[0] || null;
+    if (!options.skipStory) await maybeShowPreBattleStory(stage);
     setButtonsDisabled(true);
     setMsg('正在產生連線卡牌盤面...', '#00fff0');
     try {
@@ -672,8 +909,9 @@
     var boss = b.boss || (b.stage && b.stage.boss) || {};
     var bg = $('link-battle-boss-bg');
     if (bg) bg.style.backgroundImage = boss.bossBackground || boss.bossImage ? 'url("' + (boss.bossBackground || boss.bossImage) + '")' : '';
-    if ($('link-battle-stage-name')) $('link-battle-stage-name').textContent = (b.stage && b.stage.stageName) || '卡牌連線討伐戰';
-    if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = boss.bossName || '連線戰 BOSS';
+    if ($('link-battle-stage-name')) $('link-battle-stage-name').textContent = getDisplayStageName(b.stage);
+    if ($('link-battle-boss-name')) $('link-battle-boss-name').textContent = getDisplayBossName(stage);
+    updateBossLorePanel(stage);
     var hpPct = b.bossMaxHp > 0 ? Math.max(0, Math.min(100, Math.round(Number(b.bossHp || 0) / Number(b.bossMaxHp || 1) * 100))) : 0;
     if ($('link-battle-hpfill')) $('link-battle-hpfill').style.width = hpPct + '%';
     if ($('link-battle-boss-hp-text')) $('link-battle-boss-hp-text').textContent = Math.max(0, Number(b.bossHp || 0)).toLocaleString() + ' / ' + Number(b.bossMaxHp || 0).toLocaleString();
@@ -1079,7 +1317,8 @@
         var startBtn = $('link-battle-start-btn');
         if (startBtn) { startBtn.disabled = false; startBtn.style.display = ''; startBtn.innerHTML = state.nextStageIdAfterVictory ? '➡️ 下一關' : '📖 回章節'; }
         updateShellMode();
-      }).catch(function(){ updateShellMode(); });
+        showVictoryScene(rewardSummary);
+      }).catch(function(){ updateShellMode(); showVictoryScene(rewardSummary); });
     } else if (status === 'failed') {
       stopTimer();
       playAudio('battle_failed');
@@ -1088,6 +1327,7 @@
       var startBtn = $('link-battle-start-btn');
       if (startBtn) { startBtn.disabled = false; startBtn.style.display = ''; startBtn.innerHTML = '⚔️ 再次討伐'; }
       updateShellMode();
+      showFailureScene(reason);
     }
   }
 
@@ -1096,7 +1336,7 @@
     state.selectedTileId = null;
     state.hintedIds = new Set();
     state.linkPath = null;
-    await startBattle();
+    await startBattle({ skipStory: true });
   }
 
   async function useHint() {
@@ -1177,7 +1417,9 @@
     toggleTeamCard: toggleTeamCard,
     saveTeamDraft: saveTeamDraft,
     autoLinkBattleTeam: autoLinkBattleTeam,
-    toggleStageChapter: toggleStageChapter
+    toggleStageChapter: toggleStageChapter,
+    scenePrimaryAction: scenePrimaryAction,
+    sceneSecondaryAction: sceneSecondaryAction
   };
   window.openLinkBattleModal = openModal;
 })();
