@@ -55,6 +55,7 @@
     "getHomeState",
     "getPlayerCollection",
     "getLinkBattleDashboard",
+    "getDailyDungeonDashboard",
     "getGachaPools",
     "getBattleDashboard",
     "getCardProbabilityTable",

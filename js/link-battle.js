@@ -517,10 +517,13 @@
       updateTimerText();
       if (state.timeLeft <= 0) {
         stopTimer();
-        state.battle.status = 'failed';
-        setMsg('<b style="color:#ff7777">時間耗盡，討伐失敗。</b>', '#ff7777');
-        playAudio('battle_failed');
+        if (state.battle) {
+          state.battle.status = 'failed';
+          state.battle.endReason = 'TIMEOUT';
+          state.battle.remainingSeconds = 0;
+        }
         setButtonsDisabled(true);
+        handleBattleEnd('failed', 'TIMEOUT', '');
       }
     }, 1000);
   }
@@ -1666,13 +1669,20 @@
       if (!res || !res.success) throw new Error((res && res.msg) || '提示失敗');
       state.battle = res.state;
       state.battle.status = res.status;
+      if (res.status === 'failed') {
+        state.hintedIds = new Set();
+        state.linkPath = null;
+        renderBattleState();
+        handleBattleEnd(res.status, res.reason || 'TIMEOUT', res.rewardSummary);
+        return;
+      }
       state.hintedIds = new Set([res.hint.tileAId, res.hint.tileBId]);
       state.linkPath = null;
       renderBattleState();
       setMsg('已高亮一組可連線卡牌。使用提示會清空 Combo，並增加 BOSS 怒氣。', '#ffdd77');
       await playSupportSkillEffects(res.effects);
       if (res.effects && res.effects.bossCounter) { await playBossCounter(res.effects.bossCounter); await playSupportSkillEffects({ supportSkills: res.effects.bossCounter.supportSkills || [] }); }
-      handleBattleEnd(res.status, null, res.rewardSummary);
+      handleBattleEnd(res.status, res.reason || null, res.rewardSummary);
     } catch (err) {
       setMsg('提示失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     } finally {
@@ -1692,10 +1702,14 @@
       state.hintedIds = new Set();
       state.linkPath = null;
       renderBattleState();
+      if (res.status === 'failed') {
+        handleBattleEnd(res.status, res.reason || 'TIMEOUT', res.rewardSummary);
+        return;
+      }
       setMsg('已重新洗牌，場上至少保留可連線組合。洗牌會增加 BOSS 怒氣。', '#ffdd77');
       await playSupportSkillEffects(res.effects);
       if (res.effects && res.effects.bossCounter) { await playBossCounter(res.effects.bossCounter); await playSupportSkillEffects({ supportSkills: res.effects.bossCounter.supportSkills || [] }); }
-      handleBattleEnd(res.status, null, res.rewardSummary);
+      handleBattleEnd(res.status, res.reason || null, res.rewardSummary);
     } catch (err) {
       setMsg('洗牌失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     } finally {

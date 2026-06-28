@@ -77,7 +77,7 @@
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
   <script src="./js/tlo-image-loader.js?v=20260627-image-loading-v1"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260628-boss-figure-v2">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260628-mode-hub-linkbattle-mobile-v1">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -870,6 +870,76 @@
       margin: 0 0 12px 0;
     }
 
+
+    .mode-hub {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 10px;
+    }
+
+    .mode-group {
+      border: 1px solid rgba(0,255,240,.24);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(13,15,32,.78), rgba(4,6,16,.64));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.035), 0 10px 26px rgba(0,0,0,.18);
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-size: 260px;
+    }
+
+    .mode-group summary {
+      list-style: none;
+      cursor: pointer;
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 15px;
+      color: #fff;
+      font-weight: 950;
+      background: linear-gradient(135deg, rgba(0,255,240,.13), rgba(127,0,255,.17));
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      user-select: none;
+    }
+
+    .mode-group summary::-webkit-details-marker { display: none; }
+    .mode-group summary::after {
+      content: '收合';
+      flex: 0 0 auto;
+      font-size: 11px;
+      color: #dffcff;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,255,240,.28);
+      background: rgba(0,0,0,.22);
+    }
+    .mode-group:not([open]) summary::after { content: '展開'; }
+    .mode-group summary span { font-size: 17px; letter-spacing: .4px; }
+    .mode-group summary small { display: block; margin-top: 2px; color: #b9c5e8; font-size: 11px; line-height: 1.35; font-weight: 800; }
+
+    .mode-group-scroll {
+      max-height: min(52vh, 560px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 12px 12px;
+      overscroll-behavior: contain;
+    }
+    .mode-group:not([open]) .mode-group-scroll { display: none; }
+    .mode-group-scroll .scene-panel { margin: 0 0 10px; content-visibility: auto; contain-intrinsic-size: 138px; }
+    .mode-group-scroll .scene-panel:last-child { margin-bottom: 0; }
+    .mode-card-priority { border-color: rgba(255,221,119,.52) !important; box-shadow: 0 0 20px rgba(255,221,119,.12), inset 0 0 0 1px rgba(255,255,255,.035); }
+
+    @media(max-width:560px){
+      .mode-group-scroll { max-height: 46svh; padding: 9px 10px 10px; }
+      .mode-group summary { min-height: 50px; padding: 11px 12px; }
+      .mode-group summary span { font-size: 16px; }
+      .mode-group summary small { font-size: 10px; }
+      .mode-group-scroll .scene-panel { padding: 12px; border-radius: 18px; }
+      .mode-group-scroll .scene-panel h3 { font-size: 16px; }
+    }
+
     .gacha-machine {
       min-height: 300px;
       border: 1px solid rgba(255,0,127,.34) !important;
@@ -1181,6 +1251,51 @@
   </style>
   <link rel="icon" href="./favicon.ico?v=20260626-layer-rules-v4">
   <meta name="linkbattle-formal-ui-build" content="20260626-layer-rules-v4">
+
+  <style>
+    .daily-dungeon-entry-card{border:1px solid rgba(0,255,240,.28);background:linear-gradient(135deg,rgba(0,255,240,.07),rgba(127,0,255,.1));}
+    .daily-dungeon-modal{position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:14px;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);box-sizing:border-box;}
+    .daily-dungeon-shell{width:min(520px,96vw);max-height:92vh;overflow:auto;border-radius:22px;border:1px solid rgba(0,255,240,.42);background:radial-gradient(circle at top,#25104e 0,#080b16 52%,#050508 100%);box-shadow:0 20px 48px rgba(0,0,0,.65),0 0 28px rgba(0,255,240,.14);padding:14px;color:#fff;box-sizing:border-box;}
+    .daily-dungeon-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:10px;margin-bottom:10px;}
+    .daily-dungeon-kicker{display:inline-flex;padding:3px 9px;border-radius:999px;border:1px solid rgba(0,255,240,.35);background:rgba(0,255,240,.1);color:#bffffb;font-size:11px;font-weight:900;}
+    .daily-dungeon-head h3{margin:7px 0 5px;font-size:24px;line-height:1.1;color:#fff;text-shadow:0 0 14px rgba(0,255,240,.25);}
+    .daily-dungeon-head p{margin:0;color:#c9d4ff;font-size:12px;line-height:1.55;}
+    .daily-dungeon-close{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:24px;font-weight:900;cursor:pointer;}
+    .daily-dungeon-progress{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:9px;}
+    .daily-dungeon-stat{border:1px solid rgba(255,255,255,.11);background:rgba(4,8,20,.72);border-radius:14px;padding:9px;text-align:center;}
+    .daily-dungeon-stat span{display:block;font-size:10px;color:#94a8df;font-weight:900;letter-spacing:.4px;}
+    .daily-dungeon-stat b{display:block;margin-top:3px;color:#2fffff;font-size:17px;line-height:1.1;}
+    .daily-dungeon-team{border:1px solid rgba(0,255,240,.22);background:linear-gradient(135deg,rgba(0,255,240,.08),rgba(127,0,255,.1));border-radius:14px;padding:9px 10px;margin-bottom:10px;font-size:12px;line-height:1.6;color:#e8fbff;}
+    .daily-dungeon-team .cards{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+    .daily-dungeon-team .chip{display:inline-flex;align-items:center;gap:3px;padding:3px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.08);font-size:11px;color:#fff;}
+    .daily-dungeon-result{border-radius:16px;border:1px solid rgba(255,221,119,.35);background:linear-gradient(135deg,rgba(255,221,119,.13),rgba(127,0,255,.12));padding:10px;margin-bottom:10px;font-size:13px;line-height:1.65;color:#fff;}
+    .daily-dungeon-result.success{border-color:rgba(0,255,127,.38);background:linear-gradient(135deg,rgba(0,255,127,.11),rgba(0,255,240,.08));}
+    .daily-dungeon-result.fail{border-color:rgba(255,119,119,.4);background:linear-gradient(135deg,rgba(255,72,72,.13),rgba(255,153,51,.08));}
+    .daily-dungeon-options{display:grid;grid-template-columns:1fr;gap:10px;}
+    .daily-dungeon-option{position:relative;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.13);background:linear-gradient(135deg,rgba(14,20,43,.96),rgba(8,10,21,.96));padding:12px;text-align:left;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);}
+    .daily-dungeon-option.energy_vault{border-color:rgba(0,255,240,.28);}
+    .daily-dungeon-option.soul_trial{border-color:rgba(255,147,56,.32);}
+    .daily-dungeon-option.fate_rift{border-color:rgba(255,72,180,.34);}
+    .daily-dungeon-option h4{margin:0 0 5px;font-size:18px;display:flex;justify-content:space-between;gap:8px;align-items:center;}
+    .daily-dungeon-option p{margin:5px 0 8px;color:#cfd6f7;font-size:12px;line-height:1.55;}
+    .daily-dungeon-tags{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0;}
+    .daily-dungeon-tags span{padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.11);font-size:10px;color:#f5f7ff;font-weight:800;}
+    .daily-dungeon-reward{font-size:12px;color:#fff8d7;line-height:1.6;margin:8px 0;}
+    .daily-dungeon-go{width:100%;border:none;border-radius:13px;padding:10px 12px;background:linear-gradient(135deg,#00fff0,#3478ff);color:#fff;font-weight:1000;font-size:14px;cursor:pointer;box-shadow:0 0 16px rgba(0,255,240,.18);}
+    .daily-dungeon-go.danger{background:linear-gradient(135deg,#ff3d8d,#7f00ff);}
+    .daily-dungeon-go.mid{background:linear-gradient(135deg,#ffb02e,#ff5f42);}
+    .daily-dungeon-go:disabled{opacity:.5;cursor:not-allowed;}
+    .daily-dungeon-history{margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:9px;font-size:12px;color:#cfd6f7;line-height:1.65;}
+    .daily-dungeon-history ul{margin:6px 0 0;padding-left:18px;}
+    .daily-dungeon-complete{padding:18px 12px;border-radius:18px;text-align:center;background:linear-gradient(135deg,rgba(0,255,127,.12),rgba(255,221,119,.12));border:1px solid rgba(0,255,127,.28);}
+    @media(max-width:560px){
+      .daily-dungeon-shell{width:96vw;max-height:92vh;padding:12px;border-radius:20px;}
+      .daily-dungeon-head h3{font-size:22px;}
+      .daily-dungeon-progress{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .daily-dungeon-stat b{font-size:16px;}
+    }
+  </style>
+
 </head>
 <body class="tlo-game-body">
 
@@ -1328,54 +1443,101 @@
       <div class="screen-head">
         <div>
           <h2 class="screen-title">戰鬥畫面</h2>
-          <div class="screen-sub">戰鬥、遠征異世界、PVP 與角色培養集中在這個戰鬥大廳。</div>
+          <div class="screen-sub">主線劇情、每日副本、活動副本集中在這個戰鬥大廳。</div>
         </div>
         <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
       </div>
 
-      <div class="scene-panel">
-        <h3>⚔️ 潮流爭霸戰</h3>
-        <p>挑戰 Boss 關卡，依照卡盒與角色戰力推進進度。</p>
-        <button class="scene-btn btn-neon-cyan" onclick="openBattleModal()">進入爭霸戰<small>開啟 Boss 戰鬥介面</small></button>
-      </div>
+      <div class="mode-hub">
+        <details class="mode-group mode-group-main" open>
+          <summary><span>📖 主線劇情</span><small>主線推進與核心劇情模式</small></summary>
+          <div class="mode-group-scroll">
+            <div class="scene-panel link-battle-entry-card mode-card-priority">
+              <h3>🃏 卡牌連線討伐戰</h3>
+              <p>主線核心玩法。連線相同卡牌，合成攻擊 BOSS，推進章節劇情。</p>
+              <button class="scene-btn btn-neon-gold" onclick="openLinkBattleModal()">進入連線討伐戰<small>固定置頂的主線戰鬥</small></button>
+            </div>
 
-      <div class="scene-panel link-battle-entry-card">
-        <h3>🃏 卡牌連線討伐戰</h3>
-        <p>使用已解鎖圖鑑卡牌進行中等版連線戰，合成卡牌撞擊 BOSS，維持 Combo 可提前通關。</p>
-        <button class="scene-btn btn-neon-gold" onclick="openLinkBattleModal()">進入連線討伐戰<small>圖鑑至少解鎖 4 種卡牌</small></button>
-      </div>
+            <div class="scene-panel daily-dungeon-entry-card">
+              <h3>🌀 命運三選一</h3>
+              <p>連續 5 層地圖，每層從能量寶庫、靈魂試煉、命運裂隙中選 1 個入口前進。</p>
+              <button class="scene-btn btn-neon-cyan" onclick="openDailyDungeonModal()">進入命運三選一<small>5 層三選一試用版</small></button>
+            </div>
+          </div>
+        </details>
 
-      <div class="scene-panel">
-        <h3>🗺️ 遠征異世界</h3>
-        <p>選 1～3 張已持有角色組隊，挑戰關卡並取得分數、能量與抽卡掉落。</p>
-        <button class="scene-btn btn-neon-gold" onclick="openRpgModal()">開始遠征<small>編成隊伍遠征異世界</small></button>
-      </div>
+        <details class="mode-group mode-group-daily" open>
+          <summary><span>🗓️ 每日副本</span><small>每日挑戰、養成資源與對戰模式</small></summary>
+          <div class="mode-group-scroll">
+            <div class="scene-panel">
+              <h3>⚔️ 爭霸戰</h3>
+              <p>挑戰 Boss 關卡，依照卡盒與角色戰力推進進度。</p>
+              <button class="scene-btn btn-neon-cyan" onclick="openBattleModal()">進入爭霸戰<small>開啟 Boss 戰鬥介面</small></button>
+            </div>
 
-      <div class="scene-panel">
-        <h3>🆚 玩家對戰</h3>
-        <p>設定代表卡，和其他玩家進行每日 PVP 對戰。</p>
-        <button class="scene-btn btn-neon-purple" onclick="openPvpModal()">進入玩家對戰<small>PVP 配對、勝場與碎片獎勵</small></button>
-      </div>
+            <div class="scene-panel">
+              <h3>🗺️ 遠征異世界</h3>
+              <p>選 1～3 張已持有角色組隊，挑戰關卡並取得分數、能量與抽卡掉落。</p>
+              <button class="scene-btn btn-neon-gold" onclick="openRpgModal()">開始遠征<small>編成隊伍遠征異世界</small></button>
+            </div>
 
-      <div class="scene-panel">
-        <h3>👿 魔王挑戰</h3>
-        <p>自己的遠征 3 人隊伍，加上 1 位好友代表卡，共同討伐終焉魔王。每日免費 5 次。</p>
-        <button class="scene-btn btn-neon-pink" onclick="openDemonChallengeModal()">進入魔王挑戰<small>好友協作副本與魔王挑戰卷</small></button>
-      </div>
+            <div class="scene-panel">
+              <h3>🆚 玩家對戰</h3>
+              <p>設定代表卡，和其他玩家進行每日 PVP 對戰。</p>
+              <button class="scene-btn btn-neon-purple" onclick="openPvpModal()">進入玩家對戰<small>PVP 配對、勝場與碎片獎勵</small></button>
+            </div>
 
-      <div class="scene-panel">
-        <h3>🌍 世界BOSS 全服討伐戰</h3>
-        <p>活動時間內全服玩家同步削減同一隻 BOSS 血量，結束後依傷害排名發獎。</p>
-        <button class="scene-btn btn-neon-gold" onclick="openWorldBossModal()">挑戰世界BOSS<small>查看血量、排名與活動時間</small></button>
-      </div>
+            <div class="scene-panel">
+              <h3>👿 魔王挑戰</h3>
+              <p>自己的遠征 3 人隊伍，加上 1 位好友代表卡，共同討伐終焉魔王。每日免費 5 次。</p>
+              <button class="scene-btn btn-neon-pink" onclick="openDemonChallengeModal()">進入魔王挑戰<small>好友協作副本與魔王挑戰卷</small></button>
+            </div>
+          </div>
+        </details>
 
-      <div class="scene-panel">
-        <h3>🌟 角色養成 / 10 星升星</h3>
-        <p>使用潮流能量培養角色等級、技能等級與星級。星級最高可提升到 10 星。</p>
-        <button class="scene-btn btn-neon-green" onclick="openCharacterGrowthModal()">角色養成<small>等級、經驗、技能強化與戰力提升</small></button>
-        <button class="scene-btn btn-neon-gold" style="margin-top:8px;" onclick="openStarModal()">快速升星<small>直接開啟原升星清單</small></button>
+        <details class="mode-group mode-group-event" open>
+          <summary><span>🔥 活動副本</span><small>期間限定與全服活動</small></summary>
+          <div class="mode-group-scroll">
+            <div class="scene-panel">
+              <h3>🌍 世界BOSS</h3>
+              <p>活動時間內全服玩家同步削減同一隻 BOSS 血量，結束後依傷害排名發獎。</p>
+              <button class="scene-btn btn-neon-gold" onclick="openWorldBossModal()">挑戰世界BOSS<small>查看血量、排名與活動時間</small></button>
+            </div>
+          </div>
+        </details>
+
+        <details class="mode-group mode-group-growth">
+          <summary><span>🌟 角色養成</span><small>等級、技能與升星集中管理</small></summary>
+          <div class="mode-group-scroll">
+            <div class="scene-panel">
+              <h3>🌟 角色養成 / 10 星升星</h3>
+              <p>使用潮流能量培養角色等級、技能等級與星級。星級最高可提升到 10 星。</p>
+              <button class="scene-btn btn-neon-green" onclick="openCharacterGrowthModal()">角色養成<small>等級、經驗、技能強化與戰力提升</small></button>
+              <button class="scene-btn btn-neon-gold" style="margin-top:8px;" onclick="openStarModal()">快速升星<small>直接開啟原升星清單</small></button>
+            </div>
+          </div>
+        </details>
       </div>
     </section>
+
+
+    <div class="daily-dungeon-modal" id="daily-dungeon-modal" style="display:none;">
+      <div class="daily-dungeon-shell">
+        <div class="daily-dungeon-head">
+          <div>
+            <div class="daily-dungeon-kicker">每日副本</div>
+            <h3>🌀 命運三選一</h3>
+            <p>每日 1 次，連續 5 層。每層選 1 個入口，完成後取得累積獎勵。</p>
+          </div>
+          <button type="button" class="daily-dungeon-close" onclick="closeDailyDungeonModal()">×</button>
+        </div>
+        <div class="daily-dungeon-progress" id="daily-dungeon-progress">正在讀取...</div>
+        <div class="daily-dungeon-team" id="daily-dungeon-team">編隊加成讀取中...</div>
+        <div class="daily-dungeon-result" id="daily-dungeon-result" style="display:none;"></div>
+        <div class="daily-dungeon-options" id="daily-dungeon-options"></div>
+        <div class="daily-dungeon-history" id="daily-dungeon-history"></div>
+      </div>
+    </div>
 
 
     <section class="game-screen" id="shopScreen" data-screen="shop">
@@ -2406,19 +2568,74 @@
       document.getElementById('arena-player-avatar-img').src = pImgUrl;
     }
 
+    const PERMANENT_GACHA_PROBABILITY_GROUPS = [
+      { rarity: 'NORMAL', totalProbabilityText: '80.00%', cards: [
+        { name: 'AJ', probabilityText: '8.00%' },
+        { name: '千思語', probabilityText: '8.00%' },
+        { name: '以凡', probabilityText: '8.00%' },
+        { name: '林小蔚', probabilityText: '8.00%' },
+        { name: '阿宗', probabilityText: '8.00%' },
+        { name: '氣鵝', probabilityText: '8.00%' },
+        { name: '喬喬', probabilityText: '8.00%' },
+        { name: '瑄瑄', probabilityText: '8.00%' },
+        { name: '夢璃', probabilityText: '8.00%' },
+        { name: '燒酒', probabilityText: '8.00%' }
+      ]},
+      { rarity: 'RARE', totalProbabilityText: '8.50%', cards: [
+        { name: '小光', probabilityText: '3.50%' },
+        { name: '萌欣', probabilityText: '5.00%' }
+      ]},
+      { rarity: 'SUPER RARE', totalProbabilityText: '10.50%', cards: [
+        { name: '凌凌', probabilityText: '3.00%' },
+        { name: '小艾', probabilityText: '3.00%' },
+        { name: '小舞', probabilityText: '4.50%' }
+      ]},
+      { rarity: 'SSR', totalProbabilityText: '1.00%', cards: [
+        { name: '書宏', probabilityText: '1.00%' }
+      ]}
+    ];
+
+    function isPermanentGachaPoolKey(poolKey, pool) {
+      const key = String(poolKey || '').toLowerCase();
+      const name = String(pool && pool.name || '').toLowerCase();
+      return !key || key === 'permanent' || key === 'default' || key === 'normal' || key.indexOf('permanent') >= 0 || name.indexOf('常駐') >= 0;
+    }
+
+    function renderPermanentGachaProbability(status, body) {
+      if (status) status.innerText = '「常駐卡池」固定公告機率：可抽卡片 16 張，總機率 100.00%。';
+      let html = '';
+      PERMANENT_GACHA_PROBABILITY_GROUPS.forEach(function(group) {
+        const cards = group.cards || [];
+        cards.forEach(function(card, idx) {
+          const rarityUpper = String(group.rarity || '').toUpperCase();
+          const rowClass = rarityUpper.indexOf('NORMAL') >= 0 ? 'bg-normal' : (rarityUpper.indexOf('SUPER') >= 0 || rarityUpper === 'SR' ? 'bg-sr' : 'bg-rare');
+          html += `<tr class="${rowClass}">`;
+          if (idx === 0) html += `<td rowspan="${cards.length + 1}" style="font-weight:bold;">${escapeHtml(group.rarity || '')}<br><span style="font-size:11px;font-weight:normal;">共 ${cards.length} 款</span></td>`;
+          html += `<td>${escapeHtml(card.name || '')}</td><td>${escapeHtml(card.probabilityText || '0.00%')}</td></tr>`;
+        });
+        html += `<tr class="table-summary"><td>${escapeHtml(group.rarity || '')} 級別總計機率</td><td>${escapeHtml(group.totalProbabilityText || '0.00%')}</td></tr>`;
+      });
+      if (body) body.innerHTML = html;
+    }
+
     function openProbabilityModal() {
       const modal = document.getElementById('prob-modal');
       const status = document.getElementById('prob-status');
       const body = document.getElementById('prob-table-body');
       if (modal) modal.style.display = 'flex';
       const selectedPool = gachaPools.find(pool => pool.key === selectedGachaPoolKey);
+      const selectedPoolKey = selectedGachaPoolKey || (selectedPool && selectedPool.key) || 'permanent';
+      if (isPermanentGachaPoolKey(selectedPoolKey, selectedPool)) {
+        renderPermanentGachaProbability(status, body);
+        return;
+      }
       if (status) status.innerText = `正在讀取「${selectedPool ? selectedPool.name : '目前卡池'}」最新設定...`;
       if (body) body.innerHTML = '<tr><td colspan="3" style="color:#aaa;">同步中...</td></tr>';
       readRpcForCurrentViewer(
         'getCardProbabilityTable',
-        [playerUID, selectedGachaPoolKey || 'permanent'],
+        [playerUID, selectedPoolKey],
         'getCardProbabilityTable',
-        ['', selectedGachaPoolKey || 'permanent']
+        ['', selectedPoolKey]
       ).then(function(response) {
         if (!response || !response.success) {
           if (status) status.innerText = '卡池機率讀取失敗。';
@@ -6725,6 +6942,167 @@ function showCollectionHistory() {
     };
   </script>
 
-  <script src="./js/link-battle.js?v=20260628-boss-figure-v2"></script>
+
+  <script>
+    var dailyDungeonBusy = false;
+
+    function openDailyDungeonModal() {
+      var modal = document.getElementById('daily-dungeon-modal');
+      if (modal) modal.style.display = 'flex';
+      loadDailyDungeonDashboard();
+    }
+
+    function closeDailyDungeonModal() {
+      var modal = document.getElementById('daily-dungeon-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function dailyDungeonSafe(value) {
+      if (typeof escapeHtml === 'function') return escapeHtml(value);
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+      });
+    }
+
+    function dailyDungeonRewardText(rewards) {
+      rewards = rewards || {};
+      var parts = [];
+      if (Number(rewards.energyMax || rewards.energy || 0) > 0) {
+        if (typeof rewards.energyMin !== 'undefined') parts.push('潮流能量 ' + Number(rewards.energyMin || 0) + '～' + Number(rewards.energyMax || 0));
+        else parts.push('潮流能量 +' + Number(rewards.energy || 0));
+      }
+      if (Number(rewards.skillExpMax || rewards.skillExp || 0) > 0) {
+        if (typeof rewards.skillExpMin !== 'undefined') parts.push('技能經驗 ' + Number(rewards.skillExpMin || 0) + '～' + Number(rewards.skillExpMax || 0));
+        else parts.push('技能經驗 +' + Number(rewards.skillExp || 0));
+      }
+      if (Number(rewards.scoreMax || rewards.score || 0) > 0) {
+        if (typeof rewards.scoreMin !== 'undefined') parts.push('訓練總分 ' + Number(rewards.scoreMin || 0) + '～' + Number(rewards.scoreMax || 0));
+        else parts.push('訓練總分 +' + Number(rewards.score || 0));
+      }
+      if (Number(rewards.drawChancePercent || 0) > 0) parts.push('抽卡次數掉落率 ' + Number(rewards.drawChancePercent || 0) + '%');
+      if (Number(rewards.drawTimes || 0) > 0) parts.push('抽卡次數 +' + Number(rewards.drawTimes || 0));
+      return parts.length ? parts.join(' ｜ ') : '保底獎勵';
+    }
+
+    function loadDailyDungeonDashboard() {
+      var progress = document.getElementById('daily-dungeon-progress');
+      var options = document.getElementById('daily-dungeon-options');
+      var team = document.getElementById('daily-dungeon-team');
+      var history = document.getElementById('daily-dungeon-history');
+      var result = document.getElementById('daily-dungeon-result');
+      if (progress) progress.innerHTML = '<div class="daily-dungeon-stat"><span>狀態</span><b>讀取中</b></div>';
+      if (options) options.innerHTML = '';
+      if (team) team.innerHTML = '正在讀取編隊加成...';
+      if (history) history.innerHTML = '';
+      if (result) { result.style.display = 'none'; result.className = 'daily-dungeon-result'; result.innerHTML = ''; }
+
+      google.script.run.withSuccessHandler(function(res) {
+        renderDailyDungeonDashboard(res);
+      }).withFailureHandler(function(err) {
+        if (options) options.innerHTML = '<div class="daily-dungeon-option"><h4>讀取失敗</h4><p>' + dailyDungeonSafe(err && err.message ? err.message : err) + '</p></div>';
+      }).getDailyDungeonDashboard(playerUID);
+    }
+
+    function renderDailyDungeonDashboard(res) {
+      if (!res || !res.success) return;
+      var run = res.run || {};
+      var totals = run.totals || {};
+      var progress = document.getElementById('daily-dungeon-progress');
+      var options = document.getElementById('daily-dungeon-options');
+      var team = document.getElementById('daily-dungeon-team');
+      var history = document.getElementById('daily-dungeon-history');
+      var result = document.getElementById('daily-dungeon-result');
+      var floorLabel = run.completed ? '完成' : (Number(run.currentFloor || 1) + ' / ' + Number(run.maxFloors || 5));
+      if (progress) {
+        progress.innerHTML =
+          '<div class="daily-dungeon-stat"><span>今日層數</span><b>' + floorLabel + '</b></div>' +
+          '<div class="daily-dungeon-stat"><span>累積能量</span><b>' + Number(totals.energy || 0).toLocaleString() + '</b></div>' +
+          '<div class="daily-dungeon-stat"><span>技能經驗</span><b>' + Number(totals.skillExp || 0).toLocaleString() + '</b></div>' +
+          '<div class="daily-dungeon-stat"><span>訓練總分</span><b>' + Number(totals.score || 0).toLocaleString() + '</b></div>' +
+          '<div class="daily-dungeon-stat"><span>抽卡次數</span><b>' + Number(totals.drawTimes || 0).toLocaleString() + '</b></div>' +
+          '<div class="daily-dungeon-stat"><span>每日次數</span><b>' + (run.completed ? '0 / 1' : '1 / 1') + '</b></div>';
+      }
+
+      var teamData = res.linkBattleTeam || {};
+      var cards = Array.isArray(teamData.cards) ? teamData.cards : [];
+      var modifiers = res.teamModifiers || {};
+      if (team) {
+        team.innerHTML = '<b>編隊加成：</b>' + dailyDungeonSafe(modifiers.summary || '未套用編隊加成') +
+          '<div class="cards">' + (cards.length ? cards.map(function(card) {
+            var skill = card.linkSkill || {};
+            return '<span class="chip">' + dailyDungeonSafe(card.cardName || '角色') + '｜' + dailyDungeonSafe(skill.name || '技能') + '</span>';
+          }).join('') : '<span class="chip">尚未設定編隊，將不套用加成</span>') + '</div>';
+      }
+
+      if (res.lastResult && result) {
+        var r = res.lastResult;
+        result.style.display = 'block';
+        result.className = 'daily-dungeon-result ' + (r.cleared ? 'success' : 'fail');
+        result.innerHTML = '<b>' + dailyDungeonSafe(r.icon || '') + ' 第 ' + Number(r.floor || 0) + ' 層｜' + dailyDungeonSafe(r.title || '') + '</b><br>' +
+          dailyDungeonSafe(r.message || '') + '<br>' +
+          '獎勵：' + dailyDungeonRewardText(r.rewards || {});
+      }
+
+      if (options) {
+        if (run.completed) {
+          options.innerHTML = '<div class="daily-dungeon-complete"><h3>今日副本已完成</h3><p>你已完成 5 層命運三選一。明天重置後可以再次挑戰。</p></div>';
+        } else {
+          options.innerHTML = (res.options || []).map(function(opt) {
+            var btnClass = opt.optionKey === 'fate_rift' ? 'danger' : (opt.optionKey === 'soul_trial' ? 'mid' : '');
+            return '<div class="daily-dungeon-option ' + dailyDungeonSafe(opt.optionKey) + '">' +
+              '<h4><span>' + dailyDungeonSafe(opt.icon || '') + ' ' + dailyDungeonSafe(opt.title || '') + '</span><small>' + dailyDungeonSafe(opt.positioning || '') + '</small></h4>' +
+              '<p>' + dailyDungeonSafe(opt.description || '') + '</p>' +
+              '<div class="daily-dungeon-tags">' +
+                '<span>難度：' + dailyDungeonSafe(opt.difficulty || '-') + '</span>' +
+                '<span>風險：' + dailyDungeonSafe(opt.risk || '-') + '</span>' +
+                '<span>成功率：' + Number(opt.successRate || 0) + '%</span>' +
+                (Number(opt.rewardBonusPercent || 0) > 0 ? '<span>編隊獎勵 +' + Number(opt.rewardBonusPercent || 0) + '%</span>' : '') +
+                (Number(opt.failConsolationPercent || 0) > 0 ? '<span>失敗保底 ' + Number(opt.failConsolationPercent || 0) + '%</span>' : '') +
+              '</div>' +
+              '<div class="daily-dungeon-reward">可能獎勵：' + dailyDungeonRewardText(opt.rewards || {}) + '</div>' +
+              '<button type="button" class="daily-dungeon-go ' + btnClass + '" data-option-key="' + dailyDungeonSafe(opt.optionKey) + '" onclick="chooseDailyDungeonOption(this.getAttribute(\'data-option-key\'))">選擇這個入口</button>' +
+            '</div>';
+          }).join('');
+        }
+      }
+
+      if (history) {
+        var list = Array.isArray(run.history) ? run.history : [];
+        history.innerHTML = '<b>今日路線</b>' + (list.length ? '<ul>' + list.map(function(item) {
+          return '<li>第 ' + Number(item.floor || 0) + ' 層｜' + dailyDungeonSafe(item.title || '') + '｜' + (item.cleared ? '成功' : '失敗') + '｜' + dailyDungeonRewardText(item.rewards || {}) + '</li>';
+        }).join('') + '</ul>' : '<div style="margin-top:6px;color:#94a8df;">尚未選擇入口。</div>');
+      }
+
+      if (res.assets) {
+        var e = document.getElementById('display-energy'); if (e) e.innerText = Number(res.assets.energy || 0).toLocaleString();
+        var p = document.getElementById('display-points'); if (p) p.innerText = Number(res.assets.totalScore || 0).toLocaleString();
+        var s = document.getElementById('display-skill-exp'); if (s) s.innerText = Number(res.assets.skillExp || 0).toLocaleString();
+        var c = document.getElementById('display-count'); if (c) c.innerText = Number(res.assets.drawTimes || 0).toLocaleString();
+      }
+    }
+
+    function chooseDailyDungeonOption(optionKey) {
+      if (dailyDungeonBusy) return;
+      dailyDungeonBusy = true;
+      var buttons = document.querySelectorAll('.daily-dungeon-go');
+      buttons.forEach(function(btn) { btn.disabled = true; btn.textContent = '前進中...'; });
+      google.script.run.withSuccessHandler(function(res) {
+        dailyDungeonBusy = false;
+        renderDailyDungeonDashboard(res);
+        if (typeof loadHomeState === 'function') loadHomeState();
+      }).withFailureHandler(function(err) {
+        dailyDungeonBusy = false;
+        buttons.forEach(function(btn) { btn.disabled = false; btn.textContent = '選擇這個入口'; });
+        var result = document.getElementById('daily-dungeon-result');
+        if (result) {
+          result.style.display = 'block';
+          result.className = 'daily-dungeon-result fail';
+          result.innerHTML = '挑戰失敗：' + dailyDungeonSafe(err && err.message ? err.message : err);
+        }
+      }).chooseDailyDungeonOption(playerUID, optionKey);
+    }
+  </script>
+
+  <script src="./js/link-battle.js?v=20260628-mode-hub-linkbattle-mobile-v1"></script>
 </body>
 </html>
