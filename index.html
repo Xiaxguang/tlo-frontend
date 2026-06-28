@@ -1574,6 +1574,110 @@
     }
   </style>
 
+
+  <style id="tlo-bottom-buttons-v11">
+    /* TLO v11: 聊天 / 選單按鈕縮小並移到右下角，避免遮住畫面中央操作區 */
+    #game-chat-dock.game-chat-dock{
+      left:auto!important;
+      right:calc(62px + env(safe-area-inset-bottom))!important;
+      bottom:calc(12px + env(safe-area-inset-bottom))!important;
+      width:50px!important;
+      height:50px!important;
+      border-radius:16px!important;
+      transform:none!important;
+    }
+    #game-chat-dock .game-chat-toggle{
+      border-radius:15px!important;
+      gap:1px!important;
+    }
+    #game-chat-dock .game-chat-icon{
+      font-size:21px!important;
+    }
+    #game-chat-dock .game-chat-title b{
+      font-size:9px!important;
+    }
+    #game-chat-dock .chat-unread-badge{
+      top:-7px!important;
+      right:-7px!important;
+      min-width:18px!important;
+      height:18px!important;
+      font-size:10px!important;
+      padding:0 5px!important;
+    }
+    #game-chat-dock .chat-unread-badge.is-new{
+      min-width:31px!important;
+      height:18px!important;
+      font-size:9px!important;
+    }
+
+    #game-bottom-dock.game-bottom-dock{
+      left:auto!important;
+      right:calc(8px + env(safe-area-inset-right))!important;
+      bottom:calc(12px + env(safe-area-inset-bottom))!important;
+      width:50px!important;
+      transform:none!important;
+    }
+    #game-bottom-dock .game-menu-toggle{
+      width:50px!important;
+      height:50px!important;
+      border-radius:16px!important;
+    }
+    #game-bottom-dock .game-menu-toggle::before{
+      font-size:22px!important;
+      transform:translateY(-4px)!important;
+    }
+    #game-bottom-dock .game-menu-toggle::after{
+      bottom:6px!important;
+      font-size:9px!important;
+    }
+    #game-bottom-dock .game-bottom-nav{
+      right:calc(8px + env(safe-area-inset-right))!important;
+      left:auto!important;
+      transform:none!important;
+      bottom:calc(68px + env(safe-area-inset-bottom))!important;
+      width:min(360px,calc(100vw - 16px))!important;
+      grid-template-columns:repeat(3,minmax(0,1fr))!important;
+      transform-origin:bottom right!important;
+    }
+    #game-bottom-dock .game-bottom-nav button{
+      min-height:48px!important;
+      border-radius:14px!important;
+      font-size:11px!important;
+    }
+    #game-bottom-dock .game-bottom-nav button span{
+      font-size:17px!important;
+    }
+
+    @media(max-width:430px){
+      #game-chat-dock.game-chat-dock{
+        right:calc(60px + env(safe-area-inset-right))!important;
+        bottom:calc(10px + env(safe-area-inset-bottom))!important;
+        width:48px!important;
+        height:48px!important;
+        border-radius:15px!important;
+      }
+      #game-chat-dock .game-chat-icon{font-size:20px!important;}
+      #game-chat-dock .game-chat-title b{font-size:8.5px!important;}
+      #game-bottom-dock.game-bottom-dock{
+        right:calc(8px + env(safe-area-inset-right))!important;
+        bottom:calc(10px + env(safe-area-inset-bottom))!important;
+        width:48px!important;
+      }
+      #game-bottom-dock .game-menu-toggle{
+        width:48px!important;
+        height:48px!important;
+        border-radius:15px!important;
+      }
+      #game-bottom-dock .game-bottom-nav{
+        right:calc(8px + env(safe-area-inset-right))!important;
+        bottom:calc(64px + env(safe-area-inset-bottom))!important;
+        width:min(340px,calc(100vw - 16px))!important;
+        gap:7px!important;
+        padding:9px!important;
+      }
+    }
+  </style>
+
 </head>
 <body class="tlo-game-body">
 
