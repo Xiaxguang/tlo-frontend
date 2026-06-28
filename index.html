@@ -7347,7 +7347,9 @@ function showCollectionHistory() {
           login: './audio/bgm-login.mp3',
           home: './audio/bgm-home.mp3',
           gacha: './audio/bgm-gacha.mp3',
-          battle: './audio/bgm-battle.mp3'
+          battle: './audio/bgm-battle.mp3',
+          shop: './audio/bgm-shop.mp3',
+          social: './audio/bgm-social.mp3'
         },
         sfx: {
           click: './audio/sfx-click.mp3',
@@ -7460,6 +7462,8 @@ function showCollectionHistory() {
         var screen = active ? active.getAttribute('data-screen') : 'home';
         if (screen === 'gacha') return 'gacha';
         if (screen === 'battle') return 'battle';
+        if (screen === 'shop') return 'shop';
+        if (screen === 'social') return 'social';
         return 'home';
       }
 
@@ -7477,12 +7481,20 @@ function showCollectionHistory() {
         bgmAudio.loop = true;
         bgmAudio.preload = 'metadata';
         bgmAudio.volume = getVolume() * BGM_VOLUME_RATIO;
+        bgmAudio.onerror = function () {
+          if (currentBgm === name && name !== 'home') {
+            currentBgm = '';
+            playBgm('home');
+          }
+        };
         safePlay(bgmAudio);
       }
 
       function playBgmForScreen(screenName) {
         if (screenName === 'gacha') return playBgm('gacha');
         if (screenName === 'battle') return playBgm('battle');
+        if (screenName === 'shop') return playBgm('shop');
+        if (screenName === 'social') return playBgm('social');
         return playBgm('home');
       }
 
