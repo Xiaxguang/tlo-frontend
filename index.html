@@ -1259,8 +1259,8 @@
 
 
   </style>
-  <link rel="icon" href="./favicon.ico?v=20260626-layer-rules-v4">
-  <meta name="linkbattle-formal-ui-build" content="20260626-layer-rules-v4">
+  <link rel="icon" href="./favicon.ico?v=20260628-lobby-ui-v4">
+  <meta name="tlo-lobby-ui-build" content="20260628-lobby-ui-v4">
 
   <style>
     .daily-dungeon-entry-card{border:1px solid rgba(0,255,240,.28);background:linear-gradient(135deg,rgba(0,255,240,.07),rgba(127,0,255,.1));}
@@ -1451,6 +1451,36 @@
     .social-private-moved{border:1px solid rgba(100,255,242,.28);background:linear-gradient(135deg,rgba(100,255,242,.08),rgba(255,0,127,.08));border-radius:16px;padding:12px;color:#dfe7ff;font-size:13px;line-height:1.65;}
     .social-private-moved b{color:var(--lobby-cyan);display:block;margin-bottom:4px;font-size:15px;}
     @media(max-width:430px){.game-chat-dock{bottom:72px;width:calc(100vw - 18px);padding:7px}.game-chat-toggle{padding:8px 10px}.game-chat-dock .lobby-chat-lines{max-height:74px}.private-chat-picker{grid-template-columns:1fr}.private-chat-picker button{width:100%;}}
+
+    /* Lobby v4: 主界面資訊下移 + 底部聊天/選單小圖示 */
+    .container.game-shell{padding-bottom:calc(94px + env(safe-area-inset-bottom))!important;}
+    .lobby-home-info{display:grid;gap:8px;margin:8px 0 12px;}
+    .lobby-home-info .lobby-tip-mini{margin:0!important;}
+    .lobby-contact-mini{border:1px solid rgba(255,230,163,.46);border-radius:20px;background:linear-gradient(135deg,rgba(8,9,33,.76),rgba(54,31,7,.50));backdrop-filter:blur(9px);box-shadow:0 0 22px rgba(0,0,0,.28),inset 0 0 18px rgba(255,230,163,.04);padding:10px 12px;color:#ffe6a3;font-size:12px;line-height:1.62;}
+    .lobby-contact-mini b{display:block;color:#fff1c0;font-size:13px;margin-bottom:3px;text-shadow:0 0 10px rgba(255,230,163,.24);}
+    .lobby-contact-mini a{color:var(--lobby-cyan);font-weight:950;text-decoration:underline;text-underline-offset:2px;}
+    .lobby-contact-mini .contact-line{display:block;word-break:break-word;}
+    @media(max-height:740px){.lobby-home-info .lobby-tip-mini{display:flex!important}.lobby-home-info{margin-bottom:8px}.lobby-contact-mini{font-size:11px;padding:8px 10px;}}
+
+    .game-chat-dock{position:fixed!important;left:calc(50% - 64px)!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;transform:none!important;width:58px!important;height:58px!important;z-index:810!important;border:1px solid rgba(255,230,163,.54)!important;border-radius:18px!important;background:linear-gradient(145deg,rgba(30,23,82,.92),rgba(8,10,30,.88))!important;backdrop-filter:blur(14px)!important;box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(100,255,242,.16)!important;padding:0!important;box-sizing:border-box!important;color:#fff!important;}
+    .game-chat-toggle{position:relative!important;width:100%!important;height:100%!important;border:0!important;border-radius:17px!important;background:linear-gradient(135deg,rgba(100,255,242,.22),rgba(255,0,127,.20))!important;color:#fff!important;padding:0!important;font-weight:1000!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;cursor:pointer!important;text-shadow:0 0 10px rgba(100,255,242,.3)!important;}
+    .game-chat-title{display:flex!important;align-items:center!important;justify-content:center!important;gap:0!important;min-width:0!important;flex-direction:column!important;}
+    .game-chat-title b{font-size:10px!important;line-height:1!important;white-space:nowrap!important;}
+    .game-chat-icon{font-size:24px!important;line-height:1!important;filter:drop-shadow(0 0 8px rgba(100,255,242,.45));}
+    .game-chat-status{display:none!important;}
+    .game-chat-dock .lobby-chat-lines,#message-preview-list{display:none!important;}
+    .chat-unread-badge{position:absolute!important;top:-7px!important;right:-7px!important;min-width:20px!important;height:20px!important;padding:0 5px!important;border:1px solid rgba(255,255,255,.45)!important;z-index:2!important;}
+    .game-chat-dock.has-unread{animation:tloChatPulse 1.5s ease-in-out infinite!important;}
+
+    .game-bottom-dock{position:fixed!important;left:calc(50% + 6px)!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;transform:none!important;width:58px!important;min-width:0!important;background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important;backdrop-filter:none!important;z-index:809!important;}
+    .game-menu-toggle{position:relative!important;width:58px!important;height:58px!important;border-radius:18px!important;border:1px solid rgba(255,230,163,.54)!important;background:linear-gradient(145deg,rgba(39,31,91,.94),rgba(17,77,105,.78))!important;color:#fff!important;padding:0!important;font-size:0!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(255,230,163,.14)!important;cursor:pointer!important;}
+    .game-menu-toggle::before{content:'☰';font-size:25px;line-height:1;transform:translateY(-5px);text-shadow:0 0 10px rgba(255,230,163,.38);}
+    .game-menu-toggle::after{content:'選單';position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:10px;line-height:1;color:#fff;font-weight:1000;}
+    .game-menu-toggle span{display:none!important;}
+    .game-bottom-dock .game-bottom-nav{position:fixed!important;left:50%!important;bottom:calc(78px + env(safe-area-inset-bottom))!important;transform:translateX(-50%)!important;width:min(470px,calc(100vw - 22px))!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;background:rgba(6,7,24,.88)!important;border:1px solid rgba(255,230,163,.46)!important;border-radius:22px!important;padding:10px!important;box-shadow:0 18px 46px rgba(0,0,0,.62),0 0 22px rgba(100,255,242,.14)!important;backdrop-filter:blur(16px)!important;}
+    .game-bottom-dock.collapsed .game-bottom-nav{display:none!important;}
+    .game-bottom-dock .game-bottom-nav button{min-height:54px!important;border-radius:15px!important;}
+    @media(max-width:430px){.game-chat-dock{left:calc(50% - 63px)!important;bottom:calc(11px + env(safe-area-inset-bottom))!important;width:56px!important;height:56px!important}.game-bottom-dock{left:calc(50% + 7px)!important;bottom:calc(11px + env(safe-area-inset-bottom))!important;width:56px!important}.game-menu-toggle{width:56px!important;height:56px!important}.game-bottom-dock .game-bottom-nav{bottom:calc(74px + env(safe-area-inset-bottom))!important;width:calc(100vw - 18px)!important;}}
 </style>
 
 </head>
@@ -1519,10 +1549,18 @@
       </div>
 
 
-      <div class="lobby-tip-mini" id="notice-box">
-        <b>💡 遊戲提示</b>
-        <span>社交、世界BOSS、排行榜與活動任務已集中到「更多」與快捷列。</span>
-        <button type="button" onclick="openLobbyMoreModal()">查看功能</button>
+      <div class="lobby-home-info" aria-label="主介面資訊">
+        <div class="lobby-tip-mini" id="notice-box">
+          <b>💡 遊戲提示</b>
+          <span>社交、世界BOSS、排行榜與活動任務已集中到「更多」與快捷列。</span>
+          <button type="button" onclick="openLobbyMoreModal()">查看功能</button>
+        </div>
+        <div class="lobby-contact-mini" id="lobby-contact-box">
+          <b>📮 聯絡資訊</b>
+          <span class="contact-line">聯絡信箱：<a href="mailto:a26926291@gmail.com">a26926291@gmail.com</a></span>
+          <span class="contact-line">聯絡電話：<a href="tel:0956737181">0956737181</a></span>
+          <span class="contact-line">Line：<a href="https://line.me/ti/p/~bikabikahikari" target="_blank" rel="noopener">bikabikahikari</a></span>
+        </div>
       </div>
 
       <div class="lobby-modal" id="home-chat-modal" aria-hidden="true">
@@ -1530,7 +1568,7 @@
           <div class="lobby-modal-head">
             <div>
               <h3>💬 T-LO 聊天頻道</h3>
-              <p>平常大廳只顯示最新 2～3 則，完整聊天在這裡查看。</p>
+              <p>世界頻道、系統公告與好友私訊都集中在這裡。</p>
             </div>
             <button type="button" class="lobby-modal-close" onclick="closeHomeChatModal()">×</button>
           </div>
@@ -1550,12 +1588,6 @@
             <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
           </div>
           <div id="message-board-msg" class="lobby-chat-note">世界頻道每日限量；好友私訊只能傳給好友。</div>
-          <div class="lobby-chat-service">
-            <b>客服聯絡</b>
-            聯絡信箱：<a href="mailto:a26926291@gmail.com">a26926291@gmail.com</a><br>
-            聯絡電話：<a href="tel:0956737181">0956737181</a><br>
-            Line：<a href="https://line.me/ti/p/~bikabikahikari" target="_blank" rel="noopener">bikabikahikari</a>
-          </div>
         </div>
       </div>
 
@@ -1564,7 +1596,7 @@
           <div class="lobby-modal-head">
             <div>
               <h3>更多功能</h3>
-              <p>小遊戲、福利、養成與兌換集中在這裡；客服資訊在聊天功能表下方。</p>
+              <p>小遊戲、福利、養成與兌換集中在這裡；遊戲提示與聯絡資訊在主介面下方。</p>
             </div>
             <button type="button" class="lobby-modal-close" onclick="closeLobbyMoreModal()">×</button>
           </div>
@@ -1887,13 +1919,12 @@
     </section>
 
     <div class="game-chat-dock" id="game-chat-dock" aria-label="T-LO 聊天">
-      <button type="button" class="game-chat-toggle" onclick="openHomeChatModal()">
-        <span class="game-chat-title"><b>💬 聊天</b><span class="chat-unread-badge" id="chat-unread-badge">0</span></span>
+      <button type="button" class="game-chat-toggle" onclick="openHomeChatModal()" aria-label="打開聊天功能">
+        <span class="game-chat-icon">💬</span>
+        <span class="game-chat-title"><b>聊天</b><span class="chat-unread-badge" id="chat-unread-badge">0</span></span>
         <span class="game-chat-status" id="chat-dock-status">世界頻道</span>
       </button>
-      <div id="message-preview-list" class="lobby-chat-lines">
-        <div class="lobby-chat-empty">正在讀取最新留言...</div>
-      </div>
+      <div id="message-preview-list" class="lobby-chat-lines" aria-hidden="true"></div>
     </div>
 
     <div class="game-bottom-dock collapsed" id="game-bottom-dock">
