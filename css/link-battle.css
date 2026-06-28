@@ -1976,3 +1976,16 @@
     transform:translateX(-50%) scale(1.2)!important;
   }
 }
+
+
+/* v14 desktop stability: reduce heavy GPU effects and prevent action lock overlays from blocking the board. */
+.link-battle-path-overlay{pointer-events:none!important;}
+@media (pointer:fine){
+  .link-battle-boss-bg{filter:brightness(.58) saturate(1.05)!important;}
+  .link-battle-boss-figure{filter:drop-shadow(0 10px 14px rgba(0,0,0,.78))!important;}
+  .link-battle-path-overlay{filter:drop-shadow(0 0 6px rgba(0,255,240,.75))!important;}
+  .link-battle-float-damage,.link-battle-float-player-damage,.link-battle-float-support-skill{will-change:transform,opacity;}
+}
+@media (prefers-reduced-motion: reduce){
+  .link-battle-path-overlay,.link-battle-tile,.link-battle-boss-figure{animation:none!important;transition:none!important;}
+}

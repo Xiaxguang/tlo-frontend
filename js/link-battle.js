@@ -25,10 +25,11 @@
     lastStoryStageId: null,
     pendingScenePrimary: null,
     pendingSceneSecondary: null,
-    boardDomStableKey: null
+    boardDomStableKey: null,
+    moveSeq: 0
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260627-board-image-crash-fix-v2';
+  var TLO_LINK_BATTLE_BUILD = '20260629-desktop-stability-v14';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -94,7 +95,7 @@
     var urls = collectLinkBattleImageUrls(battleState);
     if (!urls.length) return Promise.resolve([]);
     setMsg('正在預載本場 BOSS 與卡牌圖片...', '#00fff0');
-    return preloadGameImages(urls, { timeout: 2800, concurrency: 8, fetchPriority: 'high' });
+    return preloadGameImages(urls, { timeout: 1600, concurrency: 4, fetchPriority: 'auto' });
   }
 
 
@@ -278,7 +279,7 @@
     var tier = getStageTier(stage || {});
     figure.className = 'link-battle-boss-figure tier-' + tier + (visual.bossImage ? ' has-image' : ' no-image');
     if (visual.bossImage) {
-      figure.innerHTML = '<img class="link-battle-boss-main-image" src="' + escapeHtml(visual.bossImage) + '" alt="' + escapeHtml(getDisplayBossName(stage || {})) + '" loading="eager" decoding="async" fetchpriority="high">';
+      figure.innerHTML = '<img class="link-battle-boss-main-image" src="' + escapeHtml(visual.bossImage) + '" alt="' + escapeHtml(getDisplayBossName(stage || {})) + '" loading="lazy" decoding="async">';
       var img = figure.querySelector('img');
       if (img && window.TLOImageLoader && typeof window.TLOImageLoader.enhanceImage === 'function') window.TLOImageLoader.enhanceImage(img);
     } else {
@@ -399,6 +400,28 @@
   function callRpc(method, args) {
     return new Promise(function(resolve, reject) {
       google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method].apply(null, args || []);
+    });
+  }
+
+  function withTimeout(promise, ms, message) {
+    var done = false;
+    return new Promise(function(resolve, reject) {
+      var timer = setTimeout(function() {
+        if (done) return;
+        done = true;
+        reject(new Error(message || '伺服器回應逾時，請重新操作。'));
+      }, Math.max(1000, Number(ms || 12000)));
+      Promise.resolve(promise).then(function(value) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve(value);
+      }, function(err) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        reject(err);
+      });
     });
   }
 
@@ -760,7 +783,7 @@
     var image = getCardImage(card);
     return '<div class="link-battle-team-slot">'
       + '<span>' + escapeHtml(role) + '</span>'
-      + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="eager" decoding="async" fetchpriority="high">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
+      + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
       + '<b>' + escapeHtml(getCardName(card)) + '</b>'
       + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
       + renderCardSkillTag(card, true)
@@ -837,7 +860,7 @@
       var picked = selected.has(id);
       var image = getCardImage(card);
       return '<button type="button" class="link-battle-team-card-option ' + (picked ? 'selected' : '') + '" onclick="TLOLinkBattle.toggleTeamCard(' + jsArg(id) + ')">'
-        + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="eager" decoding="async" fetchpriority="high">' : '<div class="link-battle-team-card-fallback">🎴</div>')
+        + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-card-fallback">🎴</div>')
         + '<strong>' + escapeHtml(getCardName(card)) + '</strong>'
         + '<span>' + escapeHtml(card.rarity || 'Normal') + '｜★' + Number(card.star || 1) + '</span>'
         + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
@@ -1062,7 +1085,7 @@
     setButtonsDisabled(true);
     setMsg('正在產生連線卡牌盤面...', '#00fff0');
     try {
-      var res = await callRpc('startLinkBattle', [window.playerUID || window.TLO_PLAYER_UID || '', state.selectedStageId]);
+      var res = await withTimeout(callRpc('startLinkBattle', [window.playerUID || window.TLO_PLAYER_UID || '', state.selectedStageId]), 15000, '開始挑戰逾時，請確認網路後再試一次。');
       if (!res || !res.success) {
         if (res && res.dashboard) state.dashboard = res.dashboard;
         renderDashboard();
@@ -1275,9 +1298,9 @@
         img = document.createElement('img');
         img.alt = String(tile.card_name || '');
         img.draggable = false;
-        img.loading = 'eager';
+        img.loading = 'lazy';
         img.decoding = 'async';
-        try { img.fetchPriority = 'high'; } catch (_) {}
+        try { img.fetchPriority = 'auto'; } catch (_) {}
         btn.appendChild(img);
       }
       img.alt = String(tile.card_name || '');
@@ -1447,7 +1470,7 @@
     if (state.selectedTileId === tile.tile_id) cls.push('selected');
     if (state.hintedIds.has(tile.tile_id)) cls.push('hinted');
     var img = tile.image_url
-      ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="eager" decoding="async" fetchpriority="high">'
+      ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="lazy" decoding="async">'
       : '<div class="link-battle-tile-fallback">🎴</div>';
     return '<button type="button" class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="event.preventDefault();TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\');return false;">' + img + '</button>';
   }
@@ -1477,7 +1500,9 @@
     state.isAnimating = true;
     renderBattleState();
     try {
-      var res = await callRpc('resolveLinkBattleMove', [window.playerUID || window.TLO_PLAYER_UID || '', state.runId, aId, tileId]);
+      var moveSeq = ++state.moveSeq;
+      var res = await withTimeout(callRpc('resolveLinkBattleMove', [window.playerUID || window.TLO_PLAYER_UID || '', state.runId, aId, tileId]), 12000, '連線操作逾時，已解除鎖定，請再點一次。');
+      if (moveSeq !== state.moveSeq) return;
       if (!res || !res.success) throw new Error((res && res.msg) || '連線失敗');
       if (res.effects && res.effects.playerAttack) {
         state.linkPath = { type: 'success', points: res.effects.playerAttack.path || [], tileA: tileA, tileB: tileB };
@@ -1500,6 +1525,8 @@
       if (res.effects && res.effects.bossCounter) { await playBossCounter(res.effects.bossCounter); await playSupportSkillEffects({ supportSkills: res.effects.bossCounter.supportSkills || [] }); }
       handleBattleEnd(res.status, res.reason, res.rewardSummary);
     } catch (err) {
+      state.linkPath = null;
+      state.selectedTileId = null;
       setMsg('操作失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     } finally {
       state.isAnimating = false;
@@ -1665,7 +1692,7 @@
     if (state.isAnimating || !state.runId) return;
     state.isAnimating = true;
     try {
-      var res = await callRpc('useLinkBattleHint', [window.playerUID || window.TLO_PLAYER_UID || '', state.runId]);
+      var res = await withTimeout(callRpc('useLinkBattleHint', [window.playerUID || window.TLO_PLAYER_UID || '', state.runId]), 12000, '提示操作逾時，已解除鎖定。');
       if (!res || !res.success) throw new Error((res && res.msg) || '提示失敗');
       state.battle = res.state;
       state.battle.status = res.status;
@@ -1695,7 +1722,7 @@
     if (state.isAnimating || !state.runId) return;
     state.isAnimating = true;
     try {
-      var res = await callRpc('shuffleLinkBattle', [window.playerUID || window.TLO_PLAYER_UID || '', state.runId]);
+      var res = await withTimeout(callRpc('shuffleLinkBattle', [window.playerUID || window.TLO_PLAYER_UID || '', state.runId]), 12000, '洗牌操作逾時，已解除鎖定。');
       if (!res || !res.success) throw new Error((res && res.msg) || '洗牌失敗');
       state.battle = res.state;
       state.battle.status = res.status;
