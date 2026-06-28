@@ -1259,8 +1259,8 @@
 
 
   </style>
-  <link rel="icon" href="./favicon.ico?v=20260628-lobby-ui-v4">
-  <meta name="tlo-lobby-ui-build" content="20260628-lobby-ui-v4">
+  <link rel="icon" href="./favicon.ico?v=20260628-lobby-ui-v8">
+  <meta name="tlo-lobby-ui-build" content="20260628-lobby-ui-v8">
 
   <style>
     .daily-dungeon-entry-card{border:1px solid rgba(0,255,240,.28);background:linear-gradient(135deg,rgba(0,255,240,.07),rgba(127,0,255,.1));}
@@ -1316,7 +1316,7 @@
       padding:calc(8px + env(safe-area-inset-top)) 12px calc(96px + env(safe-area-inset-bottom))!important;
       background:
         linear-gradient(180deg,rgba(4,6,20,.08),rgba(4,6,20,.2) 44%,rgba(4,6,20,.7) 100%),
-        url('./assets/ui/lobby-bg-starbase.png') center top / cover no-repeat!important;
+        url('./assets/ui/lobby-bg-starbase.webp') center top / cover no-repeat!important;
       border-left:1px solid rgba(255,226,154,.16);border-right:1px solid rgba(255,226,154,.16);
       box-shadow:0 0 55px rgba(71,45,184,.42)!important;gap:8px;overflow-x:hidden;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;
     }
@@ -1497,10 +1497,87 @@
     body.tlo-chat-modal-open #game-bottom-dock .game-bottom-nav{display:none!important;}
 </style>
 
+
+  <style id="tlo-scene-bg-v8">
+    /* TLO scene background v8: 抽卡 / 戰鬥 / 商城 / 個人 / 社交底圖 */
+    .container.game-shell.tlo-bg-home{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.08),rgba(4,6,20,.2) 44%,rgba(4,6,20,.7) 100%),
+        url('./assets/ui/lobby-bg-starbase.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-bg-gacha{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.16),rgba(4,6,20,.34) 42%,rgba(4,6,20,.78) 100%),
+        url('./assets/ui/bg-gacha-summon-altar.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-bg-battle{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.18),rgba(8,4,28,.36) 44%,rgba(4,6,20,.8) 100%),
+        url('./assets/ui/bg-battle-rift-hall.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-bg-shop{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.14),rgba(4,6,20,.3) 45%,rgba(4,6,20,.78) 100%),
+        url('./assets/ui/bg-shop-supply-station.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-bg-profile{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.18),rgba(4,6,20,.34) 45%,rgba(4,6,20,.82) 100%),
+        url('./assets/ui/bg-profile-star-cabin.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-bg-social{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.16),rgba(4,6,20,.3) 45%,rgba(4,6,20,.8) 100%),
+        url('./assets/ui/bg-social-star-plaza.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell[class*="tlo-bg-"]{
+      background-color:#070816!important;
+      background-attachment:scroll!important;
+    }
+    .container.game-shell.tlo-bg-gacha .screen-head,
+    .container.game-shell.tlo-bg-battle .screen-head,
+    .container.game-shell.tlo-bg-shop .screen-head,
+    .container.game-shell.tlo-bg-profile .screen-head,
+    .container.game-shell.tlo-bg-social .screen-head{
+      padding:10px 10px 8px;
+      border:1px solid rgba(255,230,163,.32);
+      border-radius:18px;
+      background:linear-gradient(135deg,rgba(8,10,30,.68),rgba(25,16,62,.42));
+      backdrop-filter:blur(8px);
+      box-shadow:0 0 22px rgba(0,0,0,.28), inset 0 0 18px rgba(255,255,255,.035);
+    }
+    .container.game-shell.tlo-bg-gacha .game-card,
+    .container.game-shell.tlo-bg-battle .game-card,
+    .container.game-shell.tlo-bg-shop .game-card,
+    .container.game-shell.tlo-bg-profile .game-card,
+    .container.game-shell.tlo-bg-social .game-card,
+    .container.game-shell.tlo-bg-battle .mode-group,
+    .container.game-shell.tlo-bg-gacha .history-box{
+      background:linear-gradient(180deg,rgba(11,12,34,.82),rgba(5,6,18,.72))!important;
+      border-color:rgba(255,230,163,.22)!important;
+      backdrop-filter:blur(9px);
+      box-shadow:0 16px 34px rgba(0,0,0,.34), inset 0 0 18px rgba(100,255,242,.035)!important;
+    }
+    .container.game-shell.tlo-bg-gacha .card-stage.gacha-machine{
+      background:linear-gradient(180deg,rgba(35,18,88,.56),rgba(7,9,29,.54))!important;
+      border-color:rgba(255,230,163,.35)!important;
+      backdrop-filter:blur(6px);
+    }
+    @media(max-width:430px){
+      .container.game-shell.tlo-bg-gacha,
+      .container.game-shell.tlo-bg-battle,
+      .container.game-shell.tlo-bg-shop,
+      .container.game-shell.tlo-bg-profile,
+      .container.game-shell.tlo-bg-social{
+        background-position:center top!important;
+      }
+    }
+  </style>
+
 </head>
 <body class="tlo-game-body">
 
-  <div class="container game-shell">
+  <div class="container game-shell tlo-bg-home" id="game-shell">
     <header class="game-topbar lobby-topbar">
       <div class="lobby-hud">
         <button class="lobby-avatar-btn" type="button" onclick="showGameScreen('profile')" aria-label="前往個人頁設定代表卡頭像">
@@ -7494,6 +7571,12 @@ function showCollectionHistory() {
       var labels = { home: '主介面', gacha: '抽卡', battle: '戰鬥', shop: '商城', profile: '個人', social: '社交' };
       var targetId = map[screenName] || map.home;
       if (!map[screenName]) screenName = 'home';
+      var shell = document.getElementById('game-shell') || document.querySelector('.container.game-shell');
+      if (shell) {
+        ['home','gacha','battle','shop','profile','social'].forEach(function(k){ shell.classList.remove('tlo-bg-' + k); });
+        shell.classList.add('tlo-bg-' + screenName);
+        shell.setAttribute('data-active-screen', screenName);
+      }
       document.querySelectorAll('.game-screen').forEach(function(el) {
         el.classList.toggle('active', el.id === targetId);
       });
