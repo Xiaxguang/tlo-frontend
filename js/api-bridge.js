@@ -4,6 +4,7 @@
   var AUTH_PLAYER_KEY = "TLO_AUTH_PLAYER";
   var GUEST_MODE_KEY = "TLO_GUEST_MODE";
   var GUEST_DEMO_STATE_KEY = "TLO_GUEST_DEMO_STATE";
+  var TERMS_ACCEPTED_KEY = "TLO_TERMS_ACCEPTED";
 
   function getApiBaseUrl() {
     var cfg = window.TLO_CONFIG || {};
@@ -201,70 +202,114 @@
     var style = document.createElement("style");
     style.id = "tlo-auth-style";
     style.textContent = `
-      .tlo-auth-overlay{position:fixed;inset:0;z-index:99999;background:radial-gradient(circle at top,#3b0b5e 0,#101010 52%,#050505 100%);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;}
-      .tlo-auth-card{width:min(420px,100%);background:rgba(20,20,24,.96);border:1px solid rgba(0,255,240,.45);box-shadow:0 0 35px rgba(127,0,255,.45);border-radius:22px;padding:24px;box-sizing:border-box;text-align:left;}
-      .tlo-auth-title{text-align:center;font-size:24px;font-weight:900;color:#00fff0;text-shadow:0 0 14px rgba(0,255,240,.8);margin-bottom:6px;}
-      .tlo-auth-sub{text-align:center;color:#bbb;font-size:13px;line-height:1.5;margin-bottom:18px;}
-      .tlo-auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
-      .tlo-auth-tab{border:1px solid #444;background:#191919;color:#aaa;border-radius:12px;padding:10px;font-weight:900;cursor:pointer;}
-      .tlo-auth-tab.active{background:linear-gradient(45deg,#ff007f,#7f00ff);color:#fff;border-color:#ff00ff;}
-      .tlo-auth-label{display:block;color:#00fff0;font-size:12px;font-weight:900;margin:10px 0 5px;}
-      .tlo-auth-input{width:100%;box-sizing:border-box;border:1px solid #444;background:#111;color:#fff;border-radius:12px;padding:13px;font-size:16px;outline:none;}
-      .tlo-auth-input:focus{border-color:#00fff0;box-shadow:0 0 12px rgba(0,255,240,.25);}
-      .tlo-auth-main-btn{width:100%;border:none;border-radius:14px;background:linear-gradient(45deg,#00fff0,#7f00ff);color:#fff;padding:14px;font-size:17px;font-weight:900;margin-top:14px;cursor:pointer;box-shadow:0 0 18px rgba(0,255,240,.3);}
-      .tlo-auth-guest-btn{width:100%;border:1px solid rgba(255,221,119,.65);border-radius:14px;background:#17130a;color:#ffdd77;padding:13px;font-size:15px;font-weight:900;margin-top:12px;cursor:pointer;}
-      .tlo-auth-divider{display:flex;align-items:center;gap:10px;color:#777;font-size:11px;margin-top:14px;}.tlo-auth-divider:before,.tlo-auth-divider:after{content:'';height:1px;background:#333;flex:1;}
-      .tlo-auth-note{background:#241b08;border:1px solid #ffc107;color:#ffdd77;border-radius:12px;padding:10px;font-size:12px;line-height:1.5;margin-top:12px;}
-      .tlo-auth-msg{font-size:13px;text-align:center;margin-top:10px;min-height:18px;color:#ff7777;line-height:1.4;}
-      .tlo-auth-small-btn{border:1px solid #555;background:#191919;color:#ddd;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:900;cursor:pointer;margin:4px;}
+      :root{--tlo-gold:#ffe29a;--tlo-gold2:#c58a32;--tlo-purple:#7c35ff;--tlo-cyan:#7fefff;--tlo-deep:#070821;}
+      .tlo-auth-overlay{position:fixed;inset:0;z-index:99999;background:#05020f;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#fff;font-family:'Noto Sans TC','Microsoft JhengHei','PingFang TC','Helvetica Neue',Arial,sans-serif;}
+      .tlo-auth-overlay *{box-sizing:border-box;}
+      .tlo-auth-stage{position:relative;width:min(100vw,56.25dvh);height:min(100dvh,177.78vw);max-width:520px;max-height:100dvh;background-image:url('./assets/ui/login-bg-summer.png');background-size:100% 100%;background-position:center;background-repeat:no-repeat;overflow:hidden;box-shadow:0 0 42px rgba(115,62,255,.45),0 0 90px rgba(17,214,255,.18);isolation:isolate;}
+      .tlo-auth-stage:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 54%,rgba(3,3,18,.26) 70%,rgba(3,3,18,.72) 100%);pointer-events:none;z-index:0;}
+      .tlo-login-card{position:absolute;left:7.2%;right:7.2%;bottom:4.4%;z-index:2;background:linear-gradient(180deg,rgba(17,19,54,.66),rgba(8,9,32,.86));border:1px solid rgba(255,226,154,.78);box-shadow:0 0 24px rgba(127,53,255,.45),inset 0 0 18px rgba(126,239,255,.12);border-radius:18px;padding:13px 13px 12px;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);max-height:45%;overflow:auto;scrollbar-width:thin;}
+      .tlo-login-card:before{content:'';position:absolute;inset:-1px;border-radius:18px;padding:1px;background:linear-gradient(135deg,rgba(255,226,154,.95),rgba(126,239,255,.45),rgba(124,53,255,.8),rgba(255,226,154,.8));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+      .tlo-auth-title{text-align:center;font-size:18px;font-weight:900;letter-spacing:.08em;color:#fff5cf;text-shadow:0 0 10px rgba(255,226,154,.85),0 0 18px rgba(124,53,255,.85);margin:0 0 4px;}
+      .tlo-auth-sub{text-align:center;color:#d9d3ff;font-size:11px;line-height:1.45;margin:0 0 9px;text-shadow:0 0 8px rgba(0,0,0,.95);}
+      .tlo-auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:9px;}
+      .tlo-auth-tab{min-height:34px;border:1px solid rgba(255,226,154,.55);background:linear-gradient(180deg,rgba(32,35,85,.82),rgba(12,14,45,.9));color:#d8d2ff;border-radius:12px;padding:7px 9px;font-weight:900;font-size:13px;letter-spacing:.04em;cursor:pointer;box-shadow:inset 0 0 10px rgba(126,239,255,.06);}
+      .tlo-auth-tab.active{background:linear-gradient(180deg,rgba(255,226,154,.30),rgba(124,53,255,.78));color:#fff7d7;border-color:rgba(255,226,154,.95);text-shadow:0 0 8px rgba(255,226,154,.8);box-shadow:0 0 14px rgba(124,53,255,.45),inset 0 0 12px rgba(255,226,154,.14);}
+      .tlo-auth-label{display:block;color:#ffe29a;font-size:11px;font-weight:900;margin:8px 0 4px;letter-spacing:.04em;}
+      .tlo-auth-input-wrap{position:relative;display:flex;align-items:center;margin-bottom:7px;}
+      .tlo-auth-input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:#fff0bd;text-shadow:0 0 8px rgba(255,226,154,.65);pointer-events:none;}
+      .tlo-auth-input{width:100%;height:42px;border:1px solid rgba(255,226,154,.46);background:linear-gradient(180deg,rgba(7,8,29,.9),rgba(18,16,49,.86));color:#fff;border-radius:12px;padding:10px 42px 10px 38px;font-size:16px;outline:none;box-shadow:inset 0 0 12px rgba(0,0,0,.42);}
+      .tlo-auth-input::placeholder{color:rgba(218,218,245,.58);}
+      .tlo-auth-input:focus{border-color:rgba(126,239,255,.95);box-shadow:0 0 14px rgba(126,239,255,.30),inset 0 0 12px rgba(0,0,0,.46);}
+      .tlo-password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:0;background:transparent;color:#e8e6ff;font-size:16px;cursor:pointer;border-radius:9px;}
+      .tlo-password-toggle:active,.tlo-password-toggle:hover{background:rgba(255,255,255,.08);}
+      .tlo-auth-main-btn{width:100%;min-height:47px;border:1px solid rgba(255,236,182,.95);border-radius:16px;background:linear-gradient(180deg,#a56aff 0%,#6f2ae8 48%,#371067 100%);color:#fff9d9;padding:10px 12px;font-size:20px;font-weight:900;letter-spacing:.12em;margin:9px 0 9px;cursor:pointer;text-shadow:0 2px 0 rgba(52,20,95,.8),0 0 12px rgba(255,226,154,.65);box-shadow:0 0 20px rgba(124,53,255,.62),inset 0 2px 0 rgba(255,255,255,.28),inset 0 -3px 0 rgba(32,10,77,.7);}
+      .tlo-auth-main-btn:active{transform:translateY(1px);filter:brightness(.96);}
+      .tlo-auth-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:9px;}
+      .tlo-auth-action-btn,.tlo-auth-guest-btn{min-height:38px;border:1px solid rgba(255,226,154,.70);border-radius:12px;background:linear-gradient(180deg,rgba(46,56,129,.92),rgba(19,22,69,.95));color:#f7f2ff;padding:7px 6px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 0 10px rgba(54,42,176,.18),inset 0 0 10px rgba(126,239,255,.08);}
+      .tlo-auth-action-btn:hover,.tlo-auth-guest-btn:hover{border-color:#fff0bd;filter:brightness(1.08);}
+      .tlo-auth-guest-btn{width:100%;margin-top:10px;}
+      .tlo-auth-note{background:rgba(36,27,8,.66);border:1px solid rgba(255,193,7,.62);color:#ffecaa;border-radius:12px;padding:9px;font-size:11px;line-height:1.5;margin-top:9px;}
+      .tlo-auth-msg{font-size:12px;text-align:center;margin-top:8px;min-height:17px;color:#ff8787;line-height:1.35;text-shadow:0 0 8px rgba(0,0,0,.8);}
+      .tlo-terms-row{display:flex;align-items:flex-start;gap:8px;color:#e9e4ff;font-size:11px;line-height:1.45;margin:7px 0 0;text-shadow:0 0 7px rgba(0,0,0,.9);}
+      .tlo-terms-row input{appearance:none;-webkit-appearance:none;width:18px;height:18px;flex:0 0 18px;border:1px solid rgba(255,226,154,.75);background:rgba(4,5,22,.84);border-radius:5px;margin:1px 0 0;box-shadow:inset 0 0 8px rgba(0,0,0,.45);}
+      .tlo-terms-row input:checked{background:linear-gradient(135deg,#ffe29a,#7fefff);box-shadow:0 0 12px rgba(126,239,255,.35);}
+      .tlo-terms-row input:checked:after{content:'✓';display:block;text-align:center;color:#130822;font-size:14px;font-weight:900;line-height:17px;}
+      .tlo-legal-link{border:0;background:transparent;color:#7fefff;padding:0;font:inherit;font-weight:900;text-decoration:underline;cursor:pointer;text-shadow:0 0 8px rgba(126,239,255,.45);}
+      .tlo-auth-divider{display:flex;align-items:center;gap:10px;color:#aaa;font-size:11px;margin-top:12px;}.tlo-auth-divider:before,.tlo-auth-divider:after{content:'';height:1px;background:rgba(255,226,154,.26);flex:1;}
+      .tlo-auth-small-btn{border:1px solid rgba(255,226,154,.55);background:rgba(18,20,56,.9);color:#eee;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:900;cursor:pointer;margin:4px;}
       .tlo-auth-userbar{text-align:center;margin-top:8px;}
-      .tlo-auth-force{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.86);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}
-      .tlo-auth-force .tlo-auth-card{border-color:#ffc107;box-shadow:0 0 35px rgba(255,193,7,.35);}
+      .tlo-auth-force{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.86);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;color:#fff;font-family:'Noto Sans TC','Microsoft JhengHei','PingFang TC','Helvetica Neue',Arial,sans-serif;}
+      .tlo-auth-force .tlo-auth-card{width:min(420px,100%);background:rgba(20,20,24,.96);border:1px solid rgba(255,226,154,.7);box-shadow:0 0 35px rgba(255,193,7,.35);border-radius:22px;padding:24px;box-sizing:border-box;text-align:left;}
+      .tlo-auth-force .tlo-auth-title{font-size:24px;color:#00fff0;text-shadow:0 0 14px rgba(0,255,240,.8);}
       .tlo-auth-warning{color:#ffc107;font-size:13px;line-height:1.5;background:#2a210b;border:1px solid #ffc107;border-radius:12px;padding:10px;margin:10px 0;}
       .tlo-guest-banner{background:linear-gradient(135deg,rgba(255,221,119,.14),rgba(0,255,240,.10));border:1px solid rgba(255,221,119,.55);color:#ffecaa;border-radius:14px;padding:11px 13px;margin:10px 0;font-size:12px;line-height:1.6;text-align:center;}
+      .tlo-legal-modal{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px;color:#fff;font-family:'Noto Sans TC','Microsoft JhengHei','PingFang TC','Helvetica Neue',Arial,sans-serif;}
+      .tlo-legal-card{width:min(460px,100%);max-height:min(78dvh,680px);overflow:auto;background:linear-gradient(180deg,rgba(16,18,56,.98),rgba(8,7,28,.98));border:1px solid rgba(255,226,154,.78);border-radius:20px;padding:20px;box-shadow:0 0 35px rgba(124,53,255,.42);}
+      .tlo-legal-card h3{margin:0 0 10px;color:#fff0bd;text-align:center;font-size:22px;text-shadow:0 0 12px rgba(255,226,154,.55);}
+      .tlo-legal-card p,.tlo-legal-card li{font-size:13px;line-height:1.75;color:#eee;margin:8px 0;}
+      .tlo-legal-card ul{padding-left:20px;margin:8px 0;}
+      .tlo-legal-close{width:100%;margin-top:14px;border:1px solid rgba(255,226,154,.8);background:linear-gradient(180deg,#7357cc,#2b1b74);color:#fff7d7;border-radius:13px;padding:11px;font-weight:900;cursor:pointer;}
+      @media (max-width:430px){.tlo-login-card{left:6%;right:6%;bottom:3.2%;padding:11px 11px 10px;max-height:47%;}.tlo-auth-title{font-size:16px}.tlo-auth-sub{font-size:10px}.tlo-auth-input{height:39px;font-size:15px}.tlo-auth-main-btn{min-height:44px;font-size:18px}.tlo-auth-actions{gap:6px}.tlo-auth-action-btn{font-size:11px;min-height:36px}.tlo-terms-row{font-size:10.5px}}
+      @media (max-height:720px){.tlo-login-card{max-height:52%;bottom:2.8%;}.tlo-auth-title,.tlo-auth-sub{display:none}.tlo-auth-tabs{margin-bottom:7px}.tlo-auth-input{height:37px}.tlo-auth-main-btn{min-height:40px;font-size:17px;margin:7px 0}.tlo-auth-note{display:none}.tlo-terms-row{font-size:10px}.tlo-auth-actions{margin-bottom:6px}}
     `;
     document.head.appendChild(style);
   }
 
   function authHtml() {
     var urlUid = getUrlUid();
+    var accepted = localStorage.getItem(TERMS_ACCEPTED_KEY) === "1" ? "checked" : "";
     return `
       <div class="tlo-auth-overlay" id="tlo-auth-overlay">
-        <div class="tlo-auth-card">
-          <div class="tlo-auth-title">✨ T-LO 玩家登入 ✨</div>
-          <div class="tlo-auth-sub">登入後會讀取你的抽卡次數、卡盒、戰鬥、PVP 與排行榜資料。</div>
-          <div class="tlo-auth-tabs">
-            <button class="tlo-auth-tab active" id="tlo-login-tab" type="button">內測玩家登入</button>
-            <button class="tlo-auth-tab" id="tlo-register-tab" type="button">新用戶註冊</button>
-          </div>
+        <div class="tlo-auth-stage" aria-label="T-LO 實況星域登入首頁">
+          <div class="tlo-login-card">
+            <div class="tlo-auth-title">登入實況星域</div>
+            <div class="tlo-auth-sub">收集直播主卡牌，挑戰異世界討伐</div>
+            <div class="tlo-auth-tabs">
+              <button class="tlo-auth-tab active" id="tlo-login-tab" type="button">玩家登入</button>
+              <button class="tlo-auth-tab" id="tlo-register-tab" type="button">新玩家註冊</button>
+            </div>
 
-          <div id="tlo-login-panel">
-            <label class="tlo-auth-label">玩家 UID / 玩家代碼</label>
-            <input class="tlo-auth-input" id="tlo-login-uid" value="${escapeAttr(urlUid)}" placeholder="輸入你的內測 UID">
-            <label class="tlo-auth-label">密碼</label>
-            <input class="tlo-auth-input" id="tlo-login-password" type="password" placeholder="輸入你的密碼">
-            <button class="tlo-auth-main-btn" id="tlo-login-btn" type="button">登入遊戲</button>
-            <div class="tlo-auth-note">請使用自己的玩家 UID 與密碼登入。若無法登入，請聯繫管理員重設密碼。</div>
-          </div>
+            <div id="tlo-login-panel">
+              <label class="tlo-auth-label" for="tlo-login-uid">玩家 UID</label>
+              <div class="tlo-auth-input-wrap">
+                <span class="tlo-auth-input-icon">👤</span>
+                <input class="tlo-auth-input" id="tlo-login-uid" value="${escapeAttr(urlUid)}" autocomplete="username" placeholder="請輸入 UID">
+              </div>
+              <label class="tlo-auth-label" for="tlo-login-password">密碼</label>
+              <div class="tlo-auth-input-wrap">
+                <span class="tlo-auth-input-icon">🔒</span>
+                <input class="tlo-auth-input" id="tlo-login-password" type="password" autocomplete="current-password" placeholder="請輸入密碼">
+                <button class="tlo-password-toggle" id="tlo-login-password-toggle" type="button" aria-label="顯示或隱藏密碼">👁</button>
+              </div>
+              <button class="tlo-auth-main-btn" id="tlo-login-btn" type="button">進入實況星域</button>
+              <div class="tlo-auth-actions">
+                <button class="tlo-auth-action-btn" id="tlo-guest-btn" type="button">訪客登入</button>
+                <button class="tlo-auth-action-btn" id="tlo-register-shortcut-btn" type="button">新玩家註冊</button>
+                <button class="tlo-auth-action-btn" id="tlo-forgot-btn" type="button">忘記密碼</button>
+              </div>
+            </div>
 
-          <div id="tlo-register-panel" style="display:none;">
-            <label class="tlo-auth-label">建立玩家 UID / 玩家代碼</label>
-            <input class="tlo-auth-input" id="tlo-register-uid" placeholder="例如：tlo123 或你的暱稱">
-            <label class="tlo-auth-label">顯示名稱</label>
-            <input class="tlo-auth-input" id="tlo-register-name" placeholder="可不填，預設同 UID">
-            <label class="tlo-auth-label">好友邀請碼（選填）</label>
-            <input class="tlo-auth-input" id="tlo-register-invite-code" maxlength="20" autocomplete="off" placeholder="輸入後雙方各獲得抽卡次數 +5">
-            <label class="tlo-auth-label">設定密碼</label>
-            <input class="tlo-auth-input" id="tlo-register-password" type="password" placeholder="至少 8 碼">
-            <label class="tlo-auth-label">再次輸入密碼</label>
-            <input class="tlo-auth-input" id="tlo-register-password2" type="password" placeholder="再次確認密碼">
-            <button class="tlo-auth-main-btn" id="tlo-register-btn" type="button">註冊並開始遊戲</button>
-            <div class="tlo-auth-note">新用戶會建立全新資料，不會覆蓋內測玩家資料。</div>
+            <div id="tlo-register-panel" style="display:none;">
+              <label class="tlo-auth-label" for="tlo-register-uid">建立玩家 UID</label>
+              <div class="tlo-auth-input-wrap"><span class="tlo-auth-input-icon">🆔</span><input class="tlo-auth-input" id="tlo-register-uid" autocomplete="username" placeholder="例如：tlo123 或你的暱稱"></div>
+              <label class="tlo-auth-label" for="tlo-register-name">顯示名稱</label>
+              <div class="tlo-auth-input-wrap"><span class="tlo-auth-input-icon">✨</span><input class="tlo-auth-input" id="tlo-register-name" placeholder="可不填，預設同 UID"></div>
+              <label class="tlo-auth-label" for="tlo-register-invite-code">好友邀請碼（選填）</label>
+              <div class="tlo-auth-input-wrap"><span class="tlo-auth-input-icon">🎁</span><input class="tlo-auth-input" id="tlo-register-invite-code" maxlength="20" autocomplete="off" placeholder="輸入後雙方各獲得抽卡次數 +5"></div>
+              <label class="tlo-auth-label" for="tlo-register-password">設定密碼</label>
+              <div class="tlo-auth-input-wrap"><span class="tlo-auth-input-icon">🔒</span><input class="tlo-auth-input" id="tlo-register-password" type="password" autocomplete="new-password" placeholder="至少 8 碼"><button class="tlo-password-toggle" id="tlo-register-password-toggle" type="button" aria-label="顯示或隱藏密碼">👁</button></div>
+              <label class="tlo-auth-label" for="tlo-register-password2">確認密碼</label>
+              <div class="tlo-auth-input-wrap"><span class="tlo-auth-input-icon">🔐</span><input class="tlo-auth-input" id="tlo-register-password2" type="password" autocomplete="new-password" placeholder="再次確認密碼"><button class="tlo-password-toggle" id="tlo-register-password2-toggle" type="button" aria-label="顯示或隱藏密碼">👁</button></div>
+              <button class="tlo-auth-main-btn" id="tlo-register-btn" type="button">註冊並開始冒險</button>
+              <div class="tlo-auth-note">新玩家會建立全新資料；好友邀請碼可之後到社交頁補填。</div>
+            </div>
+
+            <label class="tlo-terms-row" for="tlo-terms-check">
+              <input id="tlo-terms-check" type="checkbox" ${accepted}>
+              <span>我已閱讀並同意 <button class="tlo-legal-link" type="button" data-legal="terms">《使用者條款》</button> 與 <button class="tlo-legal-link" type="button" data-legal="privacy">《隱私政策》</button></span>
+            </label>
+            <div class="tlo-auth-msg" id="tlo-auth-msg"></div>
           </div>
-          <div class="tlo-auth-divider">免登入瀏覽</div>
-          <button class="tlo-auth-guest-btn" id="tlo-guest-btn" type="button">👀 訪客模式免登入</button>
-          <div style="color:#999;font-size:11px;line-height:1.5;text-align:center;margin-top:7px;">訪客可體驗抽卡與記憶翻牌，資料只保存在目前分頁且不會寫入正式帳號。</div>
-          <div class="tlo-auth-msg" id="tlo-auth-msg"></div>
         </div>
       </div>
     `;
@@ -279,6 +324,84 @@
     if (!el) return;
     el.style.color = good ? "#00ff7f" : "#ff7777";
     el.textContent = text || "";
+  }
+
+
+  function ensureTermsAccepted() {
+    var checkbox = document.getElementById("tlo-terms-check");
+    if (!checkbox || checkbox.checked) {
+      localStorage.setItem(TERMS_ACCEPTED_KEY, "1");
+      return true;
+    }
+    setAuthMsg("請先勾選同意使用者條款與隱私政策。", false);
+    return false;
+  }
+
+  function togglePasswordVisibility(inputId, buttonId) {
+    var input = document.getElementById(inputId);
+    var button = document.getElementById(buttonId);
+    if (!input || !button) return;
+    var show = input.type === "password";
+    input.type = show ? "text" : "password";
+    button.textContent = show ? "🙈" : "👁";
+  }
+
+  function showLegalModal(kind) {
+    var isPrivacy = kind === "privacy";
+    var title = isPrivacy ? "T-LO 隱私政策" : "T-LO 使用者條款";
+    var content = isPrivacy ? `
+      <p>本政策說明 T-LO 實況星域在玩家使用服務時，如何處理必要資料。</p>
+      <ul>
+        <li>我們會保存玩家 UID、顯示名稱、登入狀態、遊戲進度、抽卡紀錄、戰鬥紀錄、留言、好友與排行榜資料，用於提供遊戲功能。</li>
+        <li>密碼會由後端處理，前端不會顯示或公開玩家密碼。請勿把密碼提供給他人。</li>
+        <li>訪客模式資料只暫存在目前瀏覽器分頁，關閉後可能消失，且不會轉移到正式帳號。</li>
+        <li>若未來串接付款，訂單與交易流程會依第三方金流平台規範處理。</li>
+        <li>玩家可聯繫管理員協助處理帳號、密碼或資料異常問題。</li>
+      </ul>
+    ` : `
+      <p>使用 T-LO 實況星域前，請先閱讀並同意以下規範。</p>
+      <ul>
+        <li>玩家應妥善保管自己的 UID 與密碼，因分享帳號造成的損失需自行承擔。</li>
+        <li>禁止使用外掛、腳本、惡意請求或其他破壞遊戲公平性的行為。</li>
+        <li>留言、暱稱與社交內容不得包含騷擾、詐欺、冒名、惡意攻擊或違法內容。</li>
+        <li>活動獎勵、抽卡機率、商城品項與遊戲數值，可能依營運需求調整。</li>
+        <li>若系統偵測異常資料或惡意操作，管理員可暫停帳號、回復異常紀錄或限制功能。</li>
+      </ul>
+    `;
+    var old = document.getElementById("tlo-legal-modal");
+    if (old) old.remove();
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="tlo-legal-modal" id="tlo-legal-modal" role="dialog" aria-modal="true" aria-label="${escapeAttr(title)}">
+        <div class="tlo-legal-card">
+          <h3>${title}</h3>
+          ${content}
+          <button class="tlo-legal-close" id="tlo-legal-close" type="button">我知道了</button>
+        </div>
+      </div>
+    `);
+    document.getElementById("tlo-legal-close").onclick = function () { document.getElementById("tlo-legal-modal").remove(); };
+    document.getElementById("tlo-legal-modal").onclick = function (event) {
+      if (event.target.id === "tlo-legal-modal") event.currentTarget.remove();
+    };
+  }
+
+  function showForgotPasswordModal() {
+    var old = document.getElementById("tlo-legal-modal");
+    if (old) old.remove();
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="tlo-legal-modal" id="tlo-legal-modal" role="dialog" aria-modal="true" aria-label="忘記密碼">
+        <div class="tlo-legal-card">
+          <h3>忘記密碼</h3>
+          <p>目前尚未開放自動寄信重設密碼。請把你的玩家 UID 提供給管理員或客服，由後台協助重設。</p>
+          <p>為了保護帳號安全，請不要在公開留言區張貼密碼或個人敏感資料。</p>
+          <button class="tlo-legal-close" id="tlo-legal-close" type="button">我知道了</button>
+        </div>
+      </div>
+    `);
+    document.getElementById("tlo-legal-close").onclick = function () { document.getElementById("tlo-legal-modal").remove(); };
+    document.getElementById("tlo-legal-modal").onclick = function (event) {
+      if (event.target.id === "tlo-legal-modal") event.currentTarget.remove();
+    };
   }
 
   function showAuthScreen(msg) {
@@ -314,9 +437,36 @@
     document.getElementById("tlo-login-btn").onclick = handleLogin;
     document.getElementById("tlo-register-btn").onclick = handleRegister;
     document.getElementById("tlo-guest-btn").onclick = handleGuestEntry;
+    var shortcut = document.getElementById("tlo-register-shortcut-btn");
+    if (shortcut) shortcut.onclick = function () { switchAuthTab("register"); };
+    var forgot = document.getElementById("tlo-forgot-btn");
+    if (forgot) forgot.onclick = showForgotPasswordModal;
+    var terms = document.getElementById("tlo-terms-check");
+    if (terms) terms.onchange = function () {
+      if (terms.checked) localStorage.setItem(TERMS_ACCEPTED_KEY, "1");
+      else localStorage.removeItem(TERMS_ACCEPTED_KEY);
+    };
+    var legalLinks = document.querySelectorAll(".tlo-legal-link");
+    Array.prototype.forEach.call(legalLinks, function (btn) {
+      btn.onclick = function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        showLegalModal(btn.getAttribute("data-legal"));
+      };
+    });
+    var loginPw = document.getElementById("tlo-login-password-toggle");
+    if (loginPw) loginPw.onclick = function () { togglePasswordVisibility("tlo-login-password", "tlo-login-password-toggle"); };
+    var regPw = document.getElementById("tlo-register-password-toggle");
+    if (regPw) regPw.onclick = function () { togglePasswordVisibility("tlo-register-password", "tlo-register-password-toggle"); };
+    var regPw2 = document.getElementById("tlo-register-password2-toggle");
+    if (regPw2) regPw2.onclick = function () { togglePasswordVisibility("tlo-register-password2", "tlo-register-password2-toggle"); };
   }
 
   function handleGuestEntry() {
+    if (!ensureTermsAccepted()) {
+      if (window.TLOAudio) window.TLOAudio.playSfx("error");
+      return;
+    }
     clearAuth();
     sessionStorage.setItem(GUEST_MODE_KEY, "1");
     location.reload();
@@ -324,6 +474,7 @@
 
   async function handleLogin() {
     try {
+      if (!ensureTermsAccepted()) throw new Error("請先同意使用者條款與隱私政策。");
       var uid = document.getElementById("tlo-login-uid").value.trim();
       var pw = document.getElementById("tlo-login-password").value;
       if (!uid || !pw) throw new Error("請輸入 UID 與密碼。");
@@ -341,6 +492,7 @@
 
   async function handleRegister() {
     try {
+      if (!ensureTermsAccepted()) throw new Error("請先同意使用者條款與隱私政策。");
       var uid = document.getElementById("tlo-register-uid").value.trim();
       var name = document.getElementById("tlo-register-name").value.trim();
       var inviteCode = document.getElementById("tlo-register-invite-code").value.trim();
