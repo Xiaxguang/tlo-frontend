@@ -1341,9 +1341,62 @@
     .lobby-announcement-inner{display:flex;align-items:center;width:100%;height:100%;min-width:0;}
     .lobby-announcement-label{flex:0 0 auto;margin-left:10px;padding:4px 8px;border-radius:999px;background:rgba(100,255,242,.14);border:1px solid rgba(100,255,242,.38);color:var(--lobby-cyan);font-size:11px;font-weight:1000;text-shadow:0 0 10px rgba(100,255,242,.34);}
     .lobby-marquee-viewport{position:relative;flex:1;min-width:0;overflow:hidden;height:100%;display:flex;align-items:center;margin:0 10px 0 8px;}
-    .lobby-marquee-track{display:inline-block;white-space:nowrap;will-change:transform;animation:lobbyMarquee 48s linear infinite;color:#fff7d7;font-size:12px;font-weight:900;text-shadow:0 0 8px rgba(0,0,0,.75);}
+    .lobby-marquee-track{display:inline-block;white-space:nowrap;will-change:transform;animation:lobbyMarquee 6s linear infinite;color:#fff7d7;font-size:12px;font-weight:900;text-shadow:0 0 8px rgba(0,0,0,.75);}
     .lobby-announcement:hover .lobby-marquee-track{animation-play-state:paused;}
     @keyframes lobbyMarquee{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+
+    /* 全服稀有抽卡公告：與跑馬燈分離，一次只顯示一則 */
+    .global-rare-toast-layer{
+      position:fixed;
+      left:50%;
+      top:calc(86px + env(safe-area-inset-top));
+      transform:translateX(-50%) translateY(-10px);
+      width:min(470px,calc(100vw - 24px));
+      z-index:100140;
+      pointer-events:none;
+      display:flex;
+      justify-content:center;
+      opacity:0;
+      visibility:hidden;
+      transition:opacity .18s ease, transform .18s ease, visibility .18s ease;
+    }
+    .global-rare-toast-layer.show{
+      opacity:1;
+      visibility:visible;
+      transform:translateX(-50%) translateY(0);
+    }
+    .global-rare-toast-card{
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid rgba(255,230,163,.78);
+      border-radius:999px;
+      padding:9px 14px;
+      color:#fff8d6;
+      text-align:center;
+      font-size:13px;
+      font-weight:1000;
+      line-height:1.35;
+      letter-spacing:.2px;
+      background:linear-gradient(135deg,rgba(14,8,42,.94),rgba(80,23,116,.88),rgba(12,22,60,.9));
+      box-shadow:0 12px 34px rgba(0,0,0,.58),0 0 22px rgba(255,214,80,.32),inset 0 0 18px rgba(100,255,242,.08);
+      text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 10px rgba(255,221,119,.36);
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+      animation:globalRareToastGlow 2s ease-in-out 1;
+    }
+    .global-rare-toast-card::before{content:'🎉 ';}
+    .global-rare-toast-card::after{content:' ✦';color:#64fff2;}
+    @keyframes globalRareToastGlow{
+      0%{filter:brightness(1.08);box-shadow:0 12px 34px rgba(0,0,0,.58),0 0 8px rgba(255,214,80,.18),inset 0 0 18px rgba(100,255,242,.08);}
+      35%{filter:brightness(1.28);box-shadow:0 12px 34px rgba(0,0,0,.58),0 0 30px rgba(255,214,80,.5),0 0 18px rgba(100,255,242,.28),inset 0 0 22px rgba(255,255,255,.08);}
+      100%{filter:brightness(1.04);box-shadow:0 12px 34px rgba(0,0,0,.58),0 0 20px rgba(255,214,80,.28),inset 0 0 18px rgba(100,255,242,.08);}
+    }
+    @media(max-width:430px){
+      .global-rare-toast-layer{top:calc(70px + env(safe-area-inset-top));width:calc(100vw - 18px);}
+      .global-rare-toast-card{font-size:12px;padding:8px 11px;}
+    }
+
     .lobby-maintenance{border-radius:14px!important;padding:8px 10px!important;margin:0!important;border:1px solid rgba(255,100,100,.65)!important;background:rgba(6,7,25,.72)!important;color:#ffbbbb!important;line-height:1.45!important;font-size:12px!important;backdrop-filter:blur(8px);box-shadow:0 0 14px rgba(100,255,242,.12);}
     .lobby-screen{min-height:calc(100svh - 190px);padding-top:4px;}
     .lobby-stage{position:relative;min-height:48svh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;padding:26px 6px 8px;}
@@ -1803,6 +1856,7 @@
 
 </head>
 <body class="tlo-game-body">
+  <div id="global-rare-toast-layer" class="global-rare-toast-layer" aria-live="polite" aria-atomic="true"></div>
 
   <div class="container game-shell tlo-bg-home" id="game-shell">
     <header class="game-topbar lobby-topbar">
@@ -2805,6 +2859,10 @@
     let lastPublicChatSignature = '';
     let publicChatNotifyReady = false;
     let hasPublicChatNew = false;
+    let globalRareAnnouncementQueue = [];
+    let globalRareAnnouncementShowing = false;
+    let globalRareAnnouncementSeen = new Set();
+    let systemAnnouncementSeeded = false;
     let demonChallengeRunning = false;
     let latestRpgDashboardLoadedAt = 0;
     let lastRpgAdventureKey = "";
@@ -4377,8 +4435,7 @@
             setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
           }
           if (response.globalAnnouncements && response.globalAnnouncements.length) {
-            lobbySystemAnnouncementText = response.globalAnnouncements.join('　｜　');
-            renderLobbyAnnouncementMarquee();
+            enqueueGlobalRareAnnouncements(response.globalAnnouncements, { force: true });
             setTimeout(loadSystemAnnouncements, 800);
           }
         } else {
@@ -4433,8 +4490,7 @@
             setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
           }
           if (response.globalAnnouncements && response.globalAnnouncements.length) {
-            lobbySystemAnnouncementText = response.globalAnnouncements.join('　｜　');
-            renderLobbyAnnouncementMarquee();
+            enqueueGlobalRareAnnouncements(response.globalAnnouncements, { force: true });
             setTimeout(loadSystemAnnouncements, 800);
           }
         } else {
@@ -5157,22 +5213,80 @@ function showCollectionHistory() {
     function renderLobbyAnnouncementMarquee() {
       var ann = document.getElementById('ops-announcement');
       if (!ann) return;
-      var parts = [];
-      if (lobbyBaseAnnouncementText) parts.push(lobbyBaseAnnouncementText);
-      if (lobbySystemAnnouncementText) parts.push(lobbySystemAnnouncementText);
-      var text = parts.join('　✦　').trim();
+      // 官方公告跑馬燈只顯示營運公告，不混入抽到 SSR / UR 的全服公告。
+      var text = String(lobbyBaseAnnouncementText || '').trim();
       if (!text) { ann.style.display = 'none'; ann.innerHTML = ''; return; }
       ann.style.display = 'flex';
       ann.innerHTML = '<div class="lobby-announcement-inner"><span class="lobby-announcement-label">📢 公告</span><div class="lobby-marquee-viewport"><span class="lobby-marquee-track">' + escapeHtml(text) + '　　✦　　' + escapeHtml(text) + '</span></div></div>';
+    }
+
+    function normalizeGlobalAnnouncementMessage(item) {
+      if (item == null) return '';
+      if (typeof item === 'string') return item.trim();
+      return String(item.message || item.text || item.body || '').trim();
+    }
+
+    function isRareGlobalAnnouncement(msg) {
+      msg = String(msg || '');
+      return /(?:SSR|UR)/i.test(msg) && /(?:抽|獲得|開出|抽到)/.test(msg);
+    }
+
+    function markGlobalRareAnnouncementSeen(msg) {
+      msg = String(msg || '').trim();
+      if (!msg) return;
+      globalRareAnnouncementSeen.add(msg);
+      // 避免長時間遊玩時 Set 無限制變大。
+      if (globalRareAnnouncementSeen.size > 120) {
+        globalRareAnnouncementSeen = new Set(Array.from(globalRareAnnouncementSeen).slice(-80));
+      }
+    }
+
+    function enqueueGlobalRareAnnouncements(items, options) {
+      options = options || {};
+      var list = Array.isArray(items) ? items : [items];
+      list.map(normalizeGlobalAnnouncementMessage).filter(Boolean).forEach(function(msg) {
+        if (!isRareGlobalAnnouncement(msg)) return;
+        if (!options.force && globalRareAnnouncementSeen.has(msg)) return;
+        markGlobalRareAnnouncementSeen(msg);
+        globalRareAnnouncementQueue.push(msg);
+      });
+      playNextGlobalRareAnnouncement();
+    }
+
+    function playNextGlobalRareAnnouncement() {
+      if (globalRareAnnouncementShowing) return;
+      var msg = globalRareAnnouncementQueue.shift();
+      if (!msg) return;
+      var layer = document.getElementById('global-rare-toast-layer');
+      if (!layer) return;
+      globalRareAnnouncementShowing = true;
+      layer.innerHTML = '';
+      var card = document.createElement('div');
+      card.className = 'global-rare-toast-card';
+      card.textContent = msg;
+      layer.appendChild(card);
+      layer.classList.add('show');
+      setTimeout(function() {
+        layer.classList.remove('show');
+        setTimeout(function() {
+          layer.innerHTML = '';
+          globalRareAnnouncementShowing = false;
+          playNextGlobalRareAnnouncement();
+        }, 160);
+      }, 2000);
     }
 
     function loadSystemAnnouncements() {
       if (!playerUID || typeof google === 'undefined' || !google.script || !google.script.run) return;
       google.script.run.withSuccessHandler(function(res) {
         var list = Array.isArray(res) ? res : (res && res.messages ? res.messages : []);
-        var newest = (list || []).slice(-5).map(function(item){ return item.message || ''; }).filter(Boolean);
-        lobbySystemAnnouncementText = newest.join('　｜　');
-        renderLobbyAnnouncementMarquee();
+        var rareMessages = (list || []).map(normalizeGlobalAnnouncementMessage).filter(isRareGlobalAnnouncement);
+        if (!systemAnnouncementSeeded) {
+          systemAnnouncementSeeded = true;
+          rareMessages.forEach(markGlobalRareAnnouncementSeen);
+          return;
+        }
+        enqueueGlobalRareAnnouncements(rareMessages);
       }).withFailureHandler(function(){
         renderLobbyAnnouncementMarquee();
       }).getChatDashboard(playerUID, { channelType: 'SYSTEM', limit: 8 });
