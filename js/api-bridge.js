@@ -207,7 +207,7 @@
       .tlo-auth-overlay *{box-sizing:border-box;}
       .tlo-auth-stage{position:relative;width:min(100vw,56.25dvh);height:min(100dvh,177.78vw);max-width:520px;max-height:100dvh;background-image:url('./assets/ui/login-bg-summer.png');background-size:100% 100%;background-position:center;background-repeat:no-repeat;overflow:hidden;box-shadow:0 0 42px rgba(115,62,255,.45),0 0 90px rgba(17,214,255,.18);isolation:isolate;}
       .tlo-auth-stage:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 54%,rgba(3,3,18,.26) 70%,rgba(3,3,18,.72) 100%);pointer-events:none;z-index:0;}
-      .tlo-login-card{position:absolute;left:7.2%;right:7.2%;bottom:4.4%;z-index:2;background:linear-gradient(180deg,rgba(17,19,54,.66),rgba(8,9,32,.86));border:1px solid rgba(255,226,154,.78);box-shadow:0 0 24px rgba(127,53,255,.45),inset 0 0 18px rgba(126,239,255,.12);border-radius:18px;padding:13px 13px 12px;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);max-height:45%;overflow:auto;scrollbar-width:thin;}
+      .tlo-login-card{position:absolute;left:7.2%;right:7.2%;bottom:4.4%;z-index:2;background:linear-gradient(180deg,rgba(17,19,54,.66),rgba(8,9,32,.86));border:1px solid rgba(255,226,154,.78);box-shadow:0 0 24px rgba(127,53,255,.45),inset 0 0 18px rgba(126,239,255,.12);border-radius:18px;padding:13px 13px 12px;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);max-height:45%;overflow:auto;scrollbar-width:none;-ms-overflow-style:none;}
       .tlo-login-card:before{content:'';position:absolute;inset:-1px;border-radius:18px;padding:1px;background:linear-gradient(135deg,rgba(255,226,154,.95),rgba(126,239,255,.45),rgba(124,53,255,.8),rgba(255,226,154,.8));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
       .tlo-auth-title{text-align:center;font-size:18px;font-weight:900;letter-spacing:.08em;color:#fff5cf;text-shadow:0 0 10px rgba(255,226,154,.85),0 0 18px rgba(124,53,255,.85);margin:0 0 4px;}
       .tlo-auth-sub{text-align:center;color:#d9d3ff;font-size:11px;line-height:1.45;margin:0 0 9px;text-shadow:0 0 8px rgba(0,0,0,.95);}
@@ -249,6 +249,12 @@
       .tlo-legal-card p,.tlo-legal-card li{font-size:13px;line-height:1.75;color:#eee;margin:8px 0;}
       .tlo-legal-card ul{padding-left:20px;margin:8px 0;}
       .tlo-legal-close{width:100%;margin-top:14px;border:1px solid rgba(255,226,154,.8);background:linear-gradient(180deg,#7357cc,#2b1b74);color:#fff7d7;border-radius:13px;padding:11px;font-weight:900;cursor:pointer;}
+
+      /* 隱藏登入頁與彈窗滾動條，但保留滑動功能 */
+      html.tlo-auth-open,body.tlo-auth-open{scrollbar-width:none;-ms-overflow-style:none;}
+      html.tlo-auth-open::-webkit-scrollbar,body.tlo-auth-open::-webkit-scrollbar{width:0;height:0;display:none;}
+      .tlo-auth-overlay,.tlo-auth-stage,.tlo-login-card,.tlo-legal-modal,.tlo-legal-card{scrollbar-width:none;-ms-overflow-style:none;}
+      .tlo-auth-overlay::-webkit-scrollbar,.tlo-auth-stage::-webkit-scrollbar,.tlo-login-card::-webkit-scrollbar,.tlo-legal-modal::-webkit-scrollbar,.tlo-legal-card::-webkit-scrollbar{width:0;height:0;display:none;}
       @media (max-width:430px){.tlo-login-card{left:6%;right:6%;bottom:3.2%;padding:11px 11px 10px;max-height:47%;}.tlo-auth-title{font-size:16px}.tlo-auth-sub{font-size:10px}.tlo-auth-input{height:39px;font-size:15px}.tlo-auth-main-btn{min-height:44px;font-size:18px}.tlo-auth-actions{gap:6px}.tlo-auth-action-btn{font-size:11px;min-height:36px}.tlo-terms-row{font-size:10.5px}}
       @media (max-height:720px){.tlo-login-card{max-height:52%;bottom:2.8%;}.tlo-auth-title,.tlo-auth-sub{display:none}.tlo-auth-tabs{margin-bottom:7px}.tlo-auth-input{height:37px}.tlo-auth-main-btn{min-height:40px;font-size:17px;margin:7px 0}.tlo-auth-note{display:none}.tlo-terms-row{font-size:10px}.tlo-auth-actions{margin-bottom:6px}}
     `;
