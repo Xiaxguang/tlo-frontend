@@ -1259,7 +1259,7 @@
 
 
   </style>
-  <link rel="icon" href="./favicon.ico?v=20260628-lobby-ui-v8">
+  <link rel="icon" href="./favicon.ico?v=20260628-battle-bg-v12">
   <meta name="tlo-lobby-ui-build" content="20260628-lobby-ui-v8">
 
   <style>
@@ -1574,6 +1574,100 @@
     }
   </style>
 
+  <style id="tlo-battle-mode-bg-v12">
+    /* TLO battle mode backgrounds v12: 七個戰鬥彈窗開啟時，整頁背景 + 彈窗背景同步切換。 */
+    .container.game-shell.tlo-battle-mode-link-raid{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.12),rgba(8,4,28,.32) 44%,rgba(4,6,20,.82) 100%),
+        url('./assets/ui/bg-battle-mode-link-raid.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-battle-mode-fate-choice{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.16),rgba(8,4,28,.38) 44%,rgba(4,6,20,.84) 100%),
+        url('./assets/ui/bg-battle-mode-fate-choice.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-battle-mode-domination{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.18),rgba(16,7,38,.42) 44%,rgba(4,6,20,.86) 100%),
+        url('./assets/ui/bg-battle-mode-domination.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-battle-mode-expedition{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.12),rgba(8,4,28,.34) 44%,rgba(4,6,20,.82) 100%),
+        url('./assets/ui/bg-battle-mode-expedition.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-battle-mode-arena{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.16),rgba(8,4,28,.36) 44%,rgba(4,6,20,.84) 100%),
+        url('./assets/ui/bg-battle-mode-arena.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-battle-mode-demon-king{
+      background:
+        linear-gradient(180deg,rgba(4,3,12,.12),rgba(15,2,32,.42) 42%,rgba(3,3,12,.88) 100%),
+        url('./assets/ui/bg-battle-mode-demon-king.webp') center top / cover no-repeat!important;
+    }
+    .container.game-shell.tlo-battle-mode-world-boss{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.08),rgba(10,4,30,.34) 38%,rgba(4,6,20,.84) 100%),
+        url('./assets/ui/bg-battle-mode-world-boss.webp') center top / cover no-repeat!important;
+    }
+    .modal-overlay.tlo-battle-mode-overlay,
+    .daily-dungeon-modal.tlo-battle-mode-overlay{
+      background:rgba(0,0,0,.38)!important;
+      backdrop-filter:blur(2px)!important;
+    }
+    #battle-modal.tlo-battle-modal-domination .modal-content,
+    #link-battle-modal.tlo-battle-modal-link-raid .modal-content,
+    #pvp-modal.tlo-battle-modal-arena .modal-content,
+    #rpg-modal.tlo-battle-modal-expedition .modal-content,
+    #demon-challenge-modal.tlo-battle-modal-demon-king .modal-content,
+    #world-boss-modal.tlo-battle-modal-world-boss .modal-content,
+    #daily-dungeon-modal.tlo-battle-modal-fate-choice .daily-dungeon-shell{
+      border-color:rgba(255,230,163,.5)!important;
+      box-shadow:0 18px 54px rgba(0,0,0,.72),0 0 26px rgba(100,255,242,.15),inset 0 0 24px rgba(255,255,255,.035)!important;
+      background-size:cover!important;
+      background-position:center top!important;
+      background-repeat:no-repeat!important;
+      background-color:#050713!important;
+    }
+    #link-battle-modal.tlo-battle-modal-link-raid .modal-content{
+      background-image:linear-gradient(180deg,rgba(5,7,22,.77),rgba(3,4,13,.93)),url('./assets/ui/bg-battle-mode-link-raid.webp')!important;
+    }
+    #daily-dungeon-modal.tlo-battle-modal-fate-choice .daily-dungeon-shell{
+      background-image:linear-gradient(180deg,rgba(5,7,22,.78),rgba(3,4,13,.94)),url('./assets/ui/bg-battle-mode-fate-choice.webp')!important;
+    }
+    #battle-modal.tlo-battle-modal-domination .modal-content{
+      background-image:linear-gradient(180deg,rgba(5,7,22,.78),rgba(3,4,13,.94)),url('./assets/ui/bg-battle-mode-domination.webp')!important;
+    }
+    #rpg-modal.tlo-battle-modal-expedition .modal-content{
+      background-image:linear-gradient(180deg,rgba(5,7,22,.76),rgba(3,4,13,.92)),url('./assets/ui/bg-battle-mode-expedition.webp')!important;
+    }
+    #pvp-modal.tlo-battle-modal-arena .modal-content{
+      background-image:linear-gradient(180deg,rgba(5,7,22,.78),rgba(3,4,13,.94)),url('./assets/ui/bg-battle-mode-arena.webp')!important;
+    }
+    #demon-challenge-modal.tlo-battle-modal-demon-king .modal-content{
+      background-image:linear-gradient(180deg,rgba(5,3,16,.78),rgba(3,2,10,.95)),url('./assets/ui/bg-battle-mode-demon-king.webp')!important;
+    }
+    #world-boss-modal.tlo-battle-modal-world-boss .modal-content{
+      background-image:linear-gradient(180deg,rgba(5,7,22,.76),rgba(3,4,13,.92)),url('./assets/ui/bg-battle-mode-world-boss.webp')!important;
+    }
+    .modal-overlay.tlo-battle-mode-overlay .modal-content .collection-stat,
+    .modal-overlay.tlo-battle-mode-overlay .modal-content .pvp-stat,
+    .modal-overlay.tlo-battle-mode-overlay .modal-content .boss-card,
+    .modal-overlay.tlo-battle-mode-overlay .modal-content .battle-arena,
+    .daily-dungeon-modal.tlo-battle-mode-overlay .daily-dungeon-stat,
+    .daily-dungeon-modal.tlo-battle-mode-overlay .daily-dungeon-option,
+    .daily-dungeon-modal.tlo-battle-mode-overlay .daily-dungeon-result{
+      background-color:rgba(3,5,15,.68)!important;
+      backdrop-filter:blur(6px)!important;
+    }
+    @media(max-width:430px){
+      .container.game-shell[class*="tlo-battle-mode-"]{background-position:center top!important;}
+      .modal-overlay.tlo-battle-mode-overlay .modal-content,
+      #daily-dungeon-modal.tlo-battle-mode-overlay .daily-dungeon-shell{background-position:center top!important;}
+    }
+  </style>
+
 
   <style id="tlo-bottom-buttons-v11">
     /* TLO v11: 聊天 / 選單按鈕縮小並移到右下角，避免遮住畫面中央操作區 */
@@ -1800,7 +1894,7 @@
             <button type="button" onclick="openMemoryModal(); closeLobbyMoreModal()"><span>🧠</span><b>記憶翻牌</b><small>挑戰記憶小遊戲</small></button>
             <button type="button" onclick="openAchievementModal(); closeLobbyMoreModal()"><span>🏆</span><b>成就系統</b><small>收集、戰鬥與養成里程碑</small></button>
             <button type="button" onclick="openFortuneModal(); closeLobbyMoreModal()"><span>🔮</span><b>今日潮流籤</b><small>抽出今日運勢</small></button>
-            <button type="button" onclick="openPvpModal(); closeLobbyMoreModal()"><span>VS</span><b>玩家對戰</b><small>設定代表卡並挑戰玩家</small></button>
+            <button type="button" onclick="openPvpModal(); closeLobbyMoreModal()"><span>VS</span><b>競技場</b><small>設定代表卡並挑戰對手</small></button>
             <button type="button" onclick="openWorldBossModal(); closeLobbyMoreModal()"><span>🌍</span><b>世界BOSS</b><small>全服同步討伐與傷害排名</small></button>
             <button type="button" onclick="openCharacterGrowthModal(); closeLobbyMoreModal()"><span>★</span><b>角色養成</b><small>等級、經驗、技能與升星</small></button>
             <button type="button" onclick="openMissionModal(); closeLobbyMoreModal()"><span>🎁</span><b>福利任務</b><small>每日、新手、主線與一鍵領取</small></button>
@@ -1892,9 +1986,9 @@
             </div>
 
             <div class="scene-panel">
-              <h3>🆚 玩家對戰</h3>
+              <h3>🆚 競技場</h3>
               <p>設定代表卡，和其他玩家進行每日 PVP 對戰。</p>
-              <button class="scene-btn btn-neon-purple" onclick="openPvpModal()">進入玩家對戰<small>PVP 配對、勝場與碎片獎勵</small></button>
+              <button class="scene-btn btn-neon-purple" onclick="openPvpModal()">進入競技場<small>配對對戰、勝場與碎片獎勵</small></button>
             </div>
 
             <div class="scene-panel">
@@ -2449,7 +2543,7 @@
   <div class="modal-overlay" id="pvp-modal" onclick="if(event.target.id==='pvp-modal') this.style.display='none';">
     <div class="modal-content">
       <span class="modal-close" onclick="document.getElementById('pvp-modal').style.display='none';">&times;</span>
-      <div class="modal-h3">🆚 T-LO 非同步玩家對戰</div>
+      <div class="modal-h3">🆚 T-LO 非同步競技場</div>
       <div class="mini-panel" style="text-align:left;">
         <div style="font-size:12px; color:#aaa; line-height:1.5; margin-bottom:10px;">
           每天免費挑戰 10 場。每日 3 勝獲得 1 個免費抽卡碎片，集滿 3 個碎片自動換 1 次抽卡。
@@ -2464,10 +2558,10 @@
         <div class="pvp-stat">抽卡碎片<b id="pvp-fragments">0/3</b></div>
         <div class="pvp-stat">代表戰力<b id="pvp-power">0</b></div>
       </div>
-      <button class="btn-fight" id="pvp-battle-btn" onclick="startPvpBattle()">⚔️ 開始配對對戰</button>
+      <button class="btn-fight" id="pvp-battle-btn" onclick="startPvpBattle()">⚔️ 開始競技配對</button>
       <div id="pvp-result" style="text-align:center; margin:10px 0; font-weight:bold;"></div>
       <div class="battle-arena turn-mode" id="pvp-arena-panel" style="display:none;">
-        <div class="mini-battle-title" id="pvp-arena-title">🔥 PVP 玩家對戰</div>
+        <div class="mini-battle-title" id="pvp-arena-title">🔥 競技場對決</div>
         <div class="hp-container">
           <div style="flex:1;text-align:left;"><b style="color:#00fff0;">我方 HP</b><div class="hp-bar-wrapper"><div id="pvp-hp-player-fill" class="hp-bar-fill hp-player"></div></div><div id="pvp-hp-player-text" class="hp-text">--</div></div>
           <div style="flex:1;text-align:right;"><b style="color:#ff7777;">對手 HP</b><div class="hp-bar-wrapper"><div id="pvp-hp-boss-fill" class="hp-bar-fill hp-boss"></div></div><div id="pvp-hp-boss-text" class="hp-text">--</div></div>
@@ -4965,7 +5059,7 @@ function showCollectionHistory() {
       google.script.run.withSuccessHandler(async function(res) {
         registerCardImages(res);
         btn.disabled = false;
-        btn.innerText = '⚔️ 開始配對對戰';
+        btn.innerText = '⚔️ 開始競技配對';
         if (!res || !res.success) {
           setBattleHpVisible('pvp', false);
           result.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '對戰失敗')}</span>`;
@@ -4978,7 +5072,7 @@ function showCollectionHistory() {
           playerImage: getCardImageUrl({ name: res.myCard, cardName: res.myCard, imageUrl: res.myCardImageUrl || res.myCardImage || res.my_image_url || '' }) || placeholderBattleImage(res.myCard || '我方', '#123a3a', '#00fff0'),
           bossName: (res.opponentUid ? res.opponentUid + '｜' : '') + (res.opponentCard || '對手代表'),
           bossImage: getCardImageUrl({ name: res.opponentCard, cardName: res.opponentCard, imageUrl: res.opponentCardImageUrl || res.opponentCardImage || res.opponent_image_url || '' }) || placeholderBattleImage(res.opponentCard || '對手', '#3a1616', '#ff7777'),
-          stageName: 'PVP 玩家對戰',
+          stageName: '競技場對決',
           playerPower: res.myPower,
           bossPower: res.opponentPower
         });
@@ -4991,7 +5085,7 @@ function showCollectionHistory() {
       }).withFailureHandler(function(err) {
         setBattleHpVisible('pvp', false);
         btn.disabled = false;
-        btn.innerText = '⚔️ 開始配對對戰';
+        btn.innerText = '⚔️ 開始競技配對';
         result.innerHTML = '<span style="color:#ff4444;">PVP 系統繁忙，請稍後再試。</span>';
       }).executePvpBattle(playerUID);
     }
@@ -7877,5 +7971,103 @@ function showCollectionHistory() {
   </script>
 
   <script src="./js/link-battle.js?v=20260628-mode-hub-linkbattle-mobile-v2"></script>
+
+  <script id="tlo-battle-mode-bg-v12-js">
+    (function(){
+      var modeMap = {
+        linkRaid: { id:'link-battle-modal', shell:'tlo-battle-mode-link-raid', modal:'tlo-battle-modal-link-raid' },
+        fateChoice: { id:'daily-dungeon-modal', shell:'tlo-battle-mode-fate-choice', modal:'tlo-battle-modal-fate-choice' },
+        domination: { id:'battle-modal', shell:'tlo-battle-mode-domination', modal:'tlo-battle-modal-domination' },
+        expedition: { id:'rpg-modal', shell:'tlo-battle-mode-expedition', modal:'tlo-battle-modal-expedition' },
+        arena: { id:'pvp-modal', shell:'tlo-battle-mode-arena', modal:'tlo-battle-modal-arena' },
+        demonKing: { id:'demon-challenge-modal', shell:'tlo-battle-mode-demon-king', modal:'tlo-battle-modal-demon-king' },
+        worldBoss: { id:'world-boss-modal', shell:'tlo-battle-mode-world-boss', modal:'tlo-battle-modal-world-boss' }
+      };
+      var shellClasses = Object.keys(modeMap).map(function(k){ return modeMap[k].shell; });
+      var modalClasses = Object.keys(modeMap).map(function(k){ return modeMap[k].modal; }).concat(['tlo-battle-mode-overlay']);
+      function getShell(){ return document.getElementById('game-shell') || document.querySelector('.container.game-shell'); }
+      function removeModeClasses(){
+        var shell = getShell();
+        if (shell) shellClasses.forEach(function(c){ shell.classList.remove(c); });
+        Object.keys(modeMap).forEach(function(k){
+          var el = document.getElementById(modeMap[k].id);
+          if (el) modalClasses.forEach(function(c){ el.classList.remove(c); });
+        });
+        document.body.classList.remove('tlo-battle-mode-active');
+      }
+      function isShown(el){
+        if (!el) return false;
+        var st = window.getComputedStyle ? window.getComputedStyle(el) : null;
+        return (el.style.display && el.style.display !== 'none') || (st && st.display !== 'none' && st.visibility !== 'hidden');
+      }
+      window.setTloBattleModeScene = function(mode){
+        removeModeClasses();
+        var cfg = modeMap[mode];
+        if (!cfg) return;
+        var shell = getShell();
+        if (shell) {
+          shell.classList.add(cfg.shell);
+          shell.setAttribute('data-battle-mode', mode);
+        }
+        var modal = document.getElementById(cfg.id);
+        if (modal) {
+          modal.classList.add('tlo-battle-mode-overlay');
+          modal.classList.add(cfg.modal);
+        }
+        document.body.classList.add('tlo-battle-mode-active');
+      };
+      window.clearTloBattleModeScene = function(){
+        var shell = getShell();
+        removeModeClasses();
+        if (shell) shell.removeAttribute('data-battle-mode');
+      };
+      function syncBattleModeScene(){
+        var activeMode = null;
+        Object.keys(modeMap).some(function(mode){
+          var el = document.getElementById(modeMap[mode].id);
+          if (isShown(el)) { activeMode = mode; return true; }
+          return false;
+        });
+        if (activeMode) window.setTloBattleModeScene(activeMode);
+        else window.clearTloBattleModeScene();
+      }
+      function patchOpen(name, mode){
+        var fn = window[name];
+        if (typeof fn !== 'function' || fn.__tloBattleBgPatched) return;
+        var wrapped = function(){
+          window.setTloBattleModeScene(mode);
+          return fn.apply(this, arguments);
+        };
+        wrapped.__tloBattleBgPatched = true;
+        wrapped.__tloOriginal = fn;
+        window[name] = wrapped;
+      }
+      function patchAll(){
+        patchOpen('openLinkBattleModal', 'linkRaid');
+        patchOpen('openDailyDungeonModal', 'fateChoice');
+        patchOpen('openBattleModal', 'domination');
+        patchOpen('openRpgModal', 'expedition');
+        patchOpen('openPvpModal', 'arena');
+        patchOpen('openDemonChallengeModal', 'demonKing');
+        patchOpen('openWorldBossModal', 'worldBoss');
+      }
+      function init(){
+        patchAll();
+        Object.keys(modeMap).forEach(function(mode){
+          var el = document.getElementById(modeMap[mode].id);
+          if (!el) return;
+          try {
+            new MutationObserver(function(){ setTimeout(syncBattleModeScene, 20); }).observe(el, { attributes:true, attributeFilter:['style','class'] });
+          } catch(_){ }
+        });
+        document.addEventListener('click', function(){ setTimeout(syncBattleModeScene, 30); }, true);
+        setTimeout(patchAll, 300);
+        setTimeout(syncBattleModeScene, 350);
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
+    })();
+  </script>
+
 </body>
 </html>
