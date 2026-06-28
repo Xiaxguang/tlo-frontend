@@ -1485,6 +1485,16 @@
     .game-bottom-dock.collapsed .game-bottom-nav{display:none!important;}
     .game-bottom-dock .game-bottom-nav button{min-height:54px!important;border-radius:15px!important;}
     @media(max-width:430px){.game-chat-dock{left:calc(50% - 63px)!important;bottom:calc(11px + env(safe-area-inset-bottom))!important;width:56px!important;height:56px!important}.game-bottom-dock{left:calc(50% + 7px)!important;bottom:calc(11px + env(safe-area-inset-bottom))!important;width:56px!important}.game-menu-toggle{width:56px!important;height:56px!important}.game-bottom-dock .game-bottom-nav{bottom:calc(74px + env(safe-area-inset-bottom))!important;width:calc(100vw - 18px)!important;}}
+
+
+    /* Lobby layer order v7: 讓聊天與底部選單保持最高操作層，聊天視窗高於選單與其他彈窗 */
+    #game-chat-dock{z-index:100080!important;}
+    #game-bottom-dock{z-index:100070!important;}
+    #game-bottom-dock .game-bottom-nav{z-index:100071!important;}
+    #home-chat-modal{z-index:100150!important;}
+    #home-chat-modal .lobby-modal-card{position:relative;z-index:100151!important;}
+    #lobby-more-modal{z-index:100060!important;}
+    body.tlo-chat-modal-open #game-bottom-dock .game-bottom-nav{display:none!important;}
 </style>
 
 </head>
@@ -5009,9 +5019,14 @@ function showCollectionHistory() {
 
     function openHomeChatModal() {
       var modal = document.getElementById('home-chat-modal');
+      var bottomDock = document.getElementById('game-bottom-dock');
+      if (bottomDock) bottomDock.classList.add('collapsed');
       if (modal) {
+        // 將聊天視窗移到 body 最後，避免被其他較晚建立的視窗蓋住
+        try { document.body.appendChild(modal); } catch (_) {}
         modal.classList.add('show');
         modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('tlo-chat-modal-open');
       }
       clearPublicChatNotify();
       loadMessageBoard({ markRead: true });
@@ -5023,6 +5038,7 @@ function showCollectionHistory() {
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
       }
+      document.body.classList.remove('tlo-chat-modal-open');
     }
 
     function switchHomeChatChannel(type) {
@@ -5640,10 +5656,15 @@ function showCollectionHistory() {
 
     function openPrivateChatUI(friendUid) {
       currentPrivateChatFriendUid = friendUid || currentPrivateChatFriendUid || '';
+      var bottomDock = document.getElementById('game-bottom-dock');
+      if (bottomDock) bottomDock.classList.add('collapsed');
       var modal = document.getElementById('home-chat-modal');
       if (modal) {
+        // 好友私訊也共用最高聊天圖層
+        try { document.body.appendChild(modal); } catch (_) {}
         modal.classList.add('show');
         modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('tlo-chat-modal-open');
       }
       switchHomeChatChannel('PRIVATE');
       var sel = document.getElementById('private-chat-friend');
