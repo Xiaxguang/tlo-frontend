@@ -1470,7 +1470,11 @@
     .game-chat-status{display:none!important;}
     .game-chat-dock .lobby-chat-lines,#message-preview-list{display:none!important;}
     .chat-unread-badge{position:absolute!important;top:-7px!important;right:-7px!important;min-width:20px!important;height:20px!important;padding:0 5px!important;border:1px solid rgba(255,255,255,.45)!important;z-index:2!important;}
-    .game-chat-dock.has-unread{animation:tloChatPulse 1.5s ease-in-out infinite!important;}
+    .chat-unread-badge.is-new{min-width:34px!important;height:20px!important;font-size:10px!important;letter-spacing:.4px!important;background:linear-gradient(135deg,#ff2b7a,#ffdd77)!important;color:#111!important;}
+    .game-chat-dock.has-unread,.game-chat-dock.has-new-message{animation:tloChatPulse 1.5s ease-in-out infinite!important;}
+    .game-chat-dock.has-new-message .game-chat-toggle{background:linear-gradient(135deg,rgba(255,221,119,.95),rgba(255,43,122,.82))!important;color:#111!important;text-shadow:0 0 8px rgba(255,255,255,.28)!important;}
+    .game-chat-dock.has-new-message .game-chat-icon{filter:drop-shadow(0 0 10px rgba(255,221,119,.7))!important;}
+    .game-chat-dock.has-new-message .game-chat-title b{color:#111!important;}
 
     .game-bottom-dock{position:fixed!important;left:calc(50% + 6px)!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;transform:none!important;width:58px!important;min-width:0!important;background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important;backdrop-filter:none!important;z-index:809!important;}
     .game-menu-toggle{position:relative!important;width:58px!important;height:58px!important;border-radius:18px!important;border:1px solid rgba(255,230,163,.54)!important;background:linear-gradient(145deg,rgba(39,31,91,.94),rgba(17,77,105,.78))!important;color:#fff!important;padding:0!important;font-size:0!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(255,230,163,.14)!important;cursor:pointer!important;}
@@ -1920,7 +1924,7 @@
 
     <div class="game-chat-dock" id="game-chat-dock" aria-label="T-LO 聊天">
       <button type="button" class="game-chat-toggle" onclick="openHomeChatModal()" aria-label="打開聊天功能">
-        <span class="game-chat-icon">💬</span>
+        <span class="game-chat-icon" id="game-chat-icon">💬</span>
         <span class="game-chat-title"><b>聊天</b><span class="chat-unread-badge" id="chat-unread-badge">0</span></span>
         <span class="game-chat-status" id="chat-dock-status">世界頻道</span>
       </button>
@@ -2484,6 +2488,9 @@
     let latestChatDashboard = null;
     let lastPrivateUnreadCount = 0;
     let lobbyChatPollTimer = null;
+    let lastPublicChatSignature = '';
+    let publicChatNotifyReady = false;
+    let hasPublicChatNew = false;
     let demonChallengeRunning = false;
     let latestRpgDashboardLoadedAt = 0;
     let lastRpgAdventureKey = "";
@@ -4874,6 +4881,40 @@ function showCollectionHistory() {
       }
     }
 
+    function getPublicChatSignature(list) {
+      if (!Array.isArray(list) || !list.length) return '';
+      var item = list[list.length - 1] || {};
+      return String(item.id || item.messageId || item.createdAt || item.time || '') + '|' + String(item.senderUid || item.uid || '') + '|' + String(item.message || '');
+    }
+
+    function isHomeChatModalOpen() {
+      var modal = document.getElementById('home-chat-modal');
+      return !!(modal && modal.classList.contains('show'));
+    }
+
+    function trackPublicChatMessages(list, options) {
+      options = options || {};
+      var signature = getPublicChatSignature(list);
+      if (!signature) return;
+      if (!lastPublicChatSignature) {
+        lastPublicChatSignature = signature;
+        publicChatNotifyReady = true;
+        return;
+      }
+      if (signature !== lastPublicChatSignature) {
+        lastPublicChatSignature = signature;
+        if (publicChatNotifyReady && !options.silent && !isHomeChatModalOpen()) {
+          hasPublicChatNew = true;
+        }
+      }
+      publicChatNotifyReady = true;
+    }
+
+    function clearPublicChatNotify() {
+      hasPublicChatNew = false;
+      updateChatUnreadUI(latestChatDashboard || {});
+    }
+
     function updateChatUnreadUI(res) {
       if (!res) return;
       latestChatDashboard = res;
@@ -4883,13 +4924,30 @@ function showCollectionHistory() {
       var badge = document.getElementById('chat-unread-badge');
       var tabBadge = document.getElementById('chat-private-tab-badge');
       var status = document.getElementById('chat-dock-status');
-      [badge, tabBadge].forEach(function(el){
-        if (!el) return;
-        if (count > 0) { el.textContent = count > 99 ? '99+' : String(count); el.classList.add('show'); }
-        else { el.textContent = '0'; el.classList.remove('show'); }
-      });
-      if (dock) dock.classList.toggle('has-unread', count > 0);
-      if (status) status.textContent = count > 0 ? ('好友私訊 +' + (count > 99 ? '99' : count)) : (currentChatType === 'PRIVATE' ? '好友私訊' : '世界頻道');
+      var icon = document.getElementById('game-chat-icon');
+      if (badge) {
+        badge.classList.remove('is-new');
+        if (count > 0) {
+          badge.textContent = count > 99 ? '99+' : String(count);
+          badge.classList.add('show');
+        } else if (hasPublicChatNew) {
+          badge.textContent = 'NEW';
+          badge.classList.add('show', 'is-new');
+        } else {
+          badge.textContent = '0';
+          badge.classList.remove('show');
+        }
+      }
+      if (tabBadge) {
+        if (count > 0) { tabBadge.textContent = count > 99 ? '99+' : String(count); tabBadge.classList.add('show'); }
+        else { tabBadge.textContent = '0'; tabBadge.classList.remove('show'); }
+      }
+      if (dock) {
+        dock.classList.toggle('has-unread', count > 0);
+        dock.classList.toggle('has-new-message', count <= 0 && hasPublicChatNew);
+      }
+      if (icon) icon.textContent = count > 0 ? '💌' : (hasPublicChatNew ? '📨' : '💬');
+      if (status) status.textContent = count > 0 ? ('好友私訊 +' + (count > 99 ? '99' : count)) : (hasPublicChatNew ? '有新留言' : (currentChatType === 'PRIVATE' ? '好友私訊' : '世界頻道'));
       if (count > lastPrivateUnreadCount && lastPrivateUnreadCount !== 0) showPrivateMessageNotify(count);
       lastPrivateUnreadCount = count;
       var note = document.getElementById('private-chat-unread-note');
@@ -4955,6 +5013,7 @@ function showCollectionHistory() {
         modal.classList.add('show');
         modal.setAttribute('aria-hidden', 'false');
       }
+      clearPublicChatNotify();
       loadMessageBoard({ markRead: true });
     }
 
@@ -5008,6 +5067,10 @@ function showCollectionHistory() {
       if (currentChatType === 'PRIVATE') payload.friendUid = currentPrivateChatFriendUid;
       google.script.run.withSuccessHandler(function(res) {
         const list = Array.isArray(res) ? res : (res && res.messages ? res.messages : []);
+        if (currentChatType !== 'PRIVATE') {
+          trackPublicChatMessages(list || [], { silent: options.markRead !== false });
+          if (options.markRead !== false) hasPublicChatNew = false;
+        }
         updateChatUnreadUI(res || {});
         renderMessageBoard(list || []);
       }).withFailureHandler(function(err) {
@@ -5039,6 +5102,10 @@ function showCollectionHistory() {
         if (res && res.success) {
           if (input) input.value = '';
           if (msg) msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg || '訊息已送出')}</span>`;
+          if (res.dashboard && currentChatType !== 'PRIVATE' && Array.isArray(res.dashboard.messages)) {
+            trackPublicChatMessages(res.dashboard.messages, { silent: true });
+            hasPublicChatNew = false;
+          }
           if (res.dashboard) updateChatUnreadUI(res.dashboard);
           renderMessageBoard((res.dashboard && res.dashboard.messages) || []);
         } else {
@@ -5078,6 +5145,7 @@ function showCollectionHistory() {
       if (lobbyChatPollTimer || !window.TLO_IS_AUTHENTICATED) return;
       lobbyChatPollTimer = setInterval(function(){
         google.script.run.withSuccessHandler(function(res){
+          if (res && Array.isArray(res.messages)) trackPublicChatMessages(res.messages, { silent: false });
           updateChatUnreadUI(res || {});
           if (res && Array.isArray(res.messages)) renderLobbyChatPreview(res.messages);
         }).withFailureHandler(function(){}).getChatDashboard(playerUID, { channelType: 'WORLD', limit: 5, markRead: false });
