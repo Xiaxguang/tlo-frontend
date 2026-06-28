@@ -40,6 +40,7 @@
     localStorage.removeItem(AUTH_UID_KEY);
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(AUTH_PLAYER_KEY);
+    localStorage.removeItem("TLO_UID");
   }
 
   var currentAuth = getAuth();
@@ -565,14 +566,23 @@
   }
 
   async function handleLogout() {
+    if (!confirm("確定要登出並回到登入畫面嗎？")) return;
     try {
       if (window.TLO_IS_AUTHENTICATED) {
         await rawRpc("logoutAccount", [window.TLO_PLAYER_UID], { auth: true });
       }
     } catch (_) {}
     clearAuth();
+    sessionStorage.removeItem(GUEST_MODE_KEY);
+    sessionStorage.removeItem(GUEST_DEMO_STATE_KEY);
+    window.TLO_IS_AUTHENTICATED = false;
+    window.TLO_IS_GUEST = false;
+    window.TLO_PLAYER_UID = "";
+    window.TLO_AUTH_TOKEN = "";
     location.reload();
   }
+
+  window.TLO_LOGOUT = handleLogout;
 
   function showChangePasswordModal(force) {
     injectAuthStyle();
