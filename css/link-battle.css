@@ -1949,3 +1949,30 @@
   .link-battle-boss-figure.tier-mini{width:101%!important;height:90%!important;bottom:-30px!important;}
   .link-battle-boss-figure.tier-final{width:115%!important;height:102%!important;bottom:-36px!important;}
 }
+
+/* ===== BOSS figure device scale override v3 ===== */
+/*
+  需求：
+  - 手機瀏覽器：BOSS 主圖再縮小 15%
+  - 電腦網頁版：BOSS 主圖放大 20%
+  做法：不改原本一般 / 小BOSS / 最終BOSS 的 width、height、圖片倍率，
+  只在最外層 BOSS figure 做裝置比例縮放，避免破壞既有階級差異。
+*/
+.link-battle-boss-figure{
+  transform-origin:center bottom!important;
+  transition:transform .18s ease,width .18s ease,height .18s ease,bottom .18s ease,filter .18s ease!important;
+}
+
+/* 手機瀏覽器：目前大小 × 0.85 */
+@media(max-width:560px){
+  .link-battle-boss-figure{
+    transform:translateX(-50%) scale(.85)!important;
+  }
+}
+
+/* 電腦網頁版：目前大小 × 1.2 */
+@media(min-width:900px){
+  .link-battle-boss-figure{
+    transform:translateX(-50%) scale(1.2)!important;
+  }
+}
