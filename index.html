@@ -1296,109 +1296,250 @@
     }
   </style>
 
+
+  <style id="tlo-lobby-ui-v1">
+    :root{--lobby-gold:#ffe6a3;--lobby-cyan:#64fff2;--lobby-violet:#8b52ff;--lobby-ink:rgba(8,10,30,.74);}
+    html,body{scrollbar-width:none;-ms-overflow-style:none;}
+    html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none;}
+    .container.game-shell{
+      width:min(520px,100vw)!important;max-width:520px!important;min-height:100svh!important;
+      padding:calc(8px + env(safe-area-inset-top)) 12px calc(96px + env(safe-area-inset-bottom))!important;
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.08),rgba(4,6,20,.2) 44%,rgba(4,6,20,.7) 100%),
+        url('./assets/ui/lobby-bg-starbase.png') center top / cover no-repeat!important;
+      border-left:1px solid rgba(255,226,154,.16);border-right:1px solid rgba(255,226,154,.16);
+      box-shadow:0 0 55px rgba(71,45,184,.42)!important;gap:8px;overflow-x:hidden;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;
+    }
+    .container.game-shell::-webkit-scrollbar{width:0;height:0;display:none;}
+    .container.game-shell::before{background:radial-gradient(circle at 50% 22%,rgba(119,78,255,.28),transparent 28%),linear-gradient(180deg,rgba(0,0,0,.16),transparent 32%,rgba(0,0,0,.58));mask-image:none;z-index:0;}
+    .lobby-topbar{padding:2px 0 0!important;display:grid;gap:8px;}
+    .lobby-hud{display:grid;grid-template-columns:72px 1fr;gap:9px;align-items:center;padding:8px;border:1px solid rgba(255,230,163,.64);border-radius:18px;background:linear-gradient(135deg,rgba(10,9,38,.74),rgba(25,16,62,.48));backdrop-filter:blur(8px);box-shadow:0 0 18px rgba(117,71,255,.22),inset 0 0 18px rgba(100,255,242,.07);}
+    .lobby-avatar-btn{position:relative;display:flex;align-items:center;justify-content:center;width:66px;height:66px;padding:0;border:1px solid rgba(255,230,163,.82);border-radius:18px;background:radial-gradient(circle at 50% 20%,rgba(100,255,242,.2),rgba(17,12,50,.8));cursor:pointer;box-shadow:0 0 16px rgba(255,230,163,.2),inset 0 0 12px rgba(255,255,255,.06);overflow:hidden;}
+    .lobby-avatar-frame{display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
+    .lobby-avatar-img{width:100%;height:100%;object-fit:cover;}
+    .lobby-avatar-fallback{font-size:30px;color:var(--lobby-gold);text-shadow:0 0 14px var(--lobby-cyan);}
+    .lobby-avatar-badge{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);padding:2px 6px;border-radius:999px;background:rgba(0,0,0,.62);border:1px solid rgba(255,230,163,.55);color:#fff1c7;font-size:9px;font-weight:950;white-space:nowrap;}
+    .lobby-player-name{font-size:20px;font-weight:1000;color:#fff;text-shadow:0 0 12px rgba(255,230,163,.34);line-height:1.2;}
+    .lobby-player-sub{margin-top:4px;color:#d5d8ff;font-size:11px;line-height:1.35;}
+    .lobby-stats-bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+    .lobby-stat{min-height:44px;padding:7px 5px;border:1px solid rgba(255,230,163,.38);border-radius:14px;background:linear-gradient(180deg,rgba(5,8,30,.72),rgba(10,8,28,.52));backdrop-filter:blur(6px);text-align:center;box-shadow:inset 0 0 12px rgba(100,255,242,.04);}
+    .lobby-stat span{display:block;font-size:9px;color:#d7c99b;font-weight:950;white-space:nowrap;}
+    .lobby-stat b{display:block;margin-top:2px;color:#fff;font-size:16px;line-height:1.05;text-shadow:0 0 9px rgba(100,255,242,.28);font-style:normal;}
+    .lobby-stat b em{font-style:normal;}
+    .lobby-stat-wide{grid-column:span 2;}
+    .lobby-announcement,.lobby-maintenance{border-radius:14px!important;padding:8px 10px!important;margin:0!important;border:1px solid rgba(255,230,163,.48)!important;background:rgba(6,7,25,.72)!important;color:#fff!important;line-height:1.45!important;font-size:12px!important;backdrop-filter:blur(8px);box-shadow:0 0 14px rgba(100,255,242,.12);}
+    .lobby-maintenance{border-color:rgba(255,100,100,.65)!important;color:#ffbbbb!important;}
+    .lobby-screen{min-height:calc(100svh - 190px);padding-top:4px;}
+    .lobby-stage{position:relative;min-height:48svh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;padding:26px 6px 8px;}
+    .lobby-kicker{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid rgba(255,230,163,.48);border-radius:999px;background:rgba(11,9,37,.54);color:#fff1bf;font-size:11px;font-weight:1000;letter-spacing:.12em;box-shadow:0 0 18px rgba(117,71,255,.28);}
+    .lobby-title{margin:8px 0 2px;font-size:30px;line-height:1;color:#fff;text-shadow:0 0 10px rgba(255,230,163,.58),0 0 24px rgba(100,255,242,.25);letter-spacing:.08em;}
+    .lobby-subtitle{max-width:360px;margin:0 auto 14px;color:#e4e7ff;font-size:12px;line-height:1.5;text-shadow:0 2px 8px rgba(0,0,0,.7);}
+    .lobby-primary-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;}
+    .lobby-action{position:relative;min-height:106px;border:1px solid rgba(255,230,163,.76);border-radius:22px;padding:12px 8px;color:#fff;text-align:center;cursor:pointer;background:rgba(12,10,42,.64);backdrop-filter:blur(7px);box-shadow:0 0 18px rgba(0,0,0,.36),inset 0 0 22px rgba(255,255,255,.05);overflow:hidden;}
+    .lobby-action:before{content:'';position:absolute;inset:-40%;background:radial-gradient(circle at 50% 20%,rgba(255,255,255,.24),transparent 35%);opacity:.55;pointer-events:none;}
+    .lobby-action-icon{position:relative;display:block;font-size:28px;line-height:1;margin-bottom:7px;text-shadow:0 0 14px rgba(255,255,255,.5);}
+    .lobby-action strong{position:relative;display:block;font-size:18px;line-height:1.1;text-shadow:0 2px 10px rgba(0,0,0,.65);}
+    .lobby-action small{position:relative;display:block;margin-top:6px;color:#e9e9ff;font-size:10px;line-height:1.35;font-weight:800;}
+    .lobby-action-gacha{background:linear-gradient(180deg,rgba(141,64,255,.68),rgba(42,19,104,.62));box-shadow:0 0 22px rgba(147,72,255,.32),inset 0 0 22px rgba(255,255,255,.06);}
+    .lobby-action-battle{background:linear-gradient(180deg,rgba(19,113,255,.64),rgba(15,33,98,.64));box-shadow:0 0 22px rgba(69,166,255,.3),inset 0 0 22px rgba(255,255,255,.06);}
+    .lobby-action-shop{background:linear-gradient(180deg,rgba(255,183,74,.58),rgba(83,43,11,.66));box-shadow:0 0 22px rgba(255,200,89,.25),inset 0 0 22px rgba(255,255,255,.06);}
+    .lobby-action:active,.lobby-quick-dock button:active,.lobby-chat-head:active,.lobby-more-grid button:active{transform:scale(.97);}
+    .lobby-quick-dock{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:8px 0;padding:8px;border:1px solid rgba(255,230,163,.42);border-radius:20px;background:rgba(5,7,24,.64);backdrop-filter:blur(9px);box-shadow:0 0 18px rgba(0,0,0,.28);}
+    .lobby-quick-dock button{min-height:54px;border:1px solid rgba(255,230,163,.32);border-radius:15px;background:rgba(16,14,52,.68);color:#fff;font-weight:950;font-size:11px;cursor:pointer;box-shadow:inset 0 0 12px rgba(100,255,242,.04);}
+    .lobby-quick-dock span{display:block;color:var(--lobby-gold);font-size:18px;margin-bottom:3px;text-shadow:0 0 12px rgba(100,255,242,.22);}
+    .lobby-chat-preview,.lobby-tip-mini{border:1px solid rgba(255,230,163,.5);border-radius:20px;background:linear-gradient(135deg,rgba(8,9,33,.76),rgba(12,16,55,.54));backdrop-filter:blur(9px);box-shadow:0 0 22px rgba(0,0,0,.28),inset 0 0 18px rgba(100,255,242,.04);padding:10px;margin:8px 0;color:#fff;}
+    .lobby-chat-head{width:100%;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 0 8px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.1);font-weight:1000;}
+    .lobby-chat-head span{color:#fff;font-size:15px;}
+    .lobby-chat-head b{color:var(--lobby-cyan);font-size:12px;text-shadow:0 0 10px rgba(100,255,242,.35);}
+    .lobby-chat-lines{display:grid;gap:5px;padding-top:8px;min-height:54px;}
+    .lobby-chat-line{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:start;color:#e9ecff;font-size:12px;line-height:1.35;}
+    .lobby-chat-line b{color:var(--lobby-cyan);white-space:nowrap;max-width:96px;overflow:hidden;text-overflow:ellipsis;}
+    .lobby-chat-line.system b{color:#ffdf8a;}
+    .lobby-chat-empty{color:#c9c9df;text-align:center;font-size:12px;padding:8px 0;}
+    .lobby-tip-mini{display:flex!important;align-items:center;gap:8px;font-size:12px;line-height:1.45;}
+    .lobby-tip-mini b{color:#ffdf8a;white-space:nowrap;}
+    .lobby-tip-mini span{flex:1;color:#d9d9f3;}
+    .lobby-tip-mini button{border:1px solid rgba(255,230,163,.42);border-radius:999px;background:rgba(255,230,163,.1);color:#fff1bd;padding:6px 10px;font-size:11px;font-weight:950;cursor:pointer;white-space:nowrap;}
+    .lobby-modal{position:fixed;inset:0;z-index:5000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);padding:14px 10px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;}
+    .lobby-modal.show{display:flex;}
+    .lobby-modal-card{width:min(500px,100%);max-height:86svh;overflow:auto;border:1px solid rgba(255,230,163,.72);border-radius:24px;background:radial-gradient(circle at 50% 0%,rgba(99,54,199,.36),transparent 34%),linear-gradient(180deg,rgba(10,12,38,.96),rgba(6,7,22,.98));box-shadow:0 22px 60px rgba(0,0,0,.62),0 0 26px rgba(100,255,242,.16);padding:14px;box-sizing:border-box;color:#fff;scrollbar-width:none;-ms-overflow-style:none;}
+    .lobby-modal-card::-webkit-scrollbar,.lobby-message-list::-webkit-scrollbar{width:0;height:0;display:none;}
+    .lobby-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:10px;margin-bottom:10px;}
+    .lobby-modal-head h3{margin:0;color:#fff;font-size:20px;text-shadow:0 0 12px rgba(100,255,242,.22);}
+    .lobby-modal-head p{margin:4px 0 0;color:#bcc5ee;font-size:12px;line-height:1.45;}
+    .lobby-modal-close{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,230,163,.42);background:rgba(255,255,255,.08);color:#fff;font-size:24px;line-height:1;cursor:pointer;}
+    .lobby-chat-tabs{margin:0 0 10px;}
+    .lobby-message-list{height:min(48svh,420px);overflow:auto!important;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:10px;box-sizing:border-box;}
+    .lobby-message-input-row{margin-top:10px;}
+    .lobby-chat-note{font-size:12px;color:#aeb6dc;margin-top:7px;text-align:center;}
+    .lobby-more-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+    .lobby-more-grid button,.lobby-more-grid a{min-height:82px;border:1px solid rgba(255,230,163,.28);border-radius:16px;background:rgba(255,255,255,.055);color:#fff;text-align:center;text-decoration:none;padding:9px 6px;box-sizing:border-box;cursor:pointer;font-family:inherit;box-shadow:inset 0 0 12px rgba(255,255,255,.03);}
+    .lobby-more-grid span{display:block;font-size:20px;color:var(--lobby-gold);font-weight:1000;line-height:1;margin-bottom:6px;}
+    .lobby-more-grid b{display:block;font-size:13px;line-height:1.2;}
+    .lobby-more-grid small{display:block;color:#bfc5e6;font-size:10px;line-height:1.3;margin-top:4px;font-weight:800;}
+    .lobby-service-note{margin-top:10px;padding:10px;border-radius:14px;background:rgba(255,230,163,.08);border:1px solid rgba(255,230,163,.22);color:#ffe5a3;font-size:12px;line-height:1.6;}
+    .game-bottom-dock{border-color:rgba(255,230,163,.48);background:rgba(6,7,24,.74);backdrop-filter:blur(12px);box-shadow:0 0 22px rgba(100,255,242,.12),0 18px 42px rgba(0,0,0,.6);}
+    .game-menu-toggle{background:linear-gradient(135deg,rgba(39,31,91,.88),rgba(17,77,105,.72));border:1px solid rgba(255,230,163,.3);}
+    @media(max-width:430px){
+      .container.game-shell{padding-left:9px!important;padding-right:9px!important;}
+      .lobby-hud{grid-template-columns:64px 1fr;padding:7px;border-radius:16px;}
+      .lobby-avatar-btn{width:58px;height:58px;border-radius:16px;}
+      .lobby-player-name{font-size:18px;}
+      .lobby-player-sub{font-size:10px;}
+      .lobby-stats-bar{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;}
+      .lobby-stat{min-height:40px;padding:6px 4px;border-radius:12px;}
+      .lobby-stat span{font-size:8.5px;}
+      .lobby-stat b{font-size:14px;}
+      .lobby-stat-wide{display:none;}
+      .lobby-stage{min-height:46svh;padding-top:18px;}
+      .lobby-title{font-size:26px;}
+      .lobby-primary-actions{gap:6px;}
+      .lobby-action{min-height:96px;border-radius:19px;padding:10px 5px;}
+      .lobby-action-icon{font-size:24px;}
+      .lobby-action strong{font-size:15px;}
+      .lobby-action small{font-size:9.2px;}
+      .lobby-quick-dock{gap:5px;padding:7px;border-radius:18px;}
+      .lobby-quick-dock button{min-height:50px;font-size:10px;border-radius:13px;}
+      .lobby-quick-dock span{font-size:16px;}
+      .lobby-tip-mini{align-items:flex-start;flex-wrap:wrap;}
+      .lobby-more-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
+      .lobby-more-grid button,.lobby-more-grid a{min-height:78px;border-radius:14px;}
+      .lobby-more-grid small{display:none;}
+    }
+    @media(max-height:740px){.lobby-stage{min-height:40svh}.lobby-title{font-size:24px}.lobby-subtitle{display:none}.lobby-action{min-height:86px}.lobby-action small{display:none}.lobby-tip-mini{display:none!important}}
+  </style>
+
 </head>
 <body class="tlo-game-body">
 
   <div class="container game-shell">
-    <header class="game-topbar">
-      <div class="game-logo-line">
-        <h2 class="game-title">T-LO 潮流盲盒<span>OPENING LIVE ARENA</span></h2>
-        <div class="game-pill">BETA</div>
-      </div>
-
-      <div id="ops-announcement" style="display:none;background:#111;border:1px solid #00fff0;border-radius:12px;padding:12px;margin:10px 0;text-align:left;line-height:1.6;"></div>
-      <div id="ops-maintenance" style="display:none;background:#2a100c;border:1px solid #ff4444;color:#ffaaaa;border-radius:12px;padding:12px;margin:10px 0;text-align:left;line-height:1.6;"></div>
-
-      <div class="asset-info player-hud">
-        <div class="hud-main">
-          <div class="hud-tile">
-            <span class="hud-label">PLAYER</span>
-            <span class="hud-value" id="display-uid">載入中</span>
-          </div>
-          <div class="hud-tile">
-            <span class="hud-label">抽卡次數</span>
-            <span class="highlight-count hud-count" id="display-count">0</span>
-          </div>
-          <div class="hud-tile">
-            <span class="hud-label">卡盒進度</span>
-            <span class="hud-value"><span id="collection-summary-count">0</span>/<span id="collection-summary-total">0</span></span>
-          </div>
-          <div class="hud-tile">
-            <span class="hud-label">能量</span>
-            <span class="hud-value" id="display-energy">0</span>
-          </div>
-          <div class="hud-tile">
-            <span class="hud-label">訓練總分</span>
-            <span class="hud-value" id="display-points">0</span>
-          </div>
-          <div class="hud-tile">
-            <span class="hud-label">技能經驗</span>
-            <span class="hud-value" id="display-skill-exp">0</span>
-          </div>
+    <header class="game-topbar lobby-topbar">
+      <div class="lobby-hud">
+        <button class="lobby-avatar-btn" type="button" onclick="showGameScreen('profile')" aria-label="前往個人頁設定代表卡頭像">
+          <span class="lobby-avatar-frame">
+            <img id="lobby-avatar-card" class="lobby-avatar-img" alt="代表卡頭像" style="display:none;">
+            <span class="lobby-avatar-fallback">✦</span>
+          </span>
+          <span class="lobby-avatar-badge">代表卡</span>
+        </button>
+        <div class="lobby-player-block">
+          <div class="lobby-player-name" id="display-uid">載入中</div>
+          <div class="lobby-player-sub">點擊頭像可前往個人頁，之後可設定卡牌頭像</div>
         </div>
       </div>
+
+      <div class="lobby-stats-bar" aria-label="玩家資源狀態">
+        <div class="lobby-stat"><span>抽卡次數</span><b class="highlight-count hud-count" id="display-count">0</b></div>
+        <div class="lobby-stat"><span>能量</span><b id="display-energy">0</b></div>
+        <div class="lobby-stat"><span>訓練總分</span><b id="display-points">0</b></div>
+        <div class="lobby-stat"><span>卡盒</span><b><em id="collection-summary-count">0</em>/<em id="collection-summary-total">0</em></b></div>
+        <div class="lobby-stat lobby-stat-wide"><span>技能經驗</span><b id="display-skill-exp">0</b></div>
+      </div>
+
+      <div id="ops-announcement" class="lobby-announcement" style="display:none;"></div>
+      <div id="ops-maintenance" class="lobby-maintenance" style="display:none;"></div>
     </header>
 
-    <section class="game-screen active" id="homeScreen" data-screen="home">
-      <div class="screen-head">
-        <div>
-          <h2 class="screen-title">主介面</h2>
-          <div class="screen-sub">每日任務、小遊戲、排行榜與玩家互動集中在這裡。</div>
+    <section class="game-screen active lobby-screen" id="homeScreen" data-screen="home">
+      <div class="lobby-stage">
+        <div class="lobby-kicker">T-LO 星域基地</div>
+        <h2 class="lobby-title">主城大廳</h2>
+        <p class="lobby-subtitle">從這裡前往抽卡祭壇、星域戰場與商城補給，開啟今天的冒險。</p>
+
+        <div class="lobby-primary-actions" aria-label="主要行動">
+          <button class="lobby-action lobby-action-gacha" type="button" onclick="showGameScreen('gacha')">
+            <span class="lobby-action-icon">✦</span>
+            <strong>抽卡祭壇</strong>
+            <small>選擇卡池、單抽、十連與抽卡紀錄</small>
+          </button>
+          <button class="lobby-action lobby-action-battle" type="button" onclick="showGameScreen('battle')">
+            <span class="lobby-action-icon">⚔</span>
+            <strong>星域戰場</strong>
+            <small>主線冒險、PVP、世界BOSS與連線討伐</small>
+          </button>
+          <button class="lobby-action lobby-action-shop" type="button" onclick="showGameScreen('shop')">
+            <span class="lobby-action-icon">▣</span>
+            <strong>商城補給</strong>
+            <small>能量商店、訓練總分商店與儲值商品</small>
+          </button>
         </div>
       </div>
 
-      <div class="game-card hero-card">
-        <h3>今日行動</h3>
-        <div class="screen-sub">選擇你今天要做的事：開盒、冒險、簽到或領取活動補償。</div>
-        <div class="hero-actions">
-          <button class="game-big-btn btn-neon-pink" onclick="showGameScreen('gacha')">🎁 前往抽卡<small>選擇卡池、單抽、十連與查看抽卡紀錄</small></button>
-          <button class="game-big-btn btn-neon-cyan" onclick="showGameScreen('battle')">⚔️ 前往戰鬥<small>爭霸戰、遠征異世界、PVP 與升星</small></button>
-          <button class="game-big-btn btn-neon-gold" onclick="showGameScreen('shop')">🛒 前往商城<small>能量商店、訓練總分商店與儲值商品</small></button>
+      <div class="lobby-quick-dock" aria-label="快捷功能">
+        <button type="button" onclick="openCollectionModal()"><span>▣</span>卡盒</button>
+        <button type="button" onclick="openMissionModal()"><span>✓</span>任務</button>
+        <button type="button" onclick="openTrainingModal()"><span>🏆</span>排行</button>
+        <button type="button" onclick="showGameScreen('social')"><span>🤝</span>社交</button>
+        <button type="button" onclick="showGameScreen('profile')"><span>👤</span>個人</button>
+        <button type="button" onclick="openLobbyMoreModal()"><span>•••</span>更多</button>
+      </div>
+
+      <div class="lobby-chat-preview" id="home-message-board">
+        <button class="lobby-chat-head" type="button" onclick="openHomeChatModal()">
+          <span>💬 世界頻道</span>
+          <b>展開聊天室</b>
+        </button>
+        <div id="message-preview-list" class="lobby-chat-lines">
+          <div class="lobby-chat-empty">正在讀取最新留言...</div>
         </div>
       </div>
 
-      <div class="game-card">
-        <h3>快捷功能</h3>
-        <div class="feature-grid">
-          <button class="feature-btn" onclick="openCollectionModal()"><span>🎴</span>我的卡盒<small>查看角色收集進度</small></button>
-          <button class="feature-btn" onclick="openTrainingModal()"><span>🎁</span>簽到 / 排行榜<small>每日獎勵與玩家分數排名</small></button>
-          <button class="feature-btn" onclick="openRedeemModal()"><span>🎟️</span>兌換碼<small>輸入活動碼或補償碼</small></button>
-          <button class="feature-btn" onclick="openMissionModal()"><span>🎁</span>開服福利 / 任務<small>每日、新手、主線與一鍵領取</small></button>
-          <button class="feature-btn" onclick="openMemoryModal()"><span>🧠</span>記憶翻牌<small>挑戰記憶小遊戲</small></button>
-          <button class="feature-btn" onclick="openAchievementModal()"><span>🏆</span>成就系統<small>收集、戰鬥、養成里程碑</small></button>
-          <button class="feature-btn" onclick="openFortuneModal()"><span>🔮</span>今日潮流籤<small>抽出今日運勢</small></button>
-          <button class="feature-btn" onclick="openPvpModal()"><span>🆚</span>玩家對戰<small>設定代表卡並挑戰玩家</small></button>
-          <button class="feature-btn" onclick="openWorldBossModal()"><span>🌍</span>世界BOSS<small>全服同步討伐與傷害排名</small></button>
-          <button class="feature-btn" onclick="openCharacterGrowthModal()"><span>🌟</span>角色養成<small>等級、經驗、技能與10星升星</small></button>
-          <button class="feature-btn" onclick="showGameScreen('shop')"><span>🛒</span>商城<small>兌換補給與查看儲值商品</small></button>
-          <button class="feature-btn" onclick="showGameScreen('profile')"><span>👤</span>個人<small>查看資產、券與自我介紹</small></button>
-          <button class="feature-btn" onclick="showGameScreen('social')"><span>🤝</span>社交<small>好友邀請、好友列表與狀態</small></button>
+      <div class="lobby-tip-mini" id="notice-box">
+        <b>💡 遊戲提示</b>
+        <span>社交、世界BOSS、排行榜與活動任務已集中到「更多」與快捷列。</span>
+        <button type="button" onclick="openLobbyMoreModal()">查看功能</button>
+      </div>
+
+      <div class="lobby-modal" id="home-chat-modal" aria-hidden="true">
+        <div class="lobby-modal-card lobby-chat-modal-card" role="dialog" aria-modal="true" aria-label="T-LO 聊天頻道">
+          <div class="lobby-modal-head">
+            <div>
+              <h3>💬 T-LO 聊天頻道</h3>
+              <p>平常大廳只顯示最新 2～3 則，完整聊天在這裡查看。</p>
+            </div>
+            <button type="button" class="lobby-modal-close" onclick="closeHomeChatModal()">×</button>
+          </div>
+          <div class="chat-tabs lobby-chat-tabs">
+            <button class="chat-tab active" id="chat-tab-world" onclick="switchHomeChatChannel('WORLD')">世界頻道</button>
+            <button class="chat-tab" id="chat-tab-system" onclick="switchHomeChatChannel('SYSTEM')">系統頻道</button>
+          </div>
+          <div id="message-board-list" class="message-list lobby-message-list">正在讀取聊天訊息...</div>
+          <div class="message-input-row lobby-message-input-row" id="message-input-row">
+            <input id="message-input" class="message-input" maxlength="120" placeholder="在世界頻道發言，最多120字">
+            <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
+          </div>
+          <div id="message-board-msg" class="lobby-chat-note">世界頻道每日限量；系統頻道僅 GM 可發布。</div>
         </div>
       </div>
 
-      <div class="notice-box" id="notice-box" style="display:block;">
-        💡 <b>遊戲提示：</b><br>
-        社交功能與魔王挑戰協作副本更新！<br>
-        排行榜 - 戰力榜與通關榜已更新！<br>
-        有任何遊戲問題請聯繫客服詢問<br>
-        👉 <b>點擊聯繫客服：</b><br>
-        聯絡信箱 : a26926291@gmail.com<br>
-        聯絡電話 : 0956737181<br>
-        <a href="https://line.me/ti/p/~bikabikahikari" style="color:#00fff0;font-weight:bold;text-decoration:underline;">Line: bikabikahikari</a>
-      </div>
-
-      <div class="message-board-box" id="home-message-board">
-        <div class="message-board-title">💬 T-LO 聊天頻道</div>
-        <div class="chat-tabs">
-          <button class="chat-tab active" id="chat-tab-world" onclick="switchHomeChatChannel('WORLD')">世界頻道</button>
-          <button class="chat-tab" id="chat-tab-system" onclick="switchHomeChatChannel('SYSTEM')">系統頻道</button>
+      <div class="lobby-modal" id="lobby-more-modal" aria-hidden="true">
+        <div class="lobby-modal-card lobby-more-card" role="dialog" aria-modal="true" aria-label="更多功能">
+          <div class="lobby-modal-head">
+            <div>
+              <h3>更多功能</h3>
+              <p>小遊戲、福利、養成、兌換與客服集中在這裡。</p>
+            </div>
+            <button type="button" class="lobby-modal-close" onclick="closeLobbyMoreModal()">×</button>
+          </div>
+          <div class="lobby-more-grid">
+            <button type="button" onclick="openRedeemModal(); closeLobbyMoreModal()"><span>🎟️</span><b>兌換碼</b><small>輸入活動碼或補償碼</small></button>
+            <button type="button" onclick="openMemoryModal(); closeLobbyMoreModal()"><span>🧠</span><b>記憶翻牌</b><small>挑戰記憶小遊戲</small></button>
+            <button type="button" onclick="openAchievementModal(); closeLobbyMoreModal()"><span>🏆</span><b>成就系統</b><small>收集、戰鬥與養成里程碑</small></button>
+            <button type="button" onclick="openFortuneModal(); closeLobbyMoreModal()"><span>🔮</span><b>今日潮流籤</b><small>抽出今日運勢</small></button>
+            <button type="button" onclick="openPvpModal(); closeLobbyMoreModal()"><span>VS</span><b>玩家對戰</b><small>設定代表卡並挑戰玩家</small></button>
+            <button type="button" onclick="openWorldBossModal(); closeLobbyMoreModal()"><span>🌍</span><b>世界BOSS</b><small>全服同步討伐與傷害排名</small></button>
+            <button type="button" onclick="openCharacterGrowthModal(); closeLobbyMoreModal()"><span>★</span><b>角色養成</b><small>等級、經驗、技能與升星</small></button>
+            <button type="button" onclick="openMissionModal(); closeLobbyMoreModal()"><span>🎁</span><b>福利任務</b><small>每日、新手、主線與一鍵領取</small></button>
+            <button type="button" onclick="showGameScreen('shop'); closeLobbyMoreModal()"><span>🛒</span><b>商城</b><small>補給與儲值商品</small></button>
+            <button type="button" onclick="showGameScreen('profile'); closeLobbyMoreModal()"><span>👤</span><b>個人</b><small>資產、券與自我介紹</small></button>
+            <button type="button" onclick="showGameScreen('social'); closeLobbyMoreModal()"><span>🤝</span><b>社交</b><small>好友邀請、列表與狀態</small></button>
+            <a class="lobby-more-service" href="https://line.me/ti/p/~bikabikahikari" target="_blank" rel="noopener"><span>客服</span><b>聯繫客服</b><small>Line: bikabikahikari</small></a>
+          </div>
+          <div class="lobby-service-note">
+            聯絡信箱：a26926291@gmail.com<br>
+            聯絡電話：0956737181
+          </div>
         </div>
-        <div id="message-board-list" class="message-list">正在讀取聊天訊息...</div>
-        <div class="message-input-row" id="message-input-row">
-          <input id="message-input" class="message-input" maxlength="120" placeholder="在世界頻道發言，最多120字">
-          <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
-        </div>
-        <div id="message-board-msg" style="font-size:12px;color:#888;margin-top:6px;text-align:center;">世界頻道每日限量；系統頻道僅 GM 可發布。</div>
       </div>
     </section>
 
@@ -4565,6 +4706,56 @@ function showCollectionHistory() {
       box.innerHTML = html;
     }
 
+
+    function openHomeChatModal() {
+      var modal = document.getElementById('home-chat-modal');
+      if (modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+      loadMessageBoard();
+    }
+
+    function closeHomeChatModal() {
+      var modal = document.getElementById('home-chat-modal');
+      if (modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    function openLobbyMoreModal() {
+      var modal = document.getElementById('lobby-more-modal');
+      if (modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+    }
+
+    function closeLobbyMoreModal() {
+      var modal = document.getElementById('lobby-more-modal');
+      if (modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    function renderLobbyChatPreview(list) {
+      var box = document.getElementById('message-preview-list');
+      if (!box) return;
+      if (!list || !list.length) {
+        box.innerHTML = '<div class="lobby-chat-empty">目前還沒有留言。</div>';
+        return;
+      }
+      var preview = list.slice(-3);
+      var html = '';
+      preview.forEach(function(item) {
+        var isSystem = String(item.senderType || '').toUpperCase() !== 'PLAYER';
+        html += '<div class="lobby-chat-line ' + (isSystem ? 'system' : '') + '"><b>' + escapeHtml(item.displayName || item.uid || '玩家') + '：</b><span>' + escapeHtml(item.message || '') + '</span></div>';
+      });
+      box.innerHTML = html;
+    }
+
     function switchHomeChatChannel(type) {
       currentChatType = String(type || 'WORLD').toUpperCase() === 'SYSTEM' ? 'SYSTEM' : 'WORLD';
       ['WORLD','SYSTEM'].forEach(function(k){
@@ -4636,8 +4827,18 @@ function showCollectionHistory() {
       });
       box.innerHTML = html;
       box.scrollTop = box.scrollHeight;
+      renderLobbyChatPreview(list);
     }
 
+
+
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.id === 'home-chat-modal') closeHomeChatModal();
+      if (e.target && e.target.id === 'lobby-more-modal') closeLobbyMoreModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { closeHomeChatModal(); closeLobbyMoreModal(); }
+    });
 
     function jsString(text) {
       return String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
