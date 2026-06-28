@@ -1223,6 +1223,16 @@
     .profile-form textarea{min-height:86px;resize:vertical;line-height:1.5;}
     .profile-save-btn,.social-action-btn{border:0;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;color:#111;background:linear-gradient(45deg,#00fff0,#00ff7f);}
     .profile-save-btn:disabled,.social-action-btn:disabled{background:#444;color:#999;cursor:not-allowed;}
+    .profile-avatar-panel{display:grid;grid-template-columns:92px 1fr;gap:12px;align-items:center;margin:12px 0;padding:12px;border:1px solid rgba(255,230,163,.28);border-radius:16px;background:linear-gradient(135deg,rgba(30,20,76,.58),rgba(5,7,24,.58));}
+    .profile-avatar-preview{width:86px;height:86px;border-radius:20px;border:1px solid rgba(255,230,163,.68);background:radial-gradient(circle at 50% 20%,rgba(100,255,242,.2),rgba(12,10,38,.85));display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 18px rgba(117,71,255,.24);}
+    .profile-avatar-preview img{width:100%;height:100%;object-fit:cover;display:none;}
+    .profile-avatar-fallback{font-size:34px;color:#ffe6a3;text-shadow:0 0 14px #64fff2;}
+    .profile-avatar-tools{display:grid;gap:8px;}
+    .profile-avatar-title{color:#fff;font-weight:1000;font-size:15px;}
+    .profile-avatar-desc{color:#aeb6dc;font-size:12px;line-height:1.45;}
+    .profile-avatar-actions{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;}
+    .profile-avatar-actions select{min-width:0;}
+    @media(max-width:430px){.profile-avatar-panel{grid-template-columns:76px 1fr}.profile-avatar-preview{width:72px;height:72px;border-radius:16px}.profile-avatar-actions{grid-template-columns:1fr}.profile-avatar-actions button{width:100%;}}
     .item-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px;}
     .item-card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:11px;text-align:left;}
     .item-card .item-name{color:#fff;font-weight:900;font-size:13px;}
@@ -1327,8 +1337,14 @@
     .lobby-stat b{display:block;margin-top:2px;color:#fff;font-size:16px;line-height:1.05;text-shadow:0 0 9px rgba(100,255,242,.28);font-style:normal;}
     .lobby-stat b em{font-style:normal;}
     .lobby-stat-wide{grid-column:span 2;}
-    .lobby-announcement,.lobby-maintenance{border-radius:14px!important;padding:8px 10px!important;margin:0!important;border:1px solid rgba(255,230,163,.48)!important;background:rgba(6,7,25,.72)!important;color:#fff!important;line-height:1.45!important;font-size:12px!important;backdrop-filter:blur(8px);box-shadow:0 0 14px rgba(100,255,242,.12);}
-    .lobby-maintenance{border-color:rgba(255,100,100,.65)!important;color:#ffbbbb!important;}
+    .lobby-announcement{position:relative;overflow:hidden;border-radius:999px!important;padding:0!important;margin:0!important;border:1px solid rgba(255,230,163,.48)!important;background:rgba(6,7,25,.72)!important;color:#fff!important;height:34px;display:flex;align-items:center;backdrop-filter:blur(8px);box-shadow:0 0 14px rgba(100,255,242,.12);}
+    .lobby-announcement-inner{display:flex;align-items:center;width:100%;height:100%;min-width:0;}
+    .lobby-announcement-label{flex:0 0 auto;margin-left:10px;padding:4px 8px;border-radius:999px;background:rgba(100,255,242,.14);border:1px solid rgba(100,255,242,.38);color:var(--lobby-cyan);font-size:11px;font-weight:1000;text-shadow:0 0 10px rgba(100,255,242,.34);}
+    .lobby-marquee-viewport{position:relative;flex:1;min-width:0;overflow:hidden;height:100%;display:flex;align-items:center;margin:0 10px 0 8px;}
+    .lobby-marquee-track{display:inline-block;white-space:nowrap;will-change:transform;animation:lobbyMarquee 23s linear infinite;color:#fff7d7;font-size:12px;font-weight:900;text-shadow:0 0 8px rgba(0,0,0,.75);}
+    .lobby-announcement:hover .lobby-marquee-track{animation-play-state:paused;}
+    @keyframes lobbyMarquee{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+    .lobby-maintenance{border-radius:14px!important;padding:8px 10px!important;margin:0!important;border:1px solid rgba(255,100,100,.65)!important;background:rgba(6,7,25,.72)!important;color:#ffbbbb!important;line-height:1.45!important;font-size:12px!important;backdrop-filter:blur(8px);box-shadow:0 0 14px rgba(100,255,242,.12);}
     .lobby-screen{min-height:calc(100svh - 190px);padding-top:4px;}
     .lobby-stage{position:relative;min-height:48svh;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;padding:26px 6px 8px;}
     .lobby-kicker{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid rgba(255,230,163,.48);border-radius:999px;background:rgba(11,9,37,.54);color:#fff1bf;font-size:11px;font-weight:1000;letter-spacing:.12em;box-shadow:0 0 18px rgba(117,71,255,.28);}
@@ -1372,6 +1388,9 @@
     .lobby-message-list{height:min(48svh,420px);overflow:auto!important;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:10px;box-sizing:border-box;}
     .lobby-message-input-row{margin-top:10px;}
     .lobby-chat-note{font-size:12px;color:#aeb6dc;margin-top:7px;text-align:center;}
+    .lobby-chat-service{margin-top:10px;padding:10px 12px;border-radius:16px;border:1px solid rgba(255,230,163,.26);background:rgba(255,230,163,.075);color:#ffe6a3;font-size:12px;line-height:1.65;}
+    .lobby-chat-service b{display:block;color:#fff1c0;margin-bottom:2px;}
+    .lobby-chat-service a{color:var(--lobby-cyan);font-weight:950;text-decoration:underline;}
     .lobby-more-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
     .lobby-more-grid button,.lobby-more-grid a{min-height:82px;border:1px solid rgba(255,230,163,.28);border-radius:16px;background:rgba(255,255,255,.055);color:#fff;text-align:center;text-decoration:none;padding:9px 6px;box-sizing:border-box;cursor:pointer;font-family:inherit;box-shadow:inset 0 0 12px rgba(255,255,255,.03);}
     .lobby-more-grid span{display:block;font-size:20px;color:var(--lobby-gold);font-weight:1000;line-height:1;margin-bottom:6px;}
@@ -1407,7 +1426,32 @@
       .lobby-more-grid small{display:none;}
     }
     @media(max-height:740px){.lobby-stage{min-height:40svh}.lobby-title{font-size:24px}.lobby-subtitle{display:none}.lobby-action{min-height:86px}.lobby-action small{display:none}.lobby-tip-mini{display:none!important}}
-  </style>
+  
+    /* Lobby chat dock v3: 常駐底部聊天列 + 私訊通知 */
+    .container.game-shell{padding-bottom:calc(166px + env(safe-area-inset-bottom))!important;}
+    .lobby-chat-preview{display:none!important;}
+    .game-chat-dock{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);width:min(470px,calc(100vw - 22px));z-index:805;border:1px solid rgba(255,230,163,.42);border-radius:20px;background:linear-gradient(135deg,rgba(8,9,33,.88),rgba(24,10,55,.76));backdrop-filter:blur(16px);box-shadow:0 14px 42px rgba(0,0,0,.52),0 0 22px rgba(100,255,242,.18);padding:8px;box-sizing:border-box;color:#fff;}
+    .game-chat-toggle{width:100%;border:0;border-radius:15px;background:linear-gradient(135deg,rgba(100,255,242,.22),rgba(255,0,127,.22));color:#fff;padding:9px 11px;font-weight:1000;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;}
+    .game-chat-title{display:flex;align-items:center;gap:8px;min-width:0;}
+    .game-chat-title b{white-space:nowrap;}
+    .game-chat-status{color:var(--lobby-cyan);font-size:12px;font-weight:950;white-space:nowrap;}
+    .chat-unread-badge{display:none;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:linear-gradient(135deg,#ff2b7a,#ffdd77);color:#111;font-size:12px;font-weight:1000;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(255,0,127,.45);}
+    .chat-unread-badge.show{display:inline-flex;}
+    .game-chat-dock.has-unread{animation:tloChatPulse 1.5s ease-in-out infinite;}
+    @keyframes tloChatPulse{0%,100%{box-shadow:0 14px 42px rgba(0,0,0,.52),0 0 18px rgba(100,255,242,.18)}50%{box-shadow:0 14px 42px rgba(0,0,0,.55),0 0 28px rgba(255,0,127,.42)}}
+    .game-chat-dock .lobby-chat-lines{padding:7px 6px 2px;min-height:44px;max-height:82px;overflow:hidden;}
+    .private-chat-picker{display:none;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:0 0 10px;padding:8px;border:1px solid rgba(255,230,163,.22);border-radius:14px;background:rgba(255,230,163,.06);}
+    .private-chat-picker.show{display:grid;}
+    .private-chat-picker select{min-width:0;}
+    .private-chat-unread-note{font-size:12px;color:#ffdf8a;margin-top:-4px;margin-bottom:8px;text-align:center;display:none;}
+    .private-chat-unread-note.show{display:block;}
+    .lobby-chat-modal-card .chat-tab{position:relative;}
+    .chat-tab .mini-badge{display:none;min-width:18px;height:18px;line-height:18px;padding:0 5px;border-radius:999px;background:#ffdd77;color:#111;font-size:11px;font-weight:1000;margin-left:5px;}
+    .chat-tab .mini-badge.show{display:inline-block;}
+    .social-private-moved{border:1px solid rgba(100,255,242,.28);background:linear-gradient(135deg,rgba(100,255,242,.08),rgba(255,0,127,.08));border-radius:16px;padding:12px;color:#dfe7ff;font-size:13px;line-height:1.65;}
+    .social-private-moved b{color:var(--lobby-cyan);display:block;margin-bottom:4px;font-size:15px;}
+    @media(max-width:430px){.game-chat-dock{bottom:72px;width:calc(100vw - 18px);padding:7px}.game-chat-toggle{padding:8px 10px}.game-chat-dock .lobby-chat-lines{max-height:74px}.private-chat-picker{grid-template-columns:1fr}.private-chat-picker button{width:100%;}}
+</style>
 
 </head>
 <body class="tlo-game-body">
@@ -1474,15 +1518,6 @@
         <button type="button" onclick="openLobbyMoreModal()"><span>•••</span>更多</button>
       </div>
 
-      <div class="lobby-chat-preview" id="home-message-board">
-        <button class="lobby-chat-head" type="button" onclick="openHomeChatModal()">
-          <span>💬 世界頻道</span>
-          <b>展開聊天室</b>
-        </button>
-        <div id="message-preview-list" class="lobby-chat-lines">
-          <div class="lobby-chat-empty">正在讀取最新留言...</div>
-        </div>
-      </div>
 
       <div class="lobby-tip-mini" id="notice-box">
         <b>💡 遊戲提示</b>
@@ -1502,13 +1537,25 @@
           <div class="chat-tabs lobby-chat-tabs">
             <button class="chat-tab active" id="chat-tab-world" onclick="switchHomeChatChannel('WORLD')">世界頻道</button>
             <button class="chat-tab" id="chat-tab-system" onclick="switchHomeChatChannel('SYSTEM')">系統頻道</button>
+            <button class="chat-tab" id="chat-tab-private" onclick="switchHomeChatChannel('PRIVATE')">好友私訊<span class="mini-badge" id="chat-private-tab-badge">0</span></button>
           </div>
+          <div class="private-chat-picker" id="private-chat-picker">
+            <select id="private-chat-friend" class="social-input" onchange="loadPrivateChatFromSelect()"><option value="">選擇好友開始私訊</option></select>
+            <button class="social-action-btn" type="button" onclick="loadPrivateChatFromSelect()">讀取私訊</button>
+          </div>
+          <div class="private-chat-unread-note" id="private-chat-unread-note"></div>
           <div id="message-board-list" class="message-list lobby-message-list">正在讀取聊天訊息...</div>
           <div class="message-input-row lobby-message-input-row" id="message-input-row">
             <input id="message-input" class="message-input" maxlength="120" placeholder="在世界頻道發言，最多120字">
             <button id="message-send-btn" class="message-send-btn" onclick="submitHomeMessage()">送出</button>
           </div>
-          <div id="message-board-msg" class="lobby-chat-note">世界頻道每日限量；系統頻道僅 GM 可發布。</div>
+          <div id="message-board-msg" class="lobby-chat-note">世界頻道每日限量；好友私訊只能傳給好友。</div>
+          <div class="lobby-chat-service">
+            <b>客服聯絡</b>
+            聯絡信箱：<a href="mailto:a26926291@gmail.com">a26926291@gmail.com</a><br>
+            聯絡電話：<a href="tel:0956737181">0956737181</a><br>
+            Line：<a href="https://line.me/ti/p/~bikabikahikari" target="_blank" rel="noopener">bikabikahikari</a>
+          </div>
         </div>
       </div>
 
@@ -1517,7 +1564,7 @@
           <div class="lobby-modal-head">
             <div>
               <h3>更多功能</h3>
-              <p>小遊戲、福利、養成、兌換與客服集中在這裡。</p>
+              <p>小遊戲、福利、養成與兌換集中在這裡；客服資訊在聊天功能表下方。</p>
             </div>
             <button type="button" class="lobby-modal-close" onclick="closeLobbyMoreModal()">×</button>
           </div>
@@ -1533,11 +1580,6 @@
             <button type="button" onclick="showGameScreen('shop'); closeLobbyMoreModal()"><span>🛒</span><b>商城</b><small>補給與儲值商品</small></button>
             <button type="button" onclick="showGameScreen('profile'); closeLobbyMoreModal()"><span>👤</span><b>個人</b><small>資產、券與自我介紹</small></button>
             <button type="button" onclick="showGameScreen('social'); closeLobbyMoreModal()"><span>🤝</span><b>社交</b><small>好友邀請、列表與狀態</small></button>
-            <a class="lobby-more-service" href="https://line.me/ti/p/~bikabikahikari" target="_blank" rel="noopener"><span>客服</span><b>聯繫客服</b><small>Line: bikabikahikari</small></a>
-          </div>
-          <div class="lobby-service-note">
-            聯絡信箱：a26926291@gmail.com<br>
-            聯絡電話：0956737181
           </div>
         </div>
       </div>
@@ -1726,6 +1768,21 @@
           <div class="profile-tile"><span>收藏進度</span><b id="profile-collection">0 / 0</b></div>
           <div class="profile-tile"><span>成就進度</span><b id="profile-achievements">0 / 0</b></div>
         </div>
+        <div class="profile-avatar-panel">
+          <div class="profile-avatar-preview">
+            <img id="profile-avatar-preview-img" alt="代表卡頭像" loading="lazy" decoding="async">
+            <span class="profile-avatar-fallback" id="profile-avatar-fallback">✦</span>
+          </div>
+          <div class="profile-avatar-tools">
+            <div class="profile-avatar-title">代表卡頭像</div>
+            <div class="profile-avatar-desc">可從已持有卡牌中選一張作為主大廳、聊天室與社交代表頭像。</div>
+            <div class="profile-avatar-actions">
+              <select id="profile-avatar-select"><option value="">讀取已持有卡牌中...</option></select>
+              <button class="profile-save-btn" id="profile-avatar-save-btn" onclick="saveProfileAvatarCard()">設定頭像</button>
+            </div>
+            <div id="profile-avatar-msg" style="font-size:12px;color:#aaa;line-height:1.5;"></div>
+          </div>
+        </div>
         <div class="profile-form">
           <div>
             <label>暱稱</label>
@@ -1758,7 +1815,7 @@
       <div class="screen-head">
         <div>
           <h2 class="screen-title">社交</h2>
-          <div class="screen-sub">好友、好友邀請與在線狀態。私訊功能目前不開放。</div>
+          <div class="screen-sub">好友、好友邀請與在線狀態。好友私訊已整合到下方常駐聊天功能。</div>
         </div>
         <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
       </div>
@@ -1821,19 +1878,23 @@
       </div>
 
       <div class="game-card">
-        <h3>💌 好友私訊</h3>
-        <div class="row" style="display:flex;gap:8px;align-items:center;">
-          <select id="private-chat-friend" class="social-input" style="flex:1;" onchange="loadPrivateChatFromSelect()"><option value="">選擇好友開始私訊</option></select>
-          <button class="social-action-btn" style="flex:0 0 auto;" onclick="loadPrivateChatFromSelect()">讀取</button>
+        <div class="social-private-moved">
+          <b>💬 好友私訊已整合到主界面聊天</b>
+          請使用畫面下方常駐的「聊天」功能，切換到「好友私訊」後選擇好友發送訊息。收到好友私訊時，下方聊天列會主動亮起並顯示未讀數。
+          <div style="margin-top:8px;"><button class="social-action-btn" onclick="openHomeChatModal(); switchHomeChatChannel('PRIVATE');">打開好友私訊</button></div>
         </div>
-        <div id="private-chat-list" class="message-list" style="margin-top:10px;">請先選擇好友。</div>
-        <div class="message-input-row">
-          <input id="private-chat-input" class="message-input" maxlength="300" placeholder="輸入好友私訊，最多300字">
-          <button class="message-send-btn" onclick="sendPrivateChatUI()">送出</button>
-        </div>
-        <div id="private-chat-msg" style="font-size:12px;color:#888;margin-top:6px;text-align:center;"></div>
       </div>
     </section>
+
+    <div class="game-chat-dock" id="game-chat-dock" aria-label="T-LO 聊天">
+      <button type="button" class="game-chat-toggle" onclick="openHomeChatModal()">
+        <span class="game-chat-title"><b>💬 聊天</b><span class="chat-unread-badge" id="chat-unread-badge">0</span></span>
+        <span class="game-chat-status" id="chat-dock-status">世界頻道</span>
+      </button>
+      <div id="message-preview-list" class="lobby-chat-lines">
+        <div class="lobby-chat-empty">正在讀取最新留言...</div>
+      </div>
+    </div>
 
     <div class="game-bottom-dock collapsed" id="game-bottom-dock">
       <button type="button" class="game-menu-toggle" onclick="toggleBottomNav()"><span>☰ 選單</span><span class="game-menu-current" id="current-screen-label">目前：主介面</span></button>
@@ -2386,7 +2447,12 @@
     let latestWorldBossDashboard = null;
     let worldBossRunning = false;
     let currentChatType = 'WORLD';
+    let lobbyBaseAnnouncementText = '';
+    let lobbySystemAnnouncementText = '';
     let currentPrivateChatFriendUid = '';
+    let latestChatDashboard = null;
+    let lastPrivateUnreadCount = 0;
+    let lobbyChatPollTimer = null;
     let demonChallengeRunning = false;
     let latestRpgDashboardLoadedAt = 0;
     let lastRpgAdventureKey = "";
@@ -2626,7 +2692,10 @@
       loadHomeState();
       loadGachaPools();
       // 留言板延後一點載入，讓首頁與抽卡按鈕先出現。
-      setTimeout(loadMessageBoard, 400);
+      setTimeout(function(){ loadMessageBoard({ markRead: false }); }, 400);
+      setTimeout(loadSystemAnnouncements, 900);
+      setInterval(loadSystemAnnouncements, 60000);
+      startLobbyChatPolling();
     } else if (window.TLO_IS_GUEST) {
       currentCount = Math.max(0, Number(guestDemoState.drawTimes || 0));
       updateButtonState();
@@ -3955,6 +4024,11 @@
           if (typeof response.collectionUniqueCount !== "undefined") {
             setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
           }
+          if (response.globalAnnouncements && response.globalAnnouncements.length) {
+            lobbySystemAnnouncementText = response.globalAnnouncements.join('　｜　');
+            renderLobbyAnnouncementMarquee();
+            setTimeout(loadSystemAnnouncements, 800);
+          }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
           document.getElementById('card-stage').innerHTML = `<p style="color:#ff4444; font-weight:bold;">${escapeHtml(response && response.msg ? response.msg : "抽卡失敗，請稍後再試")}</p>`;
@@ -4005,6 +4079,11 @@
 
           if (typeof response.collectionUniqueCount !== "undefined") {
             setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
+          }
+          if (response.globalAnnouncements && response.globalAnnouncements.length) {
+            lobbySystemAnnouncementText = response.globalAnnouncements.join('　｜　');
+            renderLobbyAnnouncementMarquee();
+            setTimeout(loadSystemAnnouncements, 800);
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
@@ -4707,22 +4786,46 @@ function showCollectionHistory() {
     }
 
 
-    function openHomeChatModal() {
-      var modal = document.getElementById('home-chat-modal');
-      if (modal) {
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
+    function updateLobbyAvatarFromProfile(profile) {
+      profile = profile || {};
+      var img = document.getElementById('lobby-avatar-card');
+      var fallback = document.querySelector('.lobby-avatar-fallback');
+      var url = profile.avatarImageUrl || profile.avatar_image_url || '';
+      if (!url && profile.avatarCardName) url = getCardImageUrl({ name: profile.avatarCardName, imageUrl: profile.avatarImageUrl || profile.avatar_image_url });
+      if (img && url) {
+        img.src = url;
+        img.style.display = 'block';
+        if (fallback) fallback.style.display = 'none';
+      } else {
+        if (img) { img.removeAttribute('src'); img.style.display = 'none'; }
+        if (fallback) fallback.style.display = '';
       }
-      loadMessageBoard();
     }
 
-    function closeHomeChatModal() {
-      var modal = document.getElementById('home-chat-modal');
-      if (modal) {
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-      }
+    function renderLobbyAnnouncementMarquee() {
+      var ann = document.getElementById('ops-announcement');
+      if (!ann) return;
+      var parts = [];
+      if (lobbyBaseAnnouncementText) parts.push(lobbyBaseAnnouncementText);
+      if (lobbySystemAnnouncementText) parts.push(lobbySystemAnnouncementText);
+      var text = parts.join('　✦　').trim();
+      if (!text) { ann.style.display = 'none'; ann.innerHTML = ''; return; }
+      ann.style.display = 'flex';
+      ann.innerHTML = '<div class="lobby-announcement-inner"><span class="lobby-announcement-label">📢 公告</span><div class="lobby-marquee-viewport"><span class="lobby-marquee-track">' + escapeHtml(text) + '　　✦　　' + escapeHtml(text) + '</span></div></div>';
     }
+
+    function loadSystemAnnouncements() {
+      if (!playerUID || typeof google === 'undefined' || !google.script || !google.script.run) return;
+      google.script.run.withSuccessHandler(function(res) {
+        var list = Array.isArray(res) ? res : (res && res.messages ? res.messages : []);
+        var newest = (list || []).slice(-5).map(function(item){ return item.message || ''; }).filter(Boolean);
+        lobbySystemAnnouncementText = newest.join('　｜　');
+        renderLobbyAnnouncementMarquee();
+      }).withFailureHandler(function(){
+        renderLobbyAnnouncementMarquee();
+      }).getChatDashboard(playerUID, { channelType: 'SYSTEM', limit: 8 });
+    }
+
 
     function openLobbyMoreModal() {
       var modal = document.getElementById('lobby-more-modal');
@@ -4738,6 +4841,65 @@ function showCollectionHistory() {
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
       }
+    }
+
+    function updateChatUnreadUI(res) {
+      if (!res) return;
+      latestChatDashboard = res;
+      fillPrivateFriendSelect(res);
+      var count = Number(res.privateUnreadCount || 0);
+      var dock = document.getElementById('game-chat-dock');
+      var badge = document.getElementById('chat-unread-badge');
+      var tabBadge = document.getElementById('chat-private-tab-badge');
+      var status = document.getElementById('chat-dock-status');
+      [badge, tabBadge].forEach(function(el){
+        if (!el) return;
+        if (count > 0) { el.textContent = count > 99 ? '99+' : String(count); el.classList.add('show'); }
+        else { el.textContent = '0'; el.classList.remove('show'); }
+      });
+      if (dock) dock.classList.toggle('has-unread', count > 0);
+      if (status) status.textContent = count > 0 ? ('好友私訊 +' + (count > 99 ? '99' : count)) : (currentChatType === 'PRIVATE' ? '好友私訊' : '世界頻道');
+      if (count > lastPrivateUnreadCount && lastPrivateUnreadCount !== 0) showPrivateMessageNotify(count);
+      lastPrivateUnreadCount = count;
+      var note = document.getElementById('private-chat-unread-note');
+      if (note) {
+        var unreadFriends = (res.privateUnreadFriends || []).filter(function(x){ return Number(x.unreadCount || 0) > 0; });
+        if (unreadFriends.length) {
+          note.classList.add('show');
+          note.textContent = '你有 ' + count + ' 則好友私訊未讀：' + unreadFriends.slice(0,3).map(function(x){ return (x.displayName || x.uid) + ' +' + Number(x.unreadCount || 0); }).join('、');
+        } else {
+          note.classList.remove('show');
+          note.textContent = '';
+        }
+      }
+    }
+
+    function showPrivateMessageNotify(count) {
+      var dock = document.getElementById('game-chat-dock');
+      if (!dock) return;
+      dock.classList.add('has-unread');
+      setTimeout(function(){ if (Number(lastPrivateUnreadCount || 0) <= 0) dock.classList.remove('has-unread'); }, 1800);
+    }
+
+    function fillPrivateFriendSelect(res) {
+      res = res || latestChatDashboard || latestSocialDashboard || {};
+      var select = document.getElementById('private-chat-friend');
+      if (!select) return;
+      var oldValue = select.value || currentPrivateChatFriendUid || '';
+      var unreadMap = {};
+      (res.privateUnreadFriends || []).forEach(function(f){ unreadMap[String(f.uid || '')] = Number(f.unreadCount || 0); });
+      var friends = res.friends || [];
+      if (!friends.length && latestSocialDashboard && latestSocialDashboard.friends) friends = latestSocialDashboard.friends;
+      var opts = ['<option value="">選擇好友開始私訊</option>'];
+      friends.forEach(function(p){
+        var rawUid = p.uid || '';
+        var uid = escapeHtml(rawUid);
+        var unread = Number(p.unreadCount || unreadMap[String(rawUid)] || 0);
+        var label = escapeHtml((p.displayName || rawUid || '玩家') + '｜' + rawUid + (unread ? '（未讀 ' + unread + '）' : ''));
+        opts.push('<option value="' + uid + '" ' + (oldValue === rawUid ? 'selected' : '') + '>' + label + '</option>');
+      });
+      select.innerHTML = opts.join('');
+      if (oldValue) select.value = oldValue;
     }
 
     function renderLobbyChatPreview(list) {
@@ -4756,28 +4918,70 @@ function showCollectionHistory() {
       box.innerHTML = html;
     }
 
-    function switchHomeChatChannel(type) {
-      currentChatType = String(type || 'WORLD').toUpperCase() === 'SYSTEM' ? 'SYSTEM' : 'WORLD';
-      ['WORLD','SYSTEM'].forEach(function(k){
-        var el = document.getElementById(k === 'WORLD' ? 'chat-tab-world' : 'chat-tab-system');
-        if (el) el.classList.toggle('active', currentChatType === k);
-      });
-      var row = document.getElementById('message-input-row');
-      var input = document.getElementById('message-input');
-      if (row) row.style.display = currentChatType === 'SYSTEM' ? 'none' : 'flex';
-      if (input) input.placeholder = currentChatType === 'SYSTEM' ? '系統頻道僅 GM 可發言' : '在世界頻道發言，最多120字';
-      loadMessageBoard();
+    function openHomeChatModal() {
+      var modal = document.getElementById('home-chat-modal');
+      if (modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+      loadMessageBoard({ markRead: true });
     }
 
-    function loadMessageBoard() {
+    function closeHomeChatModal() {
+      var modal = document.getElementById('home-chat-modal');
+      if (modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    function switchHomeChatChannel(type) {
+      var t = String(type || 'WORLD').toUpperCase();
+      currentChatType = t === 'SYSTEM' ? 'SYSTEM' : (t === 'PRIVATE' ? 'PRIVATE' : 'WORLD');
+      ['WORLD','SYSTEM','PRIVATE'].forEach(function(k){
+        var el = document.getElementById(k === 'WORLD' ? 'chat-tab-world' : (k === 'SYSTEM' ? 'chat-tab-system' : 'chat-tab-private'));
+        if (el) el.classList.toggle('active', currentChatType === k);
+      });
+      var picker = document.getElementById('private-chat-picker');
+      if (picker) picker.classList.toggle('show', currentChatType === 'PRIVATE');
+      var row = document.getElementById('message-input-row');
+      var input = document.getElementById('message-input');
+      var sendBtn = document.getElementById('message-send-btn');
+      if (row) row.style.display = currentChatType === 'SYSTEM' ? 'none' : 'flex';
+      if (input) {
+        input.maxLength = currentChatType === 'PRIVATE' ? 300 : 120;
+        input.placeholder = currentChatType === 'SYSTEM' ? '系統頻道僅 GM 可發言' : (currentChatType === 'PRIVATE' ? '輸入好友私訊，最多300字' : '在世界頻道發言，最多120字');
+      }
+      if (sendBtn) sendBtn.textContent = currentChatType === 'PRIVATE' ? '送出私訊' : '送出';
+      var status = document.getElementById('chat-dock-status');
+      if (status && Number(lastPrivateUnreadCount || 0) <= 0) status.textContent = currentChatType === 'PRIVATE' ? '好友私訊' : '世界頻道';
+      loadMessageBoard({ markRead: true });
+    }
+
+    function loadMessageBoard(options) {
+      options = options || {};
       const box = document.getElementById('message-board-list');
       if (box) box.innerHTML = '<div style="color:#aaa;text-align:center;">正在讀取聊天頻道...</div>';
+      if (currentChatType === 'PRIVATE') {
+        var sel = document.getElementById('private-chat-friend');
+        currentPrivateChatFriendUid = sel ? (sel.value || currentPrivateChatFriendUid || '') : currentPrivateChatFriendUid;
+        if (!currentPrivateChatFriendUid) {
+          fillPrivateFriendSelect(latestChatDashboard || latestSocialDashboard || {});
+          if (box) box.innerHTML = '<div style="color:#aaa;text-align:center;">請先選擇好友開始私訊。</div>';
+          // 仍讀取一次世界頻道，更新好友與未讀通知，但不標記已讀。
+          google.script.run.withSuccessHandler(function(res){ updateChatUnreadUI(res || {}); }).withFailureHandler(function(){}).getChatDashboard(playerUID, { channelType: 'WORLD', limit: 3, markRead: false });
+          return;
+        }
+      }
+      var payload = { channelType: currentChatType, limit: currentChatType === 'PRIVATE' ? 50 : 30, markRead: options.markRead !== false };
+      if (currentChatType === 'PRIVATE') payload.friendUid = currentPrivateChatFriendUid;
       google.script.run.withSuccessHandler(function(res) {
         const list = Array.isArray(res) ? res : (res && res.messages ? res.messages : []);
+        updateChatUnreadUI(res || {});
         renderMessageBoard(list || []);
-      }).withFailureHandler(function() {
-        if (box) box.innerHTML = '<div style="color:#888; text-align:center;">聊天頻道暫時無法讀取。</div>';
-      }).getChatDashboard(playerUID, { channelType: currentChatType, limit: 30 });
+      }).withFailureHandler(function(err) {
+        if (box) box.innerHTML = '<div style="color:#888; text-align:center;">聊天頻道暫時無法讀取：' + escapeHtml(err && err.message ? err.message : err) + '</div>';
+      }).getChatDashboard(playerUID, payload);
     }
 
     function submitHomeMessage() {
@@ -4785,29 +4989,36 @@ function showCollectionHistory() {
       const input = document.getElementById('message-input');
       const btn = document.getElementById('message-send-btn');
       const msg = document.getElementById('message-board-msg');
-      const text = input.value.trim();
+      const text = input ? input.value.trim() : '';
       if (!text) {
-        msg.innerHTML = '<span style="color:#ff4444;">請先輸入訊息。</span>';
+        if (msg) msg.innerHTML = '<span style="color:#ff4444;">請先輸入訊息。</span>';
+        return;
+      }
+      if (currentChatType === 'PRIVATE' && !currentPrivateChatFriendUid) {
+        if (msg) msg.innerHTML = '<span style="color:#ff4444;">請先選擇好友。</span>';
         return;
       }
       btn.disabled = true;
       btn.innerText = '送出中';
+      var payload = { channelType: currentChatType === 'PRIVATE' ? 'PRIVATE' : 'WORLD', message: text };
+      if (currentChatType === 'PRIVATE') payload.friendUid = currentPrivateChatFriendUid;
       google.script.run.withSuccessHandler(function(res) {
         btn.disabled = false;
-        btn.innerText = '送出';
+        btn.innerText = currentChatType === 'PRIVATE' ? '送出私訊' : '送出';
         if (res && res.success) {
-          input.value = '';
-          msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg || '訊息已送出')}</span>`;
+          if (input) input.value = '';
+          if (msg) msg.innerHTML = `<span style="color:#00ff7f;">${escapeHtml(res.msg || '訊息已送出')}</span>`;
+          if (res.dashboard) updateChatUnreadUI(res.dashboard);
           renderMessageBoard((res.dashboard && res.dashboard.messages) || []);
         } else {
-          msg.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '送出失敗')}</span>`;
-          if (res && res.dashboard && res.dashboard.messages) renderMessageBoard(res.dashboard.messages);
+          if (msg) msg.innerHTML = `<span style="color:#ff4444;">${escapeHtml(res && res.msg ? res.msg : '送出失敗')}</span>`;
+          if (res && res.dashboard) { updateChatUnreadUI(res.dashboard); if (res.dashboard.messages) renderMessageBoard(res.dashboard.messages); }
         }
       }).withFailureHandler(function(err) {
         btn.disabled = false;
-        btn.innerText = '送出';
-        msg.innerHTML = '<span style="color:#ff4444;">聊天系統繁忙：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
-      }).sendChatMessage(playerUID, { channelType: 'WORLD', message: text });
+        btn.innerText = currentChatType === 'PRIVATE' ? '送出私訊' : '送出';
+        if (msg) msg.innerHTML = '<span style="color:#ff4444;">聊天系統繁忙：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).sendChatMessage(playerUID, payload);
     }
 
     function renderMessageBoard(list) {
@@ -4815,20 +5026,34 @@ function showCollectionHistory() {
       if (!box) return;
       if (!list || list.length === 0) {
         box.innerHTML = '<div style="color:#888; text-align:center;">目前還沒有訊息。</div>';
+        if (currentChatType !== 'PRIVATE') renderLobbyChatPreview([]);
         return;
       }
       let html = '';
       list.forEach(function(item) {
         const isSystem = String(item.senderType || '').toUpperCase() !== 'PLAYER';
-        html += `<div class="message-item">
-          <div class="message-meta"><span class="message-uid" style="color:${isSystem ? '#ffdd77' : '#ff007f'};">${escapeHtml(item.displayName || item.uid || '玩家')}</span>｜${escapeHtml(item.time || '')}</div>
+        const mine = (item.senderUid || item.uid || '') === playerUID;
+        html += `<div class="message-item" style="${currentChatType === 'PRIVATE' ? 'border-color:' + (mine ? 'rgba(100,255,242,.28)' : 'rgba(255,230,163,.22)') + ';' : ''}">
+          <div class="message-meta"><span class="message-uid" style="color:${isSystem ? '#ffdd77' : (mine ? '#64fff2' : '#ff7bc1')};">${escapeHtml(item.displayName || item.uid || '玩家')}</span>｜${escapeHtml(item.time || '')}</div>
           <div class="message-text">${escapeHtml(item.message || '')}</div>
         </div>`;
       });
       box.innerHTML = html;
       box.scrollTop = box.scrollHeight;
-      renderLobbyChatPreview(list);
+      if (currentChatType !== 'PRIVATE') renderLobbyChatPreview(list);
     }
+
+    function startLobbyChatPolling() {
+      if (lobbyChatPollTimer || !window.TLO_IS_AUTHENTICATED) return;
+      lobbyChatPollTimer = setInterval(function(){
+        google.script.run.withSuccessHandler(function(res){
+          updateChatUnreadUI(res || {});
+          if (res && Array.isArray(res.messages)) renderLobbyChatPreview(res.messages);
+        }).withFailureHandler(function(){}).getChatDashboard(playerUID, { channelType: 'WORLD', limit: 5, markRead: false });
+      }, 15000);
+    }
+
+
 
 
 
@@ -5015,6 +5240,8 @@ function showCollectionHistory() {
       var nameInput = document.getElementById('profile-input-name'); if (nameInput) nameInput.value = profile.displayName || '';
       var bioInput = document.getElementById('profile-input-bio'); if (bioInput) bioInput.value = profile.bio || '';
       var statusInput = document.getElementById('profile-input-status'); if (statusInput) statusInput.value = profile.manualStatus || profile.status || 'ONLINE';
+      renderProfileAvatarSelector(res);
+      updateLobbyAvatarFromProfile(profile);
       var grid = document.getElementById('profile-item-grid');
       if (grid) {
         var items = res.virtualItems || [];
@@ -5022,6 +5249,62 @@ function showCollectionHistory() {
           return `<div class="item-card"><div class="item-name">${escapeHtml(item.name || '')}</div><div class="item-amount">${Number(item.amount || 0).toLocaleString()}</div><div class="item-desc">${escapeHtml(item.desc || '')}</div></div>`;
         }).join('') : '<div style="color:#aaa;">目前沒有可顯示的道具。</div>';
       }
+    }
+
+    function renderProfileAvatarSelector(res) {
+      res = res || {};
+      var profile = res.profile || {};
+      var select = document.getElementById('profile-avatar-select');
+      var msg = document.getElementById('profile-avatar-msg');
+      var preview = document.getElementById('profile-avatar-preview-img');
+      var fallback = document.getElementById('profile-avatar-fallback');
+      var options = Array.isArray(res.avatarOptions) ? res.avatarOptions : [];
+      if (select) {
+        if (!options.length) {
+          select.innerHTML = '<option value="">目前沒有已持有卡牌可選</option>';
+          select.disabled = true;
+        } else {
+          select.disabled = false;
+          select.innerHTML = '<option value="">不設定代表卡</option>' + options.map(function(card){
+            var label = (card.rarity ? '[' + card.rarity + '] ' : '') + (card.name || card.cardName || '') + ' ×' + Number(card.quantity || card.count || 0);
+            return '<option value="' + escapeHtml(card.id || card.cardId || '') + '">' + escapeHtml(label) + '</option>';
+          }).join('');
+          select.value = profile.avatarCardId || '';
+        }
+      }
+      var url = profile.avatarImageUrl || profile.avatar_image_url || '';
+      if (!url && profile.avatarCardName) url = getCardImageUrl({ name: profile.avatarCardName, imageUrl: url });
+      if (preview && url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        if (fallback) fallback.style.display = 'none';
+      } else {
+        if (preview) { preview.removeAttribute('src'); preview.style.display = 'none'; }
+        if (fallback) fallback.style.display = '';
+      }
+      if (msg) msg.innerHTML = profile.avatarCardName ? ('目前代表卡：<b style="color:#00fff0;">' + escapeHtml(profile.avatarCardName) + '</b>') : '尚未設定代表卡頭像。';
+    }
+
+    function saveProfileAvatarCard() {
+      var select = document.getElementById('profile-avatar-select');
+      var btn = document.getElementById('profile-avatar-save-btn');
+      var msg = document.getElementById('profile-avatar-msg');
+      if (!select || select.disabled) {
+        if (msg) msg.innerHTML = '<span style="color:#ffcc66;">請先持有至少一張卡牌。</span>';
+        return;
+      }
+      var avatarCardId = select.value || null;
+      if (btn) { btn.disabled = true; btn.innerText = '設定中'; }
+      if (msg) msg.innerHTML = '<span style="color:#aaa;">正在儲存代表卡頭像...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        if (btn) { btn.disabled = false; btn.innerText = '設定頭像'; }
+        if (res && res.dashboard) renderPersonalDashboard(res.dashboard);
+        if (msg) msg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '設定失敗') + '</span>';
+        loadHomeState();
+      }).withFailureHandler(function(err) {
+        if (btn) { btn.disabled = false; btn.innerText = '設定頭像'; }
+        if (msg) msg.innerHTML = '<span style="color:#ff7777;">設定失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+      }).setPlayerAvatarCard(playerUID, avatarCardId ? { avatarCardId: avatarCardId } : { clear: true });
     }
 
     function loadPersonalDashboard() {
@@ -5126,16 +5409,7 @@ function showCollectionHistory() {
         greetStatus.innerText = '今日打招呼 ' + Number(g.usedToday || g.used || 0).toLocaleString() + ' / ' + Number(g.dailyLimit || 10).toLocaleString() + '｜' + (g.rewardText || '雙方獲得少量能量與挑戰券');
       }
 
-      var privateSelect = document.getElementById('private-chat-friend');
-      if (privateSelect) {
-        var oldValue = privateSelect.value || currentPrivateChatFriendUid || '';
-        var opts = ['<option value="">選擇好友開始私訊</option>'];
-        (res.friends || []).forEach(function(p){
-          var uid = escapeHtml(p.uid || '');
-          opts.push('<option value="' + uid + '" ' + (oldValue === (p.uid || '') ? 'selected' : '') + '>' + escapeHtml(p.displayName || p.uid || '玩家') + '｜' + uid + '</option>');
-        });
-        privateSelect.innerHTML = opts.join('');
-      }
+      fillPrivateFriendSelect(res);
 
       var referral = res.referral || {};
       var codeEl = document.getElementById('my-invite-code');
@@ -5266,61 +5540,33 @@ function showCollectionHistory() {
     }
 
     function openPrivateChatUI(friendUid) {
-      currentPrivateChatFriendUid = friendUid || '';
+      currentPrivateChatFriendUid = friendUid || currentPrivateChatFriendUid || '';
+      var modal = document.getElementById('home-chat-modal');
+      if (modal) {
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+      switchHomeChatChannel('PRIVATE');
       var sel = document.getElementById('private-chat-friend');
-      if (sel) sel.value = currentPrivateChatFriendUid;
-      loadPrivateChatFromSelect();
+      if (sel && currentPrivateChatFriendUid) sel.value = currentPrivateChatFriendUid;
+      loadMessageBoard({ markRead: true });
     }
 
     function loadPrivateChatFromSelect() {
       var sel = document.getElementById('private-chat-friend');
       currentPrivateChatFriendUid = sel ? (sel.value || '') : currentPrivateChatFriendUid;
-      var box = document.getElementById('private-chat-list');
-      if (!currentPrivateChatFriendUid) {
-        if (box) box.innerHTML = '<div style="color:#aaa;text-align:center;">請先選擇好友。</div>';
-        return;
-      }
-      if (box) box.innerHTML = '<div style="color:#aaa;text-align:center;">正在讀取私訊...</div>';
-      google.script.run.withSuccessHandler(function(res) { renderPrivateChat(res); })
-        .withFailureHandler(function(err) { if (box) box.innerHTML = '<div style="color:#ff7777;text-align:center;">私訊讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</div>'; })
-        .getChatDashboard(playerUID, { channelType: 'PRIVATE', friendUid: currentPrivateChatFriendUid, limit: 50 });
+      currentChatType = 'PRIVATE';
+      switchHomeChatChannel('PRIVATE');
     }
 
     function renderPrivateChat(res) {
-      var box = document.getElementById('private-chat-list');
-      if (!box) return;
-      var list = (res && res.messages) || [];
-      if (!list.length) {
-        box.innerHTML = '<div style="color:#aaa;text-align:center;">目前沒有私訊，先打聲招呼吧。</div>';
-        return;
-      }
-      box.innerHTML = list.map(function(item){
-        var mine = item.senderUid === playerUID;
-        return `<div class="message-item" style="border-color:${mine ? 'rgba(0,255,240,.25)' : 'rgba(255,255,255,.1)'};">
-          <div class="message-meta"><span class="message-uid" style="color:${mine ? '#00fff0' : '#ffdd77'};">${escapeHtml(item.displayName || item.uid || '')}</span>｜${escapeHtml(item.time || '')}</div>
-          <div class="message-text">${escapeHtml(item.message || '')}</div>
-        </div>`;
-      }).join('');
-      box.scrollTop = box.scrollHeight;
+      updateChatUnreadUI(res || {});
+      renderMessageBoard((res && res.messages) || []);
     }
 
     function sendPrivateChatUI() {
-      var input = document.getElementById('private-chat-input');
-      var msg = document.getElementById('private-chat-msg');
-      var text = input ? input.value.trim() : '';
-      if (!currentPrivateChatFriendUid) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請先選擇好友。</span>'; return; }
-      if (!text) { if (msg) msg.innerHTML = '<span style="color:#ff7777;">請輸入私訊內容。</span>'; return; }
-      google.script.run.withSuccessHandler(function(res) {
-        if (res && res.success) {
-          if (input) input.value = '';
-          if (msg) msg.innerHTML = '<span style="color:#00ff7f;">私訊已送出。</span>';
-          renderPrivateChat(res.dashboard || res);
-        } else if (msg) {
-          msg.innerHTML = '<span style="color:#ff7777;">' + escapeHtml(res && res.msg ? res.msg : '私訊送出失敗') + '</span>';
-        }
-      }).withFailureHandler(function(err) {
-        if (msg) msg.innerHTML = '<span style="color:#ff7777;">私訊送出失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
-      }).sendChatMessage(playerUID, { channelType: 'PRIVATE', friendUid: currentPrivateChatFriendUid, message: text });
+      currentChatType = 'PRIVATE';
+      submitHomeMessage();
     }
 
 
@@ -5578,6 +5824,7 @@ function showCollectionHistory() {
           var e=document.getElementById('display-energy'); if(e) e.innerText = Number(response.energy || 0).toLocaleString();
           var p=document.getElementById('display-points'); if(p) p.innerText = Number(response.availablePoints || 0).toLocaleString();
           var s=document.getElementById('display-skill-exp'); if(s) s.innerText = Number(response.skillExp || 0).toLocaleString();
+          if (response.profile) updateLobbyAvatarFromProfile(response.profile);
           updateButtonState();
         }
       }).withFailureHandler(function() {
@@ -6358,12 +6605,12 @@ function showCollectionHistory() {
     function loadPublicSettings() {
       if (!window.TLO_RAW_RPC) return;
       window.TLO_RAW_RPC('getPublicSettings', [], {auth:false}).then(function(res) {
-        const ann = document.getElementById('ops-announcement');
         const maint = document.getElementById('ops-maintenance');
-        if (ann && (res.announcementTitle || res.announcementBody)) {
-          ann.style.display = 'block';
-          ann.innerHTML = `<b style="color:#00fff0;">📢 ${escapeHtml(res.announcementTitle || 'T-LO 公告')}</b><br>${escapeHtml(res.announcementBody || '').replace(/\n/g, '<br>')}`;
-        }
+        const title = String(res.announcementTitle || 'T-LO 公告').trim();
+        const body = String(res.announcementBody || '').replace(/\s+/g, ' ').trim();
+        lobbyBaseAnnouncementText = (title ? title + '：' : '') + body;
+        renderLobbyAnnouncementMarquee();
+        loadSystemAnnouncements();
         if (maint && res.maintenanceEnabled) {
           maint.style.display = 'block';
           maint.innerHTML = `<b>⚠️ 維護模式已開啟</b><br>${escapeHtml(res.maintenanceMessage || '系統維護中，請稍後再試。')}`;
