@@ -77,7 +77,7 @@
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
   <script src="./js/tlo-image-loader.js?v=20260627-image-loading-v1"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260628-mode-hub-linkbattle-mobile-v1">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260628-mode-hub-linkbattle-mobile-v2">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -2569,29 +2569,35 @@
     }
 
     const PERMANENT_GACHA_PROBABILITY_GROUPS = [
-      { rarity: 'NORMAL', totalProbabilityText: '80.00%', cards: [
-        { name: 'AJ', probabilityText: '8.00%' },
-        { name: '千思語', probabilityText: '8.00%' },
-        { name: '以凡', probabilityText: '8.00%' },
-        { name: '林小蔚', probabilityText: '8.00%' },
-        { name: '阿宗', probabilityText: '8.00%' },
-        { name: '氣鵝', probabilityText: '8.00%' },
-        { name: '喬喬', probabilityText: '8.00%' },
-        { name: '瑄瑄', probabilityText: '8.00%' },
-        { name: '夢璃', probabilityText: '8.00%' },
-        { name: '燒酒', probabilityText: '8.00%' }
+      { rarity: 'NORMAL', totalProbabilityText: '84.50%', cards: [
+        { name: 'AJ', probabilityText: '6.50%' },
+        { name: '千思語', probabilityText: '6.50%' },
+        { name: '以凡', probabilityText: '6.50%' },
+        { name: '林小蔚', probabilityText: '6.50%' },
+        { name: '阿宗', probabilityText: '6.50%' },
+        { name: '氣鵝', probabilityText: '6.50%' },
+        { name: '喬喬', probabilityText: '6.50%' },
+        { name: '瑄瑄', probabilityText: '6.50%' },
+        { name: '夢璃', probabilityText: '6.50%' },
+	{ name: '毛帽', probabilityText: '6.50%' },
+	{ name: '小恭', probabilityText: '6.50%' },
+	{ name: '阿月', probabilityText: '6.50%' },
+        { name: '燒酒', probabilityText: '6.50%' }
       ]},
-      { rarity: 'RARE', totalProbabilityText: '8.50%', cards: [
-        { name: '小光', probabilityText: '3.50%' },
-        { name: '萌欣', probabilityText: '5.00%' }
+      { rarity: 'RARE', totalProbabilityText: '8.00%', cards: [
+        { name: '小光', probabilityText: '3.00%' },
+	{ name: '果果', probabilityText: '2.50%' },
+        { name: '萌欣', probabilityText: '2.50%' }
       ]},
-      { rarity: 'SUPER RARE', totalProbabilityText: '10.50%', cards: [
-        { name: '凌凌', probabilityText: '3.00%' },
-        { name: '小艾', probabilityText: '3.00%' },
-        { name: '小舞', probabilityText: '4.50%' }
+      { rarity: 'SUPER RARE', totalProbabilityText: '6.00%', cards: [
+        { name: '凌凌', probabilityText: '1.50%' },
+        { name: '小艾', probabilityText: '1.50%' },
+	{ name: '貝貝', probabilityText: '1.00%' },
+        { name: '小舞', probabilityText: '2.00%' }
       ]},
-      { rarity: 'SSR', totalProbabilityText: '1.00%', cards: [
-        { name: '書宏', probabilityText: '1.00%' }
+      { rarity: 'SSR', totalProbabilityText: '1.50%', cards: [
+        { name: '書宏', probabilityText: '1.00%' },
+	{ name: 'SSR鹿比', probabilityText: '0.50%' }
       ]}
     ];
 
@@ -2602,7 +2608,7 @@
     }
 
     function renderPermanentGachaProbability(status, body) {
-      if (status) status.innerText = '「常駐卡池」固定公告機率：可抽卡片 16 張，總機率 100.00%。';
+      if (status) status.innerText = '「常駐卡池」可抽卡片 22 張，總權重 1000。';
       let html = '';
       PERMANENT_GACHA_PROBABILITY_GROUPS.forEach(function(group) {
         const cards = group.cards || [];
@@ -7103,6 +7109,6 @@ function showCollectionHistory() {
     }
   </script>
 
-  <script src="./js/link-battle.js?v=20260628-mode-hub-linkbattle-mobile-v1"></script>
+  <script src="./js/link-battle.js?v=20260628-mode-hub-linkbattle-mobile-v2"></script>
 </body>
 </html>

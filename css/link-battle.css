@@ -1919,33 +1919,33 @@
   .link-battle-team-slot{padding:6px 4px;}
 }
 
-/* ===== Mode hub / mobile link battle optimization v1 ===== */
+/* ===== Mode hub / mobile link battle optimization v2: boss figure -20% ===== */
 .link-battle-boss-lore{display:none!important;}
 .link-battle-boss-meta{margin-top:auto!important;}
 .link-battle-boss-ui{gap:4px!important;}
 .link-battle-boss-center{display:none!important;}
-.link-battle-boss-figure{width:96%!important;height:90%!important;bottom:-26px!important;}
-.link-battle-boss-main-image{transform:scale(1.55)!important;}
-.link-battle-boss-figure.tier-mini{width:108%!important;height:100%!important;bottom:-34px!important;}
-.link-battle-boss-figure.tier-mini .link-battle-boss-main-image{transform:scale(1.72)!important;}
-.link-battle-boss-figure.tier-final{width:126%!important;height:112%!important;bottom:-42px!important;}
-.link-battle-boss-figure.tier-final .link-battle-boss-main-image{transform:scale(1.92)!important;}
+.link-battle-boss-figure{width:78%!important;height:72%!important;bottom:-14px!important;}
+.link-battle-boss-main-image{transform:scale(1.24)!important;}
+.link-battle-boss-figure.tier-mini{width:86%!important;height:80%!important;bottom:-20px!important;}
+.link-battle-boss-figure.tier-mini .link-battle-boss-main-image{transform:scale(1.38)!important;}
+.link-battle-boss-figure.tier-final{width:101%!important;height:90%!important;bottom:-26px!important;}
+.link-battle-boss-figure.tier-final .link-battle-boss-main-image{transform:scale(1.54)!important;}
 @media(max-width:560px){
   .link-battle-top{flex-basis:clamp(192px,26svh,252px)!important;height:clamp(192px,26svh,252px)!important;min-height:192px!important;}
   .link-battle-boss-ui{min-height:0!important;padding:8px 9px!important;gap:3px!important;}
   .link-battle-hp-row{gap:7px!important;}
   .link-battle-rage{height:7px!important;}
   .link-battle-boss-meta{margin-top:auto!important;}
-  .link-battle-boss-figure{width:108%!important;height:98%!important;bottom:-34px!important;}
-  .link-battle-boss-main-image{transform:scale(1.72)!important;}
-  .link-battle-boss-figure.tier-mini{width:122%!important;height:108%!important;bottom:-44px!important;}
-  .link-battle-boss-figure.tier-mini .link-battle-boss-main-image{transform:scale(1.9)!important;}
-  .link-battle-boss-figure.tier-final{width:140%!important;height:124%!important;bottom:-54px!important;}
-  .link-battle-boss-figure.tier-final .link-battle-boss-main-image{transform:scale(2.12)!important;}
+  .link-battle-boss-figure{width:86%!important;height:78%!important;bottom:-20px!important;}
+  .link-battle-boss-main-image{transform:scale(1.38)!important;}
+  .link-battle-boss-figure.tier-mini{width:98%!important;height:86%!important;bottom:-28px!important;}
+  .link-battle-boss-figure.tier-mini .link-battle-boss-main-image{transform:scale(1.52)!important;}
+  .link-battle-boss-figure.tier-final{width:112%!important;height:99%!important;bottom:-34px!important;}
+  .link-battle-boss-figure.tier-final .link-battle-boss-main-image{transform:scale(1.7)!important;}
 }
 @media(max-height:760px) and (max-width:560px){
   .link-battle-top{flex-basis:clamp(178px,25svh,232px)!important;height:clamp(178px,25svh,232px)!important;min-height:178px!important;}
-  .link-battle-boss-figure{width:112%!important;height:104%!important;bottom:-38px!important;}
-  .link-battle-boss-figure.tier-mini{width:126%!important;height:112%!important;bottom:-48px!important;}
-  .link-battle-boss-figure.tier-final{width:144%!important;height:128%!important;bottom:-58px!important;}
+  .link-battle-boss-figure{width:90%!important;height:83%!important;bottom:-23px!important;}
+  .link-battle-boss-figure.tier-mini{width:101%!important;height:90%!important;bottom:-30px!important;}
+  .link-battle-boss-figure.tier-final{width:115%!important;height:102%!important;bottom:-36px!important;}
 }
