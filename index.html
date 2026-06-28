@@ -1574,8 +1574,8 @@
     }
   </style>
 
-  <style id="tlo-battle-mode-bg-v12">
-    /* TLO battle mode backgrounds v12: 七個戰鬥彈窗開啟時，整頁背景 + 彈窗背景同步切換。 */
+  <style id="tlo-battle-mode-bg-v13">
+    /* TLO battle mode backgrounds v13-stable: 七個戰鬥彈窗開啟時，整頁背景切換；手機降低重複背景與模糊濾鏡以避免 Safari 記憶體重載。 */
     .container.game-shell.tlo-battle-mode-link-raid{
       background:
         linear-gradient(180deg,rgba(4,6,20,.12),rgba(8,4,28,.32) 44%,rgba(4,6,20,.82) 100%),
@@ -1665,6 +1665,35 @@
       .container.game-shell[class*="tlo-battle-mode-"]{background-position:center top!important;}
       .modal-overlay.tlo-battle-mode-overlay .modal-content,
       #daily-dungeon-modal.tlo-battle-mode-overlay .daily-dungeon-shell{background-position:center top!important;}
+    }
+    /* 手機穩定優先：彈窗本體不再重複解碼同一張大背景圖，只保留整頁背景 + 深色玻璃面板。 */
+    @media(max-width:768px){
+      .modal-overlay.tlo-battle-mode-overlay,
+      .daily-dungeon-modal.tlo-battle-mode-overlay{
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important;
+      }
+      #battle-modal.tlo-battle-modal-domination .modal-content,
+      #link-battle-modal.tlo-battle-modal-link-raid .modal-content,
+      #pvp-modal.tlo-battle-modal-arena .modal-content,
+      #rpg-modal.tlo-battle-modal-expedition .modal-content,
+      #demon-challenge-modal.tlo-battle-modal-demon-king .modal-content,
+      #world-boss-modal.tlo-battle-modal-world-boss .modal-content,
+      #daily-dungeon-modal.tlo-battle-modal-fate-choice .daily-dungeon-shell{
+        background-image:linear-gradient(180deg,rgba(5,7,22,.92),rgba(3,4,13,.97))!important;
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important;
+      }
+      .modal-overlay.tlo-battle-mode-overlay .modal-content .collection-stat,
+      .modal-overlay.tlo-battle-mode-overlay .modal-content .pvp-stat,
+      .modal-overlay.tlo-battle-mode-overlay .modal-content .boss-card,
+      .modal-overlay.tlo-battle-mode-overlay .modal-content .battle-arena,
+      .daily-dungeon-modal.tlo-battle-mode-overlay .daily-dungeon-stat,
+      .daily-dungeon-modal.tlo-battle-mode-overlay .daily-dungeon-option,
+      .daily-dungeon-modal.tlo-battle-mode-overlay .daily-dungeon-result{
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important;
+      }
     }
   </style>
 
@@ -7972,7 +8001,7 @@ function showCollectionHistory() {
 
   <script src="./js/link-battle.js?v=20260628-mode-hub-linkbattle-mobile-v2"></script>
 
-  <script id="tlo-battle-mode-bg-v12-js">
+  <script id="tlo-battle-mode-bg-v13-js">
     (function(){
       var modeMap = {
         linkRaid: { id:'link-battle-modal', shell:'tlo-battle-mode-link-raid', modal:'tlo-battle-modal-link-raid' },
@@ -7984,26 +8013,43 @@ function showCollectionHistory() {
         worldBoss: { id:'world-boss-modal', shell:'tlo-battle-mode-world-boss', modal:'tlo-battle-modal-world-boss' }
       };
       var shellClasses = Object.keys(modeMap).map(function(k){ return modeMap[k].shell; });
-      var modalClasses = Object.keys(modeMap).map(function(k){ return modeMap[k].modal; }).concat(['tlo-battle-mode-overlay']);
+      var modalModeClasses = Object.keys(modeMap).map(function(k){ return modeMap[k].modal; });
+      var currentMode = null;
+      var syncTimer = null;
+      var patchTimer = null;
+
       function getShell(){ return document.getElementById('game-shell') || document.querySelector('.container.game-shell'); }
-      function removeModeClasses(){
+      function getCfg(mode){ return modeMap[mode] || null; }
+      function isShown(el){
+        if (!el) return false;
+        var st = window.getComputedStyle ? window.getComputedStyle(el) : null;
+        if (el.hidden) return false;
+        if (st && (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0)) return false;
+        if (el.style && el.style.display === 'none') return false;
+        return true;
+      }
+      function stripModeClasses(){
         var shell = getShell();
         if (shell) shellClasses.forEach(function(c){ shell.classList.remove(c); });
         Object.keys(modeMap).forEach(function(k){
           var el = document.getElementById(modeMap[k].id);
-          if (el) modalClasses.forEach(function(c){ el.classList.remove(c); });
+          if (!el) return;
+          modalModeClasses.forEach(function(c){ el.classList.remove(c); });
+          el.classList.remove('tlo-battle-mode-overlay');
         });
         document.body.classList.remove('tlo-battle-mode-active');
       }
-      function isShown(el){
-        if (!el) return false;
-        var st = window.getComputedStyle ? window.getComputedStyle(el) : null;
-        return (el.style.display && el.style.display !== 'none') || (st && st.display !== 'none' && st.visibility !== 'hidden');
+      function modeAlreadyApplied(mode){
+        var cfg = getCfg(mode);
+        var shell = getShell();
+        var modal = cfg ? document.getElementById(cfg.id) : null;
+        return currentMode === mode && shell && shell.classList.contains(cfg.shell) && (!modal || modal.classList.contains(cfg.modal));
       }
       window.setTloBattleModeScene = function(mode){
-        removeModeClasses();
-        var cfg = modeMap[mode];
+        var cfg = getCfg(mode);
         if (!cfg) return;
+        if (modeAlreadyApplied(mode)) return;
+        stripModeClasses();
         var shell = getShell();
         if (shell) {
           shell.classList.add(cfg.shell);
@@ -8015,30 +8061,44 @@ function showCollectionHistory() {
           modal.classList.add(cfg.modal);
         }
         document.body.classList.add('tlo-battle-mode-active');
+        currentMode = mode;
       };
       window.clearTloBattleModeScene = function(){
+        if (!currentMode && !document.body.classList.contains('tlo-battle-mode-active')) return;
+        stripModeClasses();
         var shell = getShell();
-        removeModeClasses();
         if (shell) shell.removeAttribute('data-battle-mode');
+        currentMode = null;
       };
-      function syncBattleModeScene(){
-        var activeMode = null;
+      function detectActiveMode(){
+        var found = null;
         Object.keys(modeMap).some(function(mode){
           var el = document.getElementById(modeMap[mode].id);
-          if (isShown(el)) { activeMode = mode; return true; }
+          if (isShown(el)) { found = mode; return true; }
           return false;
         });
+        return found;
+      }
+      function syncBattleModeScene(){
+        syncTimer = null;
+        var activeMode = detectActiveMode();
         if (activeMode) window.setTloBattleModeScene(activeMode);
         else window.clearTloBattleModeScene();
       }
+      function scheduleSync(delay){
+        if (syncTimer) return;
+        syncTimer = setTimeout(syncBattleModeScene, delay || 80);
+      }
       function patchOpen(name, mode){
         var fn = window[name];
-        if (typeof fn !== 'function' || fn.__tloBattleBgPatched) return;
+        if (typeof fn !== 'function' || fn.__tloBattleBgPatchedV13) return;
         var wrapped = function(){
           window.setTloBattleModeScene(mode);
-          return fn.apply(this, arguments);
+          var result = fn.apply(this, arguments);
+          scheduleSync(120);
+          return result;
         };
-        wrapped.__tloBattleBgPatched = true;
+        wrapped.__tloBattleBgPatchedV13 = true;
         wrapped.__tloOriginal = fn;
         window[name] = wrapped;
       }
@@ -8051,18 +8111,28 @@ function showCollectionHistory() {
         patchOpen('openDemonChallengeModal', 'demonKing');
         patchOpen('openWorldBossModal', 'worldBoss');
       }
-      function init(){
-        patchAll();
+      function initObservers(){
         Object.keys(modeMap).forEach(function(mode){
           var el = document.getElementById(modeMap[mode].id);
-          if (!el) return;
+          if (!el || el.__tloBattleModeObservedV13) return;
+          el.__tloBattleModeObservedV13 = true;
           try {
-            new MutationObserver(function(){ setTimeout(syncBattleModeScene, 20); }).observe(el, { attributes:true, attributeFilter:['style','class'] });
+            new MutationObserver(function(){ scheduleSync(100); }).observe(el, { attributes:true, attributeFilter:['style','class','hidden'] });
           } catch(_){ }
         });
-        document.addEventListener('click', function(){ setTimeout(syncBattleModeScene, 30); }, true);
-        setTimeout(patchAll, 300);
-        setTimeout(syncBattleModeScene, 350);
+      }
+      function init(){
+        patchAll();
+        initObservers();
+        document.addEventListener('click', function(){ scheduleSync(120); }, true);
+        if (!patchTimer) {
+          patchTimer = setInterval(function(){
+            patchAll();
+            initObservers();
+          }, 2000);
+          setTimeout(function(){ clearInterval(patchTimer); patchTimer = null; }, 12000);
+        }
+        scheduleSync(200);
       }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
       else init();
