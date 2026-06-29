@@ -77,7 +77,7 @@
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
   <script src="./js/tlo-image-loader.js?v=20260627-image-loading-v1"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260629-v17-gacha-front">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260629-v18-gacha-front-safe">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -1269,7 +1269,7 @@
     .battle-pass-list{display:flex;flex-direction:column;gap:8px;max-height:58vh;overflow:auto;padding-right:4px}.battle-pass-row{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;align-items:stretch;background:#12121e;border:1px solid #333;border-radius:14px;padding:8px}.battle-pass-row.claimable{border-color:#ffdd77;box-shadow:0 0 12px rgba(255,221,119,.13)}.battle-pass-level{color:#ffdd77;font-weight:1000;text-align:center;display:flex;align-items:center;justify-content:center;flex-direction:column}.battle-pass-reward{background:#0b0b12;border:1px solid #28283b;border-radius:10px;padding:8px;font-size:12px;color:#ddd;line-height:1.5}.battle-pass-reward b{display:block;color:#00fff0;margin-bottom:4px}.battle-pass-reward.locked{opacity:.58}.battle-pass-reward button,.premium-action-btn{width:100%;border:0;border-radius:10px;padding:9px;margin-top:6px;background:linear-gradient(45deg,#ffdd77,#00fff0);color:#111;font-weight:1000;cursor:pointer}.battle-pass-reward button:disabled,.premium-action-btn:disabled{background:#444;color:#999;cursor:not-allowed}
     .paid-notice-card{max-width:360px;text-align:center}.paid-notice-card .premium-action-btn{margin-top:12px}
     .max-star-effect{position:relative;overflow:hidden!important;box-shadow:0 0 18px rgba(255,221,119,.34),0 0 7px rgba(0,255,240,.25)!important;border-color:rgba(255,221,119,.75)!important}.max-star-effect:after{content:"";position:absolute;inset:-35%;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.65) 47%,transparent 60%);transform:translateX(-75%) rotate(8deg);animation:tloMaxStarSweep 2.6s infinite;pointer-events:none}.max-star-effect:before{content:"★ MAX";position:absolute;right:5px;top:5px;z-index:3;background:rgba(255,221,119,.92);color:#111;border-radius:999px;padding:2px 6px;font-size:10px;font-weight:1000;box-shadow:0 0 8px rgba(255,221,119,.5)}@keyframes tloMaxStarSweep{0%,55%{transform:translateX(-85%) rotate(8deg)}100%{transform:translateX(85%) rotate(8deg)}}
-    .gacha-reveal-wrap{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}.gacha-reveal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}.gacha-reveal-card{width:min(220px,70vw);perspective:1200px;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:7px}.gacha-reveal-grid .gacha-reveal-card{width:100%}.gacha-reveal-inner{position:relative;width:100%;aspect-ratio:var(--tlo-card-aspect,2/3);transition:transform .72s cubic-bezier(.2,.75,.2,1);transform-style:preserve-3d;-webkit-transform-style:preserve-3d}.gacha-reveal-card.revealed .gacha-reveal-inner{transform:rotateY(180deg)}.gacha-reveal-face{position:absolute;inset:0;border-radius:14px;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;overflow:hidden;border:0;background:transparent;box-shadow:none}.gacha-reveal-back{transform:rotateY(0deg);z-index:2;background:url('./assets/ui/card-back-tlo.svg') center/contain no-repeat;opacity:1;visibility:visible;transition:opacity .12s ease .34s,visibility .12s ease .34s}.gacha-reveal-front{transform:rotateY(180deg);z-index:1;padding:0;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .12s ease .34s,visibility .12s ease .34s}.gacha-reveal-card.revealed .gacha-reveal-back{opacity:0;visibility:hidden;pointer-events:none}.gacha-reveal-card.revealed .gacha-reveal-front{opacity:1;visibility:visible;z-index:3}.gacha-reveal-card.reveal-complete .gacha-reveal-back{display:none!important}.gacha-reveal-card.reveal-complete .gacha-reveal-front{display:flex!important;opacity:1!important;visibility:visible!important}.gacha-reveal-front .card-wrapper{width:100%;height:100%;margin:0!important;padding:0!important;background:transparent!important;border-radius:14px!important;box-shadow:none!important;display:block!important}.gacha-reveal-front img{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain;border-radius:14px}.gacha-reveal-caption{opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease,visibility .22s ease;text-align:center;min-height:48px}.gacha-reveal-card.revealed .gacha-reveal-caption{opacity:1;visibility:visible;transform:translateY(0)}.gacha-reveal-name{font-size:13px;color:#00fff0;font-weight:1000;text-align:center;margin-top:2px}.gacha-reveal-rarity{display:none!important}.gacha-reveal-card.shaking .gacha-reveal-inner{animation:gachaShake .42s}.gacha-reveal-card.glow-N .gacha-reveal-inner{filter:drop-shadow(0 0 18px rgba(255,255,255,.82))}.gacha-reveal-card.glow-R .gacha-reveal-inner{filter:drop-shadow(0 0 20px rgba(0,157,255,.92))}.gacha-reveal-card.glow-SR .gacha-reveal-inner{filter:drop-shadow(0 0 22px rgba(220,230,255,.98))}.gacha-reveal-card.glow-SSR .gacha-reveal-inner{filter:drop-shadow(0 0 24px rgba(255,205,55,.98))}.gacha-reveal-card.glow-UR .gacha-reveal-inner{filter:drop-shadow(0 0 24px rgba(255,0,255,.82)) drop-shadow(0 0 18px rgba(0,255,240,.82))}@keyframes gachaShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px) rotate(-1deg)}40%{transform:translateX(5px) rotate(1deg)}60%{transform:translateX(-4px) rotate(-1deg)}80%{transform:translateX(4px) rotate(1deg)}}
+    .gacha-reveal-wrap{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}.gacha-reveal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}.gacha-reveal-card{width:min(220px,70vw);perspective:1200px;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:7px}.gacha-reveal-grid .gacha-reveal-card{width:100%}.gacha-reveal-inner{position:relative;width:100%;aspect-ratio:var(--tlo-card-aspect,2/3);transition:transform .72s cubic-bezier(.2,.75,.2,1);transform-style:preserve-3d;-webkit-transform-style:preserve-3d}.gacha-reveal-card.revealed .gacha-reveal-inner{transform:rotateY(180deg)}.gacha-reveal-face{position:absolute;inset:0;border-radius:14px;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;overflow:hidden;border:0;background:transparent;box-shadow:none}.gacha-reveal-back{transform:rotateY(0deg);z-index:2;background:url('./assets/ui/card-back-tlo.svg') center/contain no-repeat;opacity:1;visibility:visible;transition:opacity .12s ease .34s,visibility .12s ease .34s}.gacha-reveal-front{transform:rotateY(180deg);z-index:1;padding:0;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .12s ease .34s,visibility .12s ease .34s}.gacha-reveal-card.revealed .gacha-reveal-back{opacity:0;visibility:hidden;pointer-events:none}.gacha-reveal-card.revealed .gacha-reveal-front{opacity:1;visibility:visible;z-index:3}.gacha-reveal-card.reveal-complete .gacha-reveal-back{display:none!important}.gacha-reveal-card.reveal-complete .gacha-reveal-front{display:flex!important;opacity:1!important;visibility:visible!important}.gacha-reveal-card.reveal-complete .gacha-reveal-inner{transform:none!important;-webkit-transform:none!important;transition:none!important;filter:none!important;transform-style:flat!important;-webkit-transform-style:flat!important}.gacha-reveal-card.reveal-complete .gacha-reveal-face{-webkit-backface-visibility:visible!important;backface-visibility:visible!important}.gacha-reveal-card.reveal-complete .gacha-reveal-front{transform:none!important;-webkit-transform:none!important;z-index:5!important;pointer-events:auto!important}.gacha-reveal-front .card-wrapper{width:100%;height:100%;margin:0!important;padding:0!important;background:transparent!important;border-radius:14px!important;box-shadow:none!important;display:block!important}.gacha-reveal-front img{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain;border-radius:14px}.gacha-reveal-caption{opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease,visibility .22s ease;text-align:center;min-height:48px}.gacha-reveal-card.revealed .gacha-reveal-caption{opacity:1;visibility:visible;transform:translateY(0)}.gacha-reveal-name{font-size:13px;color:#00fff0;font-weight:1000;text-align:center;margin-top:2px}.gacha-reveal-rarity{display:none!important}.gacha-reveal-card.shaking .gacha-reveal-inner{animation:gachaShake .42s}.gacha-reveal-card.glow-N .gacha-reveal-inner{filter:drop-shadow(0 0 18px rgba(255,255,255,.82))}.gacha-reveal-card.glow-R .gacha-reveal-inner{filter:drop-shadow(0 0 20px rgba(0,157,255,.92))}.gacha-reveal-card.glow-SR .gacha-reveal-inner{filter:drop-shadow(0 0 22px rgba(220,230,255,.98))}.gacha-reveal-card.glow-SSR .gacha-reveal-inner{filter:drop-shadow(0 0 24px rgba(255,205,55,.98))}.gacha-reveal-card.glow-UR .gacha-reveal-inner{filter:drop-shadow(0 0 24px rgba(255,0,255,.82)) drop-shadow(0 0 18px rgba(0,255,240,.82))}@keyframes gachaShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px) rotate(-1deg)}40%{transform:translateX(5px) rotate(1deg)}60%{transform:translateX(-4px) rotate(-1deg)}80%{transform:translateX(4px) rotate(1deg)}}
     @media(max-width:560px){.premium-home-actions{grid-template-columns:1fr}.battle-pass-row{grid-template-columns:52px 1fr}.battle-pass-reward.premium{grid-column:2}.gacha-reveal-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.gacha-reveal-card{width:min(210px,72vw)}.gacha-reveal-grid .gacha-reveal-card{width:100%}}
 
   </style>
@@ -4480,7 +4480,7 @@
       var data = getGachaRevealViewData(item, Number(String(elementId || '').replace(/\D/g, '')) || 0, small);
       data.elementId = elementId || data.elementId;
       if (!data.imgUrl) return '<div style="color:#aaa;font-size:13px;">無圖</div>';
-      return '<div class="card-wrapper" id="' + escapeHtml(data.elementId) + '"><div class="' + data.badgeClass + '">' + data.serial + '</div><img src="' + escapeHtml(data.imgUrl) + '" class="' + data.imgClass + '" crossorigin="anonymous" loading="lazy" decoding="async"></div>';
+      return '<div class="card-wrapper" id="' + escapeHtml(data.elementId) + '"><div class="' + data.badgeClass + '">' + data.serial + '</div><img src="' + escapeHtml(data.imgUrl) + '" class="' + data.imgClass + '" crossorigin="anonymous" loading="eager" decoding="async"></div>';
     }
 
     function renderGachaRevealCard(item, index, small) {
@@ -4516,6 +4516,26 @@
         if (front) {
           front.style.opacity = '1';
           front.style.visibility = 'visible';
+          front.style.display = 'flex';
+          front.style.transform = 'none';
+          front.style.webkitTransform = 'none';
+          front.style.backfaceVisibility = 'visible';
+          front.style.webkitBackfaceVisibility = 'visible';
+          var inner = cardEl.querySelector ? cardEl.querySelector('.gacha-reveal-inner') : null;
+          if (inner) {
+            inner.style.transform = 'none';
+            inner.style.webkitTransform = 'none';
+            inner.style.transition = 'none';
+          }
+          var frontImg = front.querySelector ? front.querySelector('img') : null;
+          if (frontImg) {
+            frontImg.style.display = 'block';
+            frontImg.style.opacity = '1';
+            frontImg.style.visibility = 'visible';
+            if (frontImg.dataset && frontImg.dataset.src && !frontImg.getAttribute('src')) {
+              frontImg.setAttribute('src', frontImg.dataset.src);
+            }
+          }
         }
       }, 1180);
       if (window.TLOAudio) window.TLOAudio.playCardRarity(glow === 'SR' ? 'SUPER RARE' : glow);
@@ -8342,7 +8362,7 @@ function showCollectionHistory() {
     }
   </script>
 
-  <script src="./js/link-battle.js?v=20260629-v17-gacha-front"></script>
+  <script src="./js/link-battle.js?v=20260629-v18-gacha-front-safe"></script>
 
   <script id="tlo-battle-mode-bg-v13-js">
     (function(){
