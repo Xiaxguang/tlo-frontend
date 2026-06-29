@@ -2914,6 +2914,7 @@
     let latestChatDashboard = null;
     let lastPrivateUnreadCount = 0;
     let lobbyChatPollTimer = null;
+    let lobbyChatPollBusy = false;
     let lastPublicChatSignature = '';
     let publicChatNotifyReady = false;
     let hasPublicChatNew = false;
@@ -3131,8 +3132,12 @@
     function setCollectionSummary(uniqueCount, totalCount) {
       const countEl = document.getElementById('collection-summary-count');
       const totalEl = document.getElementById('collection-summary-total');
+      const profileEl = document.getElementById('profile-collection');
       if (countEl) countEl.innerText = Number(uniqueCount || 0);
       if (totalEl && typeof totalCount !== 'undefined' && totalCount !== null) totalEl.innerText = Number(totalCount || 0);
+      if (profileEl && typeof totalCount !== 'undefined' && totalCount !== null) {
+        profileEl.innerText = Number(uniqueCount || 0).toLocaleString() + ' / ' + Number(totalCount || 0).toLocaleString();
+      }
     }
 
     function updateCardCacheFromResponse(response) {
@@ -4611,7 +4616,6 @@
           }
           if (response.globalAnnouncements && response.globalAnnouncements.length) {
             enqueueGlobalRareAnnouncements(response.globalAnnouncements, { force: true });
-            setTimeout(loadSystemAnnouncements, 800);
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
@@ -4646,7 +4650,6 @@
           }
           if (response.globalAnnouncements && response.globalAnnouncements.length) {
             enqueueGlobalRareAnnouncements(response.globalAnnouncements, { force: true });
-            setTimeout(loadSystemAnnouncements, 800);
           }
         } else {
           if (response && typeof response.timesLeft !== "undefined") currentCount = response.timesLeft;
@@ -5433,6 +5436,7 @@ function showCollectionHistory() {
 
     function loadSystemAnnouncements() {
       if (!playerUID || typeof google === 'undefined' || !google.script || !google.script.run) return;
+      if (document.hidden) return;
       google.script.run.withSuccessHandler(function(res) {
         var list = Array.isArray(res) ? res : (res && res.messages ? res.messages : []);
         var rareMessages = (list || []).map(normalizeGlobalAnnouncementMessage).filter(isRareGlobalAnnouncement);
@@ -5730,15 +5734,25 @@ function showCollectionHistory() {
       if (currentChatType !== 'PRIVATE') renderLobbyChatPreview(list);
     }
 
+    function pollLobbyChatOnce() {
+      if (!window.TLO_IS_AUTHENTICATED || lobbyChatPollBusy || document.hidden) return;
+      lobbyChatPollBusy = true;
+      google.script.run.withSuccessHandler(function(res){
+        lobbyChatPollBusy = false;
+        if (res && Array.isArray(res.messages)) trackPublicChatMessages(res.messages, { silent: false });
+        updateChatUnreadUI(res || {});
+        if (res && Array.isArray(res.messages)) renderLobbyChatPreview(res.messages);
+      }).withFailureHandler(function(){
+        lobbyChatPollBusy = false;
+      }).getChatDashboard(playerUID, { channelType: 'WORLD', limit: 5, markRead: false });
+    }
+
     function startLobbyChatPolling() {
       if (lobbyChatPollTimer || !window.TLO_IS_AUTHENTICATED) return;
-      lobbyChatPollTimer = setInterval(function(){
-        google.script.run.withSuccessHandler(function(res){
-          if (res && Array.isArray(res.messages)) trackPublicChatMessages(res.messages, { silent: false });
-          updateChatUnreadUI(res || {});
-          if (res && Array.isArray(res.messages)) renderLobbyChatPreview(res.messages);
-        }).withFailureHandler(function(){}).getChatDashboard(playerUID, { channelType: 'WORLD', limit: 5, markRead: false });
-      }, 15000);
+      lobbyChatPollTimer = setInterval(pollLobbyChatOnce, 20000);
+      document.addEventListener('visibilitychange', function(){
+        if (!document.hidden) pollLobbyChatOnce();
+      });
     }
 
 
