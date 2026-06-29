@@ -77,7 +77,7 @@
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
   <script src="./js/tlo-image-loader.js?v=20260627-image-loading-v1"></script>
-  <link rel="stylesheet" href="./css/link-battle.css?v=20260629-v22-heal-ui">
+  <link rel="stylesheet" href="./css/link-battle.css?v=20260629-v25-battle-reset-linkfix">
   
   <style>
     :root { --tlo-card-aspect: 2 / 3; }
@@ -2410,6 +2410,13 @@
           <div class="battle-chapter-title">🗺️ 章節關卡選擇</div>
           <div class="battle-chapter-note" id="battle-chapter-note">讀取章節進度中...</div>
         </div>
+        <div id="battle-reset-ticket-box" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 10px;padding:9px 10px;border:1px solid rgba(255,221,119,.35);border-radius:12px;background:rgba(255,180,0,.08);">
+          <div style="font-size:12px;color:#ffdd77;line-height:1.45;">
+            <b>🎫 爭霸戰重置卷</b><br>
+            <span id="battle-reset-ticket-count" style="color:#ddd;">持有數讀取中...</span>
+          </div>
+          <button type="button" class="btn-collection" id="battle-reset-ticket-btn" onclick="useBattleResetTicketUI('battle')" style="width:auto;min-width:82px;margin:0;padding:8px 10px;background:linear-gradient(135deg,#ff8a00,#ffdd77);color:#111;font-weight:900;">RESET</button>
+        </div>
         <div class="battle-chapter-tabs" id="battle-chapter-tabs"></div>
         <div class="battle-stage-grid" id="battle-stage-grid"></div>
       </div>
@@ -3648,6 +3655,21 @@
       openBattleModal(selectedBattleStageId);
     }
 
+    function updateBattleResetTicketBox(response) {
+      var box = document.getElementById('battle-reset-ticket-box');
+      var countEl = document.getElementById('battle-reset-ticket-count');
+      var btn = document.getElementById('battle-reset-ticket-btn');
+      if (!box) return;
+      var count = Number((response && (response.battleResetTicketCount ?? response.resetTicketCount)) || 0);
+      if (countEl) countEl.innerText = '持有：' + count.toLocaleString() + ' 張｜使用後進度回第 1 關並清空首通獎勵紀錄';
+      if (btn) {
+        btn.disabled = count <= 0 || !!window.TLO_IS_GUEST;
+        btn.style.filter = count > 0 && !window.TLO_IS_GUEST ? '' : 'grayscale(1)';
+        btn.style.opacity = count > 0 && !window.TLO_IS_GUEST ? '1' : '.58';
+        btn.title = count > 0 ? '使用爭霸戰重置卷' : '沒有爭霸戰重置卷；請至儲值商城聯絡管理員開通';
+      }
+    }
+
     function applyBattleDashboard(response) {
       const btn = document.getElementById('fight-btn');
       const resultMsg = document.getElementById('battle-result-msg');
@@ -3659,6 +3681,7 @@
 
       registerCardImages(response);
       latestBattleDashboard = response;
+      updateBattleResetTicketBox(response);
       renderBattleChapterSelector(response);
       const selectEl = document.getElementById('player-battle-avatar-select');
       const repStatus = document.getElementById('battle-rep-status');
@@ -6039,7 +6062,8 @@ function showCollectionHistory() {
       }
     }
 
-    function useBattleResetTicketUI() {
+    function useBattleResetTicketUI(source) {
+      source = source || 'profile';
       var msg = '確定要使用「爭霸戰重置卷」嗎？\n\n' +
         '使用後將會：\n' +
         '・爭霸戰進度回到第 1 關\n' +
@@ -6049,19 +6073,29 @@ function showCollectionHistory() {
         '本操作會消耗 1 張爭霸戰重置卷，且無法復原。';
       if (!confirm(msg)) return;
       var profileMsg = document.getElementById('profile-msg');
-      if (profileMsg) profileMsg.innerHTML = '<span style="color:#aaa;">正在使用爭霸戰重置卷...</span>';
+      var battleMsg = document.getElementById('battle-result-msg');
+      var targetMsg = source === 'battle' ? battleMsg : profileMsg;
+      if (targetMsg) targetMsg.innerHTML = '<span style="color:#aaa;">正在使用爭霸戰重置卷...</span>';
       google.script.run.withSuccessHandler(function(res) {
         alert(res && res.msg ? res.msg : (res && res.success ? '爭霸戰已重置' : '重置失敗'));
         if (res && res.personalDashboard) renderPersonalDashboard(res.personalDashboard);
-        else loadPersonalDashboard();
-        if (typeof loadBattleDashboard === 'function') setTimeout(function(){ loadBattleDashboard(); }, 250);
+        else if (typeof loadPersonalDashboard === 'function') loadPersonalDashboard();
+        if (res && res.dashboard && typeof applyBattleDashboard === 'function') {
+          applyBattleDashboard(res.dashboard);
+          if (typeof showBattleBossInfoPanel === 'function') showBattleBossInfoPanel();
+        } else if (typeof loadBattleDashboard === 'function') {
+          setTimeout(function(){ loadBattleDashboard(); }, 250);
+        } else if (document.getElementById('battle-modal') && document.getElementById('battle-modal').style.display === 'flex') {
+          setTimeout(function(){ openBattleModal(1); }, 250);
+        }
         if (typeof loadHomeState === 'function') setTimeout(loadHomeState, 350);
-        if (profileMsg) profileMsg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '重置完成') + '</span>';
+        if (targetMsg) targetMsg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '重置完成') + '</span>';
       }).withFailureHandler(function(err) {
-        if (profileMsg) profileMsg.innerHTML = '<span style="color:#ff7777;">重置失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+        if (targetMsg) targetMsg.innerHTML = '<span style="color:#ff7777;">重置失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
         alert('重置失敗：' + (err && err.message ? err.message : err));
       }).useBattleResetTicket(playerUID);
     }
+
 
     function renderProfileAvatarSelector(res) {
       res = res || {};
@@ -8392,7 +8426,7 @@ function showCollectionHistory() {
     }
   </script>
 
-  <script src="./js/link-battle.js?v=20260629-v22-heal-ui"></script>
+  <script src="./js/link-battle.js?v=20260629-v25-battle-reset-linkfix"></script>
 
   <script id="tlo-battle-mode-bg-v13-js">
     (function(){

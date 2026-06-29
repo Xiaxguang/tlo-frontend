@@ -29,7 +29,7 @@
     moveSeq: 0
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260629-desktop-stability-v14';
+  var TLO_LINK_BATTLE_BUILD = '20260629-v25-linkbattle-entry-fix';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -565,7 +565,7 @@
       state.selectedStageId = res.selectedStageId || (res.selectedStage && res.selectedStage.stageId) || state.selectedStageId;
       renderDashboard();
       if (!res.canEnter) {
-        setMsg(escapeHtml(res.msg || '你的圖鑑卡牌不足，至少解鎖 4 種卡牌後，才能進入卡牌連線討伐戰。').replace(/\n/g,'<br>'), '#ffdd77');
+        setMsg(escapeHtml(res.msg || '連線討伐戰需要持有至少 5 張可出戰卡片，並完成 5 張出戰編隊。').replace(/\n/g,'<br>'), '#ffdd77');
       } else {
         setMsg('請選擇關卡並開始挑戰。', '#aaa');
       }
@@ -1066,18 +1066,15 @@
     if (!root) return;
     var dash = state.dashboard || {};
     var stages = dash.stages || [];
-    if (!dash.canEnter) {
-      root.innerHTML = '<div class="link-battle-stage-select-empty">' + escapeHtml(dash.msg || '你的圖鑑卡牌不足，暫時無法進入連線討伐戰。').replace(/\n/g, '<br>') + '</div>';
-      return;
-    }
     if (!stages.length) {
       root.innerHTML = '<div class="link-battle-stage-select-empty">目前沒有開放的連線討伐戰關卡。</div>';
       return;
     }
     var chapters = getDashboardChapters(dash, stages);
     var selectedStage = stages.find(function(s){ return s.stageId === state.selectedStageId; }) || dash.selectedStage || stages[0] || null;
+    var entryWarning = !dash.canEnter ? '<div class="link-battle-stage-select-empty" style="margin-bottom:10px;color:#ffdd77;">' + escapeHtml(dash.msg || '連線討伐戰需要持有至少 5 張可出戰卡片，並完成 5 張出戰編隊。').replace(/\n/g, '<br>') + '</div>' : '';
     var topTeamPanel = selectedStage && selectedStage.unlocked ? renderPreBattlePanel(selectedStage) : '';
-    root.innerHTML = topTeamPanel + chapters.map(function(chapter) {
+    root.innerHTML = entryWarning + topTeamPanel + chapters.map(function(chapter) {
       var chapterKey = String(chapter.chapterKey || chapter.chapterName || 'chapter');
       var isPlaceholder = chapter.placeholder || chapter.enabled === false;
       var opened = state.openChapterKey === chapterKey && !isPlaceholder;
