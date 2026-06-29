@@ -649,11 +649,9 @@
   }
 
   function getLinkBattleMaxTeamSize() {
-    var dash = state.dashboard || {};
-    var team = dash.linkBattleTeam || dash.team || {};
-    var raw = Number(team.maxTeamSize || dash.maxTeamSize || 5);
-    if (!Number.isFinite(raw) || raw <= 0) raw = 5;
-    return Math.min(5, Math.max(1, Math.floor(raw)));
+    // v15: 連線討伐戰固定 5 張出戰。
+    // 不再信任舊快取 / 舊後端回傳的 3，避免玩家端仍只顯示三格。
+    return 5;
   }
 
   function isMaxStarCard(card) {
@@ -792,14 +790,23 @@
     return out.length ? out.join('｜') : '本場未觸發輔助效果';
   }
 
+  function renderCardArtWrap(image, alt, isMax, fallbackClass) {
+    var cls = 'link-battle-card-art-wrap' + (isMax ? ' card-max-star-art' : '');
+    if (image) {
+      return '<div class="' + cls + '"><img src="' + escapeHtml(image) + '" alt="' + escapeHtml(alt || '') + '" loading="lazy" decoding="async"></div>';
+    }
+    return '<div class="' + cls + '"><div class="' + escapeHtml(fallbackClass || 'link-battle-team-slot-fallback') + '">🎴</div></div>';
+  }
+
   function renderTeamSlot(card, role) {
     if (!card) {
       return '<div class="link-battle-team-slot empty"><span>' + escapeHtml(role) + '</span><b>未選擇</b></div>';
     }
     var image = getCardImage(card);
-    return '<div class="link-battle-team-slot ' + (isMaxStarCard(card) ? 'max-star-effect' : '') + '">'
+    var maxed = isMaxStarCard(card);
+    return '<div class="link-battle-team-slot">'
       + '<span>' + escapeHtml(role) + '</span>'
-      + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
+      + renderCardArtWrap(image, getCardName(card), maxed, 'link-battle-team-slot-fallback')
       + '<b>' + escapeHtml(getCardName(card)) + '</b>'
       + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
       + renderCardSkillTag(card, true)
@@ -876,8 +883,8 @@
       var id = getCardId(card);
       var picked = selected.has(id);
       var image = getCardImage(card);
-      return '<button type="button" class="link-battle-team-card-option ' + (picked ? 'selected ' : '') + (isMaxStarCard(card) ? 'max-star-effect' : '') + '" onclick="TLOLinkBattle.toggleTeamCard(' + jsArg(id) + ')">'
-        + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-card-fallback">🎴</div>')
+      return '<button type="button" class="link-battle-team-card-option ' + (picked ? 'selected ' : '') + '" onclick="TLOLinkBattle.toggleTeamCard(' + jsArg(id) + ')">'
+        + renderCardArtWrap(image, getCardName(card), isMaxStarCard(card), 'link-battle-team-card-fallback')
         + '<strong>' + escapeHtml(getCardName(card)) + '</strong>'
         + '<span>' + escapeHtml(card.rarity || 'Normal') + '｜★' + Number(card.star || 1) + '</span>'
         + '<em>戰力 ' + Number(card.power || 0).toLocaleString() + '</em>'
@@ -1489,8 +1496,8 @@
     if (state.selectedTileId === tile.tile_id) cls.push('selected');
     if (state.hintedIds.has(tile.tile_id)) cls.push('hinted');
     var img = tile.image_url
-      ? '<img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="lazy" decoding="async">'
-      : '<div class="link-battle-tile-fallback">🎴</div>';
+      ? '<div class="link-battle-card-art-wrap ' + (isMaxStarTile(tile) ? 'card-max-star-art' : '') + '"><img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="lazy" decoding="async"></div>'
+      : '<div class="link-battle-card-art-wrap ' + (isMaxStarTile(tile) ? 'card-max-star-art' : '') + '"><div class="link-battle-tile-fallback">🎴</div></div>';
     return '<button type="button" class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="event.preventDefault();TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\');return false;">' + img + '</button>';
   }
 
@@ -1559,7 +1566,7 @@
     playAttackByRarity(effect.rarity);
     var card = $('link-battle-attack-card');
     if (card) {
-      card.innerHTML = tile && tile.image_url ? '<img src="' + escapeHtml(tile.image_url) + '" alt="" loading="eager" decoding="async">' : '<div style="font-size:42px">🎴</div>';
+      card.innerHTML = tile && tile.image_url ? '<div class="link-battle-card-art-wrap ' + (isMaxStarTile(tile) ? 'card-max-star-art' : '') + '"><img src="' + escapeHtml(tile.image_url) + '" alt="" loading="eager" decoding="async"></div>' : '<div class="link-battle-card-art-wrap ' + (isMaxStarTile(tile) ? 'card-max-star-art' : '') + '"><div style="font-size:42px">🎴</div></div>';
       card.className = 'link-battle-attack-card active';
     }
     await sleep(520);
