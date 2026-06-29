@@ -1297,9 +1297,14 @@
     .daily-dungeon-result.fail{border-color:rgba(255,119,119,.4);background:linear-gradient(135deg,rgba(255,72,72,.13),rgba(255,153,51,.08));}
     .daily-dungeon-options{display:grid;grid-template-columns:1fr;gap:10px;}
     .daily-dungeon-option{position:relative;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.13);background:linear-gradient(135deg,rgba(14,20,43,.96),rgba(8,10,21,.96));padding:12px;text-align:left;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);}
-    .daily-dungeon-option.energy_vault{border-color:rgba(0,255,240,.28);}
-    .daily-dungeon-option.soul_trial{border-color:rgba(255,147,56,.32);}
-    .daily-dungeon-option.fate_rift{border-color:rgba(255,72,180,.34);}
+    .daily-dungeon-option.energy_vault,.daily-dungeon-option.light_path{border-color:rgba(0,255,240,.28);}
+    .daily-dungeon-option.soul_trial,.daily-dungeon-option.shadow_path{border-color:rgba(255,147,56,.32);}
+    .daily-dungeon-option.fate_rift,.daily-dungeon-option.trend_path{border-color:rgba(255,72,180,.34);}
+    .daily-dungeon-story{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.055);border-radius:12px;padding:8px;margin:8px 0;color:#dfe7ff;font-size:12px;line-height:1.55;}
+    .daily-dungeon-fate-line{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0 0;}
+    .daily-dungeon-fate-line span{padding:3px 8px;border-radius:999px;background:rgba(0,255,240,.09);border:1px solid rgba(0,255,240,.2);font-size:10px;font-weight:900;color:#dff;}
+    .daily-dungeon-ending{margin-top:10px;border:1px solid rgba(255,221,119,.35);background:linear-gradient(135deg,rgba(255,221,119,.14),rgba(127,0,255,.13));border-radius:16px;padding:11px;font-size:13px;line-height:1.65;color:#fff8d7;}
+    .daily-dungeon-ending b{display:block;color:#ffdd77;font-size:16px;margin-bottom:4px;}
     .daily-dungeon-option h4{margin:0 0 5px;font-size:18px;display:flex;justify-content:space-between;gap:8px;align-items:center;}
     .daily-dungeon-option p{margin:5px 0 8px;color:#cfd6f7;font-size:12px;line-height:1.55;}
     .daily-dungeon-tags{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0;}
@@ -2090,8 +2095,8 @@
 
             <div class="scene-panel daily-dungeon-entry-card">
               <h3>🌀 命運三選一</h3>
-              <p>連續 5 層地圖，每層從能量寶庫、靈魂試煉、命運裂隙中選 1 個入口前進。</p>
-              <button class="scene-btn btn-neon-cyan" onclick="openDailyDungeonModal()">進入命運三選一<small>5 層三選一試用版</small></button>
+              <p>連續 10 關劇情，每關從光明、暗影、潮流三條命運中選 1 個方向前進。</p>
+              <button class="scene-btn btn-neon-cyan" onclick="openDailyDungeonModal()">進入命運三選一<small>10 關多結局劇情</small></button>
             </div>
           </div>
         </details>
@@ -2157,7 +2162,7 @@
           <div>
             <div class="daily-dungeon-kicker">每日副本</div>
             <h3>🌀 命運三選一</h3>
-            <p>每日 1 次，連續 5 層。每層選 1 個入口，完成後取得累積獎勵。</p>
+            <p>每日 1 次，連續 10 關。選擇之間會穿插命運試煉，最後依命運值進入不同結局，獎勵潮流能量與技能經驗。</p>
           </div>
           <button type="button" class="daily-dungeon-close" onclick="closeDailyDungeonModal()">×</button>
         </div>
@@ -8298,13 +8303,32 @@ function showCollectionHistory() {
         if (typeof rewards.skillExpMin !== 'undefined') parts.push('技能經驗 ' + Number(rewards.skillExpMin || 0) + '～' + Number(rewards.skillExpMax || 0));
         else parts.push('技能經驗 +' + Number(rewards.skillExp || 0));
       }
-      if (Number(rewards.scoreMax || rewards.score || 0) > 0) {
-        if (typeof rewards.scoreMin !== 'undefined') parts.push('訓練總分 ' + Number(rewards.scoreMin || 0) + '～' + Number(rewards.scoreMax || 0));
-        else parts.push('訓練總分 +' + Number(rewards.score || 0));
-      }
-      if (Number(rewards.drawChancePercent || 0) > 0) parts.push('抽卡次數掉落率 ' + Number(rewards.drawChancePercent || 0) + '%');
-      if (Number(rewards.drawTimes || 0) > 0) parts.push('抽卡次數 +' + Number(rewards.drawTimes || 0));
       return parts.length ? parts.join(' ｜ ') : '保底獎勵';
+    }
+
+    function dailyDungeonFateText(fateSummary) {
+      var s = (fateSummary && fateSummary.scores) || {};
+      return '光明 ' + Number(s.light || 0) + '｜暗影 ' + Number(s.dark || 0) + '｜潮流 ' + Number(s.trend || 0);
+    }
+
+    function dailyDungeonTrialText(trial) {
+      if (!trial) return '';
+      var reward = dailyDungeonRewardText(trial.rewards || {});
+      return '<div class="daily-dungeon-ending"><b>⚡ ' + dailyDungeonSafe(trial.title || '命運試煉') + '</b>' +
+        dailyDungeonSafe(trial.story || '') +
+        '<div class="daily-dungeon-story"><b>問題</b><br>' + dailyDungeonSafe(trial.question || '') + '</div>' +
+        '<div class="daily-dungeon-reward">答對獎勵：' + reward + '<br><span style="color:#b8c7ff;">答錯也會繼續前進，不會卡關。</span></div>' +
+        (Array.isArray(trial.choices) ? trial.choices.map(function(choice) {
+          return '<button type="button" class="daily-dungeon-go" data-trial-key="' + dailyDungeonSafe(trial.trialKey || '') + '" data-answer-key="' + dailyDungeonSafe(choice.key || '') + '" onclick="answerDailyDungeonTrial(this.getAttribute(\'data-trial-key\'), this.getAttribute(\'data-answer-key\'))">' + dailyDungeonSafe(choice.key || '') + '. ' + dailyDungeonSafe(choice.text || '') + '</button>';
+        }).join('') : '') +
+      '</div>';
+    }
+
+    function dailyDungeonHistoryItemText(item) {
+      if (item && item.type === 'fate_trial') {
+        return '<li>命運試煉｜' + dailyDungeonSafe(item.trialTitle || item.title || '') + '｜' + (item.correct ? '成功' : '失敗') + '｜' + dailyDungeonRewardText(item.rewards || {}) + '</li>';
+      }
+      return '<li>第 ' + Number(item.floor || 0) + ' 關｜' + dailyDungeonSafe(item.stageTitle || item.title || '') + '｜' + dailyDungeonSafe(item.fateLabel || '-') + '+' + Number(item.fatePoint || 1) + '｜' + dailyDungeonRewardText(item.rewards || {}) + '</li>';
     }
 
     function loadDailyDungeonDashboard() {
@@ -8335,15 +8359,16 @@ function showCollectionHistory() {
       var team = document.getElementById('daily-dungeon-team');
       var history = document.getElementById('daily-dungeon-history');
       var result = document.getElementById('daily-dungeon-result');
-      var floorLabel = run.completed ? '完成' : (Number(run.currentFloor || 1) + ' / ' + Number(run.maxFloors || 5));
+      var pendingTrial = run.pendingTrial || null;
+      var floorLabel = run.completed ? '完成' : (pendingTrial ? '試煉' : (Number(run.currentFloor || 1) + ' / ' + Number(run.maxFloors || 10)));
       if (progress) {
         progress.innerHTML =
-          '<div class="daily-dungeon-stat"><span>今日層數</span><b>' + floorLabel + '</b></div>' +
+          '<div class="daily-dungeon-stat"><span>今日關卡</span><b>' + floorLabel + '</b></div>' +
           '<div class="daily-dungeon-stat"><span>累積能量</span><b>' + Number(totals.energy || 0).toLocaleString() + '</b></div>' +
           '<div class="daily-dungeon-stat"><span>技能經驗</span><b>' + Number(totals.skillExp || 0).toLocaleString() + '</b></div>' +
-          '<div class="daily-dungeon-stat"><span>訓練總分</span><b>' + Number(totals.score || 0).toLocaleString() + '</b></div>' +
-          '<div class="daily-dungeon-stat"><span>抽卡次數</span><b>' + Number(totals.drawTimes || 0).toLocaleString() + '</b></div>' +
-          '<div class="daily-dungeon-stat"><span>每日次數</span><b>' + (run.completed ? '0 / 1' : '1 / 1') + '</b></div>';
+          '<div class="daily-dungeon-stat"><span>命運值</span><b style="font-size:12px;line-height:1.35;">' + dailyDungeonSafe(dailyDungeonFateText(run.fateSummary)) + '</b></div>' +
+          '<div class="daily-dungeon-stat"><span>每日次數</span><b>' + (run.completed ? '0 / 1' : '1 / 1') + '</b></div>' +
+          '<div class="daily-dungeon-stat"><span>結局</span><b style="font-size:13px;">' + dailyDungeonSafe(run.ending ? run.ending.title : '未定') + '</b></div>';
       }
 
       var teamData = res.linkBattleTeam || {};
@@ -8360,22 +8385,52 @@ function showCollectionHistory() {
       if (res.lastResult && result) {
         var r = res.lastResult;
         result.style.display = 'block';
-        result.className = 'daily-dungeon-result ' + (r.cleared ? 'success' : 'fail');
-        result.innerHTML = '<b>' + dailyDungeonSafe(r.icon || '') + ' 第 ' + Number(r.floor || 0) + ' 層｜' + dailyDungeonSafe(r.title || '') + '</b><br>' +
-          dailyDungeonSafe(r.message || '') + '<br>' +
-          '獎勵：' + dailyDungeonRewardText(r.rewards || {});
+        if (r.type === 'fate_trial') {
+          var finalHtml = '';
+          if (r.ending) {
+            var bonusText = '';
+            if (r.allTrialClearBonus && (Number(r.allTrialClearBonus.energy || 0) || Number(r.allTrialClearBonus.skillExp || 0))) {
+              bonusText = '<br>試煉全成功額外：' + dailyDungeonRewardText(r.allTrialClearBonus || {});
+            }
+            finalHtml = '<div class="daily-dungeon-ending"><b>結局：' + dailyDungeonSafe(r.ending.title || '') + '</b>' +
+              dailyDungeonSafe(r.ending.story || '') + '<br>結局獎勵：' + dailyDungeonRewardText(r.endingBonus || (r.ending && r.ending.rewards) || {}) + bonusText + '</div>';
+          }
+          result.className = 'daily-dungeon-result ' + (r.correct ? 'success' : 'fail');
+          result.innerHTML = '<b>⚡ ' + dailyDungeonSafe(r.trialTitle || r.title || '命運試煉') + '｜' + (r.correct ? '成功' : '失敗') + '</b><br>' +
+            dailyDungeonSafe(r.message || '') + '<br>' +
+            '<span>你的答案：' + dailyDungeonSafe(r.selectedKey || '-') + '. ' + dailyDungeonSafe(r.selectedText || '') + '</span><br>' +
+            '獎勵：' + dailyDungeonRewardText(r.rewards || {}) + finalHtml;
+        } else {
+          var endingHtml = '';
+          if (r.ending) {
+            endingHtml = '<div class="daily-dungeon-ending"><b>結局：' + dailyDungeonSafe(r.ending.title || '') + '</b>' +
+              dailyDungeonSafe(r.ending.story || '') + '<br>結局獎勵：' + dailyDungeonRewardText(r.endingBonus || (r.ending && r.ending.rewards) || {}) + '</div>';
+          }
+          result.className = 'daily-dungeon-result ' + (r.cleared ? 'success' : 'fail');
+          result.innerHTML = '<b>' + dailyDungeonSafe(r.icon || '') + ' 第 ' + Number(r.floor || 0) + ' 關｜' + dailyDungeonSafe(r.stageTitle || r.title || '') + '</b><br>' +
+            dailyDungeonSafe(r.message || '') + '<br>' +
+            '<span>命運值：' + dailyDungeonSafe(r.fateLabel || '-') + ' +' + Number(r.fatePoint || 1) + '</span><br>' +
+            '獎勵：' + dailyDungeonRewardText(r.rewards || {}) + endingHtml;
+        }
       }
 
       if (options) {
         if (run.completed) {
-          options.innerHTML = '<div class="daily-dungeon-complete"><h3>今日副本已完成</h3><p>你已完成 5 層命運三選一。明天重置後可以再次挑戰。</p></div>';
+          var end = run.ending || {};
+          options.innerHTML = '<div class="daily-dungeon-complete"><h3>今日命運三選一已完成</h3><p>你已完成 ' + Number(run.maxFloors || 10) + ' 關。明天重置後可以再次挑戰。</p>' +
+            (end.title ? '<div class="daily-dungeon-ending"><b>結局：' + dailyDungeonSafe(end.title) + '</b>' + dailyDungeonSafe(end.story || '') + '<br>總獎勵：' + dailyDungeonRewardText(totals) + '</div>' : '') +
+            '</div>';
+        } else if (pendingTrial) {
+          options.innerHTML = '<div class="daily-dungeon-option fate_trial">' + dailyDungeonTrialText(pendingTrial) + '</div>';
         } else {
           options.innerHTML = (res.options || []).map(function(opt) {
-            var btnClass = opt.optionKey === 'fate_rift' ? 'danger' : (opt.optionKey === 'soul_trial' ? 'mid' : '');
+            var btnClass = opt.optionKey === 'shadow_path' ? 'danger' : (opt.optionKey === 'trend_path' ? 'mid' : '');
             return '<div class="daily-dungeon-option ' + dailyDungeonSafe(opt.optionKey) + '">' +
               '<h4><span>' + dailyDungeonSafe(opt.icon || '') + ' ' + dailyDungeonSafe(opt.title || '') + '</span><small>' + dailyDungeonSafe(opt.positioning || '') + '</small></h4>' +
-              '<p>' + dailyDungeonSafe(opt.description || '') + '</p>' +
+              '<div class="daily-dungeon-story"><b>第 ' + Number((run && run.currentFloor) || 1) + ' 關｜' + dailyDungeonSafe(opt.stageTitle || '') + '</b><br>' + dailyDungeonSafe(opt.stageStory || opt.description || '') + '</div>' +
+              '<p>' + dailyDungeonSafe(opt.resultText || '') + '</p>' +
               '<div class="daily-dungeon-tags">' +
+                '<span>命運：' + dailyDungeonSafe(opt.fateLabel || '-') + ' +' + Number(opt.fatePoint || 1) + '</span>' +
                 '<span>難度：' + dailyDungeonSafe(opt.difficulty || '-') + '</span>' +
                 '<span>風險：' + dailyDungeonSafe(opt.risk || '-') + '</span>' +
                 '<span>成功率：' + Number(opt.successRate || 0) + '%</span>' +
@@ -8383,7 +8438,7 @@ function showCollectionHistory() {
                 (Number(opt.failConsolationPercent || 0) > 0 ? '<span>失敗保底 ' + Number(opt.failConsolationPercent || 0) + '%</span>' : '') +
               '</div>' +
               '<div class="daily-dungeon-reward">可能獎勵：' + dailyDungeonRewardText(opt.rewards || {}) + '</div>' +
-              '<button type="button" class="daily-dungeon-go ' + btnClass + '" data-option-key="' + dailyDungeonSafe(opt.optionKey) + '" onclick="chooseDailyDungeonOption(this.getAttribute(\'data-option-key\'))">選擇這個入口</button>' +
+              '<button type="button" class="daily-dungeon-go ' + btnClass + '" data-option-key="' + dailyDungeonSafe(opt.optionKey) + '" onclick="chooseDailyDungeonOption(this.getAttribute(\'data-option-key\'))">選擇這個命運</button>' +
             '</div>';
           }).join('');
         }
@@ -8391,9 +8446,10 @@ function showCollectionHistory() {
 
       if (history) {
         var list = Array.isArray(run.history) ? run.history : [];
-        history.innerHTML = '<b>今日路線</b>' + (list.length ? '<ul>' + list.map(function(item) {
-          return '<li>第 ' + Number(item.floor || 0) + ' 層｜' + dailyDungeonSafe(item.title || '') + '｜' + (item.cleared ? '成功' : '失敗') + '｜' + dailyDungeonRewardText(item.rewards || {}) + '</li>';
-        }).join('') + '</ul>' : '<div style="margin-top:6px;color:#94a8df;">尚未選擇入口。</div>');
+        var fateLine = '<div class="daily-dungeon-fate-line"><span>' + dailyDungeonSafe(dailyDungeonFateText(run.fateSummary)) + '</span></div>';
+        history.innerHTML = '<b>今日路線</b>' + fateLine + (list.length ? '<ul>' + list.map(function(item) {
+          return dailyDungeonHistoryItemText(item);
+        }).join('') + '</ul>' : '<div style="margin-top:6px;color:#94a8df;">尚未選擇命運。</div>');
       }
 
       if (res.assets) {
@@ -8415,7 +8471,7 @@ function showCollectionHistory() {
         if (typeof loadHomeState === 'function') loadHomeState();
       }).withFailureHandler(function(err) {
         dailyDungeonBusy = false;
-        buttons.forEach(function(btn) { btn.disabled = false; btn.textContent = '選擇這個入口'; });
+        buttons.forEach(function(btn) { btn.disabled = false; btn.textContent = '選擇這個命運'; });
         var result = document.getElementById('daily-dungeon-result');
         if (result) {
           result.style.display = 'block';
@@ -8423,6 +8479,27 @@ function showCollectionHistory() {
           result.innerHTML = '挑戰失敗：' + dailyDungeonSafe(err && err.message ? err.message : err);
         }
       }).chooseDailyDungeonOption(playerUID, optionKey);
+    }
+
+    function answerDailyDungeonTrial(trialKey, answerKey) {
+      if (dailyDungeonBusy) return;
+      dailyDungeonBusy = true;
+      var buttons = document.querySelectorAll('.daily-dungeon-go');
+      buttons.forEach(function(btn) { btn.disabled = true; btn.textContent = '判定中...'; });
+      google.script.run.withSuccessHandler(function(res) {
+        dailyDungeonBusy = false;
+        renderDailyDungeonDashboard(res);
+        if (typeof loadHomeState === 'function') loadHomeState();
+      }).withFailureHandler(function(err) {
+        dailyDungeonBusy = false;
+        buttons.forEach(function(btn) { btn.disabled = false; btn.textContent = '重新選擇'; });
+        var result = document.getElementById('daily-dungeon-result');
+        if (result) {
+          result.style.display = 'block';
+          result.className = 'daily-dungeon-result fail';
+          result.innerHTML = '試煉失敗：' + dailyDungeonSafe(err && err.message ? err.message : err);
+        }
+      }).answerDailyDungeonTrial(playerUID, trialKey, answerKey);
     }
   </script>
 
