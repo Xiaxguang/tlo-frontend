@@ -2085,3 +2085,161 @@
   .link-battle-team-slot b{font-size:9px!important;}
   .link-battle-team-slot em{display:none!important;}
 }
+
+
+/* v16: 關卡選擇編隊建議與戰力加成說明 */
+.link-battle-stage-select-actions{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.link-battle-stage-select-head .link-battle-team-guide-open{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  border:1px solid rgba(0,255,240,.58);
+  background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.24),rgba(0,255,240,.12) 40%,rgba(127,0,255,.12));
+  color:#74fff8;
+  font-size:18px;
+  line-height:1;
+  font-weight:1000;
+  box-shadow:0 0 16px rgba(0,255,240,.26), inset 0 0 10px rgba(255,255,255,.08);
+}
+.link-battle-team-guide-modal{
+  position:fixed;
+  inset:0;
+  z-index:12000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+.link-battle-team-guide-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(5px);
+}
+.link-battle-team-guide-panel{
+  position:relative;
+  z-index:1;
+  width:min(90vw,420px);
+  max-height:min(86vh,620px);
+  overflow:auto;
+  border-radius:24px;
+  border:1px solid rgba(0,255,240,.52);
+  background:linear-gradient(180deg,rgba(27,18,61,.98),rgba(7,9,23,.99));
+  color:#fff;
+  padding:20px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 0 32px rgba(0,255,240,.22),0 24px 80px rgba(0,0,0,.82);
+}
+.link-battle-team-guide-close{
+  position:absolute;
+  right:12px;
+  top:10px;
+  width:34px;
+  height:34px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:24px;
+  font-weight:900;
+  line-height:1;
+}
+.link-battle-team-guide-kicker{
+  color:#00fff0;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.5px;
+  margin-right:38px;
+}
+.link-battle-team-guide-panel h3{
+  margin:4px 38px 10px 0;
+  color:#f8f0ff;
+  font-size:24px;
+  letter-spacing:1px;
+  text-shadow:0 0 16px rgba(0,255,240,.44);
+}
+.link-battle-team-guide-panel p{
+  margin:0 0 12px;
+  color:#eadfff;
+  line-height:1.65;
+  font-weight:700;
+}
+.link-battle-team-guide-box{
+  margin-top:12px;
+  padding:12px 13px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));
+}
+.link-battle-team-guide-box>b{
+  color:#ffe96a;
+  font-size:14px;
+}
+.link-battle-team-guide-box ul{
+  margin:8px 0 0;
+  padding-left:18px;
+  color:#f4edff;
+  line-height:1.75;
+  font-size:13px;
+  font-weight:700;
+}
+.link-battle-team-guide-note{
+  margin-top:12px!important;
+  color:#ffe96a!important;
+  font-size:13px;
+}
+.link-battle-team-guide-ok{
+  width:100%;
+  margin-top:14px;
+  padding:12px;
+  border:0;
+  border-radius:999px;
+  background:linear-gradient(90deg,#00eaff,#8b5cf6);
+  color:#fff;
+  font-weight:1000;
+  letter-spacing:.5px;
+  box-shadow:0 0 18px rgba(0,255,240,.24);
+}
+.link-battle-team-power-bonus{
+  margin:10px 0 0;
+  padding:11px 12px;
+  border-radius:16px;
+  border:1px solid rgba(0,255,240,.26);
+  background:linear-gradient(180deg,rgba(0,255,240,.08),rgba(127,0,255,.065));
+  box-shadow:inset 0 0 18px rgba(0,255,240,.06);
+}
+.link-battle-team-power-equation{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.link-battle-team-power-equation span{
+  color:#00fff0;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+.link-battle-team-power-equation b{
+  color:#fff8cf;
+  font-size:14px;
+  line-height:1.45;
+  text-shadow:0 0 12px rgba(255,230,120,.32);
+}
+.link-battle-team-power-bonus small{
+  display:block;
+  margin-top:6px;
+  color:#cfc2ff;
+  font-size:12px;
+  line-height:1.5;
+  font-weight:700;
+}
+@media(max-width:560px){
+  .link-battle-stage-select-actions{gap:6px;}
+  .link-battle-stage-select-head .link-battle-team-guide-open{width:32px;height:32px;font-size:17px;}
+  .link-battle-team-guide-panel{width:92vw;padding:18px 16px;border-radius:22px;}
+  .link-battle-team-power-equation b{font-size:13px;}
+}

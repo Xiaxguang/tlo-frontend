@@ -689,7 +689,39 @@
   function getTeamBonus() {
     var dash = state.dashboard || {};
     var team = dash.linkBattleTeam || {};
-    return dash.teamBonus || team.bonus || { attackBonusPercent: 0, hpBonusPercent: 0, summary: '攻擊 +0%，HP +0%' };
+    return dash.teamBonus || team.bonus || { totalPower: 0, attackBonusPercent: 0, hpBonusPercent: 0, summary: '攻擊 +0%，HP +0%' };
+  }
+
+  function calculateLocalTeamTotalPower(ids) {
+    var list = (ids || getCurrentTeamIds()).map(findEligibleCard).filter(Boolean).slice(0, getLinkBattleMaxTeamSize());
+    var total = list.reduce(function(sum, card, idx) {
+      var power = Number(card && card.power || 0);
+      return sum + power * (idx === 0 ? 1.12 : 1);
+    }, 0);
+    return Math.max(0, Math.round(total));
+  }
+
+  function normalizePercent(value) {
+    var n = Number(value || 0);
+    if (!Number.isFinite(n)) n = 0;
+    return Math.max(0, Math.round(n * 10) / 10);
+  }
+
+  function getTeamPowerBonusDisplay(ids, bonus) {
+    bonus = bonus || getTeamBonus();
+    var totalPower = Number(bonus.totalPower || bonus.total_power || 0) || calculateLocalTeamTotalPower(ids);
+    var attack = normalizePercent(bonus.attackBonusPercent || bonus.attack_bonus_percent || 0);
+    var hp = normalizePercent(bonus.hpBonusPercent || bonus.hp_bonus_percent || 0);
+    var summary = '攻擊 +' + attack + '%｜HP +' + hp + '%';
+    return { totalPower: Math.round(totalPower), attack: attack, hp: hp, summary: summary };
+  }
+
+  function renderTeamPowerBonusSummary(ids, bonus) {
+    var info = getTeamPowerBonusDisplay(ids, bonus);
+    return '<div class="link-battle-team-power-bonus">'
+      + '<div class="link-battle-team-power-equation"><span>隊伍加成</span><b>總戰力 ' + Number(info.totalPower || 0).toLocaleString() + ' = 戰力加成：' + escapeHtml(info.summary) + '</b></div>'
+      + '<small>戰力加成有上限；合理編隊、Combo 與操作仍是通關關鍵。</small>'
+      + '</div>';
   }
 
   function getTeamSkillProfile() {
@@ -827,7 +859,8 @@
     if (!stage || !stage.unlocked) return '';
     var ids = getCurrentTeamIds();
     var bonus = getTeamBonus();
-    var bonusText = bonus.summary || ('攻擊 +' + Number(bonus.attackBonusPercent || 0) + '%，HP +' + Number(bonus.hpBonusPercent || 0) + '%');
+    var bonusInfo = getTeamPowerBonusDisplay(ids, bonus);
+    var bonusText = bonusInfo.summary;
     var open = !!state.teamPanelOpen;
     var cardNames = ids.map(findEligibleCard).filter(Boolean).map(getCardName);
     var teamText = cardNames.length ? cardNames.join('、') : '尚未編隊';
@@ -842,7 +875,7 @@
       + '</div>'
       + '<div class="link-battle-prebattle-body">'
       + renderTeamSlotsFromIds(ids)
-      + '<div class="link-battle-team-bonus">' + escapeHtml(bonusText) + '</div>'
+      + renderTeamPowerBonusSummary(ids, bonus)
       + renderTeamSkillSummary(calculateLocalTeamSkillProfile(ids.map(findEligibleCard)))
       + '<div class="link-battle-prebattle-actions">'
       + '<button type="button" onclick="TLOLinkBattle.openTeamPicker()">更換編隊</button>'
@@ -954,6 +987,29 @@
     } catch (err) {
       setMsg('自動編隊失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     }
+  }
+
+  function openTeamGuide() {
+    closeTeamGuide();
+    var modal = document.createElement('div');
+    modal.className = 'link-battle-team-guide-modal';
+    modal.innerHTML = ''
+      + '<div class="link-battle-team-guide-backdrop" onclick="TLOLinkBattle.closeTeamGuide()"></div>'
+      + '<div class="link-battle-team-guide-panel" role="dialog" aria-modal="true" aria-label="推薦編隊">'
+      + '<button type="button" class="link-battle-team-guide-close" onclick="TLOLinkBattle.closeTeamGuide()" aria-label="關閉推薦編隊">×</button>'
+      + '<div class="link-battle-team-guide-kicker">卡牌連線討伐戰</div>'
+      + '<h3>推薦編隊</h3>'
+      + '<p>連線討伐戰需選擇 <b>5 張卡片</b> 出戰。</p>'
+      + '<div class="link-battle-team-guide-box"><b>推薦配置</b><ul><li>1 張主輸出</li><li>2 張副輸出</li><li>2 張支援 / 續航 / 控制</li></ul></div>'
+      + '<div class="link-battle-team-guide-box"><b>常見流派</b><ul><li><b>爆發輸出流：</b>適合快速通關</li><li><b>穩定續航流：</b>適合高難度關卡</li><li><b>Combo 連擊流：</b>適合熟練玩家</li><li><b>高星平民流：</b>滿星 N / R 卡也能上場</li></ul></div>'
+      + '<p class="link-battle-team-guide-note">隊長卡出現率較高，建議放主要輸出卡。戰力加成有上限，Combo 與編隊流派仍然重要。</p>'
+      + '<button type="button" class="link-battle-team-guide-ok" onclick="TLOLinkBattle.closeTeamGuide()">我知道了</button>'
+      + '</div>';
+    document.body.appendChild(modal);
+  }
+
+  function closeTeamGuide() {
+    document.querySelectorAll('.link-battle-team-guide-modal').forEach(function(el) { el.remove(); });
   }
 
   function renderStageSelect() {
@@ -1796,6 +1852,8 @@
     startFromRules: startFromRules,
     openStageSelect: openStageSelect,
     closeStageSelect: closeStageSelect,
+    openTeamGuide: openTeamGuide,
+    closeTeamGuide: closeTeamGuide,
     chooseStageAndStart: chooseStageAndStart,
     selectStageForTeam: selectStageForTeam,
     startSelectedStage: startSelectedStage,
