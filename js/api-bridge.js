@@ -52,6 +52,40 @@
   window.TLO_INITIAL_TIMES = "0";
 
   var TLO_INFLIGHT_RPC = new Map();
+  var TLO_RPC_READ_CACHE = new Map();
+  var TLO_RPC_READ_CACHE_MAX = 160;
+  var TLO_READ_CACHE_TTL_MS = {
+    getPublicSettings: 180000,
+    getHomeState: 5000,
+    getPlayerCollection: 8000,
+    getLinkBattleDashboard: 10000,
+    getDailyDungeonDashboard: 8000,
+    getGachaPools: 180000,
+    getBattleDashboard: 15000,
+    getCardProbabilityTable: 180000,
+    getRpgDashboard: 15000,
+    getShopDashboard: 8000,
+    getGuestShopCatalog: 8000,
+    getPersonalDashboard: 8000,
+    getSocialDashboard: 8000,
+    getPvpDashboard: 15000,
+    getTrainingDashboard: 15000,
+    getLeaderboardDashboard: 15000,
+    getStarShopDashboard: 8000,
+    getCharacterGrowthDashboard: 8000,
+    getMissionDashboard: 10000,
+    getMonthlyCardStatus: 8000,
+    getBattlePassDashboard: 8000,
+    getAchievementDashboard: 10000,
+    getDemonChallengeDashboard: 12000,
+    getWorldBossDashboard: 8000,
+    getChatDashboard: 4000,
+    getMessageBoard: 10000,
+    getPlayerHistory: 10000,
+    adminListLinkBattleStages: 180000,
+    adminListLinkBattleChapters: 180000,
+    adminListLinkBattleBosses: 180000
+  };
   var TLO_READ_METHODS = new Set([
     "getPublicSettings",
     "getHomeState",
@@ -76,6 +110,8 @@
     "getBattlePassDashboard",
     "getAchievementDashboard",
     "getDemonChallengeDashboard",
+    "getWorldBossDashboard",
+    "getChatDashboard",
     "getMessageBoard",
     "getPlayerHistory",
     "adminListLinkBattleStages",
@@ -87,6 +123,34 @@
     var safeArgs;
     try { safeArgs = JSON.stringify(args || []); } catch (_) { safeArgs = String(args || ""); }
     return String(method || "") + "::" + String(authToken || "") + "::" + safeArgs;
+  }
+
+  function cloneRpcData(data) {
+    try { return JSON.parse(JSON.stringify(data)); } catch (_) { return data; }
+  }
+
+  function getRpcReadCache(key) {
+    var item = TLO_RPC_READ_CACHE.get(key);
+    if (!item) return null;
+    if (item.expiresAt <= Date.now()) {
+      TLO_RPC_READ_CACHE.delete(key);
+      return null;
+    }
+    return cloneRpcData(item.value);
+  }
+
+  function setRpcReadCache(key, method, value) {
+    var ttl = Number(TLO_READ_CACHE_TTL_MS[String(method || '')] || 0);
+    if (!key || !ttl || !value || value.success === false) return;
+    if (TLO_RPC_READ_CACHE.size >= TLO_RPC_READ_CACHE_MAX) {
+      var first = TLO_RPC_READ_CACHE.keys().next().value;
+      if (first) TLO_RPC_READ_CACHE.delete(first);
+    }
+    TLO_RPC_READ_CACHE.set(key, { value: cloneRpcData(value), expiresAt: Date.now() + ttl });
+  }
+
+  function clearRpcReadCache() {
+    TLO_RPC_READ_CACHE.clear();
   }
 
   async function rawRpc(method, args, options) {
@@ -108,6 +172,10 @@
 
     var isRead = TLO_READ_METHODS.has(String(method || ""));
     var dedupeKey = isRead ? stableRpcKey(method, body.args, body.authToken || "public") : "";
+    if (dedupeKey && !options.noCache) {
+      var cached = getRpcReadCache(dedupeKey);
+      if (cached) return cached;
+    }
     if (dedupeKey && TLO_INFLIGHT_RPC.has(dedupeKey)) {
       return TLO_INFLIGHT_RPC.get(dedupeKey);
     }
@@ -132,6 +200,8 @@
         throw new Error(data && data.msg ? data.msg : "API 呼叫失敗");
       }
 
+      if (isRead && dedupeKey) setRpcReadCache(dedupeKey, method, data);
+      if (!isRead) clearRpcReadCache();
       return data;
     });
 
@@ -199,6 +269,7 @@
   window.google.script = window.google.script || {};
   window.google.script.run = makeRunner();
   window.TLO_RAW_RPC = rawRpc;
+  window.TLO_CLEAR_RPC_CACHE = clearRpcReadCache;
 
   function injectAuthStyle() {
     if (document.getElementById("tlo-auth-style")) return;

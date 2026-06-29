@@ -29,7 +29,7 @@
     moveSeq: 0
   };
 
-  var TLO_LINK_BATTLE_BUILD = '20260629-v25-linkbattle-entry-fix';
+  var TLO_LINK_BATTLE_BUILD = '20260629-v26-no-selectable-pair-db-guard';
   try { console.info('[TLO LinkBattle] build', TLO_LINK_BATTLE_BUILD); } catch (e) {}
 
   var AUDIO_BASE_PATH = './audio/';
@@ -1367,7 +1367,8 @@
       SAME_TILE: '不能選同一張卡牌',
       COVERED_TILE: '卡牌目前不可選擇，不能連線',
       DIFFERENT_CARD: '必須選擇同一張卡牌',
-      PATH_BLOCKED: '路徑被其他卡牌阻擋，或超過 2 次轉彎'
+      PATH_BLOCKED: '路徑被其他卡牌阻擋，或超過 2 次轉彎',
+      NO_SELECTABLE_PAIR: '可操作牌不足兩張，無法再連線'
     };
     return map[String(reason || '')] || String(reason || '連線失敗');
   }
@@ -1378,6 +1379,7 @@
       PLAYER_HP_ZERO: '玩家 HP 歸零，討伐失敗。',
       ERROR_LIMIT: '錯誤次數過多，討伐失敗。',
       NO_MOVES: '沒有可連線組合且洗牌次數已用完，討伐失敗。',
+      NO_SELECTABLE_PAIR: '可操作牌不足兩張，無法再連線，討伐失敗。',
       TIMEOUT: '時間耗盡，討伐失敗。',
       FAILED: '討伐失敗。'
     };
