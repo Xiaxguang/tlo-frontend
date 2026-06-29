@@ -6028,9 +6028,39 @@ function showCollectionHistory() {
       if (grid) {
         var items = res.virtualItems || [];
         grid.innerHTML = items.length ? items.map(function(item){
-          return `<div class="item-card"><div class="item-name">${escapeHtml(item.name || '')}</div><div class="item-amount">${Number(item.amount || 0).toLocaleString()}</div><div class="item-desc">${escapeHtml(item.desc || '')}</div></div>`;
+          var key = String(item.key || item.itemKey || '').toLowerCase();
+          var amount = Number(item.amount || 0);
+          var action = '';
+          if (key === 'battle_reset_ticket' || String(item.itemKey || '').toUpperCase() === 'BATTLE_RESET_TICKET') {
+            action = '<button class="btn-collection" style="width:100%;margin-top:8px;padding:8px 10px;' + (amount > 0 ? 'background:linear-gradient(135deg,#ff8a00,#ffdd77);color:#111;' : 'filter:grayscale(1);opacity:.55;') + '" ' + (amount > 0 ? '' : 'disabled') + ' onclick="useBattleResetTicketUI()">使用重置卷</button>';
+          }
+          return `<div class="item-card"><div class="item-name">${escapeHtml(item.name || '')}</div><div class="item-amount">${amount.toLocaleString()}</div><div class="item-desc">${escapeHtml(item.desc || '')}</div>${action}</div>`;
         }).join('') : '<div style="color:#aaa;">目前沒有可顯示的道具。</div>';
       }
+    }
+
+    function useBattleResetTicketUI() {
+      var msg = '確定要使用「爭霸戰重置卷」嗎？\n\n' +
+        '使用後將會：\n' +
+        '・爭霸戰進度回到第 1 關\n' +
+        '・清空已領取的爭霸戰首通獎勵紀錄\n' +
+        '・可重新挑戰並再次領取首通獎勵\n\n' +
+        '此操作不會影響卡片、抽卡、連線討伐戰、命運三選一、通行證與其他副本資料。\n\n' +
+        '本操作會消耗 1 張爭霸戰重置卷，且無法復原。';
+      if (!confirm(msg)) return;
+      var profileMsg = document.getElementById('profile-msg');
+      if (profileMsg) profileMsg.innerHTML = '<span style="color:#aaa;">正在使用爭霸戰重置卷...</span>';
+      google.script.run.withSuccessHandler(function(res) {
+        alert(res && res.msg ? res.msg : (res && res.success ? '爭霸戰已重置' : '重置失敗'));
+        if (res && res.personalDashboard) renderPersonalDashboard(res.personalDashboard);
+        else loadPersonalDashboard();
+        if (typeof loadBattleDashboard === 'function') setTimeout(function(){ loadBattleDashboard(); }, 250);
+        if (typeof loadHomeState === 'function') setTimeout(loadHomeState, 350);
+        if (profileMsg) profileMsg.innerHTML = '<span style="color:' + (res && res.success ? '#00ff7f' : '#ff7777') + ';font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '重置完成') + '</span>';
+      }).withFailureHandler(function(err) {
+        if (profileMsg) profileMsg.innerHTML = '<span style="color:#ff7777;">重置失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
+        alert('重置失敗：' + (err && err.message ? err.message : err));
+      }).useBattleResetTicket(playerUID);
     }
 
     function renderProfileAvatarSelector(res) {
