@@ -1340,7 +1340,6 @@
 
   function getTileClassName(tile, selectable) {
     var cls = ['link-battle-tile', rarityClass(tile.rarity)];
-    if (isMaxStarTile(tile)) cls.push('max-star-effect');
     cls.push('layer-' + Number(tile.layer || 0));
     if (selectable) cls.push('selectable');
     if (!selectable) cls.push('covered');
@@ -1544,7 +1543,6 @@
   function renderTile(tile, positionStyle) {
     var selectable = tile.selectable != null ? !!tile.selectable : isTileSelectable(tile);
     var cls = ['link-battle-tile', rarityClass(tile.rarity)];
-    if (isMaxStarTile(tile)) cls.push('max-star-effect');
     cls.push('layer-' + Number(tile.layer || 0));
     if (selectable) cls.push('selectable');
     if (!selectable) cls.push('covered');
@@ -1552,8 +1550,8 @@
     if (state.selectedTileId === tile.tile_id) cls.push('selected');
     if (state.hintedIds.has(tile.tile_id)) cls.push('hinted');
     var img = tile.image_url
-      ? '<div class="link-battle-card-art-wrap ' + (isMaxStarTile(tile) ? 'card-max-star-art' : '') + '"><img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="lazy" decoding="async"></div>'
-      : '<div class="link-battle-card-art-wrap ' + (isMaxStarTile(tile) ? 'card-max-star-art' : '') + '"><div class="link-battle-tile-fallback">🎴</div></div>';
+      ? '<div class="link-battle-card-art-wrap"><img src="' + escapeHtml(tile.image_url) + '" alt="' + escapeHtml(tile.card_name) + '" draggable="false" loading="lazy" decoding="async"></div>'
+      : '<div class="link-battle-card-art-wrap"><div class="link-battle-tile-fallback">🎴</div></div>';
     return '<button type="button" class="' + cls.join(' ') + '" style="' + (positionStyle || '') + '" title="' + escapeHtml(tile.card_name) + '" aria-label="' + escapeHtml(tile.card_name) + '" data-tile-id="' + escapeHtml(tile.tile_id) + '" ' + (!selectable || state.isAnimating ? 'disabled' : '') + ' onclick="event.preventDefault();TLOLinkBattle.pickTile(\'' + escapeHtml(tile.tile_id) + '\');return false;">' + img + '</button>';
   }
 
@@ -1622,7 +1620,7 @@
     playAttackByRarity(effect.rarity);
     var card = $('link-battle-attack-card');
     if (card) {
-      card.innerHTML = tile && tile.image_url ? '<div class="link-battle-card-art-wrap ' + (isMaxStarTile(tile) ? 'card-max-star-art' : '') + '"><img src="' + escapeHtml(tile.image_url) + '" alt="" loading="eager" decoding="async"></div>' : '<div class="link-battle-card-art-wrap ' + (isMaxStarTile(tile) ? 'card-max-star-art' : '') + '"><div style="font-size:42px">🎴</div></div>';
+      card.innerHTML = tile && tile.image_url ? '<div class="link-battle-card-art-wrap"><img src="' + escapeHtml(tile.image_url) + '" alt="" loading="eager" decoding="async"></div>' : '<div class="link-battle-card-art-wrap"><div style="font-size:42px">🎴</div></div>';
       card.className = 'link-battle-attack-card active';
     }
     await sleep(520);

@@ -2243,3 +2243,54 @@
   .link-battle-team-guide-panel{width:92vw;padding:18px 16px;border-radius:22px;}
   .link-battle-team-power-equation b{font-size:13px;}
 }
+
+/* v20: 戰鬥操作盤面優化：盤面不套滿星掃光，遮蔽更淡且所有視覺層不攔截點擊。 */
+.link-battle-shell.in-battle .link-battle-board-wrap,
+.link-battle-shell.in-battle .link-battle-stacked-board{
+  touch-action: manipulation;
+}
+.link-battle-shell.in-battle .link-battle-tile,
+.link-battle-shell.in-battle .link-battle-tile *,
+.link-battle-shell.in-battle .link-battle-tile::before,
+.link-battle-shell.in-battle .link-battle-tile::after,
+.link-battle-shell.in-battle .link-battle-card-art-wrap,
+.link-battle-shell.in-battle .link-battle-card-art-wrap::before,
+.link-battle-shell.in-battle .link-battle-card-art-wrap::after,
+.link-battle-shell.in-battle .link-battle-card-art-wrap img{
+  -webkit-tap-highlight-color: transparent;
+}
+.link-battle-shell.in-battle .link-battle-tile *,
+.link-battle-shell.in-battle .link-battle-tile::before,
+.link-battle-shell.in-battle .link-battle-tile::after,
+.link-battle-shell.in-battle .link-battle-card-art-wrap::before,
+.link-battle-shell.in-battle .link-battle-card-art-wrap::after{
+  pointer-events: none !important;
+}
+.link-battle-shell.in-battle .link-battle-tile.max-star-effect,
+.link-battle-shell.in-battle .link-battle-attack-card .card-max-star-art{
+  animation: none !important;
+  filter: none !important;
+}
+.link-battle-shell.in-battle .link-battle-tile.max-star-effect::before,
+.link-battle-shell.in-battle .link-battle-tile.max-star-effect::after,
+.link-battle-shell.in-battle .link-battle-attack-card .card-max-star-art::before,
+.link-battle-shell.in-battle .link-battle-attack-card .card-max-star-art::after{
+  display: none !important;
+  content: none !important;
+}
+.link-battle-shell.in-battle .link-battle-tile.covered{
+  filter: grayscale(.18) brightness(.70) saturate(.86) !important;
+  opacity: .62 !important;
+}
+.link-battle-shell.in-battle .link-battle-tile.covered::after{
+  background: rgba(0,0,0,.12) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.28) !important;
+}
+.link-battle-shell.in-battle .link-battle-tile.locked{
+  filter: grayscale(.22) brightness(.62) saturate(.78) !important;
+  opacity: .70 !important;
+}
+.link-battle-shell.in-battle .link-battle-tile.locked::after{
+  background: rgba(0,0,0,.18) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.36), 0 0 10px rgba(0,255,240,.08) !important;
+}
