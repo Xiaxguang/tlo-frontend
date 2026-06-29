@@ -1258,6 +1258,20 @@
 
 
 
+
+    /* Premium / pass / gacha reveal additions */
+    .premium-home-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 0;}
+    .premium-home-btn{border:1px solid rgba(255,221,119,.42);border-radius:16px;padding:12px;background:linear-gradient(135deg,rgba(255,221,119,.18),rgba(0,255,240,.10));color:#fff;font-weight:1000;box-shadow:0 0 18px rgba(255,221,119,.10);cursor:pointer;text-align:left;}
+    .premium-home-btn span{display:block;font-size:24px;margin-bottom:4px}.premium-home-btn small{display:block;color:#aaa;font-size:11px;margin-top:4px;line-height:1.45}
+    .premium-panel{background:rgba(10,10,22,.96);border:1px solid rgba(255,221,119,.35);border-radius:16px;padding:12px;margin:10px 0;text-align:left;box-shadow:0 0 20px rgba(255,221,119,.10)}
+    .premium-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:10px 0}.premium-stat{background:#111;border:1px solid #333;border-radius:12px;padding:10px}.premium-stat span{display:block;color:#aaa;font-size:11px;font-weight:900}.premium-stat b{display:block;color:#ffdd77;font-size:18px;margin-top:4px}
+    .battle-pass-progress{height:12px;background:#222;border-radius:999px;overflow:hidden;border:1px solid #444;margin:8px 0}.battle-pass-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#00fff0,#ffdd77)}
+    .battle-pass-list{display:flex;flex-direction:column;gap:8px;max-height:58vh;overflow:auto;padding-right:4px}.battle-pass-row{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;align-items:stretch;background:#12121e;border:1px solid #333;border-radius:14px;padding:8px}.battle-pass-row.claimable{border-color:#ffdd77;box-shadow:0 0 12px rgba(255,221,119,.13)}.battle-pass-level{color:#ffdd77;font-weight:1000;text-align:center;display:flex;align-items:center;justify-content:center;flex-direction:column}.battle-pass-reward{background:#0b0b12;border:1px solid #28283b;border-radius:10px;padding:8px;font-size:12px;color:#ddd;line-height:1.5}.battle-pass-reward b{display:block;color:#00fff0;margin-bottom:4px}.battle-pass-reward.locked{opacity:.58}.battle-pass-reward button,.premium-action-btn{width:100%;border:0;border-radius:10px;padding:9px;margin-top:6px;background:linear-gradient(45deg,#ffdd77,#00fff0);color:#111;font-weight:1000;cursor:pointer}.battle-pass-reward button:disabled,.premium-action-btn:disabled{background:#444;color:#999;cursor:not-allowed}
+    .paid-notice-card{max-width:360px;text-align:center}.paid-notice-card .premium-action-btn{margin-top:12px}
+    .max-star-effect{position:relative;overflow:hidden!important;box-shadow:0 0 18px rgba(255,221,119,.34),0 0 7px rgba(0,255,240,.25)!important;border-color:rgba(255,221,119,.75)!important}.max-star-effect:after{content:"";position:absolute;inset:-35%;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.65) 47%,transparent 60%);transform:translateX(-75%) rotate(8deg);animation:tloMaxStarSweep 2.6s infinite;pointer-events:none}.max-star-effect:before{content:"★ MAX";position:absolute;right:5px;top:5px;z-index:3;background:rgba(255,221,119,.92);color:#111;border-radius:999px;padding:2px 6px;font-size:10px;font-weight:1000;box-shadow:0 0 8px rgba(255,221,119,.5)}@keyframes tloMaxStarSweep{0%,55%{transform:translateX(-85%) rotate(8deg)}100%{transform:translateX(85%) rotate(8deg)}}
+    .gacha-reveal-wrap{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}.gacha-reveal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}.gacha-reveal-card{width:min(250px,78vw);height:340px;perspective:1200px;cursor:pointer;position:relative}.gacha-reveal-grid .gacha-reveal-card{width:100%;height:230px}.gacha-reveal-inner{position:relative;width:100%;height:100%;transition:transform .72s cubic-bezier(.2,.75,.2,1);transform-style:preserve-3d}.gacha-reveal-card.revealed .gacha-reveal-inner{transform:rotateY(180deg)}.gacha-reveal-face{position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,221,119,.45);background:#111;box-shadow:0 0 18px rgba(0,0,0,.45)}.gacha-reveal-back{background:url('./assets/ui/card-back-tlo.svg') center/cover no-repeat}.gacha-reveal-front{transform:rotateY(180deg);padding:8px;flex-direction:column}.gacha-reveal-front img{max-width:100%;max-height:78%;object-fit:contain;border-radius:10px}.gacha-reveal-name{font-size:13px;color:#00fff0;font-weight:1000;text-align:center;margin-top:4px}.gacha-reveal-rarity{position:absolute;left:8px;top:8px;z-index:4}.gacha-reveal-card.shaking .gacha-reveal-inner{animation:gachaShake .42s}.gacha-reveal-card.glow-N .gacha-reveal-face{box-shadow:0 0 28px rgba(255,255,255,.72)}.gacha-reveal-card.glow-R .gacha-reveal-face{box-shadow:0 0 30px rgba(0,157,255,.80)}.gacha-reveal-card.glow-SR .gacha-reveal-face{box-shadow:0 0 34px rgba(220,230,255,.92)}.gacha-reveal-card.glow-SSR .gacha-reveal-face{box-shadow:0 0 38px rgba(255,205,55,.95)}.gacha-reveal-card.glow-UR .gacha-reveal-face{box-shadow:0 0 42px rgba(255,0,255,.75),0 0 28px rgba(0,255,240,.75)}@keyframes gachaShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px) rotate(-1deg)}40%{transform:translateX(5px) rotate(1deg)}60%{transform:translateX(-4px) rotate(-1deg)}80%{transform:translateX(4px) rotate(1deg)}}
+    @media(max-width:560px){.premium-home-actions{grid-template-columns:1fr}.battle-pass-row{grid-template-columns:52px 1fr}.battle-pass-reward.premium{grid-column:2}.gacha-reveal-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.gacha-reveal-grid .gacha-reveal-card{height:206px}}
+
   </style>
   <link rel="icon" href="./favicon.ico?v=20260628-battle-bg-v12">
   <meta name="tlo-lobby-ui-build" content="20260628-lobby-ui-v8">
@@ -1912,6 +1926,10 @@
             <small>能量商店、訓練總分商店與儲值商品</small>
           </button>
         </div>
+        <div class="premium-home-actions" aria-label="付費與通行證功能">
+          <button class="premium-home-btn" type="button" onclick="openMonthlyCardModal()"><span>🌙</span><b>月卡</b><small>30 天每日領抽卡、遠征與競技場次數</small></button>
+          <button class="premium-home-btn" type="button" onclick="openBattlePassModal()"><span>🎫</span><b>星域通行證</b><small>夏日系列 50 階累積分數獎勵</small></button>
+        </div>
       </div>
 
       <div class="lobby-quick-dock" aria-label="快捷功能">
@@ -1993,6 +2011,27 @@
       </div>
     </section>
 
+
+      <div class="lobby-modal" id="paid-notice-modal" aria-hidden="true">
+        <div class="lobby-modal-card paid-notice-card" role="dialog" aria-modal="true" aria-label="付費功能通知">
+          <div class="lobby-modal-head"><div><h3>🔔 付費功能通知</h3><p id="paid-notice-text">此付費功能尚未開通，請聯絡管理員協助開通。</p></div><button type="button" class="lobby-modal-close" onclick="closePaidNoticeModal()">×</button></div>
+          <button class="premium-action-btn" type="button" onclick="closePaidNoticeModal()">我知道了</button>
+        </div>
+      </div>
+
+      <div class="lobby-modal" id="monthly-card-modal" aria-hidden="true">
+        <div class="lobby-modal-card" role="dialog" aria-modal="true" aria-label="月卡">
+          <div class="lobby-modal-head"><div><h3>🌙 月卡</h3><p>售價 300 元，有效 30 天。付款尚未開通時，請聯絡管理員協助開通。</p></div><button type="button" class="lobby-modal-close" onclick="closeMonthlyCardModal()">×</button></div>
+          <div id="monthly-card-content" class="premium-panel">正在讀取月卡狀態...</div>
+        </div>
+      </div>
+
+      <div class="lobby-modal" id="battle-pass-modal" aria-hidden="true">
+        <div class="lobby-modal-card" role="dialog" aria-modal="true" aria-label="星域通行證" style="max-width:820px;">
+          <div class="lobby-modal-head"><div><h3>🎫 星域通行證｜夏日系列</h3><p>通關主線任務累積分數，50 階普通 / 高級獎勵。高級通行證 350 元，付款尚未開通時請聯絡管理員。</p></div><button type="button" class="lobby-modal-close" onclick="closeBattlePassModal()">×</button></div>
+          <div id="battle-pass-content" class="premium-panel">正在讀取通行證...</div>
+        </div>
+      </div>
     <section class="game-screen" id="gachaScreen" data-screen="gacha">
       <div class="screen-head">
         <div>
@@ -4405,6 +4444,80 @@
       }).catch(function(err) { alert("大圖生成失敗！"); dlBtn.innerText = originalText; dlBtn.disabled = false; });
     }
 
+    function normalizeGachaGlowKey(rarity) {
+      var r = String(rarity || '').toUpperCase().replace(/_/g, ' ');
+      if (r.indexOf('UR') >= 0) return 'UR';
+      if (r.indexOf('SSR') >= 0) return 'SSR';
+      if (r.indexOf('SUPER') >= 0 || r === 'SR' || r.indexOf('SR') >= 0) return 'SR';
+      if (r === 'R' || r.indexOf('RARE') >= 0) return 'R';
+      return 'N';
+    }
+
+    function buildGachaRevealFront(item, elementId, small) {
+      item = item || {};
+      registerCardImages(item);
+      var imgUrl = getCardImageUrl({ name: item.npcName || item.cardName || item.name, npcName: item.npcName, imageUrl: item.imageUrl, image_url: item.image_url });
+      var safeName = escapeHtml(item.npcName || item.cardName || item.name || '未知角色');
+      var safeSerial = escapeHtml(item.serialNumber || item.serial || '');
+      var rarity = item.npcRarity || item.rarity || 'NORMAL';
+      var rarityClass = String(rarity || '').replace(/[^a-z0-9_-]/gi, '');
+      var safeRarity = escapeHtml(rarity);
+      var downloadName = safeFileName('T-LO_' + (item.npcName || item.cardName || item.name || '') + '_' + (item.serialNumber || item.serial || ''));
+      var imgClass = small ? 'card-img-sm tlo-card-art' : 'card-img';
+      var badgeClass = small ? 'card-serial-badge badge-sm' : 'card-serial-badge';
+      var wrapperStyle = small ? ' style="margin:5px 0;"' : '';
+      var cardHtml = imgUrl
+        ? '<div class="card-wrapper" id="' + escapeHtml(elementId) + '"' + wrapperStyle + '><div class="' + badgeClass + '">' + safeSerial + '</div><img src="' + escapeHtml(imgUrl) + '" class="' + imgClass + '" crossorigin="anonymous" loading="lazy" decoding="async"></div><button onclick="event.stopPropagation(); downloadCombinedCard(\'' + jsString(elementId) + '\', \'' + jsString(downloadName) + '\', false)" class="btn-download">📥 下載</button>'
+        : '<p>(無圖)</p>';
+      return '<div class="rarity-tag' + (small ? '-sm' : '') + ' rarity-' + rarityClass + '">' + safeRarity + '</div>'
+        + '<div style="display:flex; flex-direction:column; align-items:center; width:100%; margin:5px 0;">' + cardHtml + '</div>'
+        + '<div class="gacha-reveal-name">' + safeName + '</div>';
+    }
+
+    function renderGachaRevealCard(item, index, small) {
+      var rarity = (item && (item.npcRarity || item.rarity)) || 'NORMAL';
+      var glow = normalizeGachaGlowKey(rarity);
+      var elementId = small ? ('card10-' + index) : 'single-card';
+      return '<div class="gacha-reveal-card" data-rarity-glow="' + glow + '" onclick="revealGachaCard(this)">'
+        + '<div class="gacha-reveal-rarity">' + escapeHtml(glow) + '</div>'
+        + '<div class="gacha-reveal-inner">'
+        + '<div class="gacha-reveal-face gacha-reveal-back"></div>'
+        + '<div class="gacha-reveal-face gacha-reveal-front">' + buildGachaRevealFront(item, elementId, small) + '</div>'
+        + '</div>'
+        + '</div>';
+    }
+
+    function revealGachaCard(cardEl) {
+      if (!cardEl || cardEl.classList.contains('revealed') || cardEl.classList.contains('shaking')) return;
+      var glow = cardEl.getAttribute('data-rarity-glow') || 'N';
+      cardEl.classList.add('shaking', 'glow-' + glow);
+      setTimeout(function(){ cardEl.classList.add('revealed'); }, 380);
+      setTimeout(function(){ cardEl.classList.remove('shaking'); }, 780);
+      if (window.TLOAudio) window.TLOAudio.playCardRarity(glow === 'SR' ? 'SUPER RARE' : glow);
+    }
+
+    function revealAllGachaCards() {
+      Array.prototype.slice.call(document.querySelectorAll('.gacha-reveal-card:not(.revealed)')).forEach(function(card, idx) {
+        setTimeout(function(){ revealGachaCard(card); }, idx * 90);
+      });
+    }
+
+    function renderSingleGachaReveal(response) {
+      var now = new Date();
+      var timeStr = now.getFullYear() + '/' + (now.getMonth()+1) + '/' + now.getDate() + ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
+      var cardHtml = renderGachaRevealCard(response, 0, false);
+      document.getElementById('card-stage').innerHTML = '<div class="gacha-reveal-wrap"><h2 style="color:#ffdd77;margin:4px 0;">點擊卡背揭曉結果</h2>' + cardHtml + '<p style="font-size:12px;color:#888;">開盒時間：' + timeStr + '</p></div>';
+    }
+
+    function renderTenGachaReveal(response) {
+      var results = (response && response.results) || [];
+      var batchTime = new Date().getTime();
+      var gridHtml = '<div class="gacha10-download-wrapper" id="gacha10-download-area"><h3 style="color:#ff007f;margin:0 0 10px 0;text-align:center;">T-LO 十連抽結果</h3><div class="gacha-reveal-grid">';
+      results.forEach(function(item, index) { gridHtml += renderGachaRevealCard(item, index, true); });
+      gridHtml += '</div></div>';
+      document.getElementById('card-stage').innerHTML = '<h2 style="color:#ff007f;margin:5px 0 10px 0;">🎉 十連召喚完成，點擊卡背翻牌！</h2><button onclick="revealAllGachaCards()" class="btn-download-all">✨ 一鍵揭曉</button><button onclick="downloadCombinedCard(\'gacha10-download-area\', \'T-LO_十連抽_' + batchTime + '\', true)" class="btn-download-all">📥 下載本次十連</button>' + gridHtml;
+    }
+
     function startGacha() {
       if (!selectedGachaPoolKey || currentCount <= 0) { if (window.TLOAudio) window.TLOAudio.playSfx('error'); return; }
       if (window.TLOAudio) window.TLOAudio.playSfx('gachaStart');
@@ -4416,24 +4529,9 @@
       google.script.run.withSuccessHandler(function(response) {
         if (response && response.success) {
           currentCount = response.timesLeft;
-
           registerCardImages(response);
-          let githubImgUrl = getCardImageUrl({ name: response.npcName, npcName: response.npcName, imageUrl: response.imageUrl, image_url: response.image_url });
-          const safeName = escapeHtml(response.npcName || '');
-          const safeSerial = escapeHtml(response.serialNumber || '');
-          const rarityClass = String(response.npcRarity || '').replace(/[^a-z0-9_-]/gi, '');
-          const safeRarity = escapeHtml(response.npcRarity || '');
-          const downloadName = safeFileName(`T-LO_${response.npcName || ''}_${response.serialNumber || ''}`);
-          let imgHtml = githubImgUrl
-            ? `<div class="card-wrapper" id="single-card"><div class="card-serial-badge">${safeSerial}</div><img src="${escapeHtml(githubImgUrl)}" class="card-img" crossorigin="anonymous" loading="lazy" decoding="async"></div><button onclick="downloadCombinedCard('single-card', '${downloadName}', false)" class="btn-download">📥 下載卡片</button>`
-            : '<p>(無圖)</p>';
-
-          let now = new Date();
-          let timeStr = now.getFullYear() + '/' + (now.getMonth()+1) + '/' + now.getDate() + ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
-
-          document.getElementById('card-stage').innerHTML = `<div class="rarity-tag rarity-${rarityClass}">${safeRarity}</div><div style="display:flex; flex-direction:column; align-items:center; width:100%; margin:5px 0;">${imgHtml}</div><h1 style="color: #00fff0; margin: 5px 0;">🎉 【${safeName}】 🎉</h1><p style="font-size: 12px; color: #888;">開盒時間：${timeStr}</p>`;
+          renderSingleGachaReveal(response);
           document.getElementById('history-list').innerHTML = response.historyHtml || "";
-          if (window.TLOAudio) window.TLOAudio.playCardRarity(response.npcRarity);
 
           if (typeof response.collectionUniqueCount !== "undefined") {
             setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
@@ -4466,29 +4564,9 @@
       google.script.run.withSuccessHandler(function(response) {
         if (response && response.success) {
           currentCount = response.timesLeft;
-
-          let gridHtml = '<div class="gacha10-download-wrapper" id="gacha10-download-area"><h3 style="color:#ff007f; margin:0 0 10px 0; text-align:center;">T-LO 十連抽盲盒爆裂開榜結果</h3><div class="gacha10-grid">';
-          response.results.forEach(function(item, index) {
-            registerCardImages(item);
-            let githubImgUrl = getCardImageUrl({ name: item.npcName, npcName: item.npcName, imageUrl: item.imageUrl, image_url: item.image_url });
-            const safeItemName = escapeHtml(item.npcName || '');
-            const safeItemSerial = escapeHtml(item.serialNumber || '');
-            const itemRarityClass = String(item.npcRarity || '').replace(/[^a-z0-9_-]/gi, '');
-            const safeItemRarity = escapeHtml(item.npcRarity || '');
-            const itemDownloadName = safeFileName(`T-LO_${item.npcName || ''}_${item.serialNumber || ''}`);
-            let cardImgHtml = githubImgUrl
-              ? `<div class="card-wrapper" id="card10-${index}" style="margin:5px 0;"><div class="card-serial-badge badge-sm">${safeItemSerial}</div><img src="${escapeHtml(githubImgUrl)}" class="card-img-sm tlo-card-art" crossorigin="anonymous" loading="lazy" decoding="async"></div><button onclick="downloadCombinedCard('card10-${index}', '${itemDownloadName}', false)" class="btn-download">📥 下載</button>`
-              : '<p>(無圖)</p>';
-
-            gridHtml += `<div class="gacha10-card"><div class="rarity-tag-sm rarity-${itemRarityClass}">${safeItemRarity}</div>${cardImgHtml}<div style="color: #00fff0; font-weight:bold; font-size:12px; margin-top:4px; text-align:center;">#${index+1} ${safeItemName}</div></div>`;
-          });
-
-          gridHtml += '</div></div>';
-          let batchTime = new Date().getTime();
-
-          document.getElementById('card-stage').innerHTML = `<h2 style="color: #ff007f; margin: 5px 0 15px 0;">🎉 十連抽盲盒爆裂開榜！ 🎉</h2><button onclick="downloadCombinedCard('gacha10-download-area', 'T-LO_十連抽_${batchTime}', true)" class="btn-download-all">📥 一鍵打包下載：本次十連高清大圖</button>${gridHtml}`;
+          registerCardImages(response);
+          renderTenGachaReveal(response);
           document.getElementById('history-list').innerHTML = response.historyHtml || "";
-          if (window.TLOAudio) window.TLOAudio.playBestGachaResult(response.results || []);
 
           if (typeof response.collectionUniqueCount !== "undefined") {
             setCollectionSummary(response.collectionUniqueCount || 0, response.totalCollectibleCards || response.totalCards || 0);
@@ -5607,6 +5685,138 @@ function showCollectionHistory() {
     }
 
 
+    function showPaidFeatureNotice(message) {
+      var text = document.getElementById('paid-notice-text');
+      if (text) text.innerText = message || '此付費功能尚未開通，請聯絡管理員協助開通。';
+      var modal = document.getElementById('paid-notice-modal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closePaidNoticeModal() {
+      var modal = document.getElementById('paid-notice-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function openMonthlyCardModal() {
+      var modal = document.getElementById('monthly-card-modal');
+      if (modal) modal.style.display = 'flex';
+      loadMonthlyCardStatus();
+    }
+
+    function closeMonthlyCardModal() {
+      var modal = document.getElementById('monthly-card-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function renderMonthlyCardStatus(res) {
+      var box = document.getElementById('monthly-card-content');
+      if (!box) return;
+      if (!res || !res.success) {
+        box.innerHTML = '<div style="color:#ff7777;font-weight:900;">月卡狀態讀取失敗。</div>';
+        return;
+      }
+      var daily = res.dailyRewards || {};
+      var activeText = res.active ? ('剩餘 ' + Number(res.daysLeft || 0) + ' 天') : '尚未開通';
+      var claimBtn = res.todayClaimable
+        ? '<button class="premium-action-btn" onclick="claimMonthlyCardReward()">領取今日月卡獎勵</button>'
+        : '<button class="premium-action-btn" disabled>' + (res.todayClaimed ? '今日已領取' : '尚不可領取') + '</button>';
+      box.innerHTML = '<div class="premium-panel-row"><span>狀態</span><b>' + escapeHtml(activeText) + '</b></div>'
+        + '<div class="premium-panel-row"><span>售價 / 期間</span><b>NT$' + Number(res.priceNtd || 300) + ' / ' + Number(res.durationDays || 30) + '天</b></div>'
+        + '<div class="premium-panel-row"><span>每日福利</span><b>抽卡 +' + Number(daily.drawTimes || 1) + '｜遠征 +' + Number(daily.rpgTickets || 5) + '｜競技場 +' + Number(daily.pvpTickets || 5) + '</b></div>'
+        + claimBtn
+        + '<button class="premium-action-btn" onclick="showPaidFeatureNotice(\'此付費功能尚未開通，請聯絡管理員協助開通。\')">聯絡管理員開通月卡</button>';
+    }
+
+    function loadMonthlyCardStatus() {
+      var box = document.getElementById('monthly-card-content');
+      if (box) box.innerHTML = '正在讀取月卡狀態...';
+      google.script.run.withSuccessHandler(renderMonthlyCardStatus)
+        .withFailureHandler(function(err){ if (box) box.innerHTML = '<div style="color:#ff7777;">讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</div>'; })
+        .getMonthlyCardStatus(playerUID);
+    }
+
+    function claimMonthlyCardReward() {
+      google.script.run.withSuccessHandler(function(res){
+        alert(res && res.msg ? res.msg : (res && res.success ? '已領取月卡獎勵' : '領取失敗'));
+        if (res && res.status) renderMonthlyCardStatus(res.status); else loadMonthlyCardStatus();
+        if (typeof loadHomeState === 'function') setTimeout(loadHomeState, 350);
+      }).withFailureHandler(function(err){ alert('領取失敗：' + (err && err.message ? err.message : err)); })
+        .claimMonthlyCardDailyReward(playerUID);
+    }
+
+    function rewardLabel(reward) {
+      reward = reward || {};
+      var type = String(reward.type || '').toUpperCase();
+      var amount = Number(reward.amount || 1);
+      if (type === 'DRAW_TIMES') return '抽卡 +' + amount;
+      if (type === 'ENERGY') return '潮流能量 +' + amount;
+      if (type === 'SCORE' || type === 'POINTS') return '訓練分數 +' + amount;
+      if (type === 'SKILL_EXP') return '技能經驗 +' + amount;
+      if (type === 'RPG_TICKET') return '遠征次數 +' + amount;
+      if (type === 'PVP_TICKET') return '競技場次數 +' + amount;
+      if (type === 'RANDOM_SERIES_CARD') return (reward.seriesName || '系列') + '隨機' + (reward.rarity || '卡') + ' ×' + amount;
+      if (type === 'FIXED_OR_RANDOM_SERIES_CARD') return reward.cardName ? ('指定卡 ' + reward.cardName + ' ×' + amount) : ((reward.seriesName || '系列') + (reward.rarity || '卡') + ' ×' + amount);
+      if (type === 'CARD') return (reward.cardName || '卡片') + ' ×' + amount;
+      return reward.name || '獎勵';
+    }
+
+    function openBattlePassModal() {
+      var modal = document.getElementById('battle-pass-modal');
+      if (modal) modal.style.display = 'flex';
+      loadBattlePassDashboard();
+    }
+
+    function closeBattlePassModal() {
+      var modal = document.getElementById('battle-pass-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function loadBattlePassDashboard() {
+      var box = document.getElementById('battle-pass-content');
+      if (box) box.innerHTML = '正在讀取通行證...';
+      google.script.run.withSuccessHandler(renderBattlePassDashboard)
+        .withFailureHandler(function(err){ if (box) box.innerHTML = '<div style="color:#ff7777;">讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</div>'; })
+        .getBattlePassDashboard(playerUID);
+    }
+
+    function renderBattlePassDashboard(res) {
+      var box = document.getElementById('battle-pass-content');
+      if (!box) return;
+      if (!res || !res.success) {
+        box.innerHTML = '<div style="color:#ff7777;font-weight:900;">通行證讀取失敗。</div>';
+        return;
+      }
+      var points = Number(res.points || 0);
+      var maxPoints = Math.max(1, Number(res.maxPoints || 5000));
+      var premiumUnlockBtn = res.premiumUnlocked
+        ? '<button class="premium-action-btn" disabled>高級通行證已解鎖</button>'
+        : '<button class="premium-action-btn" onclick="showPaidFeatureNotice(\'高級通行證尚未開放線上付款，請聯絡管理員協助開通。\')">解鎖高級通行證 NT$' + Number(res.premiumPriceNtd || 350) + '</button>';
+      var html = '<div class="premium-panel-row"><span>' + escapeHtml(res.seasonName || '星域通行證') + '</span><b>' + points.toLocaleString() + ' / ' + maxPoints.toLocaleString() + '</b></div>'
+        + '<div class="battle-pass-progress"><i style="width:' + Math.min(100, Math.floor(points / maxPoints * 100)) + '%"></i></div>'
+        + premiumUnlockBtn
+        + '<div class="battle-pass-list">';
+      (res.milestones || []).forEach(function(m) {
+        var freeBtn = m.freeClaimed ? '<button disabled>已領</button>' : (m.freeClaimable ? '<button onclick="claimBattlePassReward(' + Number(m.milestoneNo || 0) + ', \'FREE\')">領取</button>' : '<button disabled>未達標</button>');
+        var premiumBtnRow = m.premiumClaimed ? '<button disabled>已領</button>' : (m.premiumClaimable ? '<button onclick="claimBattlePassReward(' + Number(m.milestoneNo || 0) + ', \'PREMIUM\')">領取</button>' : '<button disabled>' + (res.premiumUnlocked ? '未達標' : '未解鎖') + '</button>');
+        html += '<div class="battle-pass-row ' + (m.freeClaimable || m.premiumClaimable ? 'claimable' : '') + '">'
+          + '<div class="battle-pass-level"><b>Lv.' + Number(m.milestoneNo || 0) + '</b><small>' + Number(m.requiredPoints || 0).toLocaleString() + '分</small></div>'
+          + '<div class="battle-pass-reward"><b>普通獎勵</b>' + escapeHtml(rewardLabel(m.freeReward)) + freeBtn + '</div>'
+          + '<div class="battle-pass-reward premium ' + (res.premiumUnlocked ? '' : 'locked') + '"><b>高級獎勵</b>' + escapeHtml(rewardLabel(m.premiumReward)) + premiumBtnRow + '</div>'
+          + '</div>';
+      });
+      html += '</div>';
+      box.innerHTML = html;
+    }
+
+    function claimBattlePassReward(milestoneNo, track) {
+      google.script.run.withSuccessHandler(function(res){
+        alert(res && res.msg ? res.msg : (res && res.success ? '已領取通行證獎勵' : '領取失敗'));
+        if (res && res.dashboard) renderBattlePassDashboard(res.dashboard); else loadBattlePassDashboard();
+        if (typeof loadHomeState === 'function') setTimeout(loadHomeState, 350);
+      }).withFailureHandler(function(err){ alert('領取失敗：' + (err && err.message ? err.message : err)); })
+        .claimBattlePassReward(playerUID, milestoneNo, track || 'FREE');
+    }
+
     function updateAssetDisplaysFromShopAssets(assets) {
       if (!assets) return;
       if (typeof assets.drawTimes !== 'undefined') currentCount = Number(assets.drawTimes || 0);
@@ -5678,10 +5888,11 @@ function showCollectionHistory() {
           ? 'NT$ ' + Number(item.priceAmount || 0).toLocaleString()
           : Number(item.priceAmount || 0).toLocaleString() + ' ' + escapeHtml(item.priceLabel || item.priceType || '');
         var limitText = item.limitType === 'NONE' ? '不限購' : (escapeHtml(item.limitLabel || '') + ' ' + Number(item.purchaseUsed || 0) + ' / ' + Number(item.limitCount || 0));
-        var disabled = !item.canBuy;
         var isCash = item.priceType === 'CASH';
+        var isRecharge = item.category === 'TOPUP' || isCash;
+        var disabled = !item.canBuy && !isRecharge;
         var note = item.paymentNote ? '<div class="shop-note">' + escapeHtml(item.paymentNote || '') + '</div>' : '';
-        var btnText = item.requiresLogin ? '登入後購買' : (isCash && !item.paymentDisabled ? '前往綠界付款頁' : (item.paymentDisabled ? '付款尚未開放' : (disabled ? '已達限購 / 無法購買' : '購買')));
+        var btnText = item.requiresLogin ? '登入後購買' : (isRecharge ? '聯絡管理員開通' : (disabled ? '已達限購 / 無法購買' : '購買'));
         return `<div class="shop-item-card ${disabled ? 'off' : ''}">
           <div class="shop-item-head"><div class="shop-item-name">${escapeHtml(item.name || '')}</div><span class="shop-tag">${escapeHtml(item.tag || limitText)}</span></div>
           <div class="shop-desc">${escapeHtml(item.description || '')}</div>
@@ -5728,20 +5939,9 @@ function showCollectionHistory() {
       if (latestShopDashboard && latestShopDashboard.items) {
         item = latestShopDashboard.items.find(function(x){ return x.productKey === productKey; });
       }
-      if (item && item.priceType === 'CASH') {
-        if (msg) msg.innerHTML = '<span style="color:#aaa;">正在建立綠界付款訂單...</span>';
-        google.script.run.withSuccessHandler(function(res) {
-          if (!res || !res.success) {
-            if (res && res.dashboard) latestShopDashboard = res.dashboard;
-            if (msg) msg.innerHTML = '<span style="color:#ff7777;font-weight:bold;">' + escapeHtml(res && res.msg ? res.msg : '付款訂單建立失敗') + '</span>';
-            renderShopDashboard();
-            return;
-          }
-          if (msg) msg.innerHTML = '<span style="color:#00ff7f;font-weight:bold;">付款訂單已建立，即將導轉至綠界官方付款頁...</span>';
-          submitEcpayAioForm(res.formAction, res.fields);
-        }).withFailureHandler(function(err) {
-          if (msg) msg.innerHTML = '<span style="color:#ff7777;">付款訂單建立失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
-        }).createEcpayOrder(playerUID, productKey);
+      if (item && (item.category === 'TOPUP' || item.priceType === 'CASH')) {
+        showPaidFeatureNotice('儲值商城尚未開放線上付款，請聯絡管理員協助開通。');
+        if (msg) msg.innerHTML = '<span style="color:#ffdd77;font-weight:bold;">儲值商城尚未開放線上付款，請聯絡管理員協助開通。</span>';
         return;
       }
       if (msg) msg.innerHTML = '<span style="color:#aaa;">處理購買中...</span>';
@@ -6963,7 +7163,7 @@ function showCollectionHistory() {
         const imgUrl = getCardImageUrl(card);
         const canUpgrade = !isMax && energy >= nextCost;
         html += `
-          <div style="background:#111; border:1px solid #444; border-radius:10px; padding:10px; display:flex; gap:10px; align-items:center;">
+          <div class="${isMax ? 'max-star-effect' : ''}" style="background:#111; border:1px solid #444; border-radius:10px; padding:10px; display:flex; gap:10px; align-items:center;">
             <div style="width:64px; flex:0 0 64px;">
               ${imgUrl ? `<img src="${imgUrl}" class="card-art-thumbnail tlo-card-art" loading="lazy" decoding="async">` : `<div class="card-art-placeholder">${escapeHtml(name)}</div>`}
             </div>
@@ -7059,7 +7259,7 @@ function showCollectionHistory() {
         const trainDisabled = level >= maxLevel || energy < trainCost;
         const skillDisabled = skillLevel >= maxSkill || skillExpWallet < skillCost;
         html += `
-          <div style="background:linear-gradient(135deg,#101010,#181225);border:1px solid #3a3a3a;border-radius:14px;padding:12px;display:flex;gap:12px;align-items:flex-start;text-align:left;">
+          <div class="${star >= maxStar ? 'max-star-effect' : ''}" style="background:linear-gradient(135deg,#101010,#181225);border:1px solid #3a3a3a;border-radius:14px;padding:12px;display:flex;gap:12px;align-items:flex-start;text-align:left;">
             <div style="width:74px;flex:0 0 74px;">
               ${imgUrl ? `<img src="${imgUrl}" loading="lazy" decoding="async" class="card-art-thumbnail tlo-card-art" style="box-shadow:0 0 12px rgba(0,255,240,.2);">` : `<div class="card-art-placeholder">${escapeHtml(name)}</div>`}
             </div>
@@ -7571,7 +7771,7 @@ function showCollectionHistory() {
         }
         const info = findRpgCardInfo(name);
         const img = getCardImageUrl(info) || placeholderBattleImage(name, '#123a3a', '#00fff0');
-        html += `<div class="rpg-mini-card"><img class="tlo-card-art" src="${img}" alt="${escapeHtml(name)}" loading="lazy" decoding="async"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★｜Lv.${Number(info.level||1)}</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')} Lv.${Number(info.skillLevel||1)}</div></div>`;
+        html += `<div class="rpg-mini-card ${Number(info.star||1) >= 10 ? 'max-star-effect' : ''}"><img class="tlo-card-art" src="${img}" alt="${escapeHtml(name)}" loading="lazy" decoding="async"><div class="name">${escapeHtml(name)}</div><div style="color:#ffc107;font-size:10px;">${escapeHtml(info.elementIcon || '')}${escapeHtml(info.elementLabel || '')}｜${Number(info.star||1)}★｜Lv.${Number(info.level||1)}</div><div style="color:#aaa;font-size:10px;">${escapeHtml(info.skillName || '')} Lv.${Number(info.skillLevel||1)}</div></div>`;
       }
       box.innerHTML = html;
       scheduleOptimizeTloImages(box);

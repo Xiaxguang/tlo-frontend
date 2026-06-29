@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="580" viewBox="0 0 420 580">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151037"/>
+      <stop offset="0.45" stop-color="#32206f"/>
+      <stop offset="1" stop-color="#0c1026"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0a8"/>
+      <stop offset="0.45" stop-color="#ffcc4f"/>
+      <stop offset="1" stop-color="#b56b1b"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="18" y="18" width="384" height="544" rx="34" fill="url(#bg)" stroke="url(#gold)" stroke-width="10"/>
+  <rect x="42" y="42" width="336" height="496" rx="25" fill="none" stroke="#74fff5" stroke-opacity=".65" stroke-width="3"/>
+  <circle cx="210" cy="290" r="106" fill="none" stroke="url(#gold)" stroke-width="10" filter="url(#glow)"/>
+  <path d="M210 150 L242 250 L348 250 L263 312 L296 414 L210 352 L124 414 L157 312 L72 250 L178 250 Z" fill="url(#gold)" filter="url(#glow)"/>
+  <text x="210" y="92" text-anchor="middle" fill="#fff6bd" font-size="36" font-family="Arial, sans-serif" font-weight="800">T-LO</text>
+  <text x="210" y="500" text-anchor="middle" fill="#74fff5" font-size="24" font-family="Arial, sans-serif" font-weight="700">STARFIELD CARD</text>
+</svg>

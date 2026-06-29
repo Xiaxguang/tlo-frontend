@@ -72,6 +72,8 @@
     "getStarShopDashboard",
     "getCharacterGrowthDashboard",
     "getMissionDashboard",
+    "getMonthlyCardStatus",
+    "getBattlePassDashboard",
     "getAchievementDashboard",
     "getDemonChallengeDashboard",
     "getMessageBoard",

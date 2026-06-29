@@ -462,8 +462,8 @@
               <div><label>層數</label><input id="lbLayerCount" type="number" min="1" max="6" value="2"></div>
             </div>
             <div class="row3">
-              <div><label>Rows</label><input id="lbRows" type="number" min="2" value="4"></div>
-              <div><label>Cols</label><input id="lbCols" type="number" min="2" value="6"></div>
+              <div><label>Rows（最大3）</label><input id="lbRows" type="number" min="2" max="3" value="3"></div>
+              <div><label>Cols（最大6）</label><input id="lbCols" type="number" min="2" max="6" value="6"></div>
               <div><label>開場最少可連線</label><input id="lbMinMatches" type="number" min="1" value="2"></div>
             </div>
             <div class="row3">
@@ -541,6 +541,17 @@
             <label>商品 Key</label><input id="shopGrantProduct" placeholder="例如 cash_daily_33">
             <button class="warn" onclick="testGrantShopItem()" style="width:100%;margin-top:10px">測試發放商品獎勵</button>
             <div class="muted">測試發獎不串付款、不扣資源，只驗證商品獎勵是否正確。</div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>月卡 / 星域通行證開通</h3>
+            <label>玩家 UID</label><input id="premiumGrantUid" placeholder="例如 guang">
+            <div class="row">
+              <div><label>月卡天數</label><input id="premiumMonthlyDays" type="number" min="1" value="30"></div>
+              <div><label>高級通行證</label><input value="夏日系列 NT$350" disabled></div>
+            </div>
+            <button class="primary" onclick="grantMonthlyCardByAdmin()" style="width:100%;margin-top:10px">開通 / 延長月卡</button>
+            <button class="warn" onclick="unlockPremiumPassByAdmin()" style="width:100%;margin-top:8px">解鎖高級通行證</button>
+            <div class="muted">目前線上付款未開通，玩家端會提示聯絡管理員；GM 可在這裡手動開通。</div>
           </div>
         </div>
         <h3>商品列表</h3>
@@ -1803,6 +1814,19 @@ async function testGrantShopItem(){
   try{ const data = await rpc('adminTestGrantShopItem', [$('shopGrantUid').value.trim(), $('shopGrantProduct').value.trim()]); msg('shopMsg', data.msg, true); }catch(e){ msg('shopMsg', e.message); }
 }
 
+async function grantMonthlyCardByAdmin(){
+  try{
+    const data = await rpc('adminGrantMonthlyCard', [$('premiumGrantUid').value.trim(), $('premiumMonthlyDays').value || 30]);
+    msg('shopMsg', data.msg || '月卡已開通', true);
+  }catch(e){ msg('shopMsg', e.message); }
+}
+async function unlockPremiumPassByAdmin(){
+  try{
+    const data = await rpc('adminUnlockPremiumBattlePass', [$('premiumGrantUid').value.trim()]);
+    msg('shopMsg', data.msg || '高級通行證已解鎖', true);
+  }catch(e){ msg('shopMsg', e.message); }
+}
+
 function downloadJson(filename, data){
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json;charset=utf-8'});
   const url = URL.createObjectURL(blob);
@@ -1988,14 +2012,14 @@ function clearLinkBattleStageForm(){ ['lbStageId','lbStageName','lbRewardCardNam
 function editLinkBattleStage(stageId){
   const s=(linkBattleStageRows||[]).find(x=>x.stageId===stageId); if(!s) return;
   $('lbStageOrder').value=s.stageOrder||1; $('lbStageId').value=s.stageId||''; $('lbStageEnabled').value=s.enabled?'1':'0'; $('lbStageName').value=s.stageName||''; if($('lbStageChapter')) $('lbStageChapter').value=s.chapterKey||'fallen_seraphim'; $('lbMaxTurns').value=s.maxTurns||2; $('lbStageBoss').value=s.bossId||''; $('lbHpMultiplier').value=s.bossHpMultiplier||1;
-  $('lbCardCount').value=s.cardCount||16; $('lbPairCount').value=s.pairCount||8; $('lbLayerCount').value=s.layerCount||2; $('lbRows').value=s.rows||3; $('lbCols').value=s.cols||4; $('lbMinMatches').value=s.minInitialMatches||2;
+  $('lbCardCount').value=s.cardCount||16; $('lbPairCount').value=s.pairCount||8; $('lbLayerCount').value=s.layerCount||2; $('lbRows').value=Math.min(3, s.rows||3); $('lbCols').value=Math.min(6, s.cols||6); $('lbMinMatches').value=s.minInitialMatches||2;
   $('lbTimeLimit').value=s.timeLimitSeconds||180; $('lbErrorLimit').value=s.errorLimit||8; $('lbBossAttack').value=s.bossAttackDamage||8; $('lbShuffleLimit').value=s.shuffleLimit||3; $('lbHintLimit').value=s.hintLimit||3; $('lbComboWindow').value=s.comboWindowSeconds||5; $('lbMinUnlocked').value=s.minUnlockedCards||4;
   const w=s.rarityWeights||{}; $('lbWeightNormal').value=w.Normal||0; $('lbWeightRare').value=w.RARE||0; $('lbWeightSuperRare').value=w['SUPER RARE']||0; $('lbWeightSsr').value=w.SSR||0; $('lbWeightUr').value=w.UR||0; const r=s.rewardConfig||{}; $('lbRewardType').value=r.type||'NONE'; $('lbRewardAmount').value=r.amount||0; $('lbRewardCardName').value=r.cardName||r.itemKey||'';
   $('lbStageName').scrollIntoView({behavior:'smooth',block:'center'});
 }
 async function saveLinkBattleStage(){
   try{
-    const rewardType=$('lbRewardType').value; const rewardName=$('lbRewardCardName').value.trim(); const payload={stageOrder:$('lbStageOrder').value,stageId:$('lbStageId').value.trim(),enabled:$('lbStageEnabled').value==='1',stageName:$('lbStageName').value.trim(),chapterKey:($('lbStageChapter')&&$('lbStageChapter').value)||'fallen_seraphim',chapterName:(linkBattleChapterRows.find(ch=>ch.chapterKey===(($('lbStageChapter')&&$('lbStageChapter').value)||'fallen_seraphim'))||{}).chapterName||'墮落的熾天使',maxTurns:$('lbMaxTurns').value,bossId:$('lbStageBoss').value,bossHpMultiplier:$('lbHpMultiplier').value,cardCount:$('lbCardCount').value,pairCount:$('lbPairCount').value,layerCount:$('lbLayerCount').value,rows:$('lbRows').value,cols:$('lbCols').value,minInitialMatches:$('lbMinMatches').value,timeLimitSeconds:$('lbTimeLimit').value,errorLimit:$('lbErrorLimit').value,bossAttackDamage:$('lbBossAttack').value,shuffleLimit:$('lbShuffleLimit').value,hintLimit:$('lbHintLimit').value,comboWindowSeconds:$('lbComboWindow').value,minUnlockedCards:$('lbMinUnlocked').value,rewardConfig:{type:rewardType,amount:$('lbRewardAmount').value,cardName:rewardType==='CARD'?rewardName:'',itemKey:rewardType==='ITEM'?rewardName:''},rarityWeights:{Normal:$('lbWeightNormal').value,RARE:$('lbWeightRare').value,'SUPER RARE':$('lbWeightSuperRare').value,SSR:$('lbWeightSsr').value,UR:$('lbWeightUr').value}};
+    const rewardType=$('lbRewardType').value; const rewardName=$('lbRewardCardName').value.trim(); const payload={stageOrder:$('lbStageOrder').value,stageId:$('lbStageId').value.trim(),enabled:$('lbStageEnabled').value==='1',stageName:$('lbStageName').value.trim(),chapterKey:($('lbStageChapter')&&$('lbStageChapter').value)||'fallen_seraphim',chapterName:(linkBattleChapterRows.find(ch=>ch.chapterKey===(($('lbStageChapter')&&$('lbStageChapter').value)||'fallen_seraphim'))||{}).chapterName||'墮落的熾天使',maxTurns:$('lbMaxTurns').value,bossId:$('lbStageBoss').value,bossHpMultiplier:$('lbHpMultiplier').value,cardCount:$('lbCardCount').value,pairCount:$('lbPairCount').value,layerCount:$('lbLayerCount').value,rows:Math.min(3, Number($('lbRows').value||3)),cols:Math.min(6, Number($('lbCols').value||6)),minInitialMatches:$('lbMinMatches').value,timeLimitSeconds:$('lbTimeLimit').value,errorLimit:$('lbErrorLimit').value,bossAttackDamage:$('lbBossAttack').value,shuffleLimit:$('lbShuffleLimit').value,hintLimit:$('lbHintLimit').value,comboWindowSeconds:$('lbComboWindow').value,minUnlockedCards:$('lbMinUnlocked').value,rewardConfig:{type:rewardType,amount:$('lbRewardAmount').value,cardName:rewardType==='CARD'?rewardName:'',itemKey:rewardType==='ITEM'?rewardName:''},rarityWeights:{Normal:$('lbWeightNormal').value,RARE:$('lbWeightRare').value,'SUPER RARE':$('lbWeightSuperRare').value,SSR:$('lbWeightSsr').value,UR:$('lbWeightUr').value}};
     const data=await rpc('adminUpsertLinkBattleStage',[payload]);
     msg('lbStageMsg',data.msg,true); await loadLinkBattleAdmin();
   }catch(e){ msg('lbStageMsg',e.message); }

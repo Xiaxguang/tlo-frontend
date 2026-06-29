@@ -648,10 +648,26 @@
     return String((card && (card.imageUrl || card.image_url || card.image)) || '');
   }
 
+  function getLinkBattleMaxTeamSize() {
+    var dash = state.dashboard || {};
+    var team = dash.linkBattleTeam || dash.team || {};
+    var raw = Number(team.maxTeamSize || dash.maxTeamSize || 5);
+    if (!Number.isFinite(raw) || raw <= 0) raw = 5;
+    return Math.min(5, Math.max(1, Math.floor(raw)));
+  }
+
+  function isMaxStarCard(card) {
+    return Number(card && (card.star || card.star_level || card.starLevel) || 0) >= 10;
+  }
+
+  function isMaxStarTile(tile) {
+    return Number(tile && (tile.star || tile.star_level || tile.starLevel) || 0) >= 10;
+  }
+
   function getCurrentTeamIds() {
     var team = (state.dashboard && (state.dashboard.linkBattleTeam || state.dashboard.team)) || {};
     var ids = Array.isArray(team.cardIds) ? team.cardIds : (Array.isArray(team.cards) ? team.cards.map(getCardId) : []);
-    return ids.map(function(id){ return String(id || '').trim(); }).filter(Boolean).slice(0, 3);
+    return ids.map(function(id){ return String(id || '').trim(); }).filter(Boolean).slice(0, getLinkBattleMaxTeamSize());
   }
 
   function getEligibleCardsSorted() {
@@ -696,7 +712,7 @@
 
   function calculateLocalTeamSkillProfile(cards) {
     var counts = { assault:0, guard:0, heal:0, insight:0, stability:0, suppress:0 };
-    var list = (cards || []).filter(Boolean).slice(0, 3);
+    var list = (cards || []).filter(Boolean).slice(0, getLinkBattleMaxTeamSize());
     list.forEach(function(card){
       var skill = getCardSkill(card);
       var id = skill.skillId || 'assault';
@@ -781,7 +797,7 @@
       return '<div class="link-battle-team-slot empty"><span>' + escapeHtml(role) + '</span><b>未選擇</b></div>';
     }
     var image = getCardImage(card);
-    return '<div class="link-battle-team-slot">'
+    return '<div class="link-battle-team-slot ' + (isMaxStarCard(card) ? 'max-star-effect' : '') + '">'
       + '<span>' + escapeHtml(role) + '</span>'
       + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-slot-fallback">🎴</div>')
       + '<b>' + escapeHtml(getCardName(card)) + '</b>'
@@ -792,9 +808,10 @@
 
   function renderTeamSlotsFromIds(ids) {
     var list = (ids || []).map(findEligibleCard);
-    var roles = ['隊長', '隊員', '隊員'];
+    var max = getLinkBattleMaxTeamSize();
+    var roles = ['隊長', '隊員', '隊員', '隊員', '隊員'];
     var html = '<div class="link-battle-team-slots">';
-    for (var i = 0; i < 3; i += 1) html += renderTeamSlot(list[i], roles[i]);
+    for (var i = 0; i < max; i += 1) html += renderTeamSlot(list[i], roles[i] || '隊員');
     html += '</div>';
     return html;
   }
@@ -845,7 +862,7 @@
       return;
     }
     var html = '<div class="link-battle-team-picker-summary">'
-      + '<div><span>目前選擇</span><b>' + ids.length + ' / 3</b></div>'
+      + '<div><span>目前選擇</span><b>' + ids.length + ' / ' + getLinkBattleMaxTeamSize() + '</b></div>'
       + '<em>玩家可查看每張卡的連線討伐技能；隊長技會讓同類技能略微提高。</em>'
       + '</div>';
     html += renderTeamSlotsFromIds(ids);
@@ -859,7 +876,7 @@
       var id = getCardId(card);
       var picked = selected.has(id);
       var image = getCardImage(card);
-      return '<button type="button" class="link-battle-team-card-option ' + (picked ? 'selected' : '') + '" onclick="TLOLinkBattle.toggleTeamCard(' + jsArg(id) + ')">'
+      return '<button type="button" class="link-battle-team-card-option ' + (picked ? 'selected ' : '') + (isMaxStarCard(card) ? 'max-star-effect' : '') + '" onclick="TLOLinkBattle.toggleTeamCard(' + jsArg(id) + ')">'
         + (image ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(getCardName(card)) + '" loading="lazy" decoding="async">' : '<div class="link-battle-team-card-fallback">🎴</div>')
         + '<strong>' + escapeHtml(getCardName(card)) + '</strong>'
         + '<span>' + escapeHtml(card.rarity || 'Normal') + '｜★' + Number(card.star || 1) + '</span>'
@@ -893,8 +910,8 @@
     var index = ids.indexOf(id);
     if (index >= 0) ids.splice(index, 1);
     else {
-      if (ids.length >= 3) {
-        setMsg('出戰編隊最多選擇 3 張卡牌。', '#ffdd77');
+      if (ids.length >= getLinkBattleMaxTeamSize()) {
+        setMsg('出戰編隊最多選擇 ' + getLinkBattleMaxTeamSize() + ' 張卡牌。', '#ffdd77');
         return;
       }
       ids.push(id);
@@ -918,7 +935,7 @@
 
   async function autoLinkBattleTeam() {
     try {
-      var cards = getEligibleCardsSorted().slice(0, 3);
+      var cards = getEligibleCardsSorted().slice(0, getLinkBattleMaxTeamSize());
       var ids = cards.map(getCardId).filter(Boolean);
       var res = await callRpc('setLinkBattleTeam', [window.playerUID || window.TLO_PLAYER_UID || '', ids]);
       if (!res || !res.success) throw new Error((res && res.msg) || '自動編隊失敗');
@@ -926,7 +943,7 @@
       state.teamDraftIds = getCurrentTeamIds();
       renderDashboard();
       if (state.teamPickerOpen) renderTeamPicker();
-      setMsg('已自動選擇目前戰力最高的 3 張卡牌。', '#00fff0');
+      setMsg('已自動選擇目前戰力最高的 ' + getLinkBattleMaxTeamSize() + ' 張卡牌。', '#00fff0');
     } catch (err) {
       setMsg('自動編隊失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     }
@@ -1260,6 +1277,7 @@
 
   function getTileClassName(tile, selectable) {
     var cls = ['link-battle-tile', rarityClass(tile.rarity)];
+    if (isMaxStarTile(tile)) cls.push('max-star-effect');
     cls.push('layer-' + Number(tile.layer || 0));
     if (selectable) cls.push('selectable');
     if (!selectable) cls.push('covered');
@@ -1463,6 +1481,7 @@
   function renderTile(tile, positionStyle) {
     var selectable = tile.selectable != null ? !!tile.selectable : isTileSelectable(tile);
     var cls = ['link-battle-tile', rarityClass(tile.rarity)];
+    if (isMaxStarTile(tile)) cls.push('max-star-effect');
     cls.push('layer-' + Number(tile.layer || 0));
     if (selectable) cls.push('selectable');
     if (!selectable) cls.push('covered');
@@ -1614,7 +1633,7 @@
   async function playSupportSkillEffects(effects) {
     var list = (effects && effects.supportSkills) || [];
     if (!Array.isArray(list) || !list.length) return;
-    list.slice(0, 3).forEach(function(effect, idx){
+    list.slice(0, getLinkBattleMaxTeamSize()).forEach(function(effect, idx){
       setTimeout(function(){ showSupportSkillNotice(effect); }, idx * 220);
     });
     await sleep(Math.min(700, list.length * 220 + 260));
