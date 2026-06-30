@@ -1054,6 +1054,7 @@ function showTab(name, btn){
   ['players','cards','stages','linkbattle','shop','chat','worldboss','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  if(name === 'backup') loadExportTables();
 }
 
 async function searchPlayers(){
@@ -1894,23 +1895,36 @@ async function loadRedeemLogs(){
   }catch(e){ msg('redeemLogMsg', e.message); }
 }
 
+async function loadExportTables(){
+  try{
+    const data = await rpc('adminListExportTables', []);
+    const current = $('exportTableName').value;
+    $('exportTableName').innerHTML = (data.tables || []).map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    if(current && (data.tables || []).includes(current)) $('exportTableName').value = current;
+    msg('exportMsg', `可匯出 public schema 共 ${data.count || (data.tables || []).length} 張資料表`, true);
+  }catch(e){
+    msg('exportMsg', '讀取資料表清單失敗：' + e.message);
+  }
+}
+
 async function exportOneTable(){
   try{
     const table = $('exportTableName').value;
     msg('exportMsg','匯出中...',true);
     const data = await rpc('adminExportTable', [table]);
     downloadJson(`tlo_${table}_${new Date().toISOString().slice(0,10)}.json`, data);
-    msg('exportMsg', `已匯出 ${table}，共 ${data.rows.length} 筆`, true);
+    const count = data.rowCount ?? (data.rows || []).length;
+    msg('exportMsg', `已匯出 ${table}，共 ${count} 筆${data.limited ? '（受 ADMIN_EXPORT_ROW_LIMIT 限制）' : ''}`, true);
   }catch(e){ msg('exportMsg', e.message); }
 }
 
 async function exportAllData(){
-  if(!confirm('全部匯出可能需要一點時間，確定繼續？')) return;
+  if(!confirm('全部匯出會下載 public schema 內所有資料表，可能需要一點時間，確定繼續？')) return;
   try{
     msg('exportMsg','全部匯出中...',true);
     const data = await rpc('adminExportAllData', []);
     downloadJson(`tlo_full_backup_${new Date().toISOString().slice(0,10)}.json`, data);
-    msg('exportMsg', '已完成全部備份匯出', true);
+    msg('exportMsg', `已完成全部備份匯出，共 ${data.tableCount || Object.keys(data.tables || {}).length} 張表`, true);
   }catch(e){ msg('exportMsg', e.message); }
 }
 
