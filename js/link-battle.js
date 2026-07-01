@@ -49,6 +49,23 @@
     player_attack_ur: AUDIO_BASE_PATH + 'player_attack_ur.mp3'
   };
 
+  var audioCache = Object.create(null);
+  var audioPreloadStarted = false;
+
+  function preloadBattleAudio() {
+    if (audioPreloadStarted) return;
+    audioPreloadStarted = true;
+    try {
+      if (localStorage.getItem('TLO_SOUND_ENABLED') !== '1') return;
+      Object.keys(AUDIO).forEach(function(key) {
+        var a = new Audio(AUDIO[key]);
+        a.preload = 'auto';
+        audioCache[key] = a;
+        try { a.load(); } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
   function $(id) { return document.getElementById(id); }
   function escapeHtml(text) {
     return String(text == null ? '' : text).replace(/[&<>"']/g, function (m) {
@@ -384,8 +401,16 @@
       if (localStorage.getItem('TLO_SOUND_ENABLED') !== '1') return;
       var src = AUDIO[key];
       if (!src) return;
-      var a = new Audio(src);
-      a.volume = key.indexOf('boss') >= 0 ? 0.72 : 0.58;
+      var base = audioCache[key];
+      if (!base) {
+        base = new Audio(src);
+        base.preload = 'auto';
+        audioCache[key] = base;
+        try { base.load(); } catch (_) {}
+      }
+      // cloneNode 讓同一音效可以重疊播放，但避免每次重新建立與重新解碼音檔。
+      var a = base.cloneNode ? base.cloneNode(true) : new Audio(src);
+      a.volume = key.indexOf('boss') >= 0 ? 0.66 : 0.52;
       var result = a.play();
       if (result && typeof result.catch === 'function') result.catch(function(){});
     } catch (_) {}
@@ -474,6 +499,7 @@
 
   function openModal() {
     updateViewportVars();
+    preloadBattleAudio();
     var modal = $('link-battle-modal');
     if (modal) modal.style.display = 'flex';
     setTimeout(function(){ scheduleBoardRerender(40); }, 40);
@@ -1219,7 +1245,8 @@
         setButtonsDisabled(false);
         return;
       }
-      await preloadLinkBattleImages(res.state).catch(function(){});
+      // 圖片預載改成背景執行，避免等待圖片下載造成開始戰鬥卡住。
+      preloadLinkBattleImages(res.state).catch(function(){});
       state.runId = res.runId;
       state.battle = res.state;
       state.selectedTileId = null;
@@ -1626,7 +1653,9 @@
     state.selectedTileId = null;
     state.hintedIds = new Set();
     state.isAnimating = true;
-    renderBattleState();
+    // 只更新盤面選取/鎖定狀態，不重繪 BOSS、血條、支援技能等大型區塊，降低每次點牌卡頓。
+    renderBoard();
+    var didRenderFinalState = false;
     try {
       var moveSeq = ++state.moveSeq;
       var res = await withTimeout(callRpc('resolveLinkBattleMove', [window.playerUID || window.TLO_PLAYER_UID || '', state.runId, aId, tileId]), 12000, '連線操作逾時，已解除鎖定，請再點一次。');
@@ -1635,7 +1664,7 @@
       if (res.effects && res.effects.playerAttack) {
         state.linkPath = { type: 'success', points: res.effects.playerAttack.path || [], tileA: tileA, tileB: tileB };
         renderBoard();
-        await sleep(650);
+        await sleep(320);
         await playPlayerAttack(res.effects.playerAttack, tileA || tileB);
       }
       if (res.effects && res.effects.invalid) {
@@ -1643,14 +1672,16 @@
         renderBoard();
         playAudio('boss_hit_player');
         setMsg((res.effects.invalid.blockedBySkill ? '編隊技能：' : '連線失敗：') + escapeHtml(res.effects.invalid.message || formatLinkBattleInvalidReason(res.effects.invalid.reason)), res.effects.invalid.blockedBySkill ? '#00fff0' : '#ff7777');
-        await sleep(700);
+        await sleep(420);
       }
       state.linkPath = null;
       await playSupportSkillEffects(res.effects);
       state.battle = res.state;
       state.battle.status = res.status;
-      renderBattleState();
       if (res.effects && res.effects.bossCounter) { await playBossCounter(res.effects.bossCounter); await playSupportSkillEffects({ supportSkills: res.effects.bossCounter.supportSkills || [] }); }
+      state.isAnimating = false;
+      renderBattleState();
+      didRenderFinalState = true;
       handleBattleEnd(res.status, res.reason, res.rewardSummary);
     } catch (err) {
       state.linkPath = null;
@@ -1658,20 +1689,20 @@
       setMsg('操作失敗：' + escapeHtml(err && err.message ? err.message : err), '#ff7777');
     } finally {
       state.isAnimating = false;
-      renderBattleState();
+      if (!didRenderFinalState) renderBattleState();
     }
   }
 
   async function playPlayerAttack(effect, tile) {
     playAudio('card_merge');
-    await sleep(120);
+    await sleep(80);
     playAttackByRarity(effect.rarity);
     var card = $('link-battle-attack-card');
     if (card) {
       card.innerHTML = tile && tile.image_url ? '<div class="link-battle-card-art-wrap"><img src="' + escapeHtml(tile.image_url) + '" alt="" loading="eager" decoding="async"></div>' : '<div class="link-battle-card-art-wrap"><div style="font-size:42px">🎴</div></div>';
       card.className = 'link-battle-attack-card active';
     }
-    await sleep(520);
+    await sleep(300);
     playAudio('card_hit_boss');
     showDamage(effect.damage, effect.comboBonus, effect.supportAttackBonusDamage);
     var shell = $('link-battle-shell');
@@ -1679,7 +1710,7 @@
       shell.classList.add('boss-shake');
       setTimeout(function(){ shell.classList.remove('boss-shake'); }, 560);
     }
-    await sleep(320);
+    await sleep(180);
     if (card) card.className = 'link-battle-attack-card';
     if (Number(effect.comboBonus || 0) > 0) playAudio('combo_bonus');
   }
@@ -1693,20 +1724,20 @@
       + (Number(comboBonus || 0) > 0 ? '<div style="font-size:13px;color:#ffdd77">Combo Bonus +' + Number(comboBonus || 0).toLocaleString() + '</div>' : '')
       + (Number(supportBonus || 0) > 0 ? '<div style="font-size:12px;color:#00fff0">猛攻 +' + Number(supportBonus || 0).toLocaleString() + '</div>' : '');
     shell.appendChild(el);
-    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 950);
+    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 760);
   }
 
   async function playBossCounter(effect) {
     playAudio('boss_warning');
     var warning = $('link-battle-warning');
     if (warning) warning.classList.add('active');
-    await sleep(900);
+    await sleep(520);
     if (warning) warning.classList.remove('active');
     playAudio('boss_attack');
     var shell = $('link-battle-shell');
     if (shell) {
       shell.classList.add('boss-redflash', 'boss-shake', 'boss-distort');
-      setTimeout(function(){ shell.classList.remove('boss-redflash', 'boss-shake', 'boss-distort'); }, 720);
+      setTimeout(function(){ shell.classList.remove('boss-redflash', 'boss-shake', 'boss-distort'); }, 520);
     }
     if (effect && Number(effect.playerHpDamage || 0) > 0) {
       playAudio('boss_hit_player');
@@ -1714,7 +1745,7 @@
     }
     var damageText = effect && Number(effect.playerHpDamage || 0) > 0 ? '｜玩家 HP -' + Number(effect.playerHpDamage || 0).toLocaleString() : '';
     setMsg('BOSS反擊：' + escapeHtml(effect.label || effect.skill || '攻擊') + escapeHtml(damageText), '#ff7777');
-    await sleep(760);
+    await sleep(450);
   }
 
   function showPlayerHpDamage(damage) {
@@ -1724,7 +1755,7 @@
     el.className = 'link-battle-float-player-damage';
     el.innerHTML = '玩家 HP -' + Number(damage || 0).toLocaleString();
     shell.appendChild(el);
-    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 980);
+    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 760);
   }
 
 
@@ -1736,16 +1767,16 @@
     el.className = 'link-battle-float-support-skill';
     el.innerHTML = '<b>' + escapeHtml(effect.skillName || effect.label || '編隊技能') + '</b><span>' + escapeHtml(effect.message || '技能發動') + '</span>';
     shell.appendChild(el);
-    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 1200);
+    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 900);
   }
 
   async function playSupportSkillEffects(effects) {
     var list = (effects && effects.supportSkills) || [];
     if (!Array.isArray(list) || !list.length) return;
     list.slice(0, getLinkBattleMaxTeamSize()).forEach(function(effect, idx){
-      setTimeout(function(){ showSupportSkillNotice(effect); }, idx * 220);
+      setTimeout(function(){ showSupportSkillNotice(effect); }, idx * 160);
     });
-    await sleep(Math.min(700, list.length * 220 + 260));
+    await sleep(Math.min(460, list.length * 160 + 180));
   }
 
   function getNextUnlockedStageId(currentStageId) {

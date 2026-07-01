@@ -2294,3 +2294,28 @@
   background: rgba(0,0,0,.18) !important;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.36), 0 0 10px rgba(0,255,240,.08) !important;
 }
+
+/* v27 performance patch: reduce mobile GPU work during active link-battle play. */
+.link-battle-shell.in-battle .link-battle-tile img{
+  backface-visibility:hidden;
+  transform:translateZ(0);
+}
+@media (hover:none), (pointer:coarse){
+  .link-battle-shell.in-battle .link-battle-boss-bg{
+    filter:brightness(.58) saturate(1.05)!important;
+  }
+  .link-battle-shell.in-battle .link-battle-boss-figure{
+    filter:drop-shadow(0 10px 14px rgba(0,0,0,.76))!important;
+    transition:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-tile{
+    transition:transform .08s ease, opacity .08s ease!important;
+    box-shadow:0 7px 11px rgba(0,0,0,.62),0 1px 0 rgba(255,255,255,.16) inset!important;
+  }
+  .link-battle-shell.in-battle.boss-distort{
+    animation:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-warning.active{
+    animation:none!important;
+  }
+}
