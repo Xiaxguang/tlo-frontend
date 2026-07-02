@@ -615,7 +615,7 @@
     .worldboss-battle-stage{position:relative;margin:12px 0 10px;padding:14px;border-radius:18px;border:1px solid rgba(255,221,119,.35);background:radial-gradient(circle at 50% 8%, rgba(255,221,119,.18), transparent 30%),radial-gradient(circle at 50% 88%, rgba(0,255,240,.12), transparent 35%),linear-gradient(180deg,#171221 0%,#080811 100%);box-shadow:0 0 24px rgba(255,193,7,.14), inset 0 0 22px rgba(0,0,0,.45);overflow:hidden;text-align:center;}
     .worldboss-stage-title{font-size:13px;font-weight:1000;color:#ffdd77;letter-spacing:.08em;margin-bottom:8px;text-shadow:0 0 12px rgba(255,221,119,.35);}
     .worldboss-boss-visual{position:relative;height:190px;display:flex;align-items:center;justify-content:center;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.18));border:1px solid rgba(255,255,255,.08);overflow:hidden;}
-    .worldboss-boss-visual::before{content:'';position:absolute;inset:-40px;background:radial-gradient(circle at 50% 50%, rgba(255,0,127,.24), transparent 42%),conic-gradient(from 180deg, transparent, rgba(255,221,119,.18), transparent, rgba(0,255,240,.12), transparent);animation:worldbossAuraSpin 30s linear infinite;opacity:.78;}
+    .worldboss-boss-visual::before{content:'';position:absolute;inset:-40px;background:radial-gradient(circle at 50% 50%, rgba(255,0,127,.24), transparent 42%),conic-gradient(from 180deg, transparent, rgba(255,221,119,.18), transparent, rgba(0,255,240,.12), transparent);animation:worldbossAuraSpin 45s linear infinite;opacity:.78;}
     .worldboss-stage-boss-img{position:relative;z-index:1;width:min(165px,46vw);height:165px;object-fit:cover;border-radius:20px;border:2px solid rgba(255,221,119,.48);box-shadow:0 0 26px rgba(255,0,127,.34),0 0 18px rgba(255,221,119,.24);background:#111;}
     .worldboss-stage-boss-img.is-hit{animation:worldbossHit .42s ease both;}
     .worldboss-attack-orb{position:absolute;z-index:3;left:16%;bottom:22px;width:30px;height:30px;border-radius:999px;background:radial-gradient(circle,#fff 0%,#00fff0 38%,#006cff 75%);box-shadow:0 0 18px #00fff0,0 0 28px rgba(0,108,255,.65);opacity:0;pointer-events:none;}
@@ -1474,7 +1474,7 @@
     .lobby-announcement-inner{display:flex;align-items:center;width:100%;height:100%;min-width:0;}
     .lobby-announcement-label{flex:0 0 auto;margin-left:10px;padding:4px 8px;border-radius:999px;background:rgba(100,255,242,.14);border:1px solid rgba(100,255,242,.38);color:var(--lobby-cyan);font-size:11px;font-weight:1000;text-shadow:0 0 10px rgba(100,255,242,.34);}
     .lobby-marquee-viewport{position:relative;flex:1;min-width:0;overflow:hidden;height:100%;display:flex;align-items:center;margin:0 10px 0 8px;}
-    .lobby-marquee-track{display:inline-block;white-space:nowrap;will-change:transform;animation:lobbyMarquee 30s linear infinite;color:#fff7d7;font-size:12px;font-weight:900;text-shadow:0 0 8px rgba(0,0,0,.75);}
+    .lobby-marquee-track{display:inline-block;white-space:nowrap;will-change:transform;animation:lobbyMarquee 45s linear infinite;color:#fff7d7;font-size:12px;font-weight:900;text-shadow:0 0 8px rgba(0,0,0,.75);}
     .lobby-announcement:hover .lobby-marquee-track{animation-play-state:paused;}
     @keyframes lobbyMarquee{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
 
