@@ -324,6 +324,120 @@
     .turn-badge.element { color:#111; background:#ffc107; border-color:#ffd95c; }
     .turn-badge.skill { color:#00fff0; border-color:rgba(0,255,240,.45); }
     .turn-badge.crit { color:#ffdd44; border-color:rgba(255,221,68,.55); box-shadow:0 0 10px rgba(255,221,68,.18); }
+    .battle-arena.turn-mode { isolation: isolate; }
+    .battle-arena.turn-mode::before {
+      content:"";
+      position:absolute;
+      inset:-25%;
+      pointer-events:none;
+      opacity:.24;
+      background:
+        conic-gradient(from 90deg at 50% 50%, transparent 0 18%, rgba(0,255,240,.35) 28%, transparent 38% 62%, rgba(255,193,7,.28) 72%, transparent 82% 100%);
+      animation: battleEnergySweep 4.2s linear infinite;
+      z-index:0;
+    }
+    .battle-arena.turn-mode > :not(.battle-vfx) { position:relative; z-index:1; }
+    .clash-card { position:relative; overflow:visible; transition: filter .18s ease, box-shadow .18s ease; }
+    .clash-card.is-charging { filter:brightness(1.28) saturate(1.28); box-shadow:0 0 18px rgba(0,255,240,.34), 0 8px 18px rgba(0,0,0,.48); }
+    .clash-card.is-charging::before {
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius:12px;
+      border:2px solid rgba(0,255,240,.58);
+      box-shadow:0 0 18px rgba(0,255,240,.38), inset 0 0 12px rgba(255,255,255,.12);
+      animation:battleChargePulse .48s ease-out forwards;
+      pointer-events:none;
+      z-index:-1;
+    }
+    .card-b.is-charging::before { border-color:rgba(255,68,68,.62); box-shadow:0 0 18px rgba(255,68,68,.38), inset 0 0 12px rgba(255,255,255,.12); }
+    .battle-vfx {
+      position:absolute;
+      left:var(--vfx-x,50%);
+      top:var(--vfx-y,50%);
+      pointer-events:none;
+      z-index:22;
+      transform:translate(-50%,-50%);
+      will-change:transform, opacity;
+    }
+    .battle-vfx.slash {
+      --slash-rot:-18deg;
+      width:124px;
+      height:16px;
+      border-radius:999px;
+      background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.98) 22%, rgba(0,255,240,.92) 52%, rgba(255,193,7,.72) 76%, transparent 100%);
+      box-shadow:0 0 18px rgba(0,255,240,.62), 0 0 28px rgba(255,193,7,.28);
+      animation:battleSlash .5s cubic-bezier(.16,.8,.25,1) forwards;
+    }
+    .battle-vfx.from-boss.slash { --slash-rot:18deg; background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.98) 18%, rgba(255,68,68,.95) 52%, rgba(255,193,7,.72) 78%, transparent 100%); box-shadow:0 0 18px rgba(255,68,68,.62), 0 0 28px rgba(255,193,7,.24); }
+    .battle-vfx.impact {
+      width:74px;
+      height:74px;
+      border-radius:50%;
+      border:3px solid rgba(255,255,255,.9);
+      background:radial-gradient(circle, rgba(255,255,255,.9) 0 8%, rgba(255,193,7,.52) 14%, rgba(255,0,127,.22) 38%, transparent 68%);
+      box-shadow:0 0 24px rgba(255,193,7,.55);
+      animation:battleImpact .56s ease-out forwards;
+    }
+    .battle-vfx.spark {
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 -28px 0 #00fff0, 26px -10px 0 #ffc107, 22px 18px 0 #fff, -22px 18px 0 #00fff0, -26px -10px 0 #ff4fb0;
+      animation:battleSpark .62s ease-out forwards;
+    }
+    .battle-vfx.crit {
+      color:#ffdd44;
+      font-weight:1000;
+      font-size:18px;
+      letter-spacing:1px;
+      text-shadow:0 2px 0 #000, 0 0 16px rgba(255,221,68,.9);
+      animation:battleCritPop .72s ease-out forwards;
+    }
+    .battle-vfx.skill {
+      min-width:70px;
+      padding:4px 8px;
+      color:#111;
+      font-weight:1000;
+      font-size:11px;
+      text-align:center;
+      border-radius:999px;
+      background:linear-gradient(90deg,#00fff0,#ffc107);
+      box-shadow:0 0 18px rgba(0,255,240,.45);
+      animation:battleSkillBadge .74s ease-out forwards;
+    }
+    @keyframes battleEnergySweep { to { transform:rotate(360deg); } }
+    @keyframes battleChargePulse {
+      0% { opacity:0; transform:scale(.82); }
+      45% { opacity:1; transform:scale(1.04); }
+      100% { opacity:0; transform:scale(1.18); }
+    }
+    @keyframes battleSlash {
+      0% { opacity:0; transform:translate(-50%,-50%) rotate(var(--slash-rot)) scaleX(.18) translateX(-42px); }
+      18% { opacity:1; }
+      100% { opacity:0; transform:translate(-50%,-50%) rotate(var(--slash-rot)) scaleX(1.16) translateX(42px); }
+    }
+    @keyframes battleImpact {
+      0% { opacity:0; transform:translate(-50%,-50%) scale(.25); }
+      30% { opacity:1; transform:translate(-50%,-50%) scale(.78); }
+      100% { opacity:0; transform:translate(-50%,-50%) scale(1.45); }
+    }
+    @keyframes battleSpark {
+      0% { opacity:0; transform:translate(-50%,-50%) scale(.35) rotate(0deg); }
+      22% { opacity:1; }
+      100% { opacity:0; transform:translate(-50%,-50%) scale(1.65) rotate(52deg); }
+    }
+    @keyframes battleCritPop {
+      0% { opacity:0; transform:translate(-50%,0) scale(.68); }
+      22% { opacity:1; transform:translate(-50%,-48%) scale(1.16); }
+      100% { opacity:0; transform:translate(-50%,-150%) scale(.96); }
+    }
+    @keyframes battleSkillBadge {
+      0% { opacity:0; transform:translate(-50%,20%) scale(.8); }
+      20% { opacity:1; transform:translate(-50%,-30%) scale(1.06); }
+      100% { opacity:0; transform:translate(-50%,-130%) scale(.96); }
+    }
     .damage-float {
       position: absolute;
       z-index: 25;
@@ -3989,6 +4103,57 @@
       if (bossText) bossText.innerText = '戰鬥準備中...';
     }
 
+    function getBattleArenaPanel(prefix) {
+      const arenaId = prefix === 'battle' ? 'battle-arena-panel' : `${prefix}-arena-panel`;
+      return document.getElementById(arenaId);
+    }
+
+    function getBattleVfxPoint(arena, target, actor) {
+      if (arena && target && typeof target.getBoundingClientRect === 'function') {
+        const a = arena.getBoundingClientRect();
+        const r = target.getBoundingClientRect();
+        if (a.width > 0 && a.height > 0 && r.width > 0 && r.height > 0) {
+          return {
+            x: ((r.left + r.width / 2 - a.left) / a.width) * 100,
+            y: ((r.top + r.height / 2 - a.top) / a.height) * 100
+          };
+        }
+      }
+      return actor === 'player' ? {x:72, y:48} : {x:28, y:48};
+    }
+
+    function spawnBattleVfx(prefix, target, kind, actor, text, duration) {
+      const arena = getBattleArenaPanel(prefix);
+      if (!arena) return null;
+      const point = getBattleVfxPoint(arena, target, actor);
+      const el = document.createElement('div');
+      el.className = `battle-vfx ${kind || 'impact'} ${actor === 'boss' ? 'from-boss' : 'from-player'}`;
+      el.style.setProperty('--vfx-x', Math.max(8, Math.min(92, point.x)) + '%');
+      el.style.setProperty('--vfx-y', Math.max(18, Math.min(88, point.y)) + '%');
+      if (text) el.textContent = text;
+      arena.appendChild(el);
+      setTimeout(() => el.remove(), duration || 900);
+      return el;
+    }
+
+    function playBattleCharge(prefix, actor, turn, actorEl) {
+      if (!actorEl) return;
+      actorEl.classList.remove('is-charging');
+      void actorEl.offsetWidth;
+      actorEl.classList.add('is-charging');
+      spawnBattleVfx(prefix, actorEl, 'spark', actor, '', 650);
+      if (turn && turn.isSkill) spawnBattleVfx(prefix, actorEl, 'skill', actor, turn.skillName || 'SKILL', 820);
+      setTimeout(() => actorEl.classList.remove('is-charging'), 520);
+    }
+
+    function playBattleHitEffects(prefix, actor, turn, targetEl) {
+      spawnBattleVfx(prefix, targetEl, 'slash', actor, '', 620);
+      setTimeout(() => spawnBattleVfx(prefix, targetEl, 'impact', actor, '', 720), 85);
+      setTimeout(() => spawnBattleVfx(prefix, targetEl, 'spark', actor, '', 620), 135);
+      if (turn && turn.isCritical) setTimeout(() => spawnBattleVfx(prefix, targetEl, 'crit', actor, 'CRIT', 860), 150);
+      if (turn && turn.elementIcon && turn.elementLabel) setTimeout(() => spawnBattleVfx(prefix, targetEl, 'skill', actor, `${turn.elementIcon}${turn.elementLabel}`, 820), 220);
+    }
+
     function showDamageNumber(target, amount, actor, turn) {
       const arena = document.getElementById('battle-arena-panel');
       if (!arena) return;
@@ -4069,7 +4234,9 @@
       const fBoss = document.getElementById('fighter-boss');
       const banner = document.getElementById('battle-turn-banner');
       const log = document.getElementById('battle-turn-log');
+      const arena = document.getElementById('battle-arena-panel');
 
+      if (arena) arena.classList.add('turn-mode');
       setBattleHpVisible('battle', true);
       if (banner) { banner.style.display = 'block'; banner.innerText = `⚔️ ${battle.stageName || 'T-LO 回合制戰鬥'} 開始！`; }
       if (log) { log.style.display = 'block'; log.innerHTML = ''; }
@@ -4084,15 +4251,19 @@
 
         if (isPlayer) {
           fPlayer.classList.add('turn-attack-player');
+          playBattleCharge('battle', 'player', turn, fPlayer);
           await sleepTurn(240);
           fBoss.classList.add('turn-hit-boss');
+          playBattleHitEffects('battle', 'player', turn, fBoss);
           showDamageNumber(fBoss, turn.damage, 'player', turn);
           if (window.TLOAudio) window.TLOAudio.playSfx('click');
           setHpBar(hpBossFill, hpBossText, turn.bossHpAfter, battle.bossMaxHp);
         } else {
           fBoss.classList.add('turn-attack-boss');
+          playBattleCharge('battle', 'boss', turn, fBoss);
           await sleepTurn(240);
           fPlayer.classList.add('turn-hit-player');
+          playBattleHitEffects('battle', 'boss', turn, fPlayer);
           showDamageNumber(fPlayer, turn.damage, 'boss', turn);
           if (window.TLOAudio) window.TLOAudio.playSfx('click');
           setHpBar(hpPlayerFill, hpPlayerText, turn.playerHpAfter, battle.playerMaxHp);
@@ -4277,15 +4448,19 @@
         appendTurnLogTo(prefix, turn.text || (isPlayer ? '我方攻擊！' : '敵方反擊！'), turn.actor, turn);
         if (isPlayer) {
           fPlayer.classList.add('turn-attack-player');
+          playBattleCharge(prefix, 'player', turn, fPlayer);
           await sleepTurn(240);
           fBoss.classList.add('turn-hit-boss');
+          playBattleHitEffects(prefix, 'player', turn, fBoss);
           showDamageNumberInArena(prefix, turn.damage, 'player', turn);
           if (window.TLOAudio) window.TLOAudio.playSfx('click');
           setHpBar(hpBossFill, hpBossText, turn.bossHpAfter, battle.bossMaxHp);
         } else {
           fBoss.classList.add('turn-attack-boss');
+          playBattleCharge(prefix, 'boss', turn, fBoss);
           await sleepTurn(240);
           fPlayer.classList.add('turn-hit-player');
+          playBattleHitEffects(prefix, 'boss', turn, fPlayer);
           showDamageNumberInArena(prefix, turn.damage, 'boss', turn);
           if (window.TLOAudio) window.TLOAudio.playSfx('click');
           setHpBar(hpPlayerFill, hpPlayerText, turn.playerHpAfter, battle.playerMaxHp);

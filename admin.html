@@ -52,6 +52,23 @@
     .admin-card-thumb,.admin-card-preview{display:block;box-sizing:border-box;aspect-ratio:2/3;object-fit:contain;object-position:center;background:#090909;padding:2px;border:1px solid #444}
     .admin-card-thumb{width:56px;border-radius:8px}
     .admin-card-preview{width:min(180px,100%);margin:0 auto;border-radius:16px;padding:6px}
+    .admin-tab-tools{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:12px 0}
+    .admin-tab-tools button{padding:8px 11px;border-radius:10px;font-size:12px}
+    .collapsible-panel{position:relative}
+    .section-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;padding:10px 12px;border:1px solid rgba(0,255,240,.28);background:rgba(0,255,240,.07);border-radius:12px;text-align:left}
+    .section-toggle .section-title{display:block;color:#00fff0;font-size:16px;font-weight:1000}
+    .section-toggle .section-meta{display:block;color:#aaa;font-size:11px;font-weight:700;margin-top:2px}
+    .section-chevron{color:#ffc107;font-size:18px;line-height:1}
+    .collapsible-panel.collapsed{padding-bottom:12px}
+    .collapsible-panel.collapsed > :not(.section-toggle){display:none!important}
+    .admin-data-group{border:1px solid #333;border-radius:12px;background:rgba(0,0,0,.18);margin:10px 0;overflow:hidden}
+    .admin-data-group summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;cursor:pointer;color:#00fff0;font-weight:1000;background:rgba(255,255,255,.035);list-style:none}
+    .admin-data-group summary::-webkit-details-marker{display:none}
+    .admin-data-group summary:after{content:"收合";color:#ffc107;font-size:11px}
+    .admin-data-group:not([open]) summary:after{content:"展開"}
+    .admin-data-group-body{padding:0 10px 10px;overflow-x:auto}
+    .admin-section-count{color:#aaa;font-size:12px;font-weight:800;margin-left:auto}
+    .admin-data-group table{margin-top:0}
     @media(max-width:900px){.grid,.split,.row,.row3{grid-template-columns:1fr}.statgrid{grid-template-columns:repeat(2,1fr)}.top{display:block}.top button{margin-top:8px;width:100%}}
   </style>
 </head>
@@ -288,8 +305,8 @@
           </div>
           <label>章節描述</label><input id="rpgChapterDesc" placeholder="顯示給玩家看的異世界描述">
           <div class="row3">
-            <div><label>解鎖條件</label><select id="rpgChapterUnlockType"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option></select></div>
-            <div><label>解鎖值</label><input id="rpgChapterUnlockValue" placeholder="例如 25 或 forest_01"></div>
+            <div><label>解鎖條件</label><select id="rpgChapterUnlockType"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option><option value="OWN_CARD">需擁有指定卡牌</option></select></div>
+            <div><label>解鎖值</label><input id="rpgChapterUnlockValue" placeholder="例如 25、forest_01 或卡牌名稱"></div>
             <div><label>狀態</label><select id="rpgChapterActive"><option value="1">啟用</option><option value="0">停用</option></select></div>
           </div>
           <button class="primary" onclick="saveRpgChapter()" style="margin-top:10px">新增 / 儲存遠征章節</button>
@@ -390,8 +407,8 @@
               <div><label>掉落張數</label><input id="rpgRewardCardQuantity" type="number" min="1" value="1"></div>
             </div>
             <div class="row">
-              <div><label>解鎖條件</label><select id="rpgUnlockType"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option></select></div>
-              <div><label>解鎖值</label><input id="rpgUnlockValue" placeholder="例如 25 或 forest_01"></div>
+              <div><label>解鎖條件</label><select id="rpgUnlockType"><option value="NONE">無</option><option value="BATTLE_STAGE">需通關爭霸戰關卡</option><option value="RPG_DUNGEON">需通關指定遠征關卡</option><option value="OWN_CARD">需擁有指定卡牌</option></select></div>
+              <div><label>解鎖值</label><input id="rpgUnlockValue" placeholder="例如 25、forest_01 或卡牌名稱"></div>
             </div>
             <button class="primary" onclick="saveRpgDungeon()" style="width:100%;margin-top:10px">新增 / 儲存遠征關卡</button>
             <div id="rpgStageMsg" class="msg"></div>
@@ -777,6 +794,97 @@ function msg(id, text, good=false){ const el=$(id); if(!el)return; el.textConten
 function token(){ return sessionStorage.getItem(TOKEN_KEY) || ''; }
 function note(){ return $('adminNote') ? $('adminNote').value.trim() : ''; }
 
+function setPanelCollapsed(panel, collapsed){
+  if(!panel) return;
+  panel.classList.toggle('collapsed', !!collapsed);
+  const btn = panel.querySelector(':scope > .section-toggle');
+  if(btn) btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  const icon = btn ? btn.querySelector('.section-chevron') : null;
+  if(icon) icon.textContent = collapsed ? '▸' : '▾';
+}
+
+function setupCollapsiblePanel(panel, options={}){
+  if(!panel || panel.dataset.collapsibleReady === '1') return;
+  const h = panel.querySelector(':scope > h3');
+  const title = options.title || (h ? h.textContent.trim() : '管理區塊');
+  if(h) h.classList.add('hide');
+  panel.classList.add('collapsible-panel');
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'section-toggle';
+  btn.innerHTML = `<span><span class="section-title">${esc(title)}</span>${options.meta ? `<span class="section-meta">${esc(options.meta)}</span>` : ''}</span><span class="section-chevron">▾</span>`;
+  btn.addEventListener('click', () => setPanelCollapsed(panel, !panel.classList.contains('collapsed')));
+  panel.insertBefore(btn, panel.firstChild);
+  panel.dataset.collapsibleReady = '1';
+  setPanelCollapsed(panel, !!options.collapsed);
+}
+
+function getAdminTabPanels(tabId){
+  if(tabId === 'cards') return Array.from(document.querySelectorAll('#tab-cards > .split > .panel, #tab-cards > .panel'));
+  if(tabId === 'stages') return Array.from(document.querySelectorAll('#tab-stages > .panel, #tab-stages > .split > .panel'));
+  if(tabId === 'linkbattle') return Array.from(document.querySelectorAll('#tab-linkbattle > .panel, #tab-linkbattle > .split > .panel'));
+  return [];
+}
+
+function setAdminTabSections(tabId, collapsed){
+  getAdminTabPanels(tabId).forEach(panel => setPanelCollapsed(panel, collapsed));
+}
+
+function addAdminTabTools(tabId){
+  const tab = $('tab-' + tabId);
+  if(!tab || tab.querySelector(':scope > .admin-tab-tools')) return;
+  const tools = document.createElement('div');
+  tools.className = 'admin-tab-tools';
+  tools.innerHTML = `<button class="ghost" type="button" onclick="setAdminTabSections('${tabId}', false)">全部展開</button><button class="ghost" type="button" onclick="setAdminTabSections('${tabId}', true)">全部收合</button>`;
+  const desc = tab.querySelector(':scope > .muted');
+  if(desc && desc.nextSibling) tab.insertBefore(tools, desc.nextSibling);
+  else tab.insertBefore(tools, tab.firstChild);
+}
+
+function enhanceAdminLayout(){
+  ['cards','stages','linkbattle'].forEach(tabId => {
+    addAdminTabTools(tabId);
+    getAdminTabPanels(tabId).forEach((panel, index) => setupCollapsiblePanel(panel, {collapsed:index > 0}));
+  });
+}
+
+function openAdminPanelContaining(target){
+  const el = typeof target === 'string' ? $(target) : target;
+  if(!el) return;
+  const panel = el.closest('.collapsible-panel');
+  if(panel) setPanelCollapsed(panel, false);
+  setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'center'}), 0);
+}
+
+function adminGroupRows(rows, keyFn, titleFn){
+  const groups = new Map();
+  (rows || []).forEach((row, index) => {
+    const rawKey = keyFn(row, index) || '未分類';
+    const key = String(rawKey || '未分類');
+    if(!groups.has(key)) groups.set(key, {key, title:titleFn ? titleFn(row, index, key) : key, rows:[]});
+    groups.get(key).rows.push({row, index});
+  });
+  return Array.from(groups.values());
+}
+
+function renderAdminGroupedTables(rows, keyFn, titleFn, tableFn, emptyText='目前沒有資料。'){
+  if(!(rows || []).length) return `<div class="muted">${esc(emptyText)}</div>`;
+  return adminGroupRows(rows, keyFn, titleFn).map((group, i) => `
+    <details class="admin-data-group" ${i === 0 ? 'open' : ''}>
+      <summary><span>${esc(group.title)}</span><span class="admin-section-count">${fmt(group.rows.length)} 筆</span></summary>
+      <div class="admin-data-group-body">${tableFn(group.rows)}</div>
+    </details>`).join('');
+}
+
+function formatUnlockText(type, value){
+  const t = String(type || 'NONE').toUpperCase();
+  const v = String(value || '').trim();
+  if(t === 'OWN_CARD') return '擁有卡牌' + (v ? '：' + v : '');
+  if(t === 'BATTLE_STAGE') return '通關爭霸戰' + (v ? '：' + v : '');
+  if(t === 'RPG_DUNGEON') return '通關遠征' + (v ? '：' + v : '');
+  return '無';
+}
+
 async function loadRewardCatalog(){
   if((rewardCatalog.types || []).length) return rewardCatalog;
   rewardCatalog = await rpc('adminGetRewardCatalog', []);
@@ -1023,6 +1131,7 @@ async function rpc(method, args=[], auth=true){
 }
 
 function boot(){
+  enhanceAdminLayout();
   const t = token();
   const admin = JSON.parse(sessionStorage.getItem(ADMIN_KEY) || 'null');
   if(t && admin){
@@ -1054,6 +1163,7 @@ function showTab(name, btn){
   ['players','cards','stages','linkbattle','shop','chat','worldboss','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  enhanceAdminLayout();
   if(name === 'backup') loadExportTables();
 }
 
@@ -1181,6 +1291,7 @@ async function loadCards(showMessage=true){
     if($('cardSelect')) $('cardSelect').innerHTML = options;
     if($('giftCardSelect')) $('giftCardSelect').innerHTML = options;
     renderCardsTable();
+    syncRpgUnlockCardOptions();
     if(showMessage) msg('cardsMsg', `已載入 ${cardRows.length} 張卡片`, true);
   }catch(e){ msg('cardsMsg', e.message); }
 }
@@ -1191,15 +1302,21 @@ async function loadCardAdmin(){
 }
 function renderCardsTable(){
   if(!$('cardsTable')) return;
-  $('cardsTable').innerHTML = `<table><thead><tr><th>卡片</th><th>圖片</th><th>稀有度</th><th>權重</th><th>可抽</th><th>操作</th></tr></thead><tbody>` +
-    cardRows.map((c,i)=>`<tr>
-      <td><b>${esc(c.name)}</b><br><span class="muted">ID：${esc(c.id||'')}</span><br><span class="muted">排序：${fmt(c.sortOrder)}</span></td>
-      <td>${c.imageUrl ? `<img src="${esc(c.imageUrl)}" class="admin-card-thumb" onerror="this.style.display='none'">` : '<span class="muted">無圖</span>'}</td>
-      <td>${esc(c.rarity)}</td>
-      <td><input id="cw${i}" type="number" min="0" value="${esc(c.weight)}"></td>
-      <td><select id="cd${i}"><option value="1" ${c.isDrawable?'selected':''}>可抽</option><option value="0" ${!c.isDrawable?'selected':''}>不可抽</option></select></td>
-      <td><button class="primary" onclick="saveCard(${i})">儲存權重</button><br><button class="ghost" style="margin-top:6px" onclick="loadCardToForm(${i})">載入編輯</button></td>
-    </tr>`).join('') + `</tbody></table>`;
+  $('cardsTable').innerHTML = renderAdminGroupedTables(
+    cardRows,
+    c => c.rarity || '未分類',
+    c => c.rarity || '未分類',
+    items => `<table><thead><tr><th>卡片</th><th>圖片</th><th>稀有度</th><th>權重</th><th>可抽</th><th>操作</th></tr></thead><tbody>` +
+      items.map(({row:c,index:i})=>`<tr>
+        <td><b>${esc(c.name)}</b><br><span class="muted">ID：${esc(c.id||'')}</span><br><span class="muted">排序：${fmt(c.sortOrder)}</span></td>
+        <td>${c.imageUrl ? `<img src="${esc(c.imageUrl)}" class="admin-card-thumb" onerror="this.style.display='none'">` : '<span class="muted">無圖</span>'}</td>
+        <td>${esc(c.rarity)}</td>
+        <td><input id="cw${i}" type="number" min="0" value="${esc(c.weight)}"></td>
+        <td><select id="cd${i}"><option value="1" ${c.isDrawable?'selected':''}>可抽</option><option value="0" ${!c.isDrawable?'selected':''}>不可抽</option></select></td>
+        <td><button class="primary" onclick="saveCard(${i})">儲存權重</button><br><button class="ghost" style="margin-top:6px" onclick="loadCardToForm(${i})">載入編輯</button></td>
+      </tr>`).join('') + `</tbody></table>`,
+    '目前沒有卡牌資料。'
+  );
 }
 
 function previewNewCardImage(){
@@ -1217,6 +1334,7 @@ function clearCardForm(){
 
 function loadCardToForm(i){
   const c = cardRows[i]; if(!c) return;
+  openAdminPanelContaining('newCardName');
   $('newCardId').value = c.id || '';
   $('newCardName').value = c.name || '';
   $('newCardRarity').value = c.rarity || 'NORMAL';
@@ -1225,7 +1343,6 @@ function loadCardToForm(i){
   $('newCardImage').value = c.imageUrl || '';
   $('newCardDrawable').value = c.isDrawable ? '1' : '0';
   previewNewCardImage();
-  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 async function saveNewCard(){
@@ -1325,7 +1442,7 @@ async function editGachaPool(key, scroll=true){
     if($('gachaPoolCardsTitle')) $('gachaPoolCardsTitle').textContent = `🧩 ${p.name || key}｜卡牌與權重`;
     renderGachaPoolCards();
     msg('gachaPoolCardsMsg', `已載入 ${gachaPoolCardRows.length} 張卡牌，勾選後權重必須大於 0。`, true);
-    if(scroll) $('gachaPoolName').scrollIntoView({behavior:'smooth',block:'center'});
+    if(scroll) openAdminPanelContaining('gachaPoolName');
   }catch(e){ msg('gachaPoolCardsMsg', e.message); }
 }
 
@@ -1457,13 +1574,14 @@ function renderBattleChapters(){
       <td><b>${esc(c.name || c.title)}</b><br><span class="muted">${esc(c.key || c.chapterKey)}</span></td>
       <td>${esc(c.description || c.story || '')}</td>
       <td>${esc(c.modeLabel || c.mode || '')}<br>排序 ${fmt(c.sortOrder)}</td>
-      <td>${esc(c.unlockType || 'NONE')} ${esc(c.unlockValue || '')}</td>
+      <td>${esc(formatUnlockText(c.unlockType, c.unlockValue))}</td>
       <td>${c.isActive ? '啟用' : '停用'}</td>
       <td><button class="primary" onclick="editBattleChapter(${i})">載入編輯</button><br><button class="${c.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleBattleChapter(${i})">${c.isActive?'停用':'啟用'}</button></td>
     </tr>`).join('') + `</tbody></table>`;
 }
 function editBattleChapter(i){
   const c = battleChapterRows[i]; if(!c) return;
+  openAdminPanelContaining('battleChapterName');
   $('battleChapterKey').value = c.key || c.chapterKey || '';
   $('battleChapterName').value = c.name || c.title || '';
   $('battleChapterDesc').value = c.description || c.story || '';
@@ -1473,7 +1591,6 @@ function editBattleChapter(i){
   $('battleChapterModeLabel').value = c.modeLabel || '';
   $('battleChapterUnlockType').value = c.unlockType || 'NONE';
   $('battleChapterUnlockValue').value = c.unlockValue || '';
-  window.scrollTo({top:0, behavior:'smooth'});
 }
 async function saveBattleChapter(){
   try{
@@ -1513,13 +1630,14 @@ function renderRpgChapters(){
       <td><b>${esc(c.name)}</b><br><span class="muted">${esc(c.key)}</span></td>
       <td>${esc(c.description || '')}</td>
       <td>${fmt(c.sortOrder)}</td>
-      <td>${esc(c.unlockType || 'NONE')} ${esc(c.unlockValue || '')}</td>
+      <td>${esc(formatUnlockText(c.unlockType, c.unlockValue))}</td>
       <td>${c.isActive ? '啟用' : '停用'}</td>
       <td><button class="primary" onclick="editRpgChapter(${i})">載入編輯</button><br><button class="${c.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleRpgChapter(${i})">${c.isActive?'停用':'啟用'}</button></td>
     </tr>`).join('') + `</tbody></table>`;
 }
 function editRpgChapter(i){
   const c = rpgChapterRows[i]; if(!c) return;
+  openAdminPanelContaining('rpgChapterName');
   $('rpgChapterKey').value = c.key || '';
   $('rpgChapterName').value = c.name || '';
   $('rpgChapterDesc').value = c.description || '';
@@ -1527,7 +1645,6 @@ function editRpgChapter(i){
   $('rpgChapterActive').value = c.isActive ? '1' : '0';
   $('rpgChapterUnlockType').value = c.unlockType || 'NONE';
   $('rpgChapterUnlockValue').value = c.unlockValue || '';
-  window.scrollTo({top:0, behavior:'smooth'});
 }
 async function saveRpgChapter(){
   try{
@@ -1560,18 +1677,25 @@ async function toggleRpgChapter(i){
 
 function renderBossStages(){
   if(!$('bossStagesTable')) return;
-  $('bossStagesTable').innerHTML = `<table><thead><tr><th>章節/關卡</th><th>Boss</th><th>戰力</th><th>首通獎勵</th><th>解鎖/狀態</th><th>操作</th></tr></thead><tbody>` +
-    bossStageRows.map((s,i)=>`<tr>
-      <td>#${fmt(s.stageId)}｜${esc(s.chapterName || '')}<br><span class="muted">排序 ${fmt(s.stageOrder)}｜${esc(s.stageName)}</span></td>
-      <td>${esc(s.bossCardName)}<br><span class="muted">${esc(s.bossRarity||'')}</span></td>
-      <td>${fmt(s.bossPower)}</td>
-      <td>抽卡 +${fmt(s.rewardDrawTimes)}</td>
-      <td>${s.isActive ? '啟用' : '停用'}<br><span class="muted">${esc(s.unlockType || 'NONE')} ${esc(s.unlockValue || '')}</span></td>
-      <td><button class="primary" onclick="editBossStage(${i})">載入編輯</button></td>
-    </tr>`).join('') + `</tbody></table>`;
+  $('bossStagesTable').innerHTML = renderAdminGroupedTables(
+    bossStageRows,
+    s => s.chapterKey || s.chapterName || '未分類',
+    s => s.chapterName || s.chapterKey || '未分類章節',
+    items => `<table><thead><tr><th>章節/關卡</th><th>Boss</th><th>戰力</th><th>首通獎勵</th><th>解鎖/狀態</th><th>操作</th></tr></thead><tbody>` +
+      items.map(({row:s,index:i})=>`<tr>
+        <td>#${fmt(s.stageId)}｜${esc(s.chapterName || '')}<br><span class="muted">排序 ${fmt(s.stageOrder)}｜${esc(s.stageName)}</span></td>
+        <td>${esc(s.bossCardName)}<br><span class="muted">${esc(s.bossRarity||'')}</span></td>
+        <td>${fmt(s.bossPower)}</td>
+        <td>抽卡 +${fmt(s.rewardDrawTimes)}</td>
+        <td>${s.isActive ? '啟用' : '停用'}<br><span class="muted">${esc(formatUnlockText(s.unlockType, s.unlockValue))}</span></td>
+        <td><button class="primary" onclick="editBossStage(${i})">載入編輯</button></td>
+      </tr>`).join('') + `</tbody></table>`,
+    '目前沒有爭霸戰關卡。'
+  );
 }
 function editBossStage(i){
   const s = bossStageRows[i]; if(!s) return;
+  openAdminPanelContaining('bossStageName');
   $('bossStageId').value = s.stageId;
   if($('bossChapterSelect')) $('bossChapterSelect').value = s.chapterKey || 'normal_1';
   if($('bossStageOrder')) $('bossStageOrder').value = s.stageOrder || s.stageId || 0;
@@ -1582,7 +1706,6 @@ function editBossStage(i){
   if($('bossStageActive')) $('bossStageActive').value = s.isActive ? '1' : '0';
   if($('bossUnlockType')) $('bossUnlockType').value = s.unlockType || 'NONE';
   if($('bossUnlockValue')) $('bossUnlockValue').value = s.unlockValue || '';
-  window.scrollTo({top:0, behavior:'smooth'});
 }
 async function saveBossStage(){
   try{
@@ -1608,19 +1731,26 @@ async function saveBossStage(){
 
 function renderRpgDungeons(){
   if(!$('rpgDungeonsTable')) return;
-  $('rpgDungeonsTable').innerHTML = `<table><thead><tr><th>章節/關卡</th><th>Boss</th><th>難度</th><th>通關獎勵</th><th>活動掉落</th><th>解鎖/狀態</th><th>操作</th></tr></thead><tbody>` +
-    rpgDungeonRows.map((d,i)=>`<tr>
-      <td><b>${esc(d.name)}</b><br><span class="muted">${esc(d.key)}｜${esc(d.chapterName || '')}｜排序 ${fmt(d.stageOrder || d.sortOrder)}</span><br><span class="muted">${esc(d.description||'')}</span></td>
-      <td>${esc(d.bossCardName||d.name)}<br><span class="muted">${esc(d.bossRarity||'')}</span></td>
-      <td>${fmt(d.requiredPower)}</td>
-      <td>分數 +${fmt(d.rewardScore)}<br>能量 +${fmt(d.rewardEnergy)}<br>抽卡 +${fmt(d.rewardDrawTimes)} / 掉落 ${fmt(d.rewardDrawChance)}%</td>
-      <td>${d.rewardCardName ? `${esc(d.rewardCardName)} x${fmt(d.rewardCardQuantity || 1)}<br>掉落 ${fmt(d.rewardCardChance)}%` : '<span class="muted">未指定</span>'}</td>
-      <td>${d.isActive ? '啟用' : '停用'}<br><span class="muted">${esc(d.unlockType || 'NONE')} ${esc(d.unlockValue || '')}</span></td>
-      <td><button class="primary" onclick="editRpgDungeon(${i})">載入編輯</button><br><button class="${d.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleRpgDungeon(${i})">${d.isActive?'停用':'啟用'}</button></td>
-    </tr>`).join('') + `</tbody></table>`;
+  $('rpgDungeonsTable').innerHTML = renderAdminGroupedTables(
+    rpgDungeonRows,
+    d => d.chapterKey || d.chapterName || '未分類',
+    d => d.chapterName || d.chapterKey || '未分類異世界',
+    items => `<table><thead><tr><th>章節/關卡</th><th>Boss</th><th>難度</th><th>通關獎勵</th><th>活動掉落</th><th>解鎖/狀態</th><th>操作</th></tr></thead><tbody>` +
+      items.map(({row:d,index:i})=>`<tr>
+        <td><b>${esc(d.name)}</b><br><span class="muted">${esc(d.key)}｜${esc(d.chapterName || '')}｜排序 ${fmt(d.stageOrder || d.sortOrder)}</span><br><span class="muted">${esc(d.description||'')}</span></td>
+        <td>${esc(d.bossCardName||d.name)}<br><span class="muted">${esc(d.bossRarity||'')}</span></td>
+        <td>${fmt(d.requiredPower)}</td>
+        <td>分數 +${fmt(d.rewardScore)}<br>能量 +${fmt(d.rewardEnergy)}<br>抽卡 +${fmt(d.rewardDrawTimes)} / 掉落 ${fmt(d.rewardDrawChance)}%</td>
+        <td>${d.rewardCardName ? `${esc(d.rewardCardName)} x${fmt(d.rewardCardQuantity || 1)}<br>掉落 ${fmt(d.rewardCardChance)}%` : '<span class="muted">未指定</span>'}</td>
+        <td>${d.isActive ? '啟用' : '停用'}<br><span class="muted">${esc(formatUnlockText(d.unlockType, d.unlockValue))}</span></td>
+        <td><button class="primary" onclick="editRpgDungeon(${i})">載入編輯</button><br><button class="${d.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleRpgDungeon(${i})">${d.isActive?'停用':'啟用'}</button></td>
+      </tr>`).join('') + `</tbody></table>`,
+    '目前沒有遠征異世界關卡。'
+  );
 }
 function editRpgDungeon(i){
   const d = rpgDungeonRows[i]; if(!d) return;
+  openAdminPanelContaining('rpgName');
   $('rpgKey').value = d.key || '';
   $('rpgName').value = d.name || '';
   $('rpgDesc').value = d.description || '';
@@ -1639,7 +1769,6 @@ function editRpgDungeon(i){
   if($('rpgStageOrder')) $('rpgStageOrder').value = d.stageOrder || d.sortOrder || 0;
   $('rpgSort').value = d.sortOrder || d.stageOrder || 0;
   $('rpgActive').value = d.isActive ? '1' : '0';
-  window.scrollTo({top:0, behavior:'smooth'});
 }
 async function saveRpgDungeon(){
   try{
@@ -1697,7 +1826,7 @@ function renderDemonChapters(){
 function editDemonChapter(i){
   const c=demonChapterRows[i]; if(!c)return;
   $('demonChapterKey').value=c.key||''; $('demonChapterName').value=c.name||''; $('demonChapterDesc').value=c.description||''; $('demonChapterSort').value=c.sortOrder||0; $('demonChapterActive').value=c.isActive?'1':'0';
-  $('demonChapterName').scrollIntoView({behavior:'smooth',block:'center'});
+  openAdminPanelContaining('demonChapterName');
 }
 async function saveDemonChapter(){
   try{
@@ -1718,13 +1847,19 @@ function clearDemonStageForm(){
 }
 function renderDemonStages(){
   if(!$('demonStagesTable'))return;
-  $('demonStagesTable').innerHTML=`<table><thead><tr><th>章節／關卡</th><th>魔王</th><th>難度</th><th>掉落獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>`+
-    (demonStageRows||[]).map((s,i)=>`<tr><td><b>${esc(s.name)}</b><br><span class="muted">${esc(s.chapterName||'')}｜${esc(s.key)}｜排序 ${fmt(s.stageOrder)}</span><br><span class="muted">${esc(s.description||'')}</span></td><td>${esc(s.bossCardName)}<br>戰力 ${fmt(s.bossPower)}</td><td>${esc(s.difficultyLabel||s.difficulty)}</td><td>${(s.rewards||[]).map(r=>`${esc(r.rewardText||r.rewardType)}（${fmt(r.dropChance)}%）`).join('<br>')||'未設定'}</td><td>${s.isActive?'啟用':'停用'}</td><td><button class="primary" onclick="editDemonStage(${i})">載入編輯</button><br><button class="${s.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleDemonStage(${i})">${s.isActive?'停用':'啟用'}</button></td></tr>`).join('')+'</tbody></table>';
+  $('demonStagesTable').innerHTML=renderAdminGroupedTables(
+    demonStageRows,
+    s => s.chapterKey || s.chapterName || '未分類',
+    s => s.chapterName || s.chapterKey || '未分類魔王章節',
+    items => `<table><thead><tr><th>章節／關卡</th><th>魔王</th><th>難度</th><th>掉落獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>`+
+      items.map(({row:s,index:i})=>`<tr><td><b>${esc(s.name)}</b><br><span class="muted">${esc(s.chapterName||'')}｜${esc(s.key)}｜排序 ${fmt(s.stageOrder)}</span><br><span class="muted">${esc(s.description||'')}</span></td><td>${esc(s.bossCardName)}<br>戰力 ${fmt(s.bossPower)}</td><td>${esc(s.difficultyLabel||s.difficulty)}</td><td>${(s.rewards||[]).map(r=>`${esc(r.rewardText||r.rewardType)}（${fmt(r.dropChance)}%）`).join('<br>')||'未設定'}</td><td>${s.isActive?'啟用':'停用'}</td><td><button class="primary" onclick="editDemonStage(${i})">載入編輯</button><br><button class="${s.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleDemonStage(${i})">${s.isActive?'停用':'啟用'}</button></td></tr>`).join('')+'</tbody></table>',
+    '目前沒有魔王挑戰關卡。'
+  );
 }
 function editDemonStage(i){
   const s=demonStageRows[i];if(!s)return;
   $('demonStageKey').value=s.key||'';$('demonStageChapter').value=s.chapterKey||'';$('demonStageOrder').value=s.stageOrder||0;$('demonStageName').value=s.name||'';$('demonStageDesc').value=s.description||'';$('demonBossCard').value=s.bossCardName||'';$('demonBossPower').value=s.bossPower||1;$('demonDifficulty').value=s.difficulty||'NORMAL';$('demonStageActive').value=s.isActive?'1':'0';
-  renderManagedRewardEditor('demonRewardEditor','demonReward',s.rewards||[],true);$('demonStageName').scrollIntoView({behavior:'smooth',block:'center'});
+  renderManagedRewardEditor('demonRewardEditor','demonReward',s.rewards||[],true);openAdminPanelContaining('demonStageName');
 }
 async function saveDemonStage(){
   try{
@@ -1836,7 +1971,19 @@ function downloadJson(filename, data){
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function syncRpgUnlockCardOptions(){
+  let list = $('rpgUnlockCardOptions');
+  if(!list){
+    list = document.createElement('datalist');
+    list.id = 'rpgUnlockCardOptions';
+    document.body.appendChild(list);
+  }
+  list.innerHTML = (cardRows || []).map(c => `<option value="${esc(c.name)}">${esc(c.name)}｜${esc(c.rarity)}</option>`).join('');
+  ['rpgChapterUnlockValue','rpgUnlockValue'].forEach(id => { if($(id)) $(id).setAttribute('list', 'rpgUnlockCardOptions'); });
+}
+
 function syncRedeemCardOptions(){
+  syncRpgUnlockCardOptions();
   if(!cardRows.length) return;
   const options = cardRows.map(c => `<option value="${esc(c.name)}">${esc(c.name)}｜${esc(c.rarity)}</option>`).join('');
   if($('redeemCard')) $('redeemCard').innerHTML = options;
@@ -1969,7 +2116,7 @@ function editLinkBattleChapter(chapterKey){
   $('lbChapterActive').value=ch.enabled?'1':'0';
   $('lbChapterSort').value=ch.sortOrder||10;
   $('lbChapterDesc').value=ch.description||'';
-  $('lbChapterManageName').scrollIntoView({behavior:'smooth',block:'center'});
+  openAdminPanelContaining('lbChapterManageName');
 }
 function clearLinkBattleChapterForm(){
   if($('lbChapterKey')) $('lbChapterKey').value='';
@@ -2000,20 +2147,26 @@ function renderLinkBattleBosses(){
 }
 function renderLinkBattleStages(){
   const box=$('lbStageTable'); if(!box) return;
-  box.innerHTML=`<table><thead><tr><th>章節 / 關卡</th><th>BOSS / HP</th><th>盤面</th><th>限制</th><th>通關獎勵</th><th>權重</th><th>操作</th></tr></thead><tbody>`+(linkBattleStageRows||[]).map(s=>`<tr>
-    <td><b>${esc(s.chapterName||'墮落的熾天使')}</b><br>${esc(s.stageName)}<br><span class="muted">${esc(s.stageId)}｜第 ${fmt(s.stageOrder)} 關</span><br>${s.enabled?'<span class="good">啟用</span>':'<span class="muted">停用</span>'}</td>
-    <td>${esc((s.boss&&s.boss.bossName)||s.bossId)}<br>HP倍率 <b class="yellow">${Number(s.bossHpMultiplier||1).toFixed(2)}</b></td>
-    <td>${fmt(s.cardCount)}張 / ${fmt(s.pairCount)}組<br>${fmt(s.layerCount)}層｜${fmt(s.rows)}×${fmt(s.cols)}<br>轉彎 ${fmt(s.maxTurns||2)} 次</td>
-    <td>${fmt(s.timeLimitSeconds)}秒｜錯誤 ${fmt(s.errorLimit)}<br>洗牌 ${fmt(s.shuffleLimit)}｜治療 ${fmt(s.healLimit ?? s.hintLimit)}</td>
-    <td>${esc(s.rewardText||'暫無通關獎勵')}</td>
-    <td>Normal ${fmt(s.rarityWeights?.Normal)} / RARE ${fmt(s.rarityWeights?.RARE)}<br>SR ${fmt(s.rarityWeights?.['SUPER RARE'])} / SSR ${fmt(s.rarityWeights?.SSR)} / UR ${fmt(s.rarityWeights?.UR)}</td>
-    <td><button class="primary" onclick="editLinkBattleStage('${esc(s.stageId)}')">編輯</button><br><button class="${s.enabled?'danger':'warn'}" style="margin-top:6px" onclick="toggleLinkBattleStage('${esc(s.stageId)}',${s.enabled?'false':'true'})">${s.enabled?'停用':'啟用'}</button></td>
-  </tr>`).join('')+`</tbody></table>`;
+  box.innerHTML=renderAdminGroupedTables(
+    linkBattleStageRows,
+    s => s.chapterKey || s.chapterName || '未分類',
+    s => s.chapterName || s.chapterKey || '未分類章節',
+    items => `<table><thead><tr><th>章節 / 關卡</th><th>BOSS / HP</th><th>盤面</th><th>限制</th><th>通關獎勵</th><th>權重</th><th>操作</th></tr></thead><tbody>`+items.map(({row:s})=>`<tr>
+      <td><b>${esc(s.chapterName||'墮落的熾天使')}</b><br>${esc(s.stageName)}<br><span class="muted">${esc(s.stageId)}｜第 ${fmt(s.stageOrder)} 關</span><br>${s.enabled?'<span class="good">啟用</span>':'<span class="muted">停用</span>'}</td>
+      <td>${esc((s.boss&&s.boss.bossName)||s.bossId)}<br>HP倍率 <b class="yellow">${Number(s.bossHpMultiplier||1).toFixed(2)}</b></td>
+      <td>${fmt(s.cardCount)}張 / ${fmt(s.pairCount)}組<br>${fmt(s.layerCount)}層｜${fmt(s.rows)}×${fmt(s.cols)}<br>轉彎 ${fmt(s.maxTurns||2)} 次</td>
+      <td>${fmt(s.timeLimitSeconds)}秒｜錯誤 ${fmt(s.errorLimit)}<br>洗牌 ${fmt(s.shuffleLimit)}｜治療 ${fmt(s.healLimit ?? s.hintLimit)}</td>
+      <td>${esc(s.rewardText||'暫無通關獎勵')}</td>
+      <td>Normal ${fmt(s.rarityWeights?.Normal)} / RARE ${fmt(s.rarityWeights?.RARE)}<br>SR ${fmt(s.rarityWeights?.['SUPER RARE'])} / SSR ${fmt(s.rarityWeights?.SSR)} / UR ${fmt(s.rarityWeights?.UR)}</td>
+      <td><button class="primary" onclick="editLinkBattleStage('${esc(s.stageId)}')">編輯</button><br><button class="${s.enabled?'danger':'warn'}" style="margin-top:6px" onclick="toggleLinkBattleStage('${esc(s.stageId)}',${s.enabled?'false':'true'})">${s.enabled?'停用':'啟用'}</button></td>
+    </tr>`).join('')+`</tbody></table>`,
+    '目前沒有連線討伐戰關卡。'
+  );
 }
 function editLinkBattleBoss(bossId){
   const b=(linkBattleBossRows||[]).find(x=>x.bossId===bossId); if(!b) return;
   $('lbBossId').value=b.bossId||''; $('lbBossName').value=b.bossName||''; $('lbBossImage').value=b.bossImage||''; $('lbBossBackground').value=b.bossBackground||''; $('lbBossSkills').value=(b.skillPool||[]).join(','); $('lbBossDesc').value=b.description||'';
-  $('lbBossName').scrollIntoView({behavior:'smooth',block:'center'});
+  openAdminPanelContaining('lbBossName');
 }
 async function saveLinkBattleBoss(){
   try{
@@ -2029,7 +2182,7 @@ function editLinkBattleStage(stageId){
   $('lbCardCount').value=s.cardCount||16; $('lbPairCount').value=s.pairCount||8; $('lbLayerCount').value=s.layerCount||2; $('lbRows').value=Math.min(3, s.rows||3); $('lbCols').value=Math.min(6, s.cols||6); $('lbMinMatches').value=s.minInitialMatches||2;
   $('lbTimeLimit').value=s.timeLimitSeconds||180; $('lbErrorLimit').value=s.errorLimit||8; $('lbBossAttack').value=s.bossAttackDamage||8; $('lbShuffleLimit').value=s.shuffleLimit||3; $('lbHintLimit').value=(s.healLimit ?? s.hintLimit ?? 3); $('lbComboWindow').value=s.comboWindowSeconds||5; $('lbMinUnlocked').value=s.minUnlockedCards||4;
   const w=s.rarityWeights||{}; $('lbWeightNormal').value=w.Normal||0; $('lbWeightRare').value=w.RARE||0; $('lbWeightSuperRare').value=w['SUPER RARE']||0; $('lbWeightSsr').value=w.SSR||0; $('lbWeightUr').value=w.UR||0; const r=s.rewardConfig||{}; $('lbRewardType').value=r.type||'NONE'; $('lbRewardAmount').value=r.amount||0; $('lbRewardCardName').value=r.cardName||r.itemKey||'';
-  $('lbStageName').scrollIntoView({behavior:'smooth',block:'center'});
+  openAdminPanelContaining('lbStageName');
 }
 async function saveLinkBattleStage(){
   try{
