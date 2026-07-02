@@ -1441,7 +1441,7 @@ async function editGachaPool(key, scroll=true){
     gachaPoolCardRows = data.cards || [];
     if($('gachaPoolCardsTitle')) $('gachaPoolCardsTitle').textContent = `🧩 ${p.name || key}｜卡牌與權重`;
     renderGachaPoolCards();
-    msg('gachaPoolCardsMsg', `已載入 ${gachaPoolCardRows.length} 張卡牌，勾選後權重必須大於 0。`, true);
+    msg('gachaPoolCardsMsg', `已載入 ${gachaPoolCardRows.length} 張卡牌；勾選且權重 0 會顯示在卡盒分類，但不會從抽卡取得。`, true);
     if(scroll) openAdminPanelContaining('gachaPoolName');
   }catch(e){ msg('gachaPoolCardsMsg', e.message); }
 }
@@ -1509,8 +1509,6 @@ async function saveGachaPoolCards(){
       sortOrder:sortEl ? sortEl.value : card.sortOrder
     };
   });
-  const invalid=entries.some(entry=>entry.included && Number(entry.weight)<=0);
-  if(invalid){ msg('gachaPoolCardsMsg','已勾選的卡牌權重必須大於 0。'); return; }
   if(!confirm('確定儲存此卡池全部卡牌與權重？')) return;
   try{
     const data=await rpc('adminSaveGachaPoolCards',[selectedGachaPoolKey,entries]);

@@ -3048,6 +3048,7 @@
     let latestSocialDashboard = null;
     let activeShopCategory = 'ENERGY';
     let gachaPools = [];
+    let collectionGachaPools = [];
     let selectedGachaPoolKey = 'permanent';
     let selectedCollectionPoolKey = 'all';
     let latestCollectionResponse = null;
@@ -3468,8 +3469,8 @@
     }
 
     function getCollectionPools() {
-      return (gachaPools || []).filter(function(pool) {
-        return pool && pool.key && pool.isActive !== false && pool.isHidden !== true;
+      return (collectionGachaPools || []).filter(function(pool) {
+        return pool && pool.key && pool.isHidden !== true;
       });
     }
 
@@ -3499,13 +3500,13 @@
 
       if (hint) {
         hint.innerText = pools.length
-          ? '可依照 GM 目前開放的卡池，切換查看各卡池的持有狀態。'
-          : '尚未讀到開放卡池清單，會先顯示全部卡牌。';
+          ? '可依照 GM 建立的卡池分類，切換查看各卡池的持有狀態。'
+          : '尚未讀到卡池分類清單，會先顯示全部卡牌。';
       }
     }
 
     function ensureCollectionPoolsLoaded(callback) {
-      if (gachaPools.length) {
+      if (collectionGachaPools.length) {
         renderCollectionPoolTabs();
         if (typeof callback === 'function') callback();
         return;
@@ -3514,9 +3515,9 @@
       const tabs = document.getElementById('collection-pool-tabs');
       if (tabs) tabs.innerHTML = '<button type="button" class="collection-filter-tab active">讀取卡池中...</button>';
 
-      readRpcForCurrentViewer('getGachaPools', [playerUID], 'getGachaPools', [])
+      readRpcForCurrentViewer('getCollectionGachaPools', [playerUID], 'getCollectionGachaPools', [])
         .then(function(response) {
-          gachaPools = response && Array.isArray(response.pools) ? response.pools : [];
+          collectionGachaPools = response && Array.isArray(response.pools) ? response.pools : [];
           renderCollectionPoolTabs();
         })
         .catch(function(err) {
@@ -3640,9 +3641,9 @@
       container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#aaa; font-size:13px;">正在讀取此卡池卡牌...</p>';
 
       readRpcForCurrentViewer(
-        'getCardProbabilityTable',
+        'getCollectionPoolCards',
         [playerUID, poolInfo.key],
-        'getCardProbabilityTable',
+        'getCollectionPoolCards',
         ['', poolInfo.key]
       ).then(function(poolResponse) {
         if (!poolResponse || !poolResponse.success) {
