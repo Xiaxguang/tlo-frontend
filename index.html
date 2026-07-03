@@ -2344,8 +2344,14 @@
 
       <div class="mode-hub">
         <details class="mode-group mode-group-main" open>
-          <summary><span>📖 主線劇情</span><small>主線推進與核心劇情模式</small></summary>
+          <summary><span>📖 主線任務</span><small>主線推進與核心劇情模式</small></summary>
           <div class="mode-group-scroll">
+            <div class="scene-panel traffic-war-entry-card mode-card-priority">
+              <h3>♛ 流量戰爭測試中</h3>
+              <p>線上測試版。選擇陣營，派出三張持有卡牌爭奪星域地區，資料會先寫入後端資料庫。</p>
+              <button class="scene-btn btn-neon-purple" onclick="showGameScreen('traffic')">進入流量戰爭測試<small>線上陣營地圖 MVP</small></button>
+            </div>
+
             <div class="scene-panel link-battle-entry-card mode-card-priority">
               <h3>🃏 卡牌連線討伐戰</h3>
               <p>主線核心玩法。連線相同卡牌，合成攻擊 BOSS，推進章節劇情。</p>
@@ -2392,12 +2398,6 @@
         <details class="mode-group mode-group-event" open>
           <summary><span>🔥 活動副本</span><small>期間限定與全服活動</small></summary>
           <div class="mode-group-scroll">
-            <div class="scene-panel traffic-war-entry-card">
-              <h3>♛ 流量戰爭</h3>
-              <p>選擇陣營，派出三張卡牌爭奪星域地區。此版先以本機模擬多人戰報與陣營進度。</p>
-              <button class="scene-btn btn-neon-purple" onclick="showGameScreen('traffic')">進入流量戰爭<small>測試輪迴地圖與陣營排行</small></button>
-            </div>
-
             <div class="scene-panel">
               <h3>🌍 世界BOSS</h3>
               <p>活動時間內全服玩家同步削減同一隻 BOSS 血量，結束後依傷害排名發獎。</p>
@@ -2424,7 +2424,7 @@
       <div class="screen-head traffic-war-head">
         <div>
           <h2 class="screen-title">流量戰爭</h2>
-          <div class="screen-sub">陣營輪迴戰場 MVP。先用本機模擬多人佔領、排行與戰報，之後可接正式資料庫。</div>
+          <div class="screen-sub">流量戰爭測試中。此模式已先接後端資料庫，後續會再慢慢補正式賽季規則。</div>
         </div>
         <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
       </div>
@@ -2435,17 +2435,17 @@
             <div>
               <div class="traffic-war-kicker">Traffic War MVP</div>
               <h3 id="traffic-war-season-title">星潮開播季</h3>
-              <p id="traffic-war-season-desc">選擇陣營，派出三張卡牌爭奪地區流量。這裡的玩家、戰報與地圖進度都是本機模擬資料。</p>
+              <p id="traffic-war-season-desc">選擇陣營，派出三張持有卡牌爭奪地區流量。此版本先開放線上資料庫測試。</p>
               <div class="traffic-war-season-meta" id="traffic-war-season-meta"></div>
             </div>
-            <button type="button" class="traffic-war-mini-btn" onclick="resetTrafficWarMvp()">重置測試資料</button>
+            <button type="button" class="traffic-war-mini-btn" onclick="refreshTrafficWar()">刷新線上資料</button>
           </div>
           <div class="traffic-war-stat-grid" id="traffic-war-player-stats"></div>
         </section>
 
         <section class="traffic-war-panel" aria-label="選擇陣營">
           <h3>選擇陣營</h3>
-          <p>娛樂、直播主、專業三方會在同一張地圖上爭奪地區。MVP 中選定後會保存在本機。</p>
+          <p>娛樂、直播主、專業三方會在同一張地圖上爭奪地區。測試版選定後會寫入線上資料庫。</p>
           <div class="traffic-war-grid" id="traffic-war-faction-grid"></div>
         </section>
 
@@ -8680,6 +8680,9 @@ function showCollectionHistory() {
       try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
     };
 
+    var trafficWarState = null;
+    var trafficWarLoading = false;
+    var trafficWarLastError = '';
     var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_MVP_V1';
     var TRAFFIC_WAR_CURRENT_SEASON = {
       season_id: 'season_001',
@@ -8743,6 +8746,22 @@ function showCollectionHistory() {
     }
 
     function getTrafficWarCards() {
+      if (trafficWarState && Array.isArray(trafficWarState.card_options)) {
+        return trafficWarState.card_options.map(function(card, idx) {
+          return {
+            card_id: card.card_id || card.cardName || card.card_name || card.name || ('card_' + idx),
+            card_name: card.card_name || card.cardName || card.name || '未命名卡牌',
+            name: card.name || card.card_name || card.cardName || '',
+            faction_type: card.faction_type || card.faction || ['entertainment','streamer','professional'][idx % 3],
+            rarity: card.rarity || 'NORMAL',
+            star: Number(card.star || 1),
+            level: Number(card.level || 1),
+            skill_level: Number(card.skill_level || card.skillLevel || 1),
+            total_power: Number(card.total_power || card.power || card.currentPower || 0),
+            power: Number(card.total_power || card.power || card.currentPower || 0)
+          };
+        });
+      }
       return TRAFFIC_WAR_MOCK_CARDS.map(function(card) {
         var clone = Object.assign({}, card);
         clone.total_power = calculateTrafficWarCardPower(clone);
@@ -8806,12 +8825,18 @@ function showCollectionHistory() {
           popularity: 0,
           prestige: 0,
           contribution_score: 0,
-          selected_team_card_ids: ['tw_card_001', 'tw_card_002', 'tw_card_003']
+          selected_team_card_ids: []
         },
-        season_regions: createTrafficWarRegions(),
-        faction_scores: { entertainment: 620, streamer: 710, professional: 660 },
-        rival_players: TRAFFIC_WAR_MOCK_PLAYERS.slice(),
-        action_logs: createTrafficWarInitialLogs(),
+        season_regions: createTrafficWarRegions().map(function(region) {
+          region.progress = { entertainment: 0, streamer: 0, professional: 0 };
+          return region;
+        }),
+        faction_scores: { entertainment: 0, streamer: 0, professional: 0 },
+        rival_players: [],
+        action_logs: [],
+        card_options: [],
+        personal_ranking: [],
+        team_power: 0,
         updated_at: new Date().toISOString()
       };
     }
@@ -8831,12 +8856,16 @@ function showCollectionHistory() {
       state.faction_scores = Object.assign({}, defaults.faction_scores, state.faction_scores || {});
       state.rival_players = Array.isArray(state.rival_players) && state.rival_players.length ? state.rival_players : defaults.rival_players;
       state.action_logs = Array.isArray(state.action_logs) ? state.action_logs.slice(0, 18) : defaults.action_logs;
+      state.card_options = Array.isArray(state.card_options) ? state.card_options : [];
+      state.personal_ranking = Array.isArray(state.personal_ranking) ? state.personal_ranking : [];
+      state.team_power = Number(state.team_power || 0);
       return state;
     }
 
     function loadTrafficWarState() {
+      if (trafficWarState) return normalizeTrafficWarState(trafficWarState);
       try {
-        return normalizeTrafficWarState(JSON.parse(localStorage.getItem(TRAFFIC_WAR_STORAGE_KEY) || 'null'));
+        return normalizeTrafficWarState(null);
       } catch (_) {
         return createTrafficWarDefaultState();
       }
@@ -8844,7 +8873,23 @@ function showCollectionHistory() {
 
     function saveTrafficWarState(state) {
       state.updated_at = new Date().toISOString();
-      try { localStorage.setItem(TRAFFIC_WAR_STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+      trafficWarState = normalizeTrafficWarState(state);
+    }
+
+    function trafficWarRpc(method, args) {
+      if (!window.TLO_IS_AUTHENTICATED) {
+        if (typeof showAuthScreen === 'function') showAuthScreen('流量戰爭測試中目前需要正式帳號登入。');
+        return Promise.reject(new Error('流量戰爭測試中目前需要正式帳號登入。'));
+      }
+      if (window.TLO_IS_GUEST) {
+        showAuthScreen('流量戰爭測試中目前需要正式帳號登入。');
+        return Promise.reject(new Error('流量戰爭測試中目前需要正式帳號登入。'));
+      }
+      if (typeof window.TLO_RAW_RPC === 'function') return window.TLO_RAW_RPC(method, args || []);
+      return new Promise(function(resolve, reject) {
+        if (!window.google || !google.script || !google.script.run) return reject(new Error('線上 API 尚未載入，請重新整理。'));
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method].apply(null, args || []);
+      });
     }
 
     function trafficWarFactionLabel(key) {
@@ -8869,6 +8914,7 @@ function showCollectionHistory() {
     }
 
     function getTrafficWarTeamPower(state) {
+      if (state && Number(state.team_power || 0) > 0) return Number(state.team_power || 0);
       var selected = state.player_season.selected_team_card_ids || [];
       return getTrafficWarCards().filter(function(card) {
         return selected.indexOf(card.card_id) >= 0;
@@ -8877,15 +8923,29 @@ function showCollectionHistory() {
       }, 0);
     }
 
-    function renderTrafficWar() {
-      var state = loadTrafficWarState();
-      saveTrafficWarState(state);
+    async function renderTrafficWar(forceReload) {
+      if (trafficWarLoading) return;
+      trafficWarLoading = true;
+      trafficWarLastError = '';
+      var loadingBox = document.getElementById('traffic-war-player-stats');
+      if (loadingBox) loadingBox.innerHTML = '<div class="traffic-war-stat"><span>狀態</span><b>讀取線上資料中</b></div>';
+      try {
+        var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid()]);
+        var state = normalizeTrafficWarState(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard);
+        saveTrafficWarState(state);
+      } catch (err) {
+        trafficWarLastError = err && err.message ? err.message : String(err || '讀取失敗');
+        var state = loadTrafficWarState();
+      } finally {
+        trafficWarLoading = false;
+      }
+      state = loadTrafficWarState();
       var title = document.getElementById('traffic-war-season-title');
-      if (title) title.textContent = TRAFFIC_WAR_CURRENT_SEASON.display_name + '｜' + TRAFFIC_WAR_CURRENT_SEASON.season_name;
+      if (title) title.textContent = (state.display_name || TRAFFIC_WAR_CURRENT_SEASON.display_name) + '測試中｜' + (state.season_name || TRAFFIC_WAR_CURRENT_SEASON.season_name);
       var meta = document.getElementById('traffic-war-season-meta');
       if (meta) {
         meta.innerHTML = [
-          '<span class="traffic-war-chip cyan">狀態：' + trafficWarEsc(state.status === 'active' ? '進行中' : state.status) + '</span>',
+          '<span class="traffic-war-chip cyan">狀態：' + trafficWarEsc(trafficWarLastError ? '線上讀取失敗' : '線上測試中') + '</span>',
           '<span class="traffic-war-chip">賽季：' + trafficWarEsc(state.season_id) + '</span>',
           '<span class="traffic-war-chip pink">結束：2026/07/31 23:59</span>',
           '<span class="traffic-war-chip">目前陣營：' + trafficWarEsc(trafficWarFactionLabel(state.player_season.faction)) + '</span>'
@@ -8905,6 +8965,7 @@ function showCollectionHistory() {
       if (!box) return;
       var values = [
         ['玩家', player.display_name || player.uid || '玩家'],
+        ['模式', trafficWarLastError ? '線上連線失敗' : '流量戰爭測試中'],
         ['體力', Number(player.stamina || 0).toLocaleString() + ' / 100'],
         ['貢獻', Number(player.contribution_score || 0).toLocaleString()],
         ['粉絲', Number(player.fans || 0).toLocaleString()],
@@ -8940,14 +9001,19 @@ function showCollectionHistory() {
       if (!box) return;
       var selected = state.player_season.selected_team_card_ids || [];
       var cards = getTrafficWarCards();
+      if (!cards.length) {
+        box.innerHTML = '<div class="traffic-war-team-card"><b>尚未取得可出征卡牌</b><span>請先登入正式帳號並持有至少 1 張卡牌。流量戰爭測試版會直接使用你的線上卡盒。</span></div>';
+        if (powerBox) powerBox.textContent = '隊伍戰力：0｜請先取得卡牌';
+        return;
+      }
       box.innerHTML = cards.map(function(card) {
         var isSelected = selected.indexOf(card.card_id) >= 0;
         var faction = TRAFFIC_WAR_FACTIONS[card.faction_type] || {};
-        return '<div class="traffic-war-team-card ' + (isSelected ? 'selected' : '') + '" data-rarity="' + trafficWarEsc(card.rarity) + '" onclick="toggleTrafficWarCard(\'' + trafficWarEsc(card.card_id) + '\')">'
+        var cardArg = encodeURIComponent(card.card_id || card.card_name || card.name || '');
+        return '<div class="traffic-war-team-card ' + (isSelected ? 'selected' : '') + '" data-rarity="' + trafficWarEsc(card.rarity) + '" onclick="toggleTrafficWarCard(decodeURIComponent(\'' + cardArg + '\'))">'
           + '<b>' + trafficWarEsc(card.card_name) + '</b>'
           + '<span>定位：' + trafficWarEsc(faction.shortName || card.faction_type) + '｜Lv.' + Number(card.level || 1) + '｜' + Number(card.star || 0) + '★</span>'
-          + '<span>人氣 ' + Number(card.popularity || 0).toLocaleString() + '｜粉絲 ' + Number(card.fan_power || 0).toLocaleString() + '</span>'
-          + '<span>內容 ' + Number(card.content_power || 0).toLocaleString() + '｜舞台 ' + Number(card.stage_power || 0).toLocaleString() + '</span>'
+          + '<span>技能 Lv.' + Number(card.skill_level || card.skillLevel || 1) + '｜持有 ' + Number(card.count || 0).toLocaleString() + '</span>'
           + '<span style="color:#ffdf8a;font-weight:1000;margin-top:5px;">戰力 ' + Number(card.total_power || 0).toLocaleString() + '</span>'
           + '</div>';
       }).join('');
@@ -8989,13 +9055,13 @@ function showCollectionHistory() {
         return { key: key, name: trafficWarFactionLabel(key), score: Number(state.faction_scores && state.faction_scores[key] || 0) };
       }).sort(function(a, b) { return b.score - a.score; });
       var player = state.player_season;
-      var personalRows = (state.rival_players || []).concat([{
+      var personalRows = (state.personal_ranking && state.personal_ranking.length ? state.personal_ranking : (state.rival_players || []).concat([{
         uid: player.uid,
         display_name: player.display_name || player.uid,
         faction: player.faction,
         contribution_score: Number(player.contribution_score || 0),
         self: true
-      }]).sort(function(a, b) { return Number(b.contribution_score || 0) - Number(a.contribution_score || 0); }).slice(0, 6);
+      }])).sort(function(a, b) { return Number(b.contribution_score || 0) - Number(a.contribution_score || 0); }).slice(0, 6);
       var html = '<div class="traffic-war-rank-row"><b>陣營排行</b><span>流量分</span></div>';
       html += factionRows.map(function(row, idx) {
         return '<div class="traffic-war-rank-row"><b>#' + (idx + 1) + ' ' + trafficWarEsc(row.name) + '</b><span>' + row.score.toLocaleString() + '</span></div>';
@@ -9020,32 +9086,24 @@ function showCollectionHistory() {
       }).join('') || '<div class="traffic-war-feed-row">尚無戰報。</div>';
     }
 
-    function chooseTrafficWarFaction(key) {
+    async function chooseTrafficWarFaction(key) {
       var state = loadTrafficWarState();
       if (!TRAFFIC_WAR_FACTIONS[key]) return;
       if (state.player_season.faction && state.player_season.faction !== key) {
-        alert('MVP 中同一賽季只能選定一個陣營。若要改陣營，請重置測試資料。');
+        alert('本季已選定陣營，後續版本再開放換陣營。');
         return;
       }
-      state.player_season.faction = key;
-      state.action_logs.unshift({
-        log_id: 'player_join_' + Date.now(),
-        season_id: state.season_id,
-        uid: state.player_season.uid,
-        display_name: state.player_season.display_name,
-        faction: key,
-        region_id: '',
-        region_name: '陣營大廳',
-        result: 'PUSH',
-        contribution_score: 0,
-        created_at: trafficWarNowText(),
-        mock: false
-      });
-      saveTrafficWarState(state);
-      renderTrafficWar();
+      try {
+        var res = await trafficWarRpc('chooseTrafficWarFaction', [getTrafficWarUid(), key]);
+        if (res && res.success === false) alert(res.msg || '陣營選擇失敗');
+        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
+        renderTrafficWar(true);
+      } catch (err) {
+        alert(err && err.message ? err.message : String(err));
+      }
     }
 
-    function toggleTrafficWarCard(cardId) {
+    async function toggleTrafficWarCard(cardId) {
       var state = loadTrafficWarState();
       var selected = state.player_season.selected_team_card_ids || [];
       var index = selected.indexOf(cardId);
@@ -9059,7 +9117,15 @@ function showCollectionHistory() {
       }
       state.player_season.selected_team_card_ids = selected;
       saveTrafficWarState(state);
-      renderTrafficWar();
+      renderTrafficWarTeam(state);
+      try {
+        var res = await trafficWarRpc('setTrafficWarTeam', [getTrafficWarUid(), selected]);
+        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
+        renderTrafficWar(true);
+      } catch (err) {
+        alert(err && err.message ? err.message : String(err));
+        renderTrafficWar(true);
+      }
     }
 
     function findTrafficWarRegion(state, regionId) {
@@ -9095,7 +9161,7 @@ function showCollectionHistory() {
       });
     }
 
-    function challengeTrafficWarRegion(regionId) {
+    async function challengeTrafficWarRegion(regionId) {
       var state = loadTrafficWarState();
       var player = state.player_season;
       var region = findTrafficWarRegion(state, regionId);
@@ -9113,49 +9179,20 @@ function showCollectionHistory() {
         alert('請選滿 3 張卡牌再出征。');
         return;
       }
-      var teamPower = getTrafficWarTeamPower(state);
-      var factionBonus = (TRAFFIC_WAR_FACTIONS[player.faction] && TRAFFIC_WAR_FACTIONS[player.faction].bonus) || 1;
-      var regionBonus = region.region_type === player.faction ? 1.1 : 1;
-      var randomFactor = 0.95 + Math.random() * 0.1;
-      var challengeScore = Math.floor(teamPower * factionBonus * regionBonus * randomFactor);
-      var success = challengeScore >= Number(region.required_power || 0);
-      var ratio = Number(region.required_power || 1) > 0 ? challengeScore / Number(region.required_power || 1) : 1;
-      var progressAdd = Math.round(success ? (5 + ratio * 3) : (1 + ratio));
-      progressAdd = Math.max(1, Math.min(15, progressAdd));
-      region.progress[player.faction] = Math.min(100, Number(region.progress[player.faction] || 0) + progressAdd);
-      if (region.progress[player.faction] >= 100) region.owner_faction = player.faction;
-      var rewardAmount = Math.max(1, Math.floor(Number(region.reward_amount || 0) * (success ? 1 : 0.3)));
-      player[region.reward_type] = Number(player[region.reward_type] || 0) + rewardAmount;
-      player.stamina = Math.max(0, Number(player.stamina || 0) - Number(region.stamina_cost || 0));
-      var contributionGain = success ? 20 : 5;
-      player.contribution_score = Number(player.contribution_score || 0) + contributionGain;
-      state.faction_scores[player.faction] = Number(state.faction_scores[player.faction] || 0) + contributionGain;
-      pushTrafficWarLog(state, {
-        log_id: 'player_challenge_' + Date.now(),
-        season_id: state.season_id,
-        uid: player.uid,
-        display_name: player.display_name,
-        faction: player.faction,
-        region_id: region.region_id,
-        region_name: region.region_name,
-        result: success ? 'WIN' : 'FAIL',
-        contribution_score: contributionGain,
-        created_at: trafficWarNowText(),
-        mock: false
-      });
-      simulateTrafficWarRivalAction(state);
-      saveTrafficWarState(state);
-      renderTrafficWar();
-      showTrafficWarResult({
-        success: success,
-        region: region,
-        teamPower: teamPower,
-        challengeScore: challengeScore,
-        progressAdd: progressAdd,
-        rewardType: region.reward_type,
-        rewardAmount: rewardAmount,
-        contributionGain: contributionGain
-      });
+      try {
+        var res = await trafficWarRpc('challengeTrafficWarRegion', [getTrafficWarUid(), regionId]);
+        if (res && res.success === false) {
+          alert(res.msg || '挑戰失敗');
+          if (res.dashboard) saveTrafficWarState(res.dashboard);
+          renderTrafficWar(true);
+          return;
+        }
+        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
+        renderTrafficWar(true);
+        if (res && res.result) showTrafficWarResult(res.result);
+      } catch (err) {
+        alert(err && err.message ? err.message : String(err));
+      }
     }
 
     function showTrafficWarResult(result) {
@@ -9181,11 +9218,8 @@ function showCollectionHistory() {
       modal.setAttribute('aria-hidden', 'true');
     }
 
-    function resetTrafficWarMvp() {
-      if (!confirm('只會重置本機流量戰爭 MVP 測試資料，不會影響抽卡與正式資料。確定重置？')) return;
-      var state = createTrafficWarDefaultState();
-      saveTrafficWarState(state);
-      renderTrafficWar();
+    function refreshTrafficWar() {
+      renderTrafficWar(true);
     }
 
     window.renderTrafficWar = renderTrafficWar;
@@ -9193,7 +9227,8 @@ function showCollectionHistory() {
     window.toggleTrafficWarCard = toggleTrafficWarCard;
     window.challengeTrafficWarRegion = challengeTrafficWarRegion;
     window.closeTrafficWarResult = closeTrafficWarResult;
-    window.resetTrafficWarMvp = resetTrafficWarMvp;
+    window.refreshTrafficWar = refreshTrafficWar;
+    window.resetTrafficWarMvp = refreshTrafficWar;
 
     var ROOKIE_GUIDE_STORAGE_KEY = 'TLO_ROOKIE_GUIDE_SEEN_V1';
     var rookieGuideIndex = 0;
