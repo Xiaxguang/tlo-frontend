@@ -2078,6 +2078,32 @@
     .traffic-war-window .traffic-war-map-layout{grid-template-columns:170px minmax(760px,1fr) 220px!important;}
     @media(max-width:900px){.traffic-war-window .traffic-war-map-layout{grid-template-columns:1fr!important;}.traffic-war-window .tw-sortie-panel,.traffic-war-window .tw-map-tools{display:none!important;}.traffic-war-window .traffic-war-map-scroll{height:calc(100vh - 205px)!important;min-height:560px!important;}}
 
+
+    /* 星潮沙盤戰：寬型裂縫地圖與精簡 HUD / NAV 調整 */
+    .traffic-war-window .traffic-war-resource-hud{left:8px!important;right:auto!important;top:96px!important;width:min(650px,calc(100vw - 82px))!important;display:grid!important;grid-template-columns:repeat(5,minmax(74px,1fr))!important;gap:5px!important;}
+    .traffic-war-window .traffic-war-stat.tw-hud-card{min-height:40px!important;padding:5px 6px!important;border-radius:11px!important;display:grid!important;grid-template-columns:auto 1fr!important;column-gap:5px!important;align-items:center!important;}
+    .traffic-war-window .traffic-war-stat.tw-hud-card i{font-size:15px!important;grid-row:1 / span 2!important;}.traffic-war-window .traffic-war-stat.tw-hud-card span{font-size:9px!important;line-height:1!important;}.traffic-war-window .traffic-war-stat.tw-hud-card b{font-size:12px!important;line-height:1.1!important;}
+    .traffic-war-stage{inset:142px 0 62px!important;}
+    .traffic-war-window-nav{left:8px!important;right:auto!important;bottom:7px!important;width:auto!important;display:flex!important;grid-template-columns:none!important;gap:5px!important;padding:5px!important;border-radius:15px!important;}
+    .traffic-war-window-nav button{width:58px!important;min-height:45px!important;padding:4px 3px!important;font-size:10px!important;border-radius:11px!important;line-height:1.05!important;}
+    .traffic-war-window-nav button span{font-size:16px!important;line-height:1!important;}
+    .traffic-war-window .traffic-war-map-scroll{height:100%!important;min-height:0!important;scroll-padding:520px!important;}
+    .traffic-war-window .traffic-war-map-grid{margin:0!important;overflow:visible!important;}
+    .traffic-war-window .traffic-war-tile{width:122px!important;height:98px!important;}
+    .tw-tile-art img{width:122px!important;}.traffic-war-window .traffic-war-tile.center{width:205px!important;height:166px!important;margin:-48px 0 0 -40px!important;}.traffic-war-window .traffic-war-tile.center .tw-tile-art img{width:205px!important;}
+    .tw-tile-state-ring{width:98px!important;height:62px!important;}.traffic-war-window .traffic-war-tile.center .tw-tile-state-ring{width:160px!important;height:92px!important;}
+    .traffic-war-window .tw-tile-label{top:15px!important}.traffic-war-window .tw-tile-label strong{font-size:15px!important}.traffic-war-window .traffic-war-tile.center .tw-tile-label{top:64px!important}.traffic-war-window .traffic-war-tile.center .tw-tile-label strong{font-size:18px!important}
+    .tw-resource-badge{right:4px!important;top:39px!important;width:22px!important;height:22px!important;font-size:13px!important;}
+    .tw-tile-spark{right:11px!important;top:20px!important;}
+    .traffic-war-window .tw-map-card-stack.single{top:-48px!important;}
+    .traffic-war-window .tw-selected-popover{bottom:104px!important;width:220px!important;margin-left:-110px!important;}
+    .traffic-war-window .tw-selected-popover small:nth-of-type(2){display:none!important;}
+    .traffic-war-window .tw-sortie-panel{width:170px!important;top:6px!important;left:8px!important;max-height:34%!important;padding:8px!important;}
+    .traffic-war-window .tw-sortie-cards{display:grid!important;grid-template-columns:repeat(3,42px)!important;gap:4px!important;}.traffic-war-window .tw-sortie-card{min-width:0!important;}.traffic-war-window .tw-sortie-card em{display:none!important;}
+    .traffic-war-window .traffic-war-map-legend,.traffic-war-window .tw-map-tools{transform:scale(.86);transform-origin:top right;}
+    @media(max-width:720px){.traffic-war-window .traffic-war-resource-hud{top:88px!important;width:calc(100vw - 74px)!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;}.traffic-war-stage{inset:136px 0 58px!important;}.traffic-war-window .tw-sortie-panel{display:none!important;}.traffic-war-window .traffic-war-map-legend,.traffic-war-window .tw-map-tools{display:none!important;}.traffic-war-window-nav button{width:54px!important;min-height:43px!important;font-size:9px!important;}}
+    @media(max-width:430px){.traffic-war-window .traffic-war-resource-hud{top:86px!important;gap:3px!important;width:calc(100vw - 72px)!important;}.traffic-war-window .traffic-war-stat.tw-hud-card{padding:4px 3px!important;min-height:38px!important;}.traffic-war-window .traffic-war-stat.tw-hud-card i{font-size:13px!important;}.traffic-war-window .traffic-war-stat.tw-hud-card span{font-size:8px!important;}.traffic-war-window .traffic-war-stat.tw-hud-card b{font-size:10px!important;}.traffic-war-stage{inset:132px 0 56px!important;}.traffic-war-window-nav button{width:50px!important;min-height:40px!important;}}
+
     #traffic-war-result-modal{z-index:10050;}
 </style>
 
@@ -2473,7 +2499,7 @@
         <button type="button" id="guide-collection-entry" onclick="openCollectionModal()"><span>▣</span>卡盒</button>
         <button type="button" onclick="openMissionModal()"><span>✓</span>任務</button>
         <button type="button" onclick="openTrainingModal()"><span>🏆</span>排行</button>
-        <button type="button" onclick="showGameScreen('traffic')"><span>♛</span>流量戰爭</button>
+        <button type="button" onclick="showGameScreen('traffic')"><span>♛</span>流量戰爭<br><small>測試版・未開放</small></button>
         <button type="button" onclick="showGameScreen('social')"><span>🤝</span>社交</button>
         <button type="button" onclick="showGameScreen('profile')"><span>👤</span>個人</button>
         <button type="button" onclick="openLobbyMoreModal()"><span>•••</span>更多</button>
@@ -2570,7 +2596,7 @@
             <button type="button" onclick="openWorldBossModal(); closeLobbyMoreModal()"><span>🌍</span><b>世界BOSS</b><small>全服同步討伐與傷害排名</small></button>
             <button type="button" onclick="openCharacterGrowthModal(); closeLobbyMoreModal()"><span>★</span><b>角色養成</b><small>等級、經驗、技能與升星</small></button>
             <button type="button" onclick="openMissionModal(); closeLobbyMoreModal()"><span>🎁</span><b>福利任務</b><small>每日、新手、主線與一鍵領取</small></button>
-            <button type="button" onclick="showGameScreen('traffic'); closeLobbyMoreModal()"><span>♛</span><b>流量戰爭</b><small>陣營、地區與多人戰報測試</small></button>
+            <button type="button" onclick="showGameScreen('traffic'); closeLobbyMoreModal()"><span>♛</span><b>流量戰爭</b><small>測試版・未開放</small></button>
             <button type="button" onclick="showGameScreen('shop'); closeLobbyMoreModal()"><span>🛒</span><b>商城</b><small>補給與儲值商品</small></button>
             <button type="button" onclick="showGameScreen('profile'); closeLobbyMoreModal()"><span>👤</span><b>個人</b><small>資產、券與自我介紹</small></button>
             <button type="button" onclick="showGameScreen('social'); closeLobbyMoreModal()"><span>🤝</span><b>社交</b><small>好友邀請、列表與狀態</small></button>
@@ -2652,9 +2678,9 @@
           <summary><span>📖 主線任務</span><small>主線推進與核心劇情模式</small></summary>
           <div class="mode-group-scroll">
             <div class="scene-panel traffic-war-entry-card mode-card-priority">
-              <h3>♛ 流量戰爭測試中</h3>
-              <p>線上測試版。選擇陣營，派出三張持有卡牌爭奪星域地區，資料會先寫入後端資料庫。</p>
-              <button class="scene-btn btn-neon-purple" onclick="showGameScreen('traffic')">進入流量戰爭測試<small>線上陣營地圖 MVP</small></button>
+              <h3>♛ 流量戰爭測試版｜未開放</h3>
+              <p>未開放測試版。選擇陣營，派出三張持有卡牌進入星潮沙盤戰，從主城往年度盛典推進。</p>
+              <button class="scene-btn btn-neon-purple" onclick="showGameScreen('traffic')">進入測試版<small>目前未開放正式賽季</small></button>
             </div>
 
             <div class="scene-panel link-battle-entry-card mode-card-priority">
@@ -2729,9 +2755,9 @@
       <div class="traffic-war-screen-stub">
         <div class="traffic-war-screen-card">
           <div class="traffic-war-kicker">STAR TIDE SANDBOX WAR</div>
-          <h2 class="screen-title">星潮沙盤戰</h2>
+          <h2 class="screen-title">流量戰爭測試版｜未開放</h2>
           <p>此模式會以獨立戰場視窗開啟。主畫面只保留地圖，編隊、主城、科技、排行等內容會整合在地圖內，透過按鈕彈出。</p>
-          <button type="button" class="traffic-war-open-btn" onclick="openTrafficWarWindow(true)">開啟星潮沙盤戰</button>
+          <button type="button" class="traffic-war-open-btn" onclick="openTrafficWarWindow(true)">開啟測試版戰場</button>
           <button type="button" class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
         </div>
       </div>
@@ -8946,7 +8972,7 @@ function showCollectionHistory() {
 
     window.showGameScreen = function(screenName) {
       var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen', shop: 'shopScreen', profile: 'profileScreen', social: 'socialScreen', traffic: 'trafficWarScreen' };
-      var labels = { home: '主介面', gacha: '抽卡', battle: '戰鬥', shop: '商城', profile: '個人', social: '社交', traffic: '流量戰爭' };
+      var labels = { home: '主介面', gacha: '抽卡', battle: '戰鬥', shop: '商城', profile: '個人', social: '社交', traffic: '流量戰爭測試版｜未開放' };
       var targetId = map[screenName] || map.home;
       if (!map[screenName]) screenName = 'home';
       var shell = document.getElementById('game-shell') || document.querySelector('.container.game-shell');
@@ -8983,12 +9009,13 @@ function showCollectionHistory() {
     var trafficWarLastError = '';
     var trafficWarSelectedTileId = null;
     var trafficWarActiveDrawer = null;
+    var trafficWarShouldFocusCurrent = false;
     var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_SANDBOX_V2';
     var TRAFFIC_WAR_CARD_BACK = 'assets/ui/cards/card_back_tlo.png';
     var TRAFFIC_WAR_CURRENT_SEASON = {
       season_id: 'season_001',
       season_name: '星潮開播季',
-      display_name: '星潮沙盤戰',
+      display_name: '流量戰爭測試版｜未開放',
       start_time: '2026-07-01T00:00:00+08:00',
       end_time: '2026-07-31T23:59:59+08:00',
       status: 'active',
@@ -9075,10 +9102,30 @@ function showCollectionHistory() {
       return Math.abs(n % 1000) / 1000;
     }
 
-    function trafficWarMockBaseLevel(distance) {
-      if (distance >= 10) return 1;
-      if (distance >= 7) return 2;
-      return 3;
+    function trafficWarMockTileInMap(x, y) {
+      var centerX = 16;
+      var centerY = 10;
+      if (x === centerX && y === centerY) return true;
+      var dx = Math.abs(x - centerX);
+      var dy = Math.abs(y - centerY);
+      var inOval = Math.pow(dx / 17.0, 2) + Math.pow(dy / 10.8, 2) <= 1.04;
+      if (!inOval) return false;
+      var protectedLane = (Math.abs(y - centerY) <= 1) || (Math.abs(x - centerX) <= 1) || (x <= 2 && Math.abs(y - centerY) <= 5) || (x >= 30 && Math.abs(y - centerY) <= 5) || (y >= 18 && Math.abs(x - centerX) <= 7);
+      if (protectedLane) return true;
+      var d = Math.max(dx, Math.ceil(dy * 1.65));
+      if (d > 5 && d < 16 && trafficWarTileHash(x, y, 303) < 0.075) return false;
+      if (d > 10 && trafficWarTileHash(x, y, 411) < 0.045) return false;
+      return true;
+    }
+
+    function trafficWarMockDistance(x, y) {
+      return Math.max(Math.abs(x - 16), Math.ceil(Math.abs(y - 10) * 1.65));
+    }
+
+    function trafficWarMockBaseLevel(distance, x, y) {
+      if (distance >= 13) return trafficWarTileHash(x, y, 65) < 0.34 ? 2 : 1;
+      if (distance >= 9) return trafficWarTileHash(x, y, 66) < 0.28 ? 3 : (trafficWarTileHash(x, y, 67) < 0.62 ? 2 : 1);
+      return trafficWarTileHash(x, y, 68) < 0.34 ? 3 : 2;
     }
 
     function trafficWarMockResourceLevel(x, y, distance) {
@@ -9086,31 +9133,38 @@ function showCollectionHistory() {
       if (distance <= 1) level = 10;
       else if (distance <= 2) level = 9;
       else if (distance <= 3) level = 8;
-      else if (distance <= 4) level = 7;
-      else if (distance <= 6) level = 6;
-      else if (distance <= 8) level = 5;
-      else if (distance <= 10) level = 4;
-      if (distance > 8 && trafficWarTileHash(x, y, 91) < 0.12) level = Math.min(6, level + 1);
+      else if (distance <= 5) level = 7;
+      else if (distance <= 7) level = 6;
+      else if (distance <= 9) level = 5;
+      else if (distance <= 12) level = trafficWarTileHash(x, y, 91) < 0.30 ? 5 : 4;
+      else level = trafficWarTileHash(x, y, 92) < 0.22 ? 5 : (trafficWarTileHash(x, y, 93) < 0.54 ? 4 : 3);
       return Math.max(3, Math.min(10, level));
     }
 
-    function trafficWarMockResourceType(x, y, distance, isCenter, isSpawn) {
-      if (isCenter || isSpawn) return null;
-      var chance = distance <= 3 ? 0.42 : (distance <= 6 ? 0.30 : (distance <= 9 ? 0.18 : 0.08));
-      if (distance >= 10 && trafficWarTileHash(x, y, 79) > 0.35) chance *= 0.55;
+    function trafficWarMockResourceType(x, y, distance, isCenter, isHome) {
+      if (isCenter || isHome) return null;
+      var chance = distance <= 3 ? 0.46 : (distance <= 6 ? 0.38 : (distance <= 9 ? 0.30 : (distance <= 13 ? 0.21 : 0.14)));
       if (trafficWarTileHash(x, y, 17) > chance) return null;
       return trafficWarTileHash(x, y, 29) > 0.52 ? 'tip' : 'popularity';
     }
 
+    function trafficWarMockHomeTileId(faction) {
+      if (faction === 'streamer') return 'tile_31_10';
+      if (faction === 'professional') return 'tile_16_19';
+      return faction === 'entertainment' ? 'tile_1_10' : '';
+    }
+
     function trafficWarMockTile(x, y, faction) {
-      var center = 12;
-      var distance = Math.max(Math.abs(x - center), Math.abs(y - center));
-      var isCenter = x === center && y === center;
-      var spawnId = faction ? ({ entertainment: 'tile_0_12', streamer: 'tile_24_12', professional: 'tile_12_24' })[faction] : '';
+      var centerX = 16;
+      var centerY = 10;
+      var distance = trafficWarMockDistance(x, y);
+      var isCenter = x === centerX && y === centerY;
+      var homeId = trafficWarMockHomeTileId(faction);
       var tileId = 'tile_' + x + '_' + y;
-      var resourceType = trafficWarMockResourceType(x, y, distance, isCenter, tileId === spawnId);
-      var level = isCenter ? 10 : (resourceType ? trafficWarMockResourceLevel(x, y, distance) : trafficWarMockBaseLevel(distance));
-      var type = isCenter ? 'center' : (tileId === spawnId ? 'spawn' : (resourceType ? 'resource' : 'normal'));
+      var isHome = tileId === homeId;
+      var resourceType = trafficWarMockResourceType(x, y, distance, isCenter, isHome);
+      var level = isCenter ? 10 : (resourceType ? trafficWarMockResourceLevel(x, y, distance) : trafficWarMockBaseLevel(distance, x, y));
+      var type = isCenter ? 'center' : (isHome ? 'spawn' : (resourceType ? 'resource' : 'normal'));
       return {
         tile_id: tileId,
         x: x,
@@ -9118,23 +9172,23 @@ function showCollectionHistory() {
         level: level,
         level_name: level >= 8 ? '年度前線區' : (level >= 5 ? '熱門流量區' : (level >= 3 ? '資源流量區' : '外圍新手區')),
         tile_type: type,
-        owner_faction: tileId === spawnId ? faction : null,
-        owner_uid: tileId === spawnId ? getTrafficWarUid() : null,
-        enemy_name: '敵方卡牌',
+        owner_faction: isHome ? faction : null,
+        owner_uid: isHome ? getTrafficWarUid() : null,
+        enemy_name: '卡池守軍',
         enemy_power: isCenter ? 100000 : [0,1000,2500,5000,8000,12000,18000,26000,36000,50000,70000][level],
         resource_type: resourceType,
         resource_amount: resourceType ? Math.floor([0,0,0,30,50,80,120,180,250,350,500][level]) : 0,
         is_center_city: isCenter,
         can_attack: false,
         can_collect_resource: false,
-        is_current_team_tile: tileId === spawnId
+        is_current_team_tile: isHome
       };
     }
 
     function createTrafficWarDefaultState() {
       var faction = null;
       var tiles = [];
-      for (var y = 0; y < 25; y += 1) for (var x = 0; x < 25; x += 1) tiles.push(trafficWarMockTile(x, y, faction));
+      for (var y = 0; y < 21; y += 1) for (var x = 0; x < 33; x += 1) if (trafficWarMockTileInMap(x, y)) tiles.push(trafficWarMockTile(x, y, faction));
       return {
         success: true,
         online: false,
@@ -9143,7 +9197,9 @@ function showCollectionHistory() {
         season_name: TRAFFIC_WAR_CURRENT_SEASON.season_name,
         display_name: TRAFFIC_WAR_CURRENT_SEASON.display_name,
         center_city_name: '年度盛典',
-        map_size: 25,
+        map_size: 33,
+        map_width: 33,
+        map_height: 21,
         start_time: TRAFFIC_WAR_CURRENT_SEASON.start_time,
         end_time: TRAFFIC_WAR_CURRENT_SEASON.end_time,
         status: TRAFFIC_WAR_CURRENT_SEASON.status,
@@ -9186,7 +9242,9 @@ function showCollectionHistory() {
       state.action_logs = Array.isArray(state.action_logs) ? state.action_logs.slice(0, 18) : [];
       state.personal_ranking = Array.isArray(state.personal_ranking) ? state.personal_ranking : [];
       state.team_power = Number(state.team_power || 0);
-      state.map_size = Number(state.map_size || 25);
+      state.map_width = Number(state.map_width || state.map_size || 33);
+      state.map_height = Number(state.map_height || 21);
+      state.map_size = Number(state.map_size || state.map_width || 33);
       state.display_name = state.display_name || TRAFFIC_WAR_CURRENT_SEASON.display_name;
       state.season_name = state.season_name || TRAFFIC_WAR_CURRENT_SEASON.season_name;
       state.center_city_name = state.center_city_name || '年度盛典';
@@ -9267,11 +9325,11 @@ function showCollectionHistory() {
       if (screen) {
         var screenTitle = screen.querySelector('.screen-title');
         var screenSub = screen.querySelector('.screen-sub');
-        if (screenTitle) screenTitle.textContent = '星潮沙盤戰';
+        if (screenTitle) screenTitle.textContent = '流量戰爭測試版｜未開放';
         if (screenSub) screenSub.textContent = '卡牌式沙盤戰場：外圍出生、相鄰攻格、佔地產出、決戰年度盛典。';
       }
       var title = document.getElementById('traffic-war-season-title');
-      if (title) title.textContent = (state.display_name || '星潮沙盤戰') + '｜' + (state.season_name || '星潮開播季');
+      if (title) title.textContent = (state.display_name || '流量戰爭測試版｜未開放') + '｜' + (state.season_name || '星潮開播季');
       var desc = document.getElementById('traffic-war-season-desc');
       if (desc) desc.textContent = '玩家帶領直播主卡牌從外圍推進，攻下 LV3 以上格子產出人氣與打賞，最後爭奪中央年度盛典。';
       renderTrafficWarMeta(state);
@@ -9286,7 +9344,6 @@ function showCollectionHistory() {
       var meta = document.getElementById('traffic-war-season-meta');
       if (!meta) return;
       meta.innerHTML = [
-        '<span class="traffic-war-chip cyan">資料：' + trafficWarEsc(trafficWarLastError ? '離線預覽 / ' + trafficWarLastError : '線上資料庫') + '</span>',
         '<span class="traffic-war-chip">陣營：' + trafficWarEsc(trafficWarFactionLabel(state.player_season.faction)) + '</span>',
         '<span class="traffic-war-chip pink">中央：年度盛典 ' + (state.center_unlocked ? '可挑戰' : '未開放') + '</span>',
         '<span class="traffic-war-chip">倒數：' + trafficWarEsc(trafficWarCountdownText(state.end_time)) + '</span>'
@@ -9371,26 +9428,41 @@ function showCollectionHistory() {
     }
 
     function trafficWarMapMetrics(state) {
-      var size = Number((state && state.map_size) || 25);
-      var max = Math.max(0, size - 1);
-      var stepX = 154;
-      var stepY = 94;
-      var tileW = 142;
-      var tileH = 112;
-      var paddingX = 360;
-      var paddingTop = 360;
-      var paddingBottom = 430;
+      state = state || loadTrafficWarState();
+      var tiles = Array.isArray(state.tiles) ? state.tiles : [];
+      var stepX = 126;
+      var stepY = 74;
+      var tileW = 122;
+      var tileH = 98;
+      var minIsoX = 0, maxIsoX = 0, minIsoY = 0, maxIsoY = 0;
+      if (tiles.length) {
+        minIsoX = Infinity; maxIsoX = -Infinity; minIsoY = Infinity; maxIsoY = -Infinity;
+        tiles.forEach(function(t) {
+          var x = Number(t && t.x || 0);
+          var y = Number(t && t.y || 0);
+          var isoX = (x - y) * stepX;
+          var isoY = (x + y) * stepY;
+          minIsoX = Math.min(minIsoX, isoX);
+          maxIsoX = Math.max(maxIsoX, isoX);
+          minIsoY = Math.min(minIsoY, isoY);
+          maxIsoY = Math.max(maxIsoY, isoY);
+        });
+      }
+      var paddingX = 520;
+      var paddingTop = 470;
+      var paddingBottom = 420;
       return {
-        size: size,
-        max: max,
+        size: Number(state.map_size || state.map_width || 33),
+        mapWidth: Number(state.map_width || state.map_size || 33),
+        mapHeight: Number(state.map_height || 21),
         stepX: stepX,
         stepY: stepY,
         tileW: tileW,
         tileH: tileH,
-        offsetX: paddingX + max * stepX,
-        offsetY: paddingTop,
-        width: paddingX * 2 + max * 2 * stepX + tileW + 360,
-        height: paddingTop + max * 2 * stepY + tileH + paddingBottom
+        offsetX: paddingX - minIsoX,
+        offsetY: paddingTop - minIsoY,
+        width: Math.ceil((maxIsoX - minIsoX) + paddingX * 2 + tileW + 420),
+        height: Math.ceil((maxIsoY - minIsoY) + paddingTop + paddingBottom + tileH)
       };
     }
 
@@ -9503,14 +9575,16 @@ function showCollectionHistory() {
         + '<div class="traffic-war-side-row"><span>紅色卡牌</span><b>敵人守軍</b></div>'
         + '<div class="traffic-war-side-row"><span>黃色發光</span><b>相鄰可攻打</b></div>'
         + '<div class="traffic-war-side-row"><span>中央大城</span><b>' + (state.center_unlocked ? '可挑戰' : '未開放') + '</b></div>'
-        + '<button type="button" class="traffic-war-detail-action" onclick="selectTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || 'tile_0_12') + '\'); focusTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || 'tile_0_12') + '\')">定位隊伍</button>'
+        + '<button type="button" class="traffic-war-detail-action" onclick="selectTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || 'tile_1_10') + '\'); focusTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || 'tile_1_10') + '\')">定位隊伍</button>'
         + '<button type="button" class="traffic-war-detail-action" onclick="document.getElementById(\'traffic-war-feed\')?.scrollIntoView({behavior:\'smooth\',block:\'center\'})">查看戰報</button>'
         + '</aside>';
       box.innerHTML = '<div class="traffic-war-map-layout">' + sideHtml + mapHtml + rightHtml + '</div>';
       initTrafficWarMapPan();
-      if (!box.dataset.twInitialCentered) {
+      if (trafficWarShouldFocusCurrent || !box.dataset.twInitialCentered) {
         box.dataset.twInitialCentered = '1';
-        focusTrafficWarTile(state.player_season.current_tile_id || trafficWarSelectedTileId || 'tile_12_12');
+        var focusId = state.player_season.current_tile_id || trafficWarSelectedTileId || 'tile_16_10';
+        trafficWarShouldFocusCurrent = false;
+        setTimeout(function(){ focusTrafficWarTile(focusId); }, 30);
       }
     }
 
@@ -9618,7 +9692,7 @@ function showCollectionHistory() {
       var reason = trafficWarAttackDisabledReason(state, tile);
       var attackDisabled = !!reason;
       var collectDisabled = !tile.can_collect_resource;
-      var enemyLabel = tile.enemy_card_name || (tile.is_center_city ? '年度盛典守衛' : '卡池隨機敵人');
+      var enemyLabel = tile.is_center_city ? '年度盛典守衛' : (tile.enemy_card_name || '卡池守軍');
       var tileId = trafficWarEsc(tile.tile_id);
       return '<span class="tw-selected-popover" onclick="event.stopPropagation()">'
         + '<b>' + trafficWarEsc(tile.is_center_city ? '年度盛典' : ('LV' + Number(tile.level || 1) + ' 格子')) + '</b>'
@@ -9685,12 +9759,14 @@ function showCollectionHistory() {
 
 
     function openTrafficWarWindow(refresh) {
+      trafficWarShouldFocusCurrent = true;
       var win = document.getElementById('traffic-war-window');
       if (win) {
         win.classList.add('show');
         win.setAttribute('aria-hidden', 'false');
       }
       if (refresh) renderTrafficWar(true);
+      else setTimeout(function(){ var st = loadTrafficWarState(); focusTrafficWarTile((st.player_season && st.player_season.current_tile_id) || 'tile_16_10'); }, 60);
     }
 
     function closeTrafficWarWindow() {
