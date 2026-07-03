@@ -1799,9 +1799,36 @@
     .traffic-war-detail-action{width:100%;margin-top:8px;}
     .traffic-war-detail-action:disabled{filter:grayscale(1);opacity:.58;cursor:not-allowed;}
     .traffic-war-team-card .traffic-war-card-skill{color:#dff;margin-top:5px;}
-    @media(max-width:900px){.traffic-war-map-layout{grid-template-columns:1fr}.traffic-war-map-scroll{min-height:420px}.traffic-war-side,.traffic-war-tile-detail{min-height:0}.traffic-war-bottom-nav{grid-template-columns:repeat(3,1fr)}}
-    @media(max-width:720px){.traffic-war-board-grid{grid-template-columns:1fr}.traffic-war-topline{grid-template-columns:1fr}.traffic-war-mini-btn{width:100%;}.traffic-war-hero h3,.traffic-war-panel h3{font-size:20px;}.traffic-war-map-grid{grid-template-columns:repeat(15,30px);grid-template-rows:repeat(15,30px);}.traffic-war-tile{width:30px;height:30px;}}
-    @media(max-width:430px){.traffic-war-shell{gap:10px}.traffic-war-hero,.traffic-war-panel{border-radius:17px;padding:10px}.traffic-war-grid{grid-template-columns:1fr}.traffic-war-team-grid{grid-template-columns:1fr}.traffic-war-region-meta{grid-template-columns:1fr}.traffic-war-progress-row{grid-template-columns:62px 1fr 30px}.traffic-war-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.traffic-war-map-grid{grid-template-columns:repeat(15,27px);grid-template-rows:repeat(15,27px);}.traffic-war-tile{width:27px;height:27px;border-radius:6px}.traffic-war-bottom-nav{grid-template-columns:repeat(2,1fr)}}
+    .traffic-war-map-scroll{position:relative;min-height:570px;display:flex;justify-content:center;align-items:center;background:radial-gradient(circle at 50% 42%,rgba(255,230,163,.18),transparent 28%),linear-gradient(135deg,rgba(32,28,21,.74),rgba(8,10,22,.9));}
+    .traffic-war-map-grid{position:relative;display:block;width:930px;height:555px;min-width:930px;margin:12px auto 28px;filter:drop-shadow(0 34px 22px rgba(0,0,0,.46));}
+    .traffic-war-map-grid:before{content:"";position:absolute;left:105px;right:80px;top:96px;bottom:14px;background:linear-gradient(135deg,rgba(62,95,54,.34),rgba(32,52,45,.28));transform:skewY(-26deg);filter:blur(10px);opacity:.62;pointer-events:none;}
+    .traffic-war-tile{position:absolute;left:var(--tw-left);top:var(--tw-top);z-index:var(--tw-z);width:48px;height:48px;border-radius:5px;transform:rotate(45deg);background:linear-gradient(135deg,#b8d58b,#77a962 58%,#527e4d);border:1px solid rgba(255,255,255,.28);box-shadow:6px 6px 0 #38543b,9px 10px 10px rgba(0,0,0,.28),inset 0 0 13px rgba(255,255,255,.15);overflow:visible;}
+    .traffic-war-tile:hover{transform:rotate(45deg) translate(-2px,-2px);border-color:#fff3b5;filter:brightness(1.12);}
+    .traffic-war-tile.selected{outline:2px solid #fff0a8;outline-offset:4px;box-shadow:0 0 24px rgba(255,230,163,.32),6px 6px 0 #51412a,9px 10px 12px rgba(0,0,0,.3),inset 0 0 15px rgba(255,255,255,.2);}
+    .traffic-war-tile.attackable{box-shadow:0 0 22px rgba(255,235,138,.4),6px 6px 0 #59602f,9px 10px 10px rgba(0,0,0,.28),inset 0 0 16px rgba(255,244,167,.28);}
+    .traffic-war-tile.center{width:62px;height:62px;margin:-7px 0 0 -7px;background:linear-gradient(135deg,#fff2a6,#efbf4d 52%,#b77732);border-color:#fff9ce;box-shadow:0 0 28px rgba(255,230,163,.45),8px 8px 0 #644727,12px 12px 16px rgba(0,0,0,.32),inset 0 0 20px rgba(255,255,255,.28);}
+    .traffic-war-tile.spawn{border-color:rgba(255,255,255,.65);}
+    .traffic-war-tile.entertainment{background:linear-gradient(135deg,#ffc0d9,#ff74bc 54%,#a53b78);box-shadow:6px 6px 0 #6b315a,9px 10px 10px rgba(0,0,0,.28),inset 0 0 13px rgba(255,255,255,.18);}
+    .traffic-war-tile.streamer{background:linear-gradient(135deg,#bdfdf4,#64fff2 54%,#3b908d);box-shadow:6px 6px 0 #2c5b63,9px 10px 10px rgba(0,0,0,.28),inset 0 0 13px rgba(255,255,255,.18);}
+    .traffic-war-tile.professional{background:linear-gradient(135deg,#c8ffba,#8cff80 54%,#53934d);box-shadow:6px 6px 0 #356133,9px 10px 10px rgba(0,0,0,.28),inset 0 0 13px rgba(255,255,255,.18);}
+    .traffic-war-tile.resource:before,.traffic-war-tile.city:before,.traffic-war-tile.boss:before{content:"";position:absolute;left:13px;top:13px;width:21px;height:21px;border-radius:4px;background:rgba(255,255,255,.2);box-shadow:0 0 10px rgba(255,255,255,.22);}
+    .traffic-war-tile.boss:before,.traffic-war-tile.center:before{background:rgba(255,230,163,.4);}
+    .tw-tile-label{position:absolute;inset:-3px;display:grid;place-items:center;transform:rotate(-45deg);text-align:center;pointer-events:none;}
+    .tw-tile-label em{position:absolute;top:2px;left:0;right:0;color:rgba(18,28,20,.75);font-style:normal;font-size:8px;font-weight:1000;text-shadow:0 1px rgba(255,255,255,.35);}
+    .tw-tile-label strong{color:#142014;font-size:10px;line-height:1;text-shadow:0 1px rgba(255,255,255,.45);}
+    .traffic-war-tile.center .tw-tile-label strong{font-size:11px;color:#231707;}
+    .tw-team-marker{position:absolute;left:50%;top:-28px;width:30px;height:34px;margin-left:-15px;border-radius:14px 14px 10px 10px;background:linear-gradient(180deg,#fff,#ffdf8a);color:#211600;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:1000;transform:rotate(-45deg);box-shadow:0 6px 12px rgba(0,0,0,.36);pointer-events:none;}
+    .tw-team-marker:after{content:"";position:absolute;left:8px;right:8px;bottom:-6px;height:6px;background:rgba(0,0,0,.22);border-radius:50%;filter:blur(2px);}
+    .tw-tile-spark{position:absolute;right:2px;top:2px;width:8px;height:8px;border-radius:50%;background:#fff7a8;box-shadow:0 0 12px #fff7a8;transform:rotate(-45deg);pointer-events:none;}
+    .traffic-war-tile.current:after{content:none;}
+    .traffic-war-tile small,.traffic-war-tile b{display:none;}
+    .traffic-war-map-legend{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 0;justify-content:center;color:#dce3ff;font-size:11px;font-weight:900;}
+    .traffic-war-map-legend span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(0,0,0,.18);padding:5px 8px;}
+    .traffic-war-map-legend i{width:10px;height:10px;border-radius:3px;transform:rotate(45deg);display:inline-block;background:#7fb863;}
+    .traffic-war-map-legend .entertainment i{background:#ff74bc}.traffic-war-map-legend .streamer i{background:#64fff2}.traffic-war-map-legend .professional i{background:#8cff80}.traffic-war-map-legend .center i{background:#ffdf8a}
+    @media(max-width:900px){.traffic-war-map-layout{grid-template-columns:1fr}.traffic-war-map-scroll{min-height:470px}.traffic-war-side,.traffic-war-tile-detail{min-height:0}.traffic-war-bottom-nav{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:720px){.traffic-war-board-grid{grid-template-columns:1fr}.traffic-war-topline{grid-template-columns:1fr}.traffic-war-mini-btn{width:100%;}.traffic-war-hero h3,.traffic-war-panel h3{font-size:20px;}.traffic-war-map-grid{transform:scale(.82);transform-origin:center center;margin:-22px auto -24px;}.traffic-war-map-scroll{min-height:430px;}}
+    @media(max-width:430px){.traffic-war-shell{gap:10px}.traffic-war-hero,.traffic-war-panel{border-radius:17px;padding:10px}.traffic-war-grid{grid-template-columns:1fr}.traffic-war-team-grid{grid-template-columns:1fr}.traffic-war-region-meta{grid-template-columns:1fr}.traffic-war-progress-row{grid-template-columns:62px 1fr 30px}.traffic-war-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.traffic-war-map-grid{transform:scale(.68);margin:-62px auto -74px;}.traffic-war-map-scroll{min-height:360px}.traffic-war-bottom-nav{grid-template-columns:repeat(2,1fr)}}
     @keyframes rookieClickPulse{0%{opacity:.95;transform:scale(.25)}100%{opacity:0;transform:scale(1.8)}}
     @keyframes rookiePairGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
     @media(max-width:430px){.rookie-guide-card{bottom:calc(16px + env(safe-area-inset-bottom));padding:12px;border-radius:20px}.rookie-guide-card h3{font-size:17px}.rookie-guide-actions{grid-template-columns:1fr 1fr}.rookie-guide-dots{grid-column:1/-1;order:-1}.rookie-guide-actions button{padding:9px 8px}.guide-modal-actions{grid-template-columns:1fr}}
@@ -9438,6 +9465,15 @@ function showCollectionHistory() {
       renderTrafficWarRegions(loadTrafficWarState());
     }
 
+    function trafficWarIsoTileStyle(tile) {
+      var x = Number(tile && tile.x || 0);
+      var y = Number(tile && tile.y || 0);
+      var left = 438 + (x - y) * 31;
+      var top = 22 + (x + y) * 17;
+      var z = 20 + x + y;
+      return '--tw-left:' + left + 'px;--tw-top:' + top + 'px;--tw-z:' + z + ';';
+    }
+
     function renderTrafficWarTileButton(tile) {
       var classes = ['traffic-war-tile', tile.tile_type || 'normal'];
       if (tile.owner_faction) classes.push(tile.owner_faction);
@@ -9446,9 +9482,13 @@ function showCollectionHistory() {
       if (tile.is_current_team_tile) classes.push('current');
       if (trafficWarSelectedTileId === tile.tile_id) classes.push('selected');
       var label = tile.is_center_city ? '盛典' : ('LV' + Number(tile.level || 1));
-      return '<button type="button" class="' + classes.map(trafficWarEsc).join(' ') + '" onclick="selectTrafficWarTile(\'' + trafficWarEsc(tile.tile_id) + '\')" title="' + trafficWarEsc(tile.tile_id) + '">'
-        + '<small>' + trafficWarEsc(tile.owner_faction ? trafficWarFactionShort(tile.owner_faction) : '') + '</small>'
-        + '<b>' + trafficWarEsc(label) + '</b>'
+      var owner = tile.owner_faction ? trafficWarFactionShort(tile.owner_faction) : '';
+      var teamMarker = tile.is_current_team_tile ? '<i class="tw-team-marker">隊</i>' : '';
+      var spark = tile.can_attack ? '<i class="tw-tile-spark"></i>' : '';
+      return '<button type="button" class="' + classes.map(trafficWarEsc).join(' ') + '" style="' + trafficWarIsoTileStyle(tile) + '" onclick="selectTrafficWarTile(\'' + trafficWarEsc(tile.tile_id) + '\')" title="' + trafficWarEsc(tile.tile_id) + '">'
+        + '<span class="tw-tile-label"><em>' + trafficWarEsc(owner) + '</em><strong>' + trafficWarEsc(label) + '</strong></span>'
+        + spark
+        + teamMarker
         + '</button>';
     }
 
@@ -9468,9 +9508,9 @@ function showCollectionHistory() {
         + '<div class="traffic-war-side-row"><span>陣營</span><b>' + trafficWarEsc(trafficWarFactionLabel(state.player_season.faction)) + '</b></div>'
         + '<div class="traffic-war-side-row"><span>中心開放</span><b>' + (state.center_unlocked ? '可挑戰' : '未開放') + '</b></div>'
         + '</aside>';
-      var mapHtml = '<div><div class="traffic-war-map-scroll"><div class="traffic-war-map-grid">'
+      var mapHtml = '<div><div class="traffic-war-map-scroll"><div class="traffic-war-map-grid" aria-label="流量戰爭等角沙盤地圖">'
         + tiles.map(renderTrafficWarTileButton).join('')
-        + '</div></div><div class="traffic-war-bottom-nav">'
+        + '</div></div><div class="traffic-war-map-legend"><span><i></i>未佔領</span><span class="entertainment"><i></i>娛樂</span><span class="streamer"><i></i>實況</span><span class="professional"><i></i>專業</span><span class="center"><i></i>年度盛典</span></div><div class="traffic-war-bottom-nav">'
         + '<button class="active" type="button">地圖</button><button type="button" onclick="document.getElementById(\'traffic-war-team-grid\')?.scrollIntoView({behavior:\'smooth\',block:\'center\'})">編隊</button><button type="button">主城</button><button type="button">科技</button><button type="button" onclick="document.getElementById(\'traffic-war-ranking-list\')?.scrollIntoView({behavior:\'smooth\',block:\'center\'})">排行</button>'
         + '</div></div>';
       var detailHtml = renderTrafficWarTileDetail(state, selectedTile);
