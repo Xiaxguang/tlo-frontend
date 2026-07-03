@@ -1546,7 +1546,7 @@
     .lobby-action-battle{background:linear-gradient(180deg,rgba(19,113,255,.64),rgba(15,33,98,.64));box-shadow:0 0 22px rgba(69,166,255,.3),inset 0 0 22px rgba(255,255,255,.06);}
     .lobby-action-shop{background:linear-gradient(180deg,rgba(255,183,74,.58),rgba(83,43,11,.66));box-shadow:0 0 22px rgba(255,200,89,.25),inset 0 0 22px rgba(255,255,255,.06);}
     .lobby-action:active,.lobby-quick-dock button:active,.lobby-chat-head:active,.lobby-more-grid button:active{transform:scale(.97);}
-    .lobby-quick-dock{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:8px 0;padding:8px;border:1px solid rgba(255,230,163,.42);border-radius:20px;background:rgba(5,7,24,.64);backdrop-filter:blur(9px);box-shadow:0 0 18px rgba(0,0,0,.28);}
+    .lobby-quick-dock{display:grid;grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:6px;margin:8px 0;padding:8px;border:1px solid rgba(255,230,163,.42);border-radius:20px;background:rgba(5,7,24,.64);backdrop-filter:blur(9px);box-shadow:0 0 18px rgba(0,0,0,.28);}
     .lobby-quick-dock button{min-height:54px;border:1px solid rgba(255,230,163,.32);border-radius:15px;background:rgba(16,14,52,.68);color:#fff;font-weight:950;font-size:11px;cursor:pointer;box-shadow:inset 0 0 12px rgba(100,255,242,.04);}
     .lobby-quick-dock span{display:block;color:var(--lobby-gold);font-size:18px;margin-bottom:3px;text-shadow:0 0 12px rgba(100,255,242,.22);}
     .lobby-chat-preview,.lobby-tip-mini{border:1px solid rgba(255,230,163,.5);border-radius:20px;background:linear-gradient(135deg,rgba(8,9,33,.76),rgba(12,16,55,.54));backdrop-filter:blur(9px);box-shadow:0 0 22px rgba(0,0,0,.28),inset 0 0 18px rgba(100,255,242,.04);padding:10px;margin:8px 0;color:#fff;}
@@ -1714,6 +1714,68 @@
     .guide-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
     .guide-modal-actions button{border:1px solid rgba(255,230,163,.42);border-radius:14px;background:rgba(255,230,163,.09);color:#fff;padding:11px;font-weight:1000;cursor:pointer;}
     .guide-modal-actions .primary{background:linear-gradient(135deg,#00fff0,#ffdd77);border:0;color:#111;}
+    .traffic-war-entry-card{border-color:rgba(255,116,188,.38);background:linear-gradient(135deg,rgba(255,116,188,.12),rgba(0,255,240,.08));}
+    .traffic-war-shell{display:grid;gap:12px;padding-bottom:18px;}
+    .traffic-war-hero,.traffic-war-panel{border:1px solid rgba(255,230,163,.28);border-radius:20px;background:linear-gradient(135deg,rgba(8,10,31,.84),rgba(17,12,45,.72));box-shadow:0 18px 38px rgba(0,0,0,.34),inset 0 0 18px rgba(100,255,242,.035);backdrop-filter:blur(9px);padding:12px;color:#fff;}
+    .traffic-war-hero{position:relative;overflow:hidden;border-color:rgba(100,255,242,.36);background:radial-gradient(circle at 18% 0%,rgba(0,255,240,.18),transparent 30%),radial-gradient(circle at 88% 0%,rgba(255,116,188,.16),transparent 28%),linear-gradient(135deg,rgba(7,12,38,.9),rgba(20,12,45,.82));}
+    .traffic-war-hero:after{content:"";position:absolute;inset:auto -18% -55% -18%;height:72%;background:linear-gradient(90deg,transparent,rgba(255,230,163,.14),transparent);transform:rotate(-5deg);pointer-events:none;}
+    .traffic-war-kicker{color:#64fff2;font-size:12px;font-weight:1000;letter-spacing:0;text-transform:uppercase;}
+    .traffic-war-hero h3,.traffic-war-panel h3{margin:5px 0 4px;color:#fff;font-size:22px;line-height:1.15;text-shadow:0 0 16px rgba(100,255,242,.2);}
+    .traffic-war-hero p,.traffic-war-panel p{margin:0;color:#d8def7;font-size:12px;line-height:1.6;}
+    .traffic-war-topline{position:relative;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;}
+    .traffic-war-season-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+    .traffic-war-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,230,163,.28);border-radius:999px;background:rgba(255,255,255,.07);padding:5px 8px;color:#fff1bd;font-size:11px;font-weight:950;}
+    .traffic-war-chip.cyan{border-color:rgba(100,255,242,.35);color:#dff;background:rgba(100,255,242,.08);}
+    .traffic-war-chip.pink{border-color:rgba(255,116,188,.34);color:#ffd9ee;background:rgba(255,116,188,.09);}
+    .traffic-war-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:10px;}
+    .traffic-war-stat{border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(0,0,0,.22);padding:9px;min-height:58px;box-sizing:border-box;}
+    .traffic-war-stat span{display:block;color:#aeb7dc;font-size:10px;font-weight:900;}
+    .traffic-war-stat b{display:block;color:#ffdf8a;font-size:17px;margin-top:4px;line-height:1.1;}
+    .traffic-war-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;}
+    .traffic-war-faction-card,.traffic-war-region,.traffic-war-team-card{border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(7,9,25,.72);padding:10px;box-sizing:border-box;color:#fff;box-shadow:inset 0 0 14px rgba(255,255,255,.025);}
+    .traffic-war-faction-card{display:grid;gap:7px;cursor:pointer;min-height:128px;text-align:left;}
+    .traffic-war-faction-card.selected{border-color:rgba(255,230,163,.76);box-shadow:0 0 18px rgba(255,230,163,.14),inset 0 0 16px rgba(255,230,163,.05);}
+    .traffic-war-faction-card.entertainment{background:linear-gradient(135deg,rgba(255,116,188,.18),rgba(7,9,25,.76));}
+    .traffic-war-faction-card.streamer{background:linear-gradient(135deg,rgba(100,255,242,.16),rgba(7,9,25,.76));}
+    .traffic-war-faction-card.professional{background:linear-gradient(135deg,rgba(140,255,128,.14),rgba(7,9,25,.76));}
+    .traffic-war-faction-name{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff;font-size:16px;font-weight:1000;}
+    .traffic-war-faction-name small{color:#ffdf8a;font-size:11px;font-weight:950;}
+    .traffic-war-faction-card p{color:#ccd4f4;font-size:12px;line-height:1.5;}
+    .traffic-war-faction-card button,.traffic-war-region button,.traffic-war-mini-btn{border:0;border-radius:12px;background:linear-gradient(135deg,#00fff0,#ffdd77);color:#111;padding:9px 10px;font-size:12px;font-weight:1000;cursor:pointer;}
+    .traffic-war-faction-card button:disabled,.traffic-war-region button:disabled{filter:grayscale(1);opacity:.62;cursor:not-allowed;}
+    .traffic-war-team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;}
+    .traffic-war-team-card{position:relative;cursor:pointer;min-height:132px;}
+    .traffic-war-team-card.selected{border-color:#64fff2;box-shadow:0 0 16px rgba(100,255,242,.18);}
+    .traffic-war-team-card:before{content:attr(data-rarity);position:absolute;right:8px;top:8px;border-radius:999px;background:rgba(255,230,163,.14);border:1px solid rgba(255,230,163,.28);color:#ffdf8a;padding:2px 6px;font-size:10px;font-weight:1000;}
+    .traffic-war-team-card b{display:block;color:#fff;font-size:15px;margin-bottom:6px;padding-right:48px;}
+    .traffic-war-team-card span{display:block;color:#aeb7dc;font-size:11px;line-height:1.45;}
+    .traffic-war-team-power{margin-top:10px;border:1px solid rgba(100,255,242,.28);border-radius:14px;background:rgba(100,255,242,.075);padding:9px;color:#dff;font-size:12px;font-weight:950;}
+    .traffic-war-region{display:grid;gap:8px;min-height:214px;}
+    .traffic-war-region-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+    .traffic-war-region h4{margin:0;color:#fff;font-size:16px;line-height:1.25;}
+    .traffic-war-region-type{flex:0 0 auto;border:1px solid rgba(100,255,242,.26);border-radius:999px;background:rgba(100,255,242,.075);padding:3px 7px;color:#dff;font-size:10px;font-weight:950;}
+    .traffic-war-region-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;color:#cfd6f5;font-size:11px;}
+    .traffic-war-region-meta span{border:1px solid rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.045);padding:6px;}
+    .traffic-war-progress-list{display:grid;gap:6px;}
+    .traffic-war-progress-row{display:grid;grid-template-columns:70px 1fr 34px;gap:6px;align-items:center;color:#cfd6f5;font-size:10px;font-weight:900;}
+    .traffic-war-track{height:9px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden;border:1px solid rgba(255,255,255,.08);}
+    .traffic-war-fill{display:block;height:100%;width:0;border-radius:999px;background:#64fff2;box-shadow:0 0 10px currentColor;}
+    .traffic-war-fill.entertainment{background:#ff74bc;color:#ff74bc;}
+    .traffic-war-fill.streamer{background:#64fff2;color:#64fff2;}
+    .traffic-war-fill.professional{background:#8cff80;color:#8cff80;}
+    .traffic-war-owner{color:#ffdf8a;font-size:11px;font-weight:950;}
+    .traffic-war-board-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+    .traffic-war-rank-list,.traffic-war-feed{display:grid;gap:7px;}
+    .traffic-war-rank-row,.traffic-war-feed-row{border:1px solid rgba(255,255,255,.1);border-radius:13px;background:rgba(0,0,0,.2);padding:8px;color:#dce3ff;font-size:12px;line-height:1.45;}
+    .traffic-war-rank-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .traffic-war-rank-row b{color:#fff;}
+    .traffic-war-feed-row small{display:block;color:#9fb0dc;margin-top:3px;}
+    .traffic-war-result-body{display:grid;gap:8px;text-align:left;}
+    .traffic-war-result-badge{display:inline-flex;width:max-content;border-radius:999px;padding:5px 9px;font-weight:1000;font-size:12px;}
+    .traffic-war-result-badge.win{background:rgba(0,255,127,.16);color:#91ffbd;border:1px solid rgba(0,255,127,.32);}
+    .traffic-war-result-badge.fail{background:rgba(255,116,188,.16);color:#ffd3e8;border:1px solid rgba(255,116,188,.34);}
+    @media(max-width:720px){.traffic-war-board-grid{grid-template-columns:1fr}.traffic-war-topline{grid-template-columns:1fr}.traffic-war-mini-btn{width:100%;}.traffic-war-hero h3,.traffic-war-panel h3{font-size:20px;}}
+    @media(max-width:430px){.traffic-war-shell{gap:10px}.traffic-war-hero,.traffic-war-panel{border-radius:17px;padding:10px}.traffic-war-grid{grid-template-columns:1fr}.traffic-war-team-grid{grid-template-columns:1fr}.traffic-war-region-meta{grid-template-columns:1fr}.traffic-war-progress-row{grid-template-columns:62px 1fr 30px}.traffic-war-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
     @keyframes rookieClickPulse{0%{opacity:.95;transform:scale(.25)}100%{opacity:0;transform:scale(1.8)}}
     @keyframes rookiePairGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
     @media(max-width:430px){.rookie-guide-card{bottom:calc(16px + env(safe-area-inset-bottom));padding:12px;border-radius:20px}.rookie-guide-card h3{font-size:17px}.rookie-guide-actions{grid-template-columns:1fr 1fr}.rookie-guide-dots{grid-column:1/-1;order:-1}.rookie-guide-actions button{padding:9px 8px}.guide-modal-actions{grid-template-columns:1fr}}
@@ -1752,6 +1814,11 @@
         linear-gradient(180deg,rgba(4,6,20,.16),rgba(4,6,20,.3) 45%,rgba(4,6,20,.8) 100%),
         url('./assets/ui/bg-social-star-plaza.webp') center top / cover no-repeat!important;
     }
+    .container.game-shell.tlo-bg-traffic{
+      background:
+        linear-gradient(180deg,rgba(4,6,20,.18),rgba(18,6,36,.36) 42%,rgba(4,6,20,.82) 100%),
+        url('./assets/ui/bg-battle-rift-hall.webp') center top / cover no-repeat!important;
+    }
     .container.game-shell[class*="tlo-bg-"]{
       background-color:#070816!important;
       background-attachment:scroll!important;
@@ -1760,7 +1827,8 @@
     .container.game-shell.tlo-bg-battle .screen-head,
     .container.game-shell.tlo-bg-shop .screen-head,
     .container.game-shell.tlo-bg-profile .screen-head,
-    .container.game-shell.tlo-bg-social .screen-head{
+    .container.game-shell.tlo-bg-social .screen-head,
+    .container.game-shell.tlo-bg-traffic .screen-head{
       padding:10px 10px 8px;
       border:1px solid rgba(255,230,163,.32);
       border-radius:18px;
@@ -1773,6 +1841,7 @@
     .container.game-shell.tlo-bg-shop .game-card,
     .container.game-shell.tlo-bg-profile .game-card,
     .container.game-shell.tlo-bg-social .game-card,
+    .container.game-shell.tlo-bg-traffic .game-card,
     .container.game-shell.tlo-bg-battle .mode-group,
     .container.game-shell.tlo-bg-gacha .history-box{
       background:linear-gradient(180deg,rgba(11,12,34,.82),rgba(5,6,18,.72))!important;
@@ -1790,7 +1859,8 @@
       .container.game-shell.tlo-bg-battle,
       .container.game-shell.tlo-bg-shop,
       .container.game-shell.tlo-bg-profile,
-      .container.game-shell.tlo-bg-social{
+      .container.game-shell.tlo-bg-social,
+      .container.game-shell.tlo-bg-traffic{
         background-position:center top!important;
       }
     }
@@ -2103,6 +2173,7 @@
         <button type="button" id="guide-collection-entry" onclick="openCollectionModal()"><span>▣</span>卡盒</button>
         <button type="button" onclick="openMissionModal()"><span>✓</span>任務</button>
         <button type="button" onclick="openTrainingModal()"><span>🏆</span>排行</button>
+        <button type="button" onclick="showGameScreen('traffic')"><span>♛</span>流量戰爭</button>
         <button type="button" onclick="showGameScreen('social')"><span>🤝</span>社交</button>
         <button type="button" onclick="showGameScreen('profile')"><span>👤</span>個人</button>
         <button type="button" onclick="openLobbyMoreModal()"><span>•••</span>更多</button>
@@ -2194,6 +2265,7 @@
             <button type="button" onclick="openWorldBossModal(); closeLobbyMoreModal()"><span>🌍</span><b>世界BOSS</b><small>全服同步討伐與傷害排名</small></button>
             <button type="button" onclick="openCharacterGrowthModal(); closeLobbyMoreModal()"><span>★</span><b>角色養成</b><small>等級、經驗、技能與升星</small></button>
             <button type="button" onclick="openMissionModal(); closeLobbyMoreModal()"><span>🎁</span><b>福利任務</b><small>每日、新手、主線與一鍵領取</small></button>
+            <button type="button" onclick="showGameScreen('traffic'); closeLobbyMoreModal()"><span>♛</span><b>流量戰爭</b><small>陣營、地區與多人戰報測試</small></button>
             <button type="button" onclick="showGameScreen('shop'); closeLobbyMoreModal()"><span>🛒</span><b>商城</b><small>補給與儲值商品</small></button>
             <button type="button" onclick="showGameScreen('profile'); closeLobbyMoreModal()"><span>👤</span><b>個人</b><small>資產、券與自我介紹</small></button>
             <button type="button" onclick="showGameScreen('social'); closeLobbyMoreModal()"><span>🤝</span><b>社交</b><small>好友邀請、列表與狀態</small></button>
@@ -2320,6 +2392,12 @@
         <details class="mode-group mode-group-event" open>
           <summary><span>🔥 活動副本</span><small>期間限定與全服活動</small></summary>
           <div class="mode-group-scroll">
+            <div class="scene-panel traffic-war-entry-card">
+              <h3>♛ 流量戰爭</h3>
+              <p>選擇陣營，派出三張卡牌爭奪星域地區。此版先以本機模擬多人戰報與陣營進度。</p>
+              <button class="scene-btn btn-neon-purple" onclick="showGameScreen('traffic')">進入流量戰爭<small>測試輪迴地圖與陣營排行</small></button>
+            </div>
+
             <div class="scene-panel">
               <h3>🌍 世界BOSS</h3>
               <p>活動時間內全服玩家同步削減同一隻 BOSS 血量，結束後依傷害排名發獎。</p>
@@ -2339,6 +2417,75 @@
             </div>
           </div>
         </details>
+      </div>
+    </section>
+
+    <section class="game-screen" id="trafficWarScreen" data-screen="traffic">
+      <div class="screen-head traffic-war-head">
+        <div>
+          <h2 class="screen-title">流量戰爭</h2>
+          <div class="screen-sub">陣營輪迴戰場 MVP。先用本機模擬多人佔領、排行與戰報，之後可接正式資料庫。</div>
+        </div>
+        <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
+      </div>
+
+      <div class="traffic-war-shell">
+        <section class="traffic-war-hero" aria-label="流量戰爭賽季資訊">
+          <div class="traffic-war-topline">
+            <div>
+              <div class="traffic-war-kicker">Traffic War MVP</div>
+              <h3 id="traffic-war-season-title">星潮開播季</h3>
+              <p id="traffic-war-season-desc">選擇陣營，派出三張卡牌爭奪地區流量。這裡的玩家、戰報與地圖進度都是本機模擬資料。</p>
+              <div class="traffic-war-season-meta" id="traffic-war-season-meta"></div>
+            </div>
+            <button type="button" class="traffic-war-mini-btn" onclick="resetTrafficWarMvp()">重置測試資料</button>
+          </div>
+          <div class="traffic-war-stat-grid" id="traffic-war-player-stats"></div>
+        </section>
+
+        <section class="traffic-war-panel" aria-label="選擇陣營">
+          <h3>選擇陣營</h3>
+          <p>娛樂、直播主、專業三方會在同一張地圖上爭奪地區。MVP 中選定後會保存在本機。</p>
+          <div class="traffic-war-grid" id="traffic-war-faction-grid"></div>
+        </section>
+
+        <section class="traffic-war-panel" aria-label="出征隊伍">
+          <h3>出征隊伍</h3>
+          <p>選 3 張卡牌組成隊伍，戰力會影響地區推進與獎勵結果。</p>
+          <div class="traffic-war-team-grid" id="traffic-war-team-grid"></div>
+          <div class="traffic-war-team-power" id="traffic-war-team-power">隊伍戰力：0</div>
+        </section>
+
+        <section class="traffic-war-panel" aria-label="星域地圖">
+          <h3>星域地圖</h3>
+          <p>每個地區都有不同需求戰力、消耗與資源。陣營進度達 100% 後會取得暫時控制權。</p>
+          <div class="traffic-war-grid" id="traffic-war-region-grid"></div>
+        </section>
+
+        <div class="traffic-war-board-grid">
+          <section class="traffic-war-panel" aria-label="陣營與個人排行">
+            <h3>排行</h3>
+            <div class="traffic-war-rank-list" id="traffic-war-ranking-list"></div>
+          </section>
+          <section class="traffic-war-panel" aria-label="最近戰報">
+            <h3>最近戰報</h3>
+            <div class="traffic-war-feed" id="traffic-war-feed"></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="lobby-modal" id="traffic-war-result-modal" aria-hidden="true">
+        <div class="lobby-modal-card" role="dialog" aria-modal="true" aria-label="流量戰爭結果">
+          <div class="lobby-modal-head">
+            <div>
+              <h3>流量戰爭結果</h3>
+              <p id="traffic-war-result-sub">挑戰結算</p>
+            </div>
+            <button type="button" class="lobby-modal-close" onclick="closeTrafficWarResult()">×</button>
+          </div>
+          <div class="traffic-war-result-body" id="traffic-war-result-body"></div>
+          <button type="button" class="premium-action-btn" onclick="closeTrafficWarResult()">確認</button>
+        </div>
       </div>
     </section>
 
@@ -8501,13 +8648,13 @@ function showCollectionHistory() {
     };
 
     window.showGameScreen = function(screenName) {
-      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen', shop: 'shopScreen', profile: 'profileScreen', social: 'socialScreen' };
-      var labels = { home: '主介面', gacha: '抽卡', battle: '戰鬥', shop: '商城', profile: '個人', social: '社交' };
+      var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen', shop: 'shopScreen', profile: 'profileScreen', social: 'socialScreen', traffic: 'trafficWarScreen' };
+      var labels = { home: '主介面', gacha: '抽卡', battle: '戰鬥', shop: '商城', profile: '個人', social: '社交', traffic: '流量戰爭' };
       var targetId = map[screenName] || map.home;
       if (!map[screenName]) screenName = 'home';
       var shell = document.getElementById('game-shell') || document.querySelector('.container.game-shell');
       if (shell) {
-        ['home','gacha','battle','shop','profile','social'].forEach(function(k){ shell.classList.remove('tlo-bg-' + k); });
+        ['home','gacha','battle','shop','profile','social','traffic'].forEach(function(k){ shell.classList.remove('tlo-bg-' + k); });
         shell.classList.add('tlo-bg-' + screenName);
         shell.setAttribute('data-active-screen', screenName);
       }
@@ -8528,9 +8675,525 @@ function showCollectionHistory() {
       if (screenName === 'profile') loadPersonalDashboard();
       if (screenName === 'social') loadSocialDashboard();
       if (screenName === 'gacha') loadGachaPools(false);
+      if (screenName === 'traffic') renderTrafficWar();
       scheduleOptimizeTloImages(document);
       try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { window.scrollTo(0, 0); }
     };
+
+    var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_MVP_V1';
+    var TRAFFIC_WAR_CURRENT_SEASON = {
+      season_id: 'season_001',
+      season_name: '星潮開播季',
+      display_name: '流量戰爭',
+      start_time: '2026-07-01T00:00:00+08:00',
+      end_time: '2026-07-31T23:59:59+08:00',
+      status: 'active',
+      winning_faction: null
+    };
+    var TRAFFIC_WAR_FACTIONS = {
+      entertainment: { key: 'entertainment', name: '娛樂陣營', shortName: '娛樂', icon: '🎤', bonus: 1.05, desc: '擅長話題操作與廣場擴散，適合搶熱搜型地區。' },
+      streamer: { key: 'streamer', name: '直播主陣營', shortName: '直播', icon: '📡', bonus: 1.08, desc: '爆發力高，擅長把單場挑戰轉成高流量推進。' },
+      professional: { key: 'professional', name: '專業陣營', shortName: '專業', icon: '🏛️', bonus: 1.05, desc: '穩定經營內容與粉絲據點，適合長線佔領。' }
+    };
+    var TRAFFIC_WAR_REGION_TEMPLATES = [
+      { region_id: 'region_001', region_name: '新人直播間', region_type: 'normal', required_power: 3000, reward_type: 'fans', reward_amount: 100, stamina_cost: 10, is_boss_region: false, seed_progress: { entertainment: 36, streamer: 28, professional: 22 } },
+      { region_id: 'region_002', region_name: '熱搜廣場', region_type: 'entertainment', required_power: 6000, reward_type: 'popularity', reward_amount: 150, stamina_cost: 10, is_boss_region: false, seed_progress: { entertainment: 48, streamer: 21, professional: 33 } },
+      { region_id: 'region_003', region_name: '禮物商都', region_type: 'resource', required_power: 7000, reward_type: 'gift_energy', reward_amount: 80, stamina_cost: 15, is_boss_region: false, seed_progress: { entertainment: 24, streamer: 39, professional: 18 } },
+      { region_id: 'region_004', region_name: 'PK競技場', region_type: 'streamer', required_power: 10000, reward_type: 'prestige', reward_amount: 200, stamina_cost: 20, is_boss_region: false, seed_progress: { entertainment: 12, streamer: 43, professional: 26 } },
+      { region_id: 'region_005', region_name: '粉絲應援站', region_type: 'professional', required_power: 12000, reward_type: 'fans', reward_amount: 300, stamina_cost: 20, is_boss_region: false, seed_progress: { entertainment: 18, streamer: 27, professional: 45 } },
+      { region_id: 'region_006', region_name: '星光主舞台', region_type: 'boss', required_power: 20000, reward_type: 'prestige', reward_amount: 800, stamina_cost: 30, is_boss_region: true, seed_progress: { entertainment: 7, streamer: 9, professional: 6 } }
+    ];
+    var TRAFFIC_WAR_MOCK_CARDS = [
+      { card_id: 'tw_card_001', card_name: '星璃', name: '星璃', faction_type: 'entertainment', rarity: 'N', star: 1, level: 1, popularity: 800, fan_power: 600, content_power: 500, stage_power: 700 },
+      { card_id: 'tw_card_002', card_name: '雷恩', name: '雷恩', faction_type: 'streamer', rarity: 'R', star: 2, level: 8, popularity: 1000, fan_power: 800, content_power: 700, stage_power: 1200 },
+      { card_id: 'tw_card_003', card_name: '教授喵', name: '教授喵', faction_type: 'professional', rarity: 'SR', star: 2, level: 12, popularity: 900, fan_power: 1000, content_power: 1500, stage_power: 800 },
+      { card_id: 'tw_card_004', card_name: '彗星Lulu', name: '彗星Lulu', faction_type: 'entertainment', rarity: 'SSR', star: 3, level: 18, popularity: 1300, fan_power: 1200, content_power: 900, stage_power: 1500 },
+      { card_id: 'tw_card_005', card_name: '台長K', name: '台長K', faction_type: 'streamer', rarity: 'R', star: 1, level: 6, popularity: 850, fan_power: 1100, content_power: 650, stage_power: 980 }
+    ];
+    var TRAFFIC_WAR_MOCK_PLAYERS = [
+      { uid: 'mock_1001', display_name: '星塵經紀人', faction: 'streamer', contribution_score: 760 },
+      { uid: 'mock_1002', display_name: '甜甜圈台長', faction: 'entertainment', contribution_score: 690 },
+      { uid: 'mock_1003', display_name: '剪輯大師', faction: 'professional', contribution_score: 640 },
+      { uid: 'mock_1004', display_name: '夜貓觀眾', faction: 'streamer', contribution_score: 520 },
+      { uid: 'mock_1005', display_name: '熱搜小編', faction: 'entertainment', contribution_score: 500 }
+    ];
+
+    function trafficWarEsc(value) {
+      if (typeof escapeHtml === 'function') return escapeHtml(value);
+      return String(value || '').replace(/[&<>"']/g, function(ch) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[ch];
+      });
+    }
+
+    function getTrafficWarUid() {
+      try {
+        if (typeof playerUID !== 'undefined' && playerUID) return playerUID;
+        if (window.TLO_PLAYER_UID) return window.TLO_PLAYER_UID;
+        return localStorage.getItem('TLO_UID') || localStorage.getItem('TLO_AUTH_UID') || 'test_player_001';
+      } catch (_) {
+        return 'test_player_001';
+      }
+    }
+
+    function getTrafficWarDisplayName() {
+      var nameEl = document.getElementById('display-uid');
+      var name = nameEl && nameEl.textContent ? nameEl.textContent.trim() : '';
+      if (name && name !== '載入中') return name;
+      return getTrafficWarUid();
+    }
+
+    function getTrafficWarCards() {
+      return TRAFFIC_WAR_MOCK_CARDS.map(function(card) {
+        var clone = Object.assign({}, card);
+        clone.total_power = calculateTrafficWarCardPower(clone);
+        return clone;
+      });
+    }
+
+    function calculateTrafficWarCardPower(card) {
+      var rarityBonus = { N: 0, R: 500, SR: 1500, SSR: 3000, UR: 5000 }[card.rarity] || 0;
+      var starBonus = Number(card.star || 0) * 300;
+      return Number(card.popularity || 0) + Number(card.fan_power || 0) + Number(card.content_power || 0) + Number(card.stage_power || 0) + rarityBonus + starBonus;
+    }
+
+    function createTrafficWarRegions() {
+      return TRAFFIC_WAR_REGION_TEMPLATES.map(function(region) {
+        return {
+          season_id: TRAFFIC_WAR_CURRENT_SEASON.season_id,
+          region_id: region.region_id,
+          region_name: region.region_name,
+          region_type: region.region_type,
+          required_power: region.required_power,
+          reward_type: region.reward_type,
+          reward_amount: region.reward_amount,
+          stamina_cost: region.stamina_cost,
+          is_boss_region: !!region.is_boss_region,
+          owner_faction: null,
+          progress: Object.assign({ entertainment: 0, streamer: 0, professional: 0 }, region.seed_progress || {})
+        };
+      });
+    }
+
+    function createTrafficWarInitialLogs() {
+      return [
+        { log_id: 'mock_log_001', season_id: TRAFFIC_WAR_CURRENT_SEASON.season_id, uid: 'mock_1001', display_name: '星塵經紀人', faction: 'streamer', region_id: 'region_004', region_name: 'PK競技場', result: 'WIN', contribution_score: 20, created_at: '07/03 20:10', mock: true },
+        { log_id: 'mock_log_002', season_id: TRAFFIC_WAR_CURRENT_SEASON.season_id, uid: 'mock_1002', display_name: '甜甜圈台長', faction: 'entertainment', region_id: 'region_002', region_name: '熱搜廣場', result: 'WIN', contribution_score: 20, created_at: '07/03 20:06', mock: true },
+        { log_id: 'mock_log_003', season_id: TRAFFIC_WAR_CURRENT_SEASON.season_id, uid: 'mock_1003', display_name: '剪輯大師', faction: 'professional', region_id: 'region_005', region_name: '粉絲應援站', result: 'WIN', contribution_score: 20, created_at: '07/03 19:58', mock: true },
+        { log_id: 'mock_log_004', season_id: TRAFFIC_WAR_CURRENT_SEASON.season_id, uid: 'mock_1004', display_name: '夜貓觀眾', faction: 'streamer', region_id: 'region_003', region_name: '禮物商都', result: 'PUSH', contribution_score: 8, created_at: '07/03 19:52', mock: true }
+      ];
+    }
+
+    function createTrafficWarDefaultState() {
+      return {
+        version: 1,
+        mode_key: 'traffic_war',
+        season_id: TRAFFIC_WAR_CURRENT_SEASON.season_id,
+        season_name: TRAFFIC_WAR_CURRENT_SEASON.season_name,
+        display_name: TRAFFIC_WAR_CURRENT_SEASON.display_name,
+        start_time: TRAFFIC_WAR_CURRENT_SEASON.start_time,
+        end_time: TRAFFIC_WAR_CURRENT_SEASON.end_time,
+        status: TRAFFIC_WAR_CURRENT_SEASON.status,
+        winning_faction: TRAFFIC_WAR_CURRENT_SEASON.winning_faction,
+        player_season: {
+          uid: getTrafficWarUid(),
+          display_name: getTrafficWarDisplayName(),
+          season_id: TRAFFIC_WAR_CURRENT_SEASON.season_id,
+          faction: null,
+          stamina: 100,
+          fans: 0,
+          coins: 0,
+          gift_energy: 0,
+          popularity: 0,
+          prestige: 0,
+          contribution_score: 0,
+          selected_team_card_ids: ['tw_card_001', 'tw_card_002', 'tw_card_003']
+        },
+        season_regions: createTrafficWarRegions(),
+        faction_scores: { entertainment: 620, streamer: 710, professional: 660 },
+        rival_players: TRAFFIC_WAR_MOCK_PLAYERS.slice(),
+        action_logs: createTrafficWarInitialLogs(),
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    function normalizeTrafficWarState(state) {
+      var defaults = createTrafficWarDefaultState();
+      if (!state || state.season_id !== TRAFFIC_WAR_CURRENT_SEASON.season_id) return defaults;
+      state.player_season = Object.assign({}, defaults.player_season, state.player_season || {});
+      state.player_season.uid = getTrafficWarUid();
+      state.player_season.display_name = getTrafficWarDisplayName();
+      state.player_season.selected_team_card_ids = Array.isArray(state.player_season.selected_team_card_ids) ? state.player_season.selected_team_card_ids : defaults.player_season.selected_team_card_ids.slice();
+      state.season_regions = Array.isArray(state.season_regions) && state.season_regions.length ? state.season_regions : defaults.season_regions;
+      state.season_regions = state.season_regions.map(function(region) {
+        var progress = Object.assign({ entertainment: 0, streamer: 0, professional: 0 }, region.progress || {});
+        return Object.assign({}, region, { progress: progress });
+      });
+      state.faction_scores = Object.assign({}, defaults.faction_scores, state.faction_scores || {});
+      state.rival_players = Array.isArray(state.rival_players) && state.rival_players.length ? state.rival_players : defaults.rival_players;
+      state.action_logs = Array.isArray(state.action_logs) ? state.action_logs.slice(0, 18) : defaults.action_logs;
+      return state;
+    }
+
+    function loadTrafficWarState() {
+      try {
+        return normalizeTrafficWarState(JSON.parse(localStorage.getItem(TRAFFIC_WAR_STORAGE_KEY) || 'null'));
+      } catch (_) {
+        return createTrafficWarDefaultState();
+      }
+    }
+
+    function saveTrafficWarState(state) {
+      state.updated_at = new Date().toISOString();
+      try { localStorage.setItem(TRAFFIC_WAR_STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+    }
+
+    function trafficWarFactionLabel(key) {
+      return (TRAFFIC_WAR_FACTIONS[key] && TRAFFIC_WAR_FACTIONS[key].name) || '未選陣營';
+    }
+
+    function trafficWarFactionShort(key) {
+      return (TRAFFIC_WAR_FACTIONS[key] && TRAFFIC_WAR_FACTIONS[key].shortName) || '未選';
+    }
+
+    function trafficWarRegionTypeLabel(type) {
+      return ({ normal: '普通', entertainment: '娛樂加成', resource: '資源', streamer: '直播加成', professional: '專業加成', boss: '主舞台' })[type] || type || '普通';
+    }
+
+    function trafficWarRewardLabel(type) {
+      return ({ fans: '粉絲', coins: '金幣', gift_energy: '禮物能量', popularity: '人氣', prestige: '聲望' })[type] || type || '資源';
+    }
+
+    function trafficWarNowText() {
+      var d = new Date();
+      return String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    function getTrafficWarTeamPower(state) {
+      var selected = state.player_season.selected_team_card_ids || [];
+      return getTrafficWarCards().filter(function(card) {
+        return selected.indexOf(card.card_id) >= 0;
+      }).reduce(function(sum, card) {
+        return sum + calculateTrafficWarCardPower(card);
+      }, 0);
+    }
+
+    function renderTrafficWar() {
+      var state = loadTrafficWarState();
+      saveTrafficWarState(state);
+      var title = document.getElementById('traffic-war-season-title');
+      if (title) title.textContent = TRAFFIC_WAR_CURRENT_SEASON.display_name + '｜' + TRAFFIC_WAR_CURRENT_SEASON.season_name;
+      var meta = document.getElementById('traffic-war-season-meta');
+      if (meta) {
+        meta.innerHTML = [
+          '<span class="traffic-war-chip cyan">狀態：' + trafficWarEsc(state.status === 'active' ? '進行中' : state.status) + '</span>',
+          '<span class="traffic-war-chip">賽季：' + trafficWarEsc(state.season_id) + '</span>',
+          '<span class="traffic-war-chip pink">結束：2026/07/31 23:59</span>',
+          '<span class="traffic-war-chip">目前陣營：' + trafficWarEsc(trafficWarFactionLabel(state.player_season.faction)) + '</span>'
+        ].join('');
+      }
+      renderTrafficWarStats(state);
+      renderTrafficWarFactions(state);
+      renderTrafficWarTeam(state);
+      renderTrafficWarRegions(state);
+      renderTrafficWarRanking(state);
+      renderTrafficWarFeed(state);
+    }
+
+    function renderTrafficWarStats(state) {
+      var player = state.player_season;
+      var box = document.getElementById('traffic-war-player-stats');
+      if (!box) return;
+      var values = [
+        ['玩家', player.display_name || player.uid || '玩家'],
+        ['體力', Number(player.stamina || 0).toLocaleString() + ' / 100'],
+        ['貢獻', Number(player.contribution_score || 0).toLocaleString()],
+        ['粉絲', Number(player.fans || 0).toLocaleString()],
+        ['人氣', Number(player.popularity || 0).toLocaleString()],
+        ['禮物能量', Number(player.gift_energy || 0).toLocaleString()],
+        ['聲望', Number(player.prestige || 0).toLocaleString()],
+        ['隊伍戰力', Number(getTrafficWarTeamPower(state)).toLocaleString()]
+      ];
+      box.innerHTML = values.map(function(item) {
+        return '<div class="traffic-war-stat"><span>' + trafficWarEsc(item[0]) + '</span><b>' + trafficWarEsc(item[1]) + '</b></div>';
+      }).join('');
+    }
+
+    function renderTrafficWarFactions(state) {
+      var box = document.getElementById('traffic-war-faction-grid');
+      if (!box) return;
+      var current = state.player_season.faction;
+      box.innerHTML = Object.keys(TRAFFIC_WAR_FACTIONS).map(function(key) {
+        var faction = TRAFFIC_WAR_FACTIONS[key];
+        var selected = current === key;
+        var locked = current && current !== key;
+        return '<div class="traffic-war-faction-card ' + trafficWarEsc(key) + (selected ? ' selected' : '') + '">'
+          + '<div class="traffic-war-faction-name"><span>' + trafficWarEsc(faction.icon + ' ' + faction.name) + '</span><small>加成 x' + faction.bonus.toFixed(2) + '</small></div>'
+          + '<p>' + trafficWarEsc(faction.desc) + '</p>'
+          + '<button type="button" ' + (selected || locked ? 'disabled' : '') + ' onclick="chooseTrafficWarFaction(\'' + key + '\')">' + (selected ? '已加入' : (locked ? '本季已選定' : '加入陣營')) + '</button>'
+          + '</div>';
+      }).join('');
+    }
+
+    function renderTrafficWarTeam(state) {
+      var box = document.getElementById('traffic-war-team-grid');
+      var powerBox = document.getElementById('traffic-war-team-power');
+      if (!box) return;
+      var selected = state.player_season.selected_team_card_ids || [];
+      var cards = getTrafficWarCards();
+      box.innerHTML = cards.map(function(card) {
+        var isSelected = selected.indexOf(card.card_id) >= 0;
+        var faction = TRAFFIC_WAR_FACTIONS[card.faction_type] || {};
+        return '<div class="traffic-war-team-card ' + (isSelected ? 'selected' : '') + '" data-rarity="' + trafficWarEsc(card.rarity) + '" onclick="toggleTrafficWarCard(\'' + trafficWarEsc(card.card_id) + '\')">'
+          + '<b>' + trafficWarEsc(card.card_name) + '</b>'
+          + '<span>定位：' + trafficWarEsc(faction.shortName || card.faction_type) + '｜Lv.' + Number(card.level || 1) + '｜' + Number(card.star || 0) + '★</span>'
+          + '<span>人氣 ' + Number(card.popularity || 0).toLocaleString() + '｜粉絲 ' + Number(card.fan_power || 0).toLocaleString() + '</span>'
+          + '<span>內容 ' + Number(card.content_power || 0).toLocaleString() + '｜舞台 ' + Number(card.stage_power || 0).toLocaleString() + '</span>'
+          + '<span style="color:#ffdf8a;font-weight:1000;margin-top:5px;">戰力 ' + Number(card.total_power || 0).toLocaleString() + '</span>'
+          + '</div>';
+      }).join('');
+      if (powerBox) {
+        powerBox.textContent = '隊伍戰力：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜已選 ' + selected.length + ' / 3';
+      }
+    }
+
+    function renderTrafficWarRegions(state) {
+      var box = document.getElementById('traffic-war-region-grid');
+      if (!box) return;
+      var selectedCount = (state.player_season.selected_team_card_ids || []).length;
+      box.innerHTML = state.season_regions.map(function(region) {
+        var owner = region.owner_faction ? trafficWarFactionShort(region.owner_faction) + '控制中' : '尚未控制';
+        var disabled = !state.player_season.faction || Number(state.player_season.stamina || 0) < Number(region.stamina_cost || 0) || selectedCount !== 3;
+        var progressHtml = Object.keys(TRAFFIC_WAR_FACTIONS).map(function(key) {
+          var pct = Math.max(0, Math.min(100, Number(region.progress && region.progress[key] || 0)));
+          return '<div class="traffic-war-progress-row"><span>' + trafficWarEsc(trafficWarFactionShort(key)) + '</span><div class="traffic-war-track"><i class="traffic-war-fill ' + trafficWarEsc(key) + '" style="width:' + pct + '%"></i></div><span>' + pct + '%</span></div>';
+        }).join('');
+        return '<article class="traffic-war-region">'
+          + '<div class="traffic-war-region-head"><h4>' + trafficWarEsc(region.region_name) + '</h4><span class="traffic-war-region-type">' + trafficWarEsc(trafficWarRegionTypeLabel(region.region_type)) + '</span></div>'
+          + '<div class="traffic-war-region-meta">'
+          + '<span>需求戰力<br><b>' + Number(region.required_power || 0).toLocaleString() + '</b></span>'
+          + '<span>消耗體力<br><b>' + Number(region.stamina_cost || 0).toLocaleString() + '</b></span>'
+          + '<span>獎勵<br><b>' + trafficWarEsc(trafficWarRewardLabel(region.reward_type)) + ' +' + Number(region.reward_amount || 0).toLocaleString() + '</b></span>'
+          + '<span>控制權<br><b>' + trafficWarEsc(owner) + '</b></span>'
+          + '</div>'
+          + '<div class="traffic-war-progress-list">' + progressHtml + '</div>'
+          + '<div class="traffic-war-owner">' + (region.is_boss_region ? '主舞台地區｜' : '') + '本區加成：' + trafficWarEsc(trafficWarRegionTypeLabel(region.region_type)) + '</div>'
+          + '<button type="button" ' + (disabled ? 'disabled' : '') + ' onclick="challengeTrafficWarRegion(\'' + trafficWarEsc(region.region_id) + '\')">' + (disabled ? '需陣營 / 體力 / 3人隊伍' : '派隊搶流量') + '</button>'
+          + '</article>';
+      }).join('');
+    }
+
+    function renderTrafficWarRanking(state) {
+      var box = document.getElementById('traffic-war-ranking-list');
+      if (!box) return;
+      var factionRows = Object.keys(TRAFFIC_WAR_FACTIONS).map(function(key) {
+        return { key: key, name: trafficWarFactionLabel(key), score: Number(state.faction_scores && state.faction_scores[key] || 0) };
+      }).sort(function(a, b) { return b.score - a.score; });
+      var player = state.player_season;
+      var personalRows = (state.rival_players || []).concat([{
+        uid: player.uid,
+        display_name: player.display_name || player.uid,
+        faction: player.faction,
+        contribution_score: Number(player.contribution_score || 0),
+        self: true
+      }]).sort(function(a, b) { return Number(b.contribution_score || 0) - Number(a.contribution_score || 0); }).slice(0, 6);
+      var html = '<div class="traffic-war-rank-row"><b>陣營排行</b><span>流量分</span></div>';
+      html += factionRows.map(function(row, idx) {
+        return '<div class="traffic-war-rank-row"><b>#' + (idx + 1) + ' ' + trafficWarEsc(row.name) + '</b><span>' + row.score.toLocaleString() + '</span></div>';
+      }).join('');
+      html += '<div class="traffic-war-rank-row"><b>個人貢獻</b><span>分數</span></div>';
+      html += personalRows.map(function(row, idx) {
+        return '<div class="traffic-war-rank-row"><b>#' + (idx + 1) + ' ' + trafficWarEsc(row.display_name || row.uid) + (row.self ? '（我）' : '') + '</b><span>' + Number(row.contribution_score || 0).toLocaleString() + '</span></div>';
+      }).join('');
+      box.innerHTML = html;
+    }
+
+    function renderTrafficWarFeed(state) {
+      var box = document.getElementById('traffic-war-feed');
+      if (!box) return;
+      var logs = (state.action_logs || []).slice(0, 10);
+      box.innerHTML = logs.map(function(log) {
+        var faction = trafficWarFactionShort(log.faction);
+        var action = log.result === 'WIN' ? '成功推進' : (log.result === 'FAIL' ? '試探失利' : '推進戰線');
+        return '<div class="traffic-war-feed-row"><b>' + trafficWarEsc(log.created_at || '') + '｜' + trafficWarEsc(log.display_name || log.uid || '玩家') + '</b>'
+          + '<div>' + trafficWarEsc(faction) + '在「' + trafficWarEsc(log.region_name || '') + '」' + trafficWarEsc(action) + '，貢獻 +' + Number(log.contribution_score || 0).toLocaleString() + '</div>'
+          + '<small>' + (log.mock ? '模擬玩家' : '我的行動') + '｜season_id: ' + trafficWarEsc(log.season_id || state.season_id) + '</small></div>';
+      }).join('') || '<div class="traffic-war-feed-row">尚無戰報。</div>';
+    }
+
+    function chooseTrafficWarFaction(key) {
+      var state = loadTrafficWarState();
+      if (!TRAFFIC_WAR_FACTIONS[key]) return;
+      if (state.player_season.faction && state.player_season.faction !== key) {
+        alert('MVP 中同一賽季只能選定一個陣營。若要改陣營，請重置測試資料。');
+        return;
+      }
+      state.player_season.faction = key;
+      state.action_logs.unshift({
+        log_id: 'player_join_' + Date.now(),
+        season_id: state.season_id,
+        uid: state.player_season.uid,
+        display_name: state.player_season.display_name,
+        faction: key,
+        region_id: '',
+        region_name: '陣營大廳',
+        result: 'PUSH',
+        contribution_score: 0,
+        created_at: trafficWarNowText(),
+        mock: false
+      });
+      saveTrafficWarState(state);
+      renderTrafficWar();
+    }
+
+    function toggleTrafficWarCard(cardId) {
+      var state = loadTrafficWarState();
+      var selected = state.player_season.selected_team_card_ids || [];
+      var index = selected.indexOf(cardId);
+      if (index >= 0) selected.splice(index, 1);
+      else {
+        if (selected.length >= 3) {
+          alert('流量戰爭 MVP 目前固定 3 人出征，請先取消一張卡。');
+          return;
+        }
+        selected.push(cardId);
+      }
+      state.player_season.selected_team_card_ids = selected;
+      saveTrafficWarState(state);
+      renderTrafficWar();
+    }
+
+    function findTrafficWarRegion(state, regionId) {
+      return (state.season_regions || []).find(function(region) { return region.region_id === regionId; });
+    }
+
+    function pushTrafficWarLog(state, log) {
+      state.action_logs = [log].concat(state.action_logs || []).slice(0, 18);
+    }
+
+    function simulateTrafficWarRivalAction(state) {
+      var rivals = state.rival_players || [];
+      if (!rivals.length || !state.season_regions || !state.season_regions.length) return;
+      var rival = rivals[Math.floor(Math.random() * rivals.length)];
+      var region = state.season_regions[Math.floor(Math.random() * state.season_regions.length)];
+      var gain = Math.floor(2 + Math.random() * 6);
+      region.progress[rival.faction] = Math.min(100, Number(region.progress[rival.faction] || 0) + gain);
+      if (region.progress[rival.faction] >= 100) region.owner_faction = rival.faction;
+      state.faction_scores[rival.faction] = Number(state.faction_scores[rival.faction] || 0) + gain * 2;
+      rival.contribution_score = Number(rival.contribution_score || 0) + gain * 2;
+      pushTrafficWarLog(state, {
+        log_id: 'mock_push_' + Date.now(),
+        season_id: state.season_id,
+        uid: rival.uid,
+        display_name: rival.display_name,
+        faction: rival.faction,
+        region_id: region.region_id,
+        region_name: region.region_name,
+        result: 'PUSH',
+        contribution_score: gain * 2,
+        created_at: trafficWarNowText(),
+        mock: true
+      });
+    }
+
+    function challengeTrafficWarRegion(regionId) {
+      var state = loadTrafficWarState();
+      var player = state.player_season;
+      var region = findTrafficWarRegion(state, regionId);
+      if (!region) return;
+      if (!player.faction) {
+        alert('請先選擇陣營。');
+        return;
+      }
+      if (Number(player.stamina || 0) < Number(region.stamina_cost || 0)) {
+        alert('體力不足，無法挑戰這個地區。');
+        return;
+      }
+      var selected = player.selected_team_card_ids || [];
+      if (selected.length !== 3) {
+        alert('請選滿 3 張卡牌再出征。');
+        return;
+      }
+      var teamPower = getTrafficWarTeamPower(state);
+      var factionBonus = (TRAFFIC_WAR_FACTIONS[player.faction] && TRAFFIC_WAR_FACTIONS[player.faction].bonus) || 1;
+      var regionBonus = region.region_type === player.faction ? 1.1 : 1;
+      var randomFactor = 0.95 + Math.random() * 0.1;
+      var challengeScore = Math.floor(teamPower * factionBonus * regionBonus * randomFactor);
+      var success = challengeScore >= Number(region.required_power || 0);
+      var ratio = Number(region.required_power || 1) > 0 ? challengeScore / Number(region.required_power || 1) : 1;
+      var progressAdd = Math.round(success ? (5 + ratio * 3) : (1 + ratio));
+      progressAdd = Math.max(1, Math.min(15, progressAdd));
+      region.progress[player.faction] = Math.min(100, Number(region.progress[player.faction] || 0) + progressAdd);
+      if (region.progress[player.faction] >= 100) region.owner_faction = player.faction;
+      var rewardAmount = Math.max(1, Math.floor(Number(region.reward_amount || 0) * (success ? 1 : 0.3)));
+      player[region.reward_type] = Number(player[region.reward_type] || 0) + rewardAmount;
+      player.stamina = Math.max(0, Number(player.stamina || 0) - Number(region.stamina_cost || 0));
+      var contributionGain = success ? 20 : 5;
+      player.contribution_score = Number(player.contribution_score || 0) + contributionGain;
+      state.faction_scores[player.faction] = Number(state.faction_scores[player.faction] || 0) + contributionGain;
+      pushTrafficWarLog(state, {
+        log_id: 'player_challenge_' + Date.now(),
+        season_id: state.season_id,
+        uid: player.uid,
+        display_name: player.display_name,
+        faction: player.faction,
+        region_id: region.region_id,
+        region_name: region.region_name,
+        result: success ? 'WIN' : 'FAIL',
+        contribution_score: contributionGain,
+        created_at: trafficWarNowText(),
+        mock: false
+      });
+      simulateTrafficWarRivalAction(state);
+      saveTrafficWarState(state);
+      renderTrafficWar();
+      showTrafficWarResult({
+        success: success,
+        region: region,
+        teamPower: teamPower,
+        challengeScore: challengeScore,
+        progressAdd: progressAdd,
+        rewardType: region.reward_type,
+        rewardAmount: rewardAmount,
+        contributionGain: contributionGain
+      });
+    }
+
+    function showTrafficWarResult(result) {
+      var modal = document.getElementById('traffic-war-result-modal');
+      var sub = document.getElementById('traffic-war-result-sub');
+      var body = document.getElementById('traffic-war-result-body');
+      if (!modal || !body) return;
+      if (sub) sub.textContent = result.region.region_name + '｜' + (result.success ? '成功推進' : '推進受阻');
+      body.innerHTML = '<span class="traffic-war-result-badge ' + (result.success ? 'win' : 'fail') + '">' + (result.success ? 'WIN' : 'TRY') + '</span>'
+        + '<div>隊伍戰力：<b>' + Number(result.teamPower || 0).toLocaleString() + '</b></div>'
+        + '<div>挑戰分數：<b>' + Number(result.challengeScore || 0).toLocaleString() + '</b> / 需求 ' + Number(result.region.required_power || 0).toLocaleString() + '</div>'
+        + '<div>地區推進：<b>+' + Number(result.progressAdd || 0).toLocaleString() + '%</b></div>'
+        + '<div>取得獎勵：<b>' + trafficWarEsc(trafficWarRewardLabel(result.rewardType)) + ' +' + Number(result.rewardAmount || 0).toLocaleString() + '</b></div>'
+        + '<div>個人貢獻：<b>+' + Number(result.contributionGain || 0).toLocaleString() + '</b></div>';
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeTrafficWarResult() {
+      var modal = document.getElementById('traffic-war-result-modal');
+      if (!modal) return;
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function resetTrafficWarMvp() {
+      if (!confirm('只會重置本機流量戰爭 MVP 測試資料，不會影響抽卡與正式資料。確定重置？')) return;
+      var state = createTrafficWarDefaultState();
+      saveTrafficWarState(state);
+      renderTrafficWar();
+    }
+
+    window.renderTrafficWar = renderTrafficWar;
+    window.chooseTrafficWarFaction = chooseTrafficWarFaction;
+    window.toggleTrafficWarCard = toggleTrafficWarCard;
+    window.challengeTrafficWarRegion = challengeTrafficWarRegion;
+    window.closeTrafficWarResult = closeTrafficWarResult;
+    window.resetTrafficWarMvp = resetTrafficWarMvp;
 
     var ROOKIE_GUIDE_STORAGE_KEY = 'TLO_ROOKIE_GUIDE_SEEN_V1';
     var rookieGuideIndex = 0;
