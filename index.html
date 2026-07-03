@@ -1389,19 +1389,19 @@
   
 
     /* 星潮沙盤戰：正式地塊素材版 -------------------------------------------------- */
-    .traffic-war-window .traffic-war-map-scroll{overflow:auto!important;overscroll-behavior:contain;touch-action:none;cursor:grab;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:radial-gradient(circle at 50% 42%,rgba(255,226,130,.16),transparent 24%),radial-gradient(circle at 48% 72%,rgba(100,255,242,.10),transparent 30%),linear-gradient(135deg,rgba(8,12,32,.96),rgba(3,5,16,.98))!important;}
+    .traffic-war-window .traffic-war-map-scroll{position:relative!important;display:block!important;overflow:auto!important;overscroll-behavior:contain;touch-action:none;cursor:grab;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:radial-gradient(circle at 50% 42%,rgba(255,226,130,.16),transparent 24%),radial-gradient(circle at 48% 72%,rgba(100,255,242,.10),transparent 30%),linear-gradient(135deg,rgba(8,12,32,.96),rgba(3,5,16,.98))!important;}
     .traffic-war-window .traffic-war-map-scroll::-webkit-scrollbar{display:none;}
     .traffic-war-window .traffic-war-map-scroll.dragging{cursor:grabbing;}
-    .traffic-war-window .traffic-war-map-grid{position:relative!important;display:block!important;width:3000px!important;height:1900px!important;min-width:3000px!important;margin:60px auto 160px!important;transform:none!important;transform-origin:top left!important;filter:drop-shadow(0 38px 24px rgba(0,0,0,.46));}
+    .traffic-war-window .traffic-war-map-grid{position:relative!important;display:block!important;width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:24px 24px 170px!important;transform:none!important;transform-origin:top left!important;filter:drop-shadow(0 38px 24px rgba(0,0,0,.46));}
     .traffic-war-window .traffic-war-map-grid:before{content:"";position:absolute;left:280px;right:280px;top:190px;bottom:90px;background:radial-gradient(ellipse at center,rgba(70,118,72,.18),rgba(8,12,32,.03) 68%,transparent 78%);filter:blur(14px);pointer-events:none;}
-    .traffic-war-window .traffic-war-tile{position:absolute!important;left:var(--tw-left)!important;top:var(--tw-top)!important;z-index:var(--tw-z)!important;width:132px!important;height:104px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;transform:none!important;padding:0!important;cursor:pointer;transition:filter .14s ease,transform .14s ease;}
+    .traffic-war-window .traffic-war-tile{position:absolute!important;left:var(--tw-left)!important;top:var(--tw-top)!important;z-index:var(--tw-z)!important;width:142px!important;height:112px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;transform:none!important;padding:0!important;cursor:pointer;transition:filter .14s ease,transform .14s ease;}
     .traffic-war-window .traffic-war-tile:hover{transform:translateY(-3px)!important;filter:brightness(1.13) drop-shadow(0 0 12px rgba(255,230,163,.22));}
     .traffic-war-window .traffic-war-tile::before,.traffic-war-window .traffic-war-tile::after{content:none!important;display:none!important;}
-    .traffic-war-window .traffic-war-tile.center{width:210px!important;height:170px!important;margin:-48px 0 0 -38px!important;background:transparent!important;box-shadow:none!important;}
+    .traffic-war-window .traffic-war-tile.center{width:230px!important;height:186px!important;margin:-58px 0 0 -44px!important;background:transparent!important;box-shadow:none!important;}
     .traffic-war-window .traffic-war-tile.entertainment,.traffic-war-window .traffic-war-tile.streamer,.traffic-war-window .traffic-war-tile.professional,.traffic-war-window .traffic-war-tile.resource,.traffic-war-window .traffic-war-tile.city,.traffic-war-window .traffic-war-tile.boss{background:transparent!important;box-shadow:none!important;color:#fff;}
     .tw-tile-art{position:absolute;inset:0;display:grid;place-items:end center;pointer-events:none;z-index:1;}
-    .tw-tile-art img{display:block;width:132px;max-width:none;height:auto;object-fit:contain;filter:drop-shadow(0 11px 12px rgba(0,0,0,.34));}
-    .traffic-war-window .traffic-war-tile.center .tw-tile-art img{width:210px;filter:drop-shadow(0 0 26px rgba(255,217,98,.48)) drop-shadow(0 18px 18px rgba(0,0,0,.38));}
+    .tw-tile-art img{display:block;width:142px;max-width:none;height:auto;object-fit:contain;filter:drop-shadow(0 11px 12px rgba(0,0,0,.34));}
+    .traffic-war-window .traffic-war-tile.center .tw-tile-art img{width:230px;filter:drop-shadow(0 0 26px rgba(255,217,98,.48)) drop-shadow(0 18px 18px rgba(0,0,0,.38));}
     .traffic-war-window .traffic-war-tile.friendly .tw-tile-art img,.traffic-war-window .traffic-war-tile.owned-by-me .tw-tile-art img{filter:drop-shadow(0 0 14px rgba(74,218,255,.58)) drop-shadow(0 11px 12px rgba(0,0,0,.34));}
     .traffic-war-window .traffic-war-tile.enemy .tw-tile-art img{filter:drop-shadow(0 0 15px rgba(255,88,112,.58)) drop-shadow(0 11px 12px rgba(0,0,0,.34));}
     .tw-tile-state-ring{position:absolute;left:50%;top:50%;width:112px;height:72px;transform:translate(-50%,-38%);border-radius:50%;pointer-events:none;z-index:2;opacity:0;}
@@ -1418,8 +1418,8 @@
     .tw-tile-spark{position:absolute;right:10px;top:24px;width:10px;height:10px;border-radius:50%;background:#fff7a8;box-shadow:0 0 14px #fff7a8;transform:none!important;pointer-events:none;z-index:8;}
     .tw-map-card-stack{position:absolute;left:50%;top:-42px;width:84px;height:62px;margin-left:-42px;transform:none!important;z-index:34;pointer-events:none;}.tw-map-card-stack .tw-map-card{position:absolute;bottom:16px;width:30px;height:42px;border-radius:6px;overflow:hidden;border:2px solid #64fff2;background:#10263a;box-shadow:0 8px 14px rgba(0,0,0,.42),0 0 13px rgba(100,255,242,.28);}.tw-map-card-stack .mini-0{left:2px}.tw-map-card-stack .mini-1{left:27px}.tw-map-card-stack .mini-2{left:52px}.tw-map-card-stack em{position:absolute;left:4px;right:4px;bottom:0;border-radius:999px;background:linear-gradient(135deg,#00fff0,#2b75ff);color:#04121d;font-size:10px;font-style:normal;font-weight:1000;text-align:center;padding:1px 3px;box-shadow:0 0 10px rgba(100,255,242,.35);}
     .tw-map-enemy-card{position:absolute;left:50%;top:-28px;width:72px;height:54px;margin-left:-36px;transform:none!important;z-index:28;pointer-events:none;display:grid;place-items:center;}.tw-map-enemy-card b{display:grid!important;place-items:center;width:38px!important;height:46px!important;border-radius:7px!important;border:2px solid #ff5d7e!important;background:linear-gradient(160deg,#431323,#180711)!important;color:#ffdce6!important;font-size:18px!important;box-shadow:0 0 14px rgba(255,93,126,.38),0 8px 14px rgba(0,0,0,.34)!important;position:static!important;text-align:center!important;}.tw-map-enemy-card em{position:absolute;left:-14px;right:-14px;bottom:-5px;border-radius:999px;background:#2b0714;color:#ffdce6;border:1px solid rgba(255,93,126,.5);font-size:8px;font-style:normal;font-weight:1000;text-align:center;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    @media(max-width:720px){.traffic-war-window .traffic-war-map-grid{width:3000px!important;height:1900px!important;min-width:3000px!important;margin:50px auto 150px!important;transform:none!important;}}
-    @media(max-width:430px){.traffic-war-window .traffic-war-map-grid{width:3000px!important;height:1900px!important;min-width:3000px!important;margin:44px auto 150px!important;transform:none!important;}}
+    @media(max-width:720px){.traffic-war-window .traffic-war-map-grid{width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:22px 22px 150px!important;transform:none!important;}}
+    @media(max-width:430px){.traffic-war-window .traffic-war-map-grid{width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:18px 18px 140px!important;transform:none!important;}}
 
   </style>
   <link rel="icon" href="./favicon.ico?v=20260628-battle-bg-v12">
@@ -2037,21 +2037,21 @@
 
 
     /* 星潮沙盤戰：正式地塊素材版 FINAL OVERRIDE */
-    .traffic-war-window .traffic-war-map-scroll{overflow:auto!important;overscroll-behavior:contain;touch-action:none;cursor:grab;scrollbar-width:none;background:radial-gradient(circle at 50% 42%,rgba(255,226,130,.16),transparent 24%),radial-gradient(circle at 48% 72%,rgba(100,255,242,.10),transparent 30%),linear-gradient(135deg,rgba(8,12,32,.96),rgba(3,5,16,.98))!important;}
+    .traffic-war-window .traffic-war-map-scroll{position:relative!important;display:block!important;overflow:auto!important;overscroll-behavior:contain;touch-action:none;cursor:grab;scrollbar-width:none;background:radial-gradient(circle at 50% 42%,rgba(255,226,130,.16),transparent 24%),radial-gradient(circle at 48% 72%,rgba(100,255,242,.10),transparent 30%),linear-gradient(135deg,rgba(8,12,32,.96),rgba(3,5,16,.98))!important;}
     .traffic-war-window .traffic-war-map-scroll::-webkit-scrollbar{display:none;}.traffic-war-window .traffic-war-map-scroll.dragging{cursor:grabbing;}
-    .traffic-war-window .traffic-war-map-grid{position:relative!important;display:block!important;width:3000px!important;height:1900px!important;min-width:3000px!important;margin:60px auto 160px!important;transform:none!important;transform-origin:top left!important;filter:drop-shadow(0 38px 24px rgba(0,0,0,.46));}
-    .traffic-war-window .traffic-war-tile{position:absolute!important;left:var(--tw-left)!important;top:var(--tw-top)!important;z-index:var(--tw-z)!important;width:132px!important;height:104px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;transform:none!important;padding:0!important;}
+    .traffic-war-window .traffic-war-map-grid{position:relative!important;display:block!important;width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:24px 24px 170px!important;transform:none!important;transform-origin:top left!important;filter:drop-shadow(0 38px 24px rgba(0,0,0,.46));}
+    .traffic-war-window .traffic-war-tile{position:absolute!important;left:var(--tw-left)!important;top:var(--tw-top)!important;z-index:var(--tw-z)!important;width:142px!important;height:112px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;transform:none!important;padding:0!important;}
     .traffic-war-window .traffic-war-tile:hover{transform:translateY(-3px)!important;filter:brightness(1.13) drop-shadow(0 0 12px rgba(255,230,163,.22));}.traffic-war-window .traffic-war-tile::before,.traffic-war-window .traffic-war-tile::after{content:none!important;display:none!important;}
-    .traffic-war-window .traffic-war-tile.center{width:210px!important;height:170px!important;margin:-48px 0 0 -38px!important;background:transparent!important;box-shadow:none!important;}
+    .traffic-war-window .traffic-war-tile.center{width:230px!important;height:186px!important;margin:-58px 0 0 -44px!important;background:transparent!important;box-shadow:none!important;}
     .traffic-war-window .traffic-war-tile.entertainment,.traffic-war-window .traffic-war-tile.streamer,.traffic-war-window .traffic-war-tile.professional,.traffic-war-window .traffic-war-tile.resource,.traffic-war-window .traffic-war-tile.city,.traffic-war-window .traffic-war-tile.boss{background:transparent!important;box-shadow:none!important;color:#fff;}
-    .tw-tile-art{position:absolute;inset:0;display:grid;place-items:end center;pointer-events:none;z-index:1;}.tw-tile-art img{display:block;width:132px;max-width:none;height:auto;object-fit:contain;filter:drop-shadow(0 11px 12px rgba(0,0,0,.34));}.traffic-war-window .traffic-war-tile.center .tw-tile-art img{width:210px;filter:drop-shadow(0 0 26px rgba(255,217,98,.48)) drop-shadow(0 18px 18px rgba(0,0,0,.38));}
+    .tw-tile-art{position:absolute;inset:0;display:grid;place-items:end center;pointer-events:none;z-index:1;}.tw-tile-art img{display:block;width:142px;max-width:none;height:auto;object-fit:contain;filter:drop-shadow(0 11px 12px rgba(0,0,0,.34));}.traffic-war-window .traffic-war-tile.center .tw-tile-art img{width:230px;filter:drop-shadow(0 0 26px rgba(255,217,98,.48)) drop-shadow(0 18px 18px rgba(0,0,0,.38));}
     .traffic-war-window .traffic-war-tile.friendly .tw-tile-art img,.traffic-war-window .traffic-war-tile.owned-by-me .tw-tile-art img{filter:drop-shadow(0 0 14px rgba(74,218,255,.58)) drop-shadow(0 11px 12px rgba(0,0,0,.34));}.traffic-war-window .traffic-war-tile.enemy .tw-tile-art img{filter:drop-shadow(0 0 15px rgba(255,88,112,.58)) drop-shadow(0 11px 12px rgba(0,0,0,.34));}
     .tw-tile-state-ring{position:absolute;left:50%;top:50%;width:112px;height:72px;transform:translate(-50%,-38%);border-radius:50%;pointer-events:none;z-index:2;opacity:0;}.traffic-war-window .traffic-war-tile.friendly .tw-tile-state-ring,.traffic-war-window .traffic-war-tile.owned-by-me .tw-tile-state-ring{opacity:1;border:2px solid rgba(81,229,255,.9);box-shadow:0 0 20px rgba(81,229,255,.36),inset 0 0 18px rgba(81,229,255,.12);}.traffic-war-window .traffic-war-tile.enemy .tw-tile-state-ring{opacity:1;border:2px solid rgba(255,83,111,.86);box-shadow:0 0 18px rgba(255,83,111,.32),inset 0 0 18px rgba(255,83,111,.10);}.traffic-war-window .traffic-war-tile.attackable .tw-tile-state-ring{opacity:1;border:2px solid rgba(255,232,121,.95);box-shadow:0 0 28px rgba(255,232,121,.54),inset 0 0 20px rgba(255,232,121,.18);}.traffic-war-window .traffic-war-tile.selected .tw-tile-state-ring{opacity:1;border:3px solid #fff1a8;box-shadow:0 0 36px rgba(255,241,168,.62),inset 0 0 22px rgba(255,241,168,.2);}.traffic-war-window .traffic-war-tile.center .tw-tile-state-ring{width:178px;height:104px;top:55%;border-color:rgba(255,223,102,.85);box-shadow:0 0 38px rgba(255,207,86,.48);opacity:1;}
     .traffic-war-window .tw-tile-label{position:absolute;left:0;right:0;top:18px;bottom:auto;z-index:6;display:grid;place-items:center;text-align:center;transform:none!important;pointer-events:none;}.traffic-war-window .tw-tile-label em{position:static;color:#aefcff;font-style:normal;font-size:10px;font-weight:1000;text-shadow:0 2px 5px #061018;line-height:1;min-height:10px;}.traffic-war-window .tw-tile-label strong{display:block;color:#f4fff1;font-size:17px;font-weight:1000;line-height:1.05;text-shadow:0 2px 4px #061018,0 0 10px rgba(255,255,255,.25);}.traffic-war-window .traffic-war-tile.center .tw-tile-label{top:72px;}.traffic-war-window .traffic-war-tile.center .tw-tile-label strong{font-size:20px;color:#fff1a8;text-shadow:0 2px 6px #2a1300,0 0 16px rgba(255,215,86,.72);}
     .tw-resource-badge{position:absolute;right:2px;top:44px;transform:none!important;z-index:7;font-style:normal;font-size:15px;background:rgba(7,10,28,.88);border:1px solid rgba(255,255,255,.25);border-radius:999px;width:24px;height:24px;display:grid;place-items:center;box-shadow:0 0 12px rgba(255,230,163,.24);}.tw-tile-spark{position:absolute;right:10px;top:24px;width:10px;height:10px;border-radius:50%;background:#fff7a8;box-shadow:0 0 14px #fff7a8;transform:none!important;pointer-events:none;z-index:8;}
     .tw-map-card-stack{position:absolute;left:50%;top:-42px;width:84px;height:62px;margin-left:-42px;transform:none!important;z-index:34;pointer-events:none;}.tw-map-enemy-card{position:absolute;left:50%;top:-28px;width:72px;height:54px;margin-left:-36px;transform:none!important;z-index:28;pointer-events:none;display:grid;place-items:center;}.tw-map-enemy-card b{display:grid!important;place-items:center;width:38px!important;height:46px!important;border-radius:7px!important;border:2px solid #ff5d7e!important;background:linear-gradient(160deg,#431323,#180711)!important;color:#ffdce6!important;font-size:18px!important;box-shadow:0 0 14px rgba(255,93,126,.38),0 8px 14px rgba(0,0,0,.34)!important;position:static!important;text-align:center!important;}
-    @media(max-width:720px){.traffic-war-window .traffic-war-map-grid{width:3000px!important;height:1900px!important;min-width:3000px!important;margin:50px auto 150px!important;transform:none!important;}}
-    @media(max-width:430px){.traffic-war-window .traffic-war-map-grid{width:3000px!important;height:1900px!important;min-width:3000px!important;margin:44px auto 150px!important;transform:none!important;}}
+    @media(max-width:720px){.traffic-war-window .traffic-war-map-grid{width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:22px 22px 150px!important;transform:none!important;}}
+    @media(max-width:430px){.traffic-war-window .traffic-war-map-grid{width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:18px 18px 140px!important;transform:none!important;}}
 
 
     #traffic-war-result-modal{z-index:10050;}
@@ -9046,15 +9046,28 @@ function showCollectionHistory() {
       });
     }
 
+    function trafficWarTileHash(x, y, salt) {
+      var n = ((x * 73856093) ^ (y * 19349663) ^ ((salt || 0) * 83492791));
+      return Math.abs(n % 1000) / 1000;
+    }
+
+    function trafficWarMockResourceType(x, y, level, distance, isCenter, isSpawn) {
+      if (isCenter || isSpawn || Number(level || 0) < 3) return null;
+      var chance = distance <= 3 ? 0.28 : (distance <= 6 ? 0.18 : (distance <= 8 ? 0.10 : 0.04));
+      if (level >= 7 && distance > 5) chance = 0.03;
+      if (trafficWarTileHash(x, y, 17) > chance) return null;
+      return trafficWarTileHash(x, y, 29) > 0.52 ? 'tip' : 'popularity';
+    }
+
     function trafficWarMockTile(x, y, faction) {
-      var center = 7;
-      var dist = Math.abs(x - center) + Math.abs(y - center);
-      var level = Math.max(1, Math.min(10, 10 - Math.floor(dist / 2)));
-      if (x === center && y === center) level = 10;
-      var type = x === center && y === center ? 'center' : (level >= 3 && (x + y) % 3 === 0 ? 'resource' : 'normal');
-      var resourceType = level >= 3 ? (((x + y) % 2 === 0) ? 'popularity' : 'tip') : null;
-      var spawnId = faction ? ({ entertainment: 'tile_0_7', streamer: 'tile_7_14', professional: 'tile_14_7' })[faction] : '';
+      var center = 10;
+      var distance = Math.max(Math.abs(x - center), Math.abs(y - center));
+      var isCenter = x === center && y === center;
+      var level = isCenter ? 10 : Math.max(1, Math.min(10, 11 - distance));
+      var spawnId = faction ? ({ entertainment: 'tile_0_10', streamer: 'tile_20_10', professional: 'tile_10_20' })[faction] : '';
       var tileId = 'tile_' + x + '_' + y;
+      var resourceType = trafficWarMockResourceType(x, y, level, distance, isCenter, tileId === spawnId);
+      var type = isCenter ? 'center' : (tileId === spawnId ? 'spawn' : (resourceType ? 'resource' : 'normal'));
       return {
         tile_id: tileId,
         x: x,
@@ -9065,10 +9078,10 @@ function showCollectionHistory() {
         owner_faction: tileId === spawnId ? faction : null,
         owner_uid: tileId === spawnId ? getTrafficWarUid() : null,
         enemy_name: (level >= 9 ? '年度盛典守衛' : (level >= 7 ? '演算法守門人' : (level >= 4 ? '黑粉軍團' : '冷場觀眾'))),
-        enemy_power: x === center && y === center ? 100000 : [0,1000,2500,5000,8000,12000,18000,26000,36000,50000,70000][level],
+        enemy_power: isCenter ? 100000 : [0,1000,2500,5000,8000,12000,18000,26000,36000,50000,70000][level],
         resource_type: resourceType,
-        resource_amount: level >= 3 ? Math.floor([0,0,0,30,50,80,120,180,250,350,500][level]) : 0,
-        is_center_city: x === center && y === center,
+        resource_amount: resourceType ? Math.floor([0,0,0,30,50,80,120,180,250,350,500][level]) : 0,
+        is_center_city: isCenter,
         can_attack: false,
         can_collect_resource: false,
         is_current_team_tile: tileId === spawnId
@@ -9078,7 +9091,7 @@ function showCollectionHistory() {
     function createTrafficWarDefaultState() {
       var faction = null;
       var tiles = [];
-      for (var y = 0; y < 15; y += 1) for (var x = 0; x < 15; x += 1) tiles.push(trafficWarMockTile(x, y, faction));
+      for (var y = 0; y < 21; y += 1) for (var x = 0; x < 21; x += 1) tiles.push(trafficWarMockTile(x, y, faction));
       return {
         success: true,
         online: false,
@@ -9087,7 +9100,7 @@ function showCollectionHistory() {
         season_name: TRAFFIC_WAR_CURRENT_SEASON.season_name,
         display_name: TRAFFIC_WAR_CURRENT_SEASON.display_name,
         center_city_name: '年度盛典',
-        map_size: 15,
+        map_size: 21,
         start_time: TRAFFIC_WAR_CURRENT_SEASON.start_time,
         end_time: TRAFFIC_WAR_CURRENT_SEASON.end_time,
         status: TRAFFIC_WAR_CURRENT_SEASON.status,
@@ -9130,7 +9143,7 @@ function showCollectionHistory() {
       state.action_logs = Array.isArray(state.action_logs) ? state.action_logs.slice(0, 18) : [];
       state.personal_ranking = Array.isArray(state.personal_ranking) ? state.personal_ranking : [];
       state.team_power = Number(state.team_power || 0);
-      state.map_size = Number(state.map_size || 15);
+      state.map_size = Number(state.map_size || 21);
       state.display_name = state.display_name || TRAFFIC_WAR_CURRENT_SEASON.display_name;
       state.season_name = state.season_name || TRAFFIC_WAR_CURRENT_SEASON.season_name;
       state.center_city_name = state.center_city_name || '年度盛典';
@@ -9314,12 +9327,38 @@ function showCollectionHistory() {
       }
     }
 
+    function trafficWarMapMetrics(state) {
+      var size = Number((state && state.map_size) || 21);
+      var max = Math.max(0, size - 1);
+      var stepX = 134;
+      var stepY = 82;
+      var tileW = 142;
+      var tileH = 112;
+      var paddingX = 210;
+      var paddingTop = 70;
+      var paddingBottom = 210;
+      return {
+        size: size,
+        max: max,
+        stepX: stepX,
+        stepY: stepY,
+        tileW: tileW,
+        tileH: tileH,
+        offsetX: paddingX + max * stepX,
+        offsetY: paddingTop,
+        width: paddingX * 2 + max * 2 * stepX + 260,
+        height: paddingTop + max * 2 * stepY + tileH + paddingBottom
+      };
+    }
+
     function trafficWarIsoTileStyle(tile) {
+      var state = loadTrafficWarState();
+      var m = trafficWarMapMetrics(state);
       var x = Number(tile && tile.x || 0);
       var y = Number(tile && tile.y || 0);
-      // 使用實際 PNG 地塊素材後，格距必須拉開，避免建築與地塊互相覆蓋。
-      var left = 1450 + (x - y) * 96;
-      var top = 70 + (x + y) * 58;
+      // 等距地圖座標：保留上方與左側安全邊界，避免格子被切掉，也讓整張地圖可完整拖曳。
+      var left = m.offsetX + (x - y) * m.stepX;
+      var top = m.offsetY + (x + y) * m.stepY;
       var z = 100 + x + y;
       return '--tw-left:' + left + 'px;--tw-top:' + top + 'px;--tw-z:' + z + ';';
     }
@@ -9364,7 +9403,7 @@ function showCollectionHistory() {
         html += '<span class="tw-map-card-stack friendly">' + selectedCards.slice(0, 3).map(function(card, idx) {
           return '<span class="tw-map-card mini-' + idx + '"><img src="' + trafficWarEsc(getTrafficWarCardImage(card)) + '" alt="" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span>';
         }).join('') + '<em>隊伍一</em></span>';
-      } else if (!tile.owner_faction && !tile.is_center_city && (tile.can_attack || Number(tile.level || 0) >= 4)) {
+      } else if (!tile.owner_faction && !tile.is_center_city && (tile.can_attack || trafficWarSelectedTileId === tile.tile_id || (Number(tile.level || 0) >= 8 && trafficWarTileHash(Number(tile.x || 0), Number(tile.y || 0), 71) < 0.28))) {
         html += '<span class="tw-map-enemy-card"><b>☠</b><em>' + trafficWarEsc(tile.enemy_name || '黑粉軍團') + '</em></span>';
       }
       return html;
@@ -9401,12 +9440,13 @@ function showCollectionHistory() {
       box.style.display = 'block';
       var tiles = state.tiles || [];
       if (!trafficWarSelectedTileId || !findTrafficWarTile(state, trafficWarSelectedTileId)) {
-        trafficWarSelectedTileId = state.player_season.current_tile_id || 'tile_0_7';
+        trafficWarSelectedTileId = state.player_season.current_tile_id || 'tile_0_10';
       }
       var selectedTile = findTrafficWarTile(state, trafficWarSelectedTileId) || tiles[0] || null;
       var selectedCards = getTrafficWarSelectedCards(state);
       var sideHtml = renderTrafficWarSortiePanel(state, selectedCards);
-      var mapHtml = '<div class="tw-map-column"><div class="traffic-war-map-scroll"><div class="traffic-war-map-grid" aria-label="星潮沙盤戰等距地圖">'
+      var metrics = trafficWarMapMetrics(state);
+      var mapHtml = '<div class="tw-map-column"><div class="traffic-war-map-scroll"><div class="traffic-war-map-grid" style="--tw-grid-w:' + metrics.width + 'px;--tw-grid-h:' + metrics.height + 'px;" aria-label="星潮沙盤戰等距地圖">'
         + tiles.map(renderTrafficWarTileButton).join('')
         + '</div></div>'
         + '<div class="traffic-war-map-legend"><span><i></i>未知</span><span class="streamer"><i></i>自己 / 同陣營</span><span class="entertainment"><i></i>敵人</span><span class="center"><i></i>年度盛典</span><span class="attack"><i></i>可攻打</span></div>'
@@ -9416,7 +9456,7 @@ function showCollectionHistory() {
         + '<div class="traffic-war-side-row"><span>紅色卡牌</span><b>敵人守軍</b></div>'
         + '<div class="traffic-war-side-row"><span>黃色發光</span><b>相鄰可攻打</b></div>'
         + '<div class="traffic-war-side-row"><span>中央大城</span><b>' + (state.center_unlocked ? '可挑戰' : '未開放') + '</b></div>'
-        + '<button type="button" class="traffic-war-detail-action" onclick="selectTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || 'tile_0_7') + '\'); focusTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || 'tile_0_7') + '\')">定位隊伍</button>'
+        + '<button type="button" class="traffic-war-detail-action" onclick="selectTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || 'tile_0_10') + '\'); focusTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || 'tile_0_10') + '\')">定位隊伍</button>'
         + '<button type="button" class="traffic-war-detail-action" onclick="document.getElementById(\'traffic-war-feed\')?.scrollIntoView({behavior:\'smooth\',block:\'center\'})">查看戰報</button>'
         + '</aside>';
       var detailHtml = renderTrafficWarTileDetail(state, selectedTile);
@@ -9424,7 +9464,7 @@ function showCollectionHistory() {
       initTrafficWarMapPan();
       if (!box.dataset.twInitialCentered) {
         box.dataset.twInitialCentered = '1';
-        focusTrafficWarTile(state.player_season.current_tile_id || trafficWarSelectedTileId || 'tile_7_7');
+        focusTrafficWarTile(state.player_season.current_tile_id || trafficWarSelectedTileId || 'tile_10_10');
       }
     }
 
