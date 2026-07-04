@@ -2156,6 +2156,27 @@
       .traffic-war-window .tw-selected-popover{width:210px!important;margin-left:-105px!important;bottom:94px!important;}
     }
 
+
+    /* 星潮沙盤戰 V7：卡牌貼地、手機效能與縮放優化 */
+    html,body{overscroll-behavior:none;}
+    .traffic-war-window.show{overscroll-behavior:none;touch-action:none;}
+    .traffic-war-window .traffic-war-map-scroll{overscroll-behavior:none!important;}
+    .traffic-war-window .traffic-war-tile{transition:filter .08s linear!important;will-change:auto!important;}
+    .traffic-war-window .traffic-war-tile:hover{transform:none!important;}
+    .traffic-war-window .traffic-war-tile.attackable{outline-width:2px!important;}
+    .traffic-war-window .tw-map-card-stack.single{top:22px!important;left:50%!important;width:54px!important;height:70px!important;margin-left:-27px!important;z-index:38!important;filter:drop-shadow(0 8px 8px rgba(0,0,0,.48));}
+    .traffic-war-window .tw-map-card-stack.single .tw-map-card{left:8px!important;bottom:12px!important;width:36px!important;height:50px!important;border-width:2px!important;border-radius:7px!important;}
+    .traffic-war-window .tw-map-card-stack.single em{bottom:0!important;left:2px!important;right:2px!important;font-size:9px!important;padding:1px 2px!important;}
+    .traffic-war-window .tw-map-enemy-card{top:18px!important;width:44px!important;height:58px!important;margin-left:-22px!important;}
+    .traffic-war-window .tw-map-enemy-card.card img{width:34px!important;height:48px!important;object-fit:cover;border:2px solid #ff5d7e;border-radius:7px;box-shadow:0 0 10px rgba(255,93,126,.42),0 7px 10px rgba(0,0,0,.42);}
+    .traffic-war-window .tw-selected-popover{z-index:80!important;pointer-events:auto!important;}
+    .traffic-war-window .traffic-war-map-grid{backface-visibility:hidden;}
+    .traffic-war-window .tw-tile-art img{pointer-events:none;user-select:none;-webkit-user-drag:none;}
+    .tw-skill-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.tw-skill-tags i{font-style:normal;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.07);padding:2px 6px;color:#dce5ff;font-size:10px;font-weight:900}.tw-skill-tags i.awaken{border-color:rgba(255,223,138,.45);color:#fff1a8;background:rgba(255,223,138,.1)}
+    .tw-skill-upgrade-btn{margin-top:6px;border:0;border-radius:10px;background:linear-gradient(135deg,#8cffd7,#ffdf8a);color:#101018;padding:6px 8px;font-size:11px;font-weight:1000;cursor:pointer}.tw-skill-upgrade-btn:disabled{opacity:.45;filter:grayscale(.35);cursor:not-allowed}
+    .traffic-war-tech-card .tw-tech-level{color:#fff1a8;font-size:12px;font-weight:1000}.traffic-war-tech-card .tw-tech-actions{display:flex;gap:6px;align-items:center;justify-content:space-between}.traffic-war-tech-card .tw-tech-actions button{flex:1}
+    @media(max-width:720px){.traffic-war-window .tw-map-card-stack.single{top:20px!important;transform:scale(.9)!important;transform-origin:center top!important}.traffic-war-window .tw-resource-badge{transform:scale(.82);transform-origin:center center}.traffic-war-window .traffic-war-tile{contain:layout paint!important}.traffic-war-window .tw-selected-popover{transform:scale(.9);transform-origin:bottom center}}
+
     #traffic-war-result-modal{z-index:10050;}
 </style>
 
@@ -9298,6 +9319,8 @@ function showCollectionHistory() {
       state.faction_scores = Object.assign({ entertainment: 0, streamer: 0, professional: 0 }, state.faction_scores || {});
       state.action_logs = Array.isArray(state.action_logs) ? state.action_logs.slice(0, 18) : [];
       state.personal_ranking = Array.isArray(state.personal_ranking) ? state.personal_ranking : [];
+      state.tech_levels = Object.assign({}, state.tech_levels || {});
+      state.skill_levels = Object.assign({}, state.skill_levels || {});
       state.team_power = Number(state.team_power || 0);
       state.map_width = Number(state.map_width || state.map_size || 33);
       state.map_height = Number(state.map_height || 21);
@@ -9336,6 +9359,13 @@ function showCollectionHistory() {
           duplicate_bonus_percent: Number(card.duplicate_bonus_percent || 0),
           skill_name: card.skill_name || '直播技能',
           skill_desc: card.skill_desc || '',
+          skill_group: card.skill_group || card.skill_type || 'passive',
+          skill_group_label: card.skill_group_label || '',
+          skill_level: Number(card.skill_level || card.traffic_skill_level || 1),
+          awakened: !!card.awakened || Number(card.duplicate_count || card.count || 0) >= 5,
+          second_skill_name: card.second_skill_name || '',
+          second_skill_desc: card.second_skill_desc || '',
+          second_skill_group: card.second_skill_group || '',
           image_url: card.image_url || card.imageUrl || '',
           total_power: Number(card.total_power || card.power || 0),
           power: Number(card.total_power || card.power || 0)
@@ -9568,11 +9598,11 @@ function showCollectionHistory() {
       var selectedCards = trafficWarRenderSelectedCards && trafficWarRenderSelectedCards.length ? trafficWarRenderSelectedCards : getTrafficWarSelectedCards(state);
       if (tile.is_current_team_tile && selectedCards.length) {
         var leader = selectedCards[0];
-        html += '<span class="tw-map-card-stack friendly single"><span class="tw-map-card mini-0"><img src="' + trafficWarEsc(getTrafficWarCardImage(leader)) + '" alt="" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span><em>隊長</em></span>';
-      } else if (!tile.owner_faction && !tile.is_center_city && (tile.can_attack || trafficWarSelectedTileId === tile.tile_id)) {
+        html += '<span class="tw-map-card-stack friendly single"><span class="tw-map-card mini-0"><img src="' + trafficWarEsc(getTrafficWarCardImage(leader)) + '" alt="" loading="eager" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span><em>隊長</em></span>';
+      } else if (!tile.owner_faction && !tile.is_center_city && trafficWarSelectedTileId === tile.tile_id) {
         var img = tile.enemy_card_image_url || '';
         if (img) {
-          html += '<span class="tw-map-enemy-card card"><img src="' + trafficWarEsc(img) + '" alt="" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span>';
+          html += '<span class="tw-map-enemy-card card"><img src="' + trafficWarEsc(img) + '" alt="" loading="eager" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span>';
         }
       }
       return html;
@@ -9653,6 +9683,7 @@ function showCollectionHistory() {
       if (!scroller || scroller.dataset.panReady === '1') return;
       scroller.dataset.panReady = '1';
       var startX = 0, startY = 0, startLeft = 0, startTop = 0, dragging = false, moved = false;
+      var pinchStartDistance = 0, pinchStartZoom = trafficWarMapZoom;
       scroller.addEventListener('pointerdown', function(e) {
         if (e.button != null && e.button !== 0) return;
         dragging = true;
@@ -9694,6 +9725,28 @@ function showCollectionHistory() {
           trafficWarMapWasDragged = false;
         }
       }, true);
+      scroller.addEventListener('touchstart', function(e) {
+        if (e.touches && e.touches.length === 2) {
+          var dx = e.touches[0].clientX - e.touches[1].clientX;
+          var dy = e.touches[0].clientY - e.touches[1].clientY;
+          pinchStartDistance = Math.sqrt(dx * dx + dy * dy);
+          pinchStartZoom = trafficWarMapZoom;
+        }
+      }, { passive: true });
+      scroller.addEventListener('touchmove', function(e) {
+        if (e.touches && e.touches.length === 2 && pinchStartDistance > 0) {
+          var dx = e.touches[0].clientX - e.touches[1].clientX;
+          var dy = e.touches[0].clientY - e.touches[1].clientY;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          var next = Math.max(0.48, Math.min(1.35, pinchStartZoom * (dist / pinchStartDistance)));
+          if (Math.abs(next - trafficWarMapZoom) > 0.04) {
+            trafficWarMapZoom = next;
+            var grid = scroller.querySelector('.traffic-war-map-grid');
+            if (grid) grid.style.setProperty('--tw-map-zoom', String(next));
+          }
+          e.preventDefault();
+        }
+      }, { passive: false });
     }
 
     function focusTrafficWarTile(tileId) {
@@ -9845,6 +9898,7 @@ function showCollectionHistory() {
       var win = document.getElementById('traffic-war-window');
       if (win) {
         win.classList.add('show');
+        document.body.classList.add('traffic-war-lock');
         win.setAttribute('aria-hidden', 'false');
       }
       if (refresh) renderTrafficWar(true);
@@ -9855,6 +9909,7 @@ function showCollectionHistory() {
       var win = document.getElementById('traffic-war-window');
       if (win) {
         win.classList.remove('show');
+        document.body.classList.remove('traffic-war-lock');
         win.setAttribute('aria-hidden', 'true');
       }
       trafficWarActiveDrawer = null;
@@ -9891,13 +9946,35 @@ function showCollectionHistory() {
         }).join('') + '</div>';
     }
 
+    function trafficWarSkillGroupText(card) {
+      var key = String((card && (card.skill_group || card.skill_type)) || 'passive');
+      var map = { active: '主動', passive: '被動', support: '輔助', resource: '資源', mobility: '行軍', siege: '攻城' };
+      return card && card.skill_group_label ? card.skill_group_label : (map[key] || '技能');
+    }
+
+    function trafficWarCardSkillHtml(card, isHome) {
+      var skillLevel = Number(card.skill_level || 1);
+      var awaken = !!card.awakened || Number(card.duplicate_count || 0) >= 5;
+      var html = '<div class="tw-skill-tags"><i>' + trafficWarEsc(trafficWarSkillGroupText(card)) + '</i><i>技能 LV' + skillLevel + '</i>' + (awaken ? '<i class="awaken">覺醒二技</i>' : '') + '</div>';
+      html += '<small>' + trafficWarEsc(card.skill_name) + '：' + trafficWarEsc(card.skill_desc || '') + '</small>';
+      if (awaken && card.second_skill_name) html += '<small>二技｜' + trafficWarEsc(card.second_skill_name) + '：' + trafficWarEsc(card.second_skill_desc || '') + '</small>';
+      var cost = 120 * skillLevel;
+      html += '<button type="button" class="tw-skill-upgrade-btn" ' + (isHome ? 'onclick="upgradeTrafficWarSkill(\'' + trafficWarEsc(encodeURIComponent(card.card_id || card.name)) + '\')"' : 'disabled') + '>人氣升級技能｜' + cost.toLocaleString() + '</button>';
+      return html;
+    }
+
     function trafficWarTeamPanelHtml(state) {
       var selected = state.player_season.selected_team_card_ids || [];
       var cards = getTrafficWarCards();
       var player = state.player_season || {};
       var isHome = !!player.home_tile_id && player.current_tile_id === player.home_tile_id;
-      var header = '<div class="traffic-war-drawer-note"><b>隊伍一 / 隊伍二 / 隊伍三</b><br>目前先開放隊伍一。固定選 3 張卡，沙盤模式內卡牌一律 LV1，不繼承主遊戲等級，只繼承重複卡加成與卡牌技能。<br><b>隊伍戰力：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜已選 ' + selected.length + ' / 3</b><br>' + (isHome ? '目前在主城，可以重新編隊、回復血量與改隊伍名。' : '目前隊伍遠征中，必須回到主城才能重新編隊、回復血量或改隊伍名。') + '</div>';
-      header += '<div class="tw-team-slot-tabs"><button class="active" type="button">隊伍一</button><button type="button" disabled>隊伍二</button><button type="button" disabled>隊伍三</button></div>';
+      var extraTeams = Number(player.tech_extra_teams || (state.tech_levels && state.tech_levels.extra_teams) || 0);
+      var teamSizeTech = Number(player.tech_team_size || (state.tech_levels && state.tech_levels.team_size) || 0);
+      var team2Unlocked = extraTeams >= 1;
+      var team3Unlocked = extraTeams >= 2;
+      var team23Slots = teamSizeTech >= 2 ? 3 : 2;
+      var header = '<div class="traffic-war-drawer-note"><b>隊伍一 / 隊伍二 / 隊伍三</b><br>隊伍一固定 3 張卡。科技「擴編隊伍」可解鎖隊伍二、隊伍三；新隊伍初始只能編 2 張卡，科技「隊伍人數」可解鎖第三張卡。<br><b>隊伍一戰力：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜已選 ' + selected.length + ' / 3</b><br>' + (isHome ? '目前在主城，可以重新編隊、回復血量與改隊伍名。' : '目前隊伍遠征中，必須回到主城才能重新編隊、回復血量或改隊伍名。') + '</div>';
+      header += '<div class="tw-team-slot-tabs"><button class="active" type="button">隊伍一｜3槽</button><button type="button" ' + (team2Unlocked ? '' : 'disabled') + '>隊伍二｜' + (team2Unlocked ? team23Slots + '槽' : '科技解鎖') + '</button><button type="button" ' + (team3Unlocked ? '' : 'disabled') + '>隊伍三｜' + (team3Unlocked ? team23Slots + '槽' : '科技解鎖') + '</button></div>';
       if (!cards.length) return header + '<div class="traffic-war-drawer-note">尚未取得可出征卡牌。</div>';
       return header + '<div class="traffic-war-team-grid traffic-war-card-deck-grid">' + cards.map(function(card) {
         var id = card.card_id || card.name;
@@ -9908,7 +9985,7 @@ function showCollectionHistory() {
           + '<span class="tw-card-frame"><img src="' + trafficWarEsc(getTrafficWarCardImage(card)) + '" alt="" loading="lazy" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span>'
           + '<span class="tw-card-info"><b>' + trafficWarEsc(card.card_name) + '</b>'
           + '<em>' + trafficWarEsc(faction.shortName || card.faction_type) + '｜沙盤 LV1｜重複 +' + Number(card.duplicate_bonus_percent || 0) + '%</em>'
-          + '<small>' + trafficWarEsc(card.skill_name) + '：' + trafficWarEsc(card.skill_desc || '') + '</small>'
+          + trafficWarCardSkillHtml(card, isHome)
           + '<strong>沙盤戰力 ' + Number(card.total_power || 0).toLocaleString() + '</strong></span>'
           + '</button>';
       }).join('') + '</div>';
@@ -9950,16 +10027,26 @@ function showCollectionHistory() {
     }
 
     function trafficWarTechPanelHtml(state) {
+      var player = state.player_season || {};
+      var tech = state.tech_levels || {};
+      var popularity = Number(player.popularity || 0);
+      var tip = Number(player.tip || player.gift_energy || 0);
       var techs = [
-        ['直播訓練', '隊伍總戰力 +3% / 每級', '人氣'],
-        ['人氣經營', '所有人氣產出 +5% / 每級', '人氣'],
-        ['打賞企劃', '所有打賞產出 +5% / 每級', '打賞'],
-        ['快速轉場', '行動力消耗降低', '人氣'],
-        ['盛典動員', '攻打年度盛典時戰力提升', '打賞']
+        { key:'training', name:'直播訓練', desc:'隊伍總戰力 +3% / 每級', resource:'人氣', max:10, lv:Number(tech.training||0), cost:function(lv){return 300 + lv*180;} },
+        { key:'popularity_output', name:'人氣經營', desc:'所有人氣產出 +5% / 每級', resource:'人氣', max:10, lv:Number(tech.popularity_output||0), cost:function(lv){return 260 + lv*160;} },
+        { key:'tip_output', name:'打賞企劃', desc:'所有打賞產出 +5% / 每級', resource:'打賞', max:10, lv:Number(tech.tip_output||0), cost:function(lv){return 180 + lv*130;} },
+        { key:'extra_teams', name:'擴編隊伍', desc:'LV1 解鎖隊伍二；LV2 解鎖隊伍三。新隊伍初始只能編 2 張卡。', resource:'打賞', max:2, lv:Number(tech.extra_teams||0), cost:function(lv){return lv === 0 ? 800 : 1600;} },
+        { key:'team_size', name:'隊伍人數', desc:'LV1 解鎖隊伍二第三張卡；LV2 解鎖隊伍三第三張卡。', resource:'人氣', max:2, lv:Number(tech.team_size||0), cost:function(lv){return lv === 0 ? 1200 : 2200;} },
+        { key:'mobility', name:'快速轉場', desc:'行動力消耗降低。', resource:'人氣', max:5, lv:Number(tech.mobility||0), cost:function(lv){return 400 + lv*260;} },
+        { key:'festival', name:'盛典動員', desc:'攻打年度盛典時戰力提升。', resource:'打賞', max:5, lv:Number(tech.festival||0), cost:function(lv){return 500 + lv*320;} }
       ];
-      return '<div class="traffic-war-drawer-note">科技會用人氣或打賞升級，這裡先做成地圖內彈出介面，等玩法確認後再正式串接後端。</div><div class="traffic-war-tech-list">'
-        + techs.map(function(t) { return '<div class="traffic-war-tech-card"><b>' + trafficWarEsc(t[0]) + '</b><span>' + trafficWarEsc(t[1]) + '<br>消耗資源：' + trafficWarEsc(t[2]) + '</span><button type="button" disabled>升級｜後續開放</button></div>'; }).join('')
-        + '</div>';
+      return '<div class="traffic-war-drawer-note">科技使用人氣或打賞升級。隊伍擴編與隊伍人數會影響隊伍二、隊伍三的開放與卡槽。</div><div class="traffic-war-tech-list">'
+        + techs.map(function(t) {
+          var cost = t.cost(t.lv);
+          var enough = t.resource === '打賞' ? tip >= cost : popularity >= cost;
+          var full = t.lv >= t.max;
+          return '<div class="traffic-war-tech-card"><b>' + trafficWarEsc(t.name) + '</b><span>' + trafficWarEsc(t.desc) + '</span><div class="tw-tech-level">目前 LV' + t.lv + ' / ' + t.max + '</div><div class="tw-tech-actions"><span>消耗' + trafficWarEsc(t.resource) + ' ' + cost.toLocaleString() + '</span><button type="button" ' + (full || !enough ? 'disabled' : 'onclick="upgradeTrafficWarTech(\'' + t.key + '\')"') + '>' + (full ? '已滿級' : '升級') + '</button></div></div>';
+        }).join('') + '</div>';
     }
 
     function renderTrafficWarDrawer(state) {
@@ -10048,6 +10135,29 @@ function showCollectionHistory() {
         if (res && res.dashboard) saveTrafficWarState(res.dashboard);
         renderTrafficWar(true);
         if (res && res.result) showTrafficWarResult(Object.assign({ success: true, collectOnly: true }, res.result));
+      } catch (err) {
+        alert(err && err.message ? err.message : String(err));
+      }
+    }
+
+    async function upgradeTrafficWarTech(key) {
+      try {
+        var res = await trafficWarRpc('upgradeTrafficWarTech', [getTrafficWarUid(), key]);
+        if (res && res.success === false) alert(res.msg || '科技升級失敗');
+        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
+        renderTrafficWar(true);
+      } catch (err) {
+        alert(err && err.message ? err.message : String(err));
+      }
+    }
+
+    async function upgradeTrafficWarSkill(encodedCardId) {
+      var cardId = decodeURIComponent(encodedCardId || '');
+      try {
+        var res = await trafficWarRpc('upgradeTrafficWarSkill', [getTrafficWarUid(), cardId]);
+        if (res && res.success === false) alert(res.msg || '技能升級失敗');
+        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
+        renderTrafficWar(true);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
       }
