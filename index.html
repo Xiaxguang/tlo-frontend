@@ -1421,7 +1421,20 @@
     @media(max-width:720px){.traffic-war-window .traffic-war-map-grid{width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:22px 22px 150px!important;transform:none!important;}}
     @media(max-width:430px){.traffic-war-window .traffic-war-map-grid{width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:18px 18px 140px!important;transform:none!important;}}
 
-  </style>
+  
+    /* 星潮沙盤戰：隊伍欄收合與資訊浮窗修正版 */
+    .traffic-war-window .tw-sortie-panel{transition:width .18s ease, max-height .18s ease, opacity .18s ease;}
+    .traffic-war-window .tw-sortie-collapse-btn{position:absolute;right:-14px;top:12px;z-index:5;width:28px;height:28px;border:1px solid rgba(100,255,242,.38);border-radius:999px;background:rgba(10,14,35,.94);color:#dff;font-weight:1000;box-shadow:0 6px 18px rgba(0,0,0,.35);cursor:pointer;}
+    .traffic-war-window .tw-sortie-collapsed-label{display:none;writing-mode:vertical-rl;text-orientation:mixed;gap:5px;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:1000;min-height:110px;}
+    .traffic-war-window .tw-sortie-collapsed-label span{color:#ffdf8a;font-size:10px;}
+    .traffic-war-window .tw-sortie-panel.collapsed{width:48px!important;min-width:48px!important;max-height:180px!important;overflow:visible!important;padding:8px 6px!important;}
+    .traffic-war-window .tw-sortie-panel.collapsed h4,.traffic-war-window .tw-sortie-panel.collapsed .tw-sortie-content{display:none!important;}
+    .traffic-war-window .tw-sortie-panel.collapsed .tw-sortie-collapsed-label{display:flex;}
+    .traffic-war-window .tw-sortie-panel.collapsed .tw-sortie-collapse-btn{right:-13px;}
+    .traffic-war-window .tw-selected-popover small:nth-of-type(2){display:block!important;}
+    .traffic-war-window .tw-selected-popover{width:244px!important;margin-left:-122px!important;}
+    @media(max-width:720px){.traffic-war-window .tw-sortie-panel{display:block!important;width:48px!important;max-height:150px!important;padding:7px 5px!important}.traffic-war-window .tw-sortie-panel:not(.collapsed){width:168px!important;max-height:36%!important}.traffic-war-window .tw-sortie-panel.collapsed h4,.traffic-war-window .tw-sortie-panel.collapsed .tw-sortie-content{display:none!important}.traffic-war-window .tw-sortie-panel.collapsed .tw-sortie-collapsed-label{display:flex!important}.traffic-war-window .tw-selected-popover{width:220px!important;margin-left:-110px!important}}
+</style>
   <link rel="icon" href="./favicon.ico?v=20260628-battle-bg-v12">
   <meta name="tlo-lobby-ui-build" content="20260628-lobby-ui-v8">
 
@@ -9082,6 +9095,7 @@ function showCollectionHistory() {
     var trafficWarLoading = false;
     var trafficWarLastError = '';
     var trafficWarSelectedTileId = null;
+    var trafficWarSortieCollapsed = false;
     var trafficWarActiveDrawer = null;
     var trafficWarShouldFocusCurrent = false;
     var trafficWarMapZoom = 1;
@@ -9786,28 +9800,41 @@ function showCollectionHistory() {
       }
     }
 
+    function toggleTrafficWarSortiePanel() {
+      trafficWarSortieCollapsed = !trafficWarSortieCollapsed;
+      renderTrafficWarRegions(loadTrafficWarState());
+    }
+
     function renderTrafficWarSortiePanel(state, selectedCards) {
       var player = state.player_season || {};
       var isHome = !!player.home_tile_id && player.current_tile_id === player.home_tile_id;
       var teamName = player.team_name || '隊伍一';
       var leader = selectedCards[0];
+      var tileCount = Number(player.owned_tile_count || 0);
+      var tileLimit = Number(player.tile_limit || 15);
+      var collapsedClass = trafficWarSortieCollapsed ? ' collapsed' : '';
       var cardHtml = selectedCards.length ? selectedCards.map(function(card) {
         return '<span class="tw-sortie-card"><img src="' + trafficWarEsc(getTrafficWarCardImage(card)) + '" alt="" loading="lazy" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"><em>' + trafficWarEsc(card.card_name) + '</em></span>';
       }).join('') : '<div class="tw-sortie-empty">尚未編隊</div>';
       var homeText = player.home_tile_id ? (isHome ? '主城內' : '遠征中') : '尚未出生';
-      return '<aside class="traffic-war-side tw-sortie-panel"><h4>出征隊伍</h4>'
+      return '<aside class="traffic-war-side tw-sortie-panel' + collapsedClass + '">'
+        + '<button type="button" class="tw-sortie-collapse-btn" onclick="toggleTrafficWarSortiePanel()">' + (trafficWarSortieCollapsed ? '▶' : '◀') + '</button>'
+        + '<h4>出征隊伍</h4>'
+        + '<div class="tw-sortie-collapsed-label"><b>出征</b><span>' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '</span></div>'
+        + '<div class="tw-sortie-content">'
         + '<div class="tw-squad-tabs"><button class="active" type="button">隊伍一</button><button type="button" disabled>隊伍二</button><button type="button" disabled>隊伍三</button></div>'
         + '<div class="tw-sortie-title"><b>' + trafficWarEsc(teamName) + '</b><span>' + trafficWarEsc(trafficWarFactionLabel(player.faction)) + '</span></div>'
         + '<div class="tw-leader-line">隊長卡：<b>' + trafficWarEsc(leader ? leader.card_name : '尚未選擇') + '</b></div>'
         + '<div class="tw-sortie-cards">' + cardHtml + '</div>'
         + '<div class="traffic-war-side-row"><span>隊伍戰力</span><b>' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '</b></div>'
+        + '<div class="traffic-war-side-row"><span>持有格</span><b>' + tileCount.toLocaleString() + ' / ' + tileLimit.toLocaleString() + '</b></div>'
         + '<div class="traffic-war-side-row"><span>主城位置</span><b>' + trafficWarEsc(player.home_tile_id || '尚未生成') + '</b></div>'
         + '<div class="traffic-war-side-row"><span>目前狀態</span><b>' + trafficWarEsc(homeText) + '</b></div>'
         + '<div class="traffic-war-side-row"><span>行動力</span><b>' + Number(player.stamina || 0).toLocaleString() + ' / 100</b></div>'
         + '<div class="tw-home-actions"><button type="button" onclick="openTrafficWarPanel(\'team\')" ' + (isHome ? '' : 'disabled') + '>重新編隊</button><button type="button" disabled>回復血量</button><button type="button" disabled>改隊伍名</button></div>'
-        + '<div class="tw-locked-team"><b>隊伍二</b><span>後續開放</span></div>'
-        + '<div class="tw-locked-team"><b>隊伍三</b><span>後續開放</span></div>'
-        + '</aside>';
+        + '<div class="tw-locked-team"><b>隊伍二</b><span>新團出道 LV1 解鎖</span></div>'
+        + '<div class="tw-locked-team"><b>隊伍三</b><span>新團出道 LV2 解鎖</span></div>'
+        + '</div></aside>';
     }
 
     function trafficWarAttackDisabledReason(state, tile) {
@@ -9816,24 +9843,33 @@ function showCollectionHistory() {
       if (selectedCount !== 3) return '不可攻打：請先編成 3 張卡';
       if (Number(state.player_season.stamina || 0) <= 0) return '不可攻打：行動力不足';
       if (tile && tile.is_center_city && !state.center_unlocked) return '不可攻打：年度盛典尚未開放';
+      if (tile && !tile.owner_uid && !tile.is_center_city && Number(state.player_season.owned_tile_count || 0) >= Number(state.player_season.tile_limit || 15)) return '不可攻打：持有格已達上限，請升級公司擴編';
       if (!tile || !tile.can_attack) return '不可攻打：請先移動到相鄰格';
       return '';
     }
 
     function renderTrafficWarTileDetailBubble(state, tile) {
       if (!tile) return '';
+      var player = state.player_season || {};
       var owner = tile.owner_faction ? trafficWarFactionLabel(tile.owner_faction) : '未佔領';
-      var resource = tile.resource_type ? (trafficWarRewardLabel(tile.resource_type) + ' +' + Number(tile.resource_amount || 0).toLocaleString() + '/h') : '無';
+      var isOwnedByMe = String(tile.owner_uid || '') === String(player.uid || '');
+      var isResource = !!tile.resource_type;
+      var resourceLabel = isResource ? trafficWarRewardLabel(tile.resource_type) : '人氣';
+      var perHour = isResource ? Number(tile.resource_amount || 0) : 0;
+      var expectedReward = Math.max(20, Math.floor((Number(tile.resource_amount || 0) || Number(tile.level || 1) * 20)));
+      var productionText = isResource ? (resourceLabel + ' +' + perHour.toLocaleString() + '/h') : '無固定產出';
       var reason = trafficWarAttackDisabledReason(state, tile);
       var attackDisabled = !!reason;
       var collectDisabled = !tile.can_collect_resource;
-      var enemyLabel = tile.is_center_city ? '年度盛典守衛' : (tile.enemy_card_name || '卡池守軍');
       var tileId = trafficWarEsc(tile.tile_id);
+      var typeText = tile.is_center_city ? '年度盛典' : (tile.resource_type === 'tip' ? '駐唱酒吧資源點' : (tile.resource_type ? '直播間資源點' : '普通流量地'));
       return '<span class="tw-selected-popover" onclick="event.stopPropagation()">'
-        + '<b>' + trafficWarEsc(tile.is_center_city ? '年度盛典' : (tile.resource_type === 'tip' ? '駐唱酒吧資源點' : (tile.resource_type ? '直播間資源點' : '普通土地'))) + '</b>'
+        + '<b>' + trafficWarEsc(typeText) + '</b>'
         + '<small>狀態：' + trafficWarEsc(owner) + '</small>'
-        + '<small>等級：LV' + Number(tile.level || 1) + '｜敵方戰力 ' + Number(tile.enemy_power || 0).toLocaleString() + '</small>'
-        + '<small>產出：' + trafficWarEsc(resource) + '</small>'
+        + '<small>預估敵方戰力：' + Number(tile.enemy_power || 0).toLocaleString() + '</small>'
+        + '<small>預計攻打獲得：' + trafficWarEsc(resourceLabel) + ' +' + expectedReward.toLocaleString() + '</small>'
+        + '<small>' + (isOwnedByMe ? '目前每小時產出：' : '攻佔後每小時產出：') + trafficWarEsc(productionText) + '</small>'
+        + '<small>持有格：' + Number(player.owned_tile_count || 0).toLocaleString() + ' / ' + Number(player.tile_limit || 15).toLocaleString() + '</small>'
         + (reason ? '<em>' + trafficWarEsc(reason) + '</em>' : '<em class="ok">可攻打</em>')
         + '<button type="button" class="primary" ' + (attackDisabled ? 'disabled' : '') + ' onclick="event.stopPropagation();challengeTrafficWarRegion(\'' + tileId + '\')">攻打</button>'
         + '<button type="button" ' + (collectDisabled ? 'disabled' : '') + ' onclick="event.stopPropagation();collectTrafficWarTileResource(\'' + tileId + '\')">領取</button>'
@@ -9852,8 +9888,7 @@ function showCollectionHistory() {
         + '<div class="tw-detail-title">' + trafficWarEsc(title) + '</div>'
         + '<div class="traffic-war-detail-row"><span>格子等級</span><b>LV' + Number(tile.level || 1) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>狀態</span><b>' + trafficWarEsc(owner) + '</b></div>'
-        + '<div class="traffic-war-detail-row"><span>敵人</span><b>' + trafficWarEsc(tile.enemy_card_name || tile.enemy_name || '卡池隨機敵人') + '</b></div>'
-        + '<div class="traffic-war-detail-row"><span>敵人戰力</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b></div>'
+        + '<div class="traffic-war-detail-row"><span>預估敵方戰力</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>產出</span><b>' + trafficWarEsc(resource) + '</b></div>'
         + '<div class="tw-detail-note">' + trafficWarEsc(reason || '可攻打：此格鄰接目前隊伍位置') + '</div>'
         + '<button type="button" class="traffic-war-detail-action primary" ' + (attackDisabled ? 'disabled' : '') + ' onclick="challengeTrafficWarRegion(\'' + trafficWarEsc(tile.tile_id) + '\')">攻打</button>'
@@ -9973,7 +10008,7 @@ function showCollectionHistory() {
       var team2Unlocked = extraTeams >= 1;
       var team3Unlocked = extraTeams >= 2;
       var team23Slots = teamSizeTech >= 2 ? 3 : 2;
-      var header = '<div class="traffic-war-drawer-note"><b>隊伍一 / 隊伍二 / 隊伍三</b><br>隊伍一固定 3 張卡。科技「擴編隊伍」可解鎖隊伍二、隊伍三；新隊伍初始只能編 2 張卡，科技「隊伍人數」可解鎖第三張卡。<br><b>隊伍一戰力：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜已選 ' + selected.length + ' / 3</b><br>' + (isHome ? '目前在主城，可以重新編隊、回復血量與改隊伍名。' : '目前隊伍遠征中，必須回到主城才能重新編隊、回復血量或改隊伍名。') + '</div>';
+      var header = '<div class="traffic-war-drawer-note"><b>隊伍一 / 隊伍二 / 隊伍三</b><br>隊伍一固定 3 張卡。科技「新團出道」可解鎖隊伍二、隊伍三；新隊伍初始只能編 2 張卡，科技「添加新血」可解鎖第三張卡。<br><b>隊伍一戰力：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜已選 ' + selected.length + ' / 3</b><br>' + (isHome ? '目前在主城，可以重新編隊、回復血量與改隊伍名。' : '目前隊伍遠征中，必須回到主城才能重新編隊、回復血量或改隊伍名。') + '</div>';
       header += '<div class="tw-team-slot-tabs"><button class="active" type="button">隊伍一｜3槽</button><button type="button" ' + (team2Unlocked ? '' : 'disabled') + '>隊伍二｜' + (team2Unlocked ? team23Slots + '槽' : '科技解鎖') + '</button><button type="button" ' + (team3Unlocked ? '' : 'disabled') + '>隊伍三｜' + (team3Unlocked ? team23Slots + '槽' : '科技解鎖') + '</button></div>';
       if (!cards.length) return header + '<div class="traffic-war-drawer-note">尚未取得可出征卡牌。</div>';
       return header + '<div class="traffic-war-team-grid traffic-war-card-deck-grid">' + cards.map(function(card) {
@@ -10022,7 +10057,7 @@ function showCollectionHistory() {
     function trafficWarCityPanelHtml(state) {
       var p = state.player_season || {};
       return '<div class="traffic-war-drawer-note">主城是沙盤模式的基地。LV3 以上格子產出的人氣與打賞，會用來強化主城與科技。第一版先顯示規劃介面，後續再接正式升級資料。</div>'
-        + '<div class="traffic-war-stat-grid"><div class="traffic-war-stat"><span>人氣</span><b>' + Number(p.popularity || 0).toLocaleString() + '</b></div><div class="traffic-war-stat"><span>打賞</span><b>' + Number(p.tip || p.gift_energy || 0).toLocaleString() + '</b></div><div class="traffic-war-stat"><span>行動力</span><b>' + Number(p.stamina || 0).toLocaleString() + '/100</b></div><div class="traffic-war-stat"><span>目前位置</span><b>' + trafficWarEsc(p.current_tile_id || '尚未出生') + '</b></div></div>'
+        + '<div class="traffic-war-stat-grid"><div class="traffic-war-stat"><span>人氣</span><b>' + Number(p.popularity || 0).toLocaleString() + '</b></div><div class="traffic-war-stat"><span>打賞</span><b>' + Number(p.tip || p.gift_energy || 0).toLocaleString() + '</b></div><div class="traffic-war-stat"><span>行動力</span><b>' + Number(p.stamina || 0).toLocaleString() + '/100</b></div><div class="traffic-war-stat"><span>目前位置</span><b>' + trafficWarEsc(p.current_tile_id || '尚未出生') + '</b></div><div class="traffic-war-stat"><span>持有格</span><b>' + Number(p.owned_tile_count || 0).toLocaleString() + ' / ' + Number(p.tile_limit || 15).toLocaleString() + '</b></div></div>'
         + '<div class="traffic-war-tech-list" style="margin-top:10px;"><div class="traffic-war-tech-card"><b>主城功能</b><span>資源管理、隊伍補給、行動力恢復、年度盛典攻城準備。</span><button type="button" disabled>正式版開放</button></div></div>';
     }
 
@@ -10032,15 +10067,16 @@ function showCollectionHistory() {
       var popularity = Number(player.popularity || 0);
       var tip = Number(player.tip || player.gift_energy || 0);
       var techs = [
-        { key:'training', name:'直播訓練', desc:'隊伍總戰力 +3% / 每級', resource:'人氣', max:10, lv:Number(tech.training||0), cost:function(lv){return 300 + lv*180;} },
-        { key:'popularity_output', name:'人氣經營', desc:'所有人氣產出 +5% / 每級', resource:'人氣', max:10, lv:Number(tech.popularity_output||0), cost:function(lv){return 260 + lv*160;} },
+        { key:'training', name:'藝人訓練室', desc:'旗下隊伍總戰力 +3% / 每級', resource:'人氣', max:10, lv:Number(tech.training||0), cost:function(lv){return 300 + lv*180;} },
+        { key:'popularity_output', name:'流量營運', desc:'所有人氣產出 +5% / 每級', resource:'人氣', max:10, lv:Number(tech.popularity_output||0), cost:function(lv){return 260 + lv*160;} },
         { key:'tip_output', name:'打賞企劃', desc:'所有打賞產出 +5% / 每級', resource:'打賞', max:10, lv:Number(tech.tip_output||0), cost:function(lv){return 180 + lv*130;} },
-        { key:'extra_teams', name:'擴編隊伍', desc:'LV1 解鎖隊伍二；LV2 解鎖隊伍三。新隊伍初始只能編 2 張卡。', resource:'打賞', max:2, lv:Number(tech.extra_teams||0), cost:function(lv){return lv === 0 ? 800 : 1600;} },
-        { key:'team_size', name:'隊伍人數', desc:'LV1 解鎖隊伍二第三張卡；LV2 解鎖隊伍三第三張卡。', resource:'人氣', max:2, lv:Number(tech.team_size||0), cost:function(lv){return lv === 0 ? 1200 : 2200;} },
-        { key:'mobility', name:'快速轉場', desc:'行動力消耗降低。', resource:'人氣', max:5, lv:Number(tech.mobility||0), cost:function(lv){return 400 + lv*260;} },
-        { key:'festival', name:'盛典動員', desc:'攻打年度盛典時戰力提升。', resource:'打賞', max:5, lv:Number(tech.festival||0), cost:function(lv){return 500 + lv*320;} }
+        { key:'extra_teams', name:'新團出道', desc:'LV1 解鎖隊伍二；LV2 解鎖隊伍三。新隊伍初始只能編 2 張卡。', resource:'打賞', max:2, lv:Number(tech.extra_teams||0), cost:function(lv){return lv === 0 ? 800 : 1600;} },
+        { key:'team_size', name:'添加新血', desc:'LV1 解鎖隊伍二第三張卡；LV2 解鎖隊伍三第三張卡。', resource:'人氣', max:2, lv:Number(tech.team_size||0), cost:function(lv){return lv === 0 ? 1200 : 2200;} },
+        { key:'company_expansion', name:'公司擴編', desc:'持有格上限 +3 / 每級，預設 15 格。', resource:'打賞', max:5, lv:Number(tech.company_expansion||0), cost:function(lv){return [700,1100,1600,2200,3000][lv] || 3000;} },
+        { key:'mobility', name:'通告快轉', desc:'降低行動力壓力，提升跑圖效率。', resource:'人氣', max:5, lv:Number(tech.mobility||0), cost:function(lv){return 400 + lv*260;} },
+        { key:'festival', name:'盛典公關', desc:'攻打年度盛典時戰力提升。', resource:'打賞', max:5, lv:Number(tech.festival||0), cost:function(lv){return 500 + lv*320;} }
       ];
-      return '<div class="traffic-war-drawer-note">科技使用人氣或打賞升級。隊伍擴編與隊伍人數會影響隊伍二、隊伍三的開放與卡槽。</div><div class="traffic-war-tech-list">'
+      return '<div class="traffic-war-drawer-note">科技使用人氣或打賞升級。新團出道、添加新血與公司擴編會影響隊伍開放、卡槽與持有格上限。</div><div class="traffic-war-tech-list">'
         + techs.map(function(t) {
           var cost = t.cost(t.lv);
           var enough = t.resource === '打賞' ? tip >= cost : popularity >= cost;
