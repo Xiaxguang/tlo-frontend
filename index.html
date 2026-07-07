@@ -2505,6 +2505,67 @@
     }
   </style>
 
+  <style id="tlo-performance-traffic-war-hotfix">
+    /* TLO performance hotfix: 保留功能，降低手機端拖曳 / 縮放 / 點格子時的重繪成本 */
+    html, body{overscroll-behavior-y:contain;}
+    .traffic-war-window.show{overscroll-behavior:none;touch-action:none;}
+    .traffic-war-window .traffic-war-map-scroll{
+      touch-action:none!important;
+      overscroll-behavior:contain!important;
+      -webkit-overflow-scrolling:auto!important;
+      contain:strict;
+      will-change:scroll-position;
+    }
+    .traffic-war-window .traffic-war-map-grid{
+      transform:scale(var(--tw-map-zoom,1)) translateZ(0)!important;
+      transform-origin:0 0!important;
+      filter:none!important;
+      contain:layout style paint;
+      isolation:isolate;
+      will-change:transform;
+    }
+    .traffic-war-window .traffic-war-map-grid:before{display:none!important;}
+    .traffic-war-window .traffic-war-tile{
+      transition:none!important;
+      will-change:auto!important;
+      contain:layout style paint;
+      content-visibility:auto;
+      contain-intrinsic-size:142px 112px;
+      backface-visibility:hidden;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .traffic-war-window .traffic-war-tile:hover{transform:none!important;filter:none!important;}
+    .traffic-war-window .tw-tile-art img{filter:none!important;transform:translateZ(0);}
+    .traffic-war-window .traffic-war-tile.friendly .tw-tile-art img,
+    .traffic-war-window .traffic-war-tile.owned-by-me .tw-tile-art img,
+    .traffic-war-window .traffic-war-tile.enemy .tw-tile-art img{filter:none!important;}
+    .traffic-war-window .tw-resource-badge,
+    .traffic-war-window .tw-tile-spark,
+    .traffic-war-window .tw-tile-state-ring{box-shadow:none!important;}
+    .traffic-war-window .tw-selected-popover{
+      display:block!important;
+      line-height:1.45;
+      text-align:left;
+      pointer-events:auto;
+    }
+    .traffic-war-window .tw-selected-popover b{font-size:13px;}
+    .traffic-war-window .tw-selected-popover small{font-size:11px;}
+    @media(max-width:720px){
+      .traffic-war-window .traffic-war-window-top,
+      .traffic-war-window .traffic-war-stat.tw-hud-card,
+      .traffic-war-window .traffic-war-drawer,
+      .traffic-war-window .traffic-war-side,
+      .traffic-war-window .traffic-war-tile-detail{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+      .traffic-war-window .traffic-war-map-legend,
+      .traffic-war-window .tw-map-tools{display:none!important;}
+      .traffic-war-window .tw-tile-label em{display:none!important;}
+      .traffic-war-window .traffic-war-tile:not(.selected) .tw-selected-popover{display:none!important;}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
+    }
+  </style>
+
 </head>
 <body class="tlo-game-body">
   <div id="global-rare-toast-layer" class="global-rare-toast-layer" aria-live="polite" aria-atomic="true"></div>
@@ -2740,7 +2801,6 @@
         <div class="quick-links">
           <button class="btn-collection" onclick="openCollectionModal()">🎴 查看我的潮流卡盒</button>
           <button class="btn-collection" onclick="openProbabilityModal()">ℹ️ 查看盲盒角色機率表</button>
-          <a href="https://lbr-game.up.railway.app/roulette/" class="btn btn-full btn-roulette" target="_blank">🎡 前往 T-LO 大轉盤現場</a>
         </div>
       </div>
 
@@ -9510,18 +9570,45 @@ function showCollectionHistory() {
       return (state.tiles || []).find(function(tile) { return tile.tile_id === tileId; });
     }
 
+    function findTrafficWarTileElement(tileId) {
+      if (!tileId) return null;
+      var direct = document.getElementById('tw-' + String(tileId));
+      if (direct) return direct;
+      var nodes = document.querySelectorAll('.traffic-war-window .traffic-war-tile');
+      for (var i = 0; i < nodes.length; i += 1) {
+        if (nodes[i].dataset && nodes[i].dataset.tileId === tileId) return nodes[i];
+        if (nodes[i].getAttribute('title') === tileId) return nodes[i];
+      }
+      return null;
+    }
+
     function selectTrafficWarTile(tileId) {
       if (trafficWarMapWasDragged) return;
-      var scroller = document.querySelector('.traffic-war-window .traffic-war-map-scroll');
-      var keepLeft = scroller ? scroller.scrollLeft : null;
-      var keepTop = scroller ? scroller.scrollTop : null;
-      trafficWarSelectedTileId = (trafficWarSelectedTileId === tileId) ? null : tileId;
-      renderTrafficWarRegions(loadTrafficWarState());
-      var nextScroller = document.querySelector('.traffic-war-window .traffic-war-map-scroll');
-      if (nextScroller && keepLeft !== null) {
-        nextScroller.scrollLeft = keepLeft;
-        nextScroller.scrollTop = keepTop;
+      var state = loadTrafficWarState();
+      var nextTile = findTrafficWarTile(state, tileId);
+      if (!nextTile) return;
+      var root = document.querySelector('.traffic-war-window .traffic-war-map-grid');
+      var prevId = trafficWarSelectedTileId;
+      var prevEl = prevId ? findTrafficWarTileElement(prevId) : null;
+      if (prevEl) {
+        prevEl.classList.remove('selected');
+        var oldBubble = prevEl.querySelector('.tw-selected-popover');
+        if (oldBubble) oldBubble.remove();
+        var oldEnemy = prevEl.querySelector('.tw-map-enemy-card');
+        if (oldEnemy) oldEnemy.remove();
       }
+      if (prevId === tileId) {
+        trafficWarSelectedTileId = null;
+        return;
+      }
+      trafficWarSelectedTileId = tileId;
+      var currentEl = root ? findTrafficWarTileElement(tileId) : null;
+      if (!currentEl) {
+        renderTrafficWarRegions(state);
+        return;
+      }
+      currentEl.classList.add('selected');
+      currentEl.insertAdjacentHTML('beforeend', renderTrafficWarTileDetailBubble(state, nextTile));
     }
 
     function trafficWarMapMetrics(state) {
@@ -9639,7 +9726,7 @@ function showCollectionHistory() {
       var asset = trafficWarTileAsset(tile);
       var detailBubble = trafficWarSelectedTileId === tile.tile_id ? renderTrafficWarTileDetailBubble(state, tile) : '';
       var tileId = trafficWarEsc(tile.tile_id);
-      return '<div role="button" tabindex="0" class="' + classes.map(trafficWarEsc).join(' ') + '" style="' + trafficWarIsoTileStyle(tile) + '" onclick="selectTrafficWarTile(\'' + tileId + '\')" title="' + tileId + '">'
+      return '<div id="tw-' + tileId + '" role="button" tabindex="0" data-tile-id="' + tileId + '" class="' + classes.map(trafficWarEsc).join(' ') + '" style="' + trafficWarIsoTileStyle(tile) + '" onclick="selectTrafficWarTile(\'' + tileId + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();selectTrafficWarTile(\'' + tileId + '\')}" title="' + tileId + '">'
         + '<span class="tw-tile-art"><img src="' + trafficWarEsc(asset) + '" alt="" loading="lazy" decoding="async"></span>'
         + '<span class="tw-tile-state-ring"></span>'
         + '<span class="tw-tile-label"><em>' + trafficWarEsc(owner) + '</em><strong>' + trafficWarEsc(label) + '</strong></span>'
@@ -9668,7 +9755,9 @@ function showCollectionHistory() {
       trafficWarRenderState = null;
       trafficWarRenderMetrics = null;
       trafficWarRenderSelectedCards = [];
-      var mapHtml = '<div class="tw-map-column"><div class="traffic-war-map-scroll"><div class="traffic-war-map-grid" style="--tw-grid-w:' + metrics.width + 'px;--tw-grid-h:' + metrics.height + 'px;--tw-map-zoom:' + trafficWarMapZoom + ';" aria-label="星潮沙盤戰等距地圖">'
+      var layoutW = Math.ceil(metrics.width * Number(trafficWarMapZoom || 1));
+      var layoutH = Math.ceil(metrics.height * Number(trafficWarMapZoom || 1));
+      var mapHtml = '<div class="tw-map-column"><div class="traffic-war-map-scroll"><div class="traffic-war-map-grid" data-base-w="' + metrics.width + '" data-base-h="' + metrics.height + '" style="--tw-grid-w:' + layoutW + 'px;--tw-grid-h:' + layoutH + 'px;--tw-map-zoom:' + trafficWarMapZoom + ';" aria-label="星潮沙盤戰等距地圖">'
         + tileHtml
         + '</div></div>'
         + '<div class="traffic-war-map-legend"><span><i></i>未知</span><span class="streamer"><i></i>自己 / 同陣營</span><span class="entertainment"><i></i>敵人</span><span class="center"><i></i>年度盛典</span><span class="attack"><i></i>可攻打</span></div>'
@@ -9756,7 +9845,7 @@ function showCollectionHistory() {
           if (Math.abs(next - trafficWarMapZoom) > 0.04) {
             trafficWarMapZoom = next;
             var grid = scroller.querySelector('.traffic-war-map-grid');
-            if (grid) grid.style.setProperty('--tw-map-zoom', String(next));
+            if (grid) applyTrafficWarMapZoom(grid);
           }
           e.preventDefault();
         }
@@ -9785,18 +9874,31 @@ function showCollectionHistory() {
       scroller.scrollTo({ left: Math.max(0, left), top: Math.max(0, top), behavior: 'smooth' });
     }
 
+    function applyTrafficWarMapZoom(grid) {
+      grid = grid || document.querySelector('.traffic-war-window .traffic-war-map-grid');
+      if (!grid) return;
+      var baseW = Number(grid.dataset.baseW || 0);
+      var baseH = Number(grid.dataset.baseH || 0);
+      if (!baseW) baseW = parseFloat(String(grid.style.getPropertyValue('--tw-grid-w') || '').replace('px','')) || 4200;
+      if (!baseH) baseH = parseFloat(String(grid.style.getPropertyValue('--tw-grid-h') || '').replace('px','')) || 2700;
+      var zoom = Number(trafficWarMapZoom || 1);
+      grid.style.setProperty('--tw-map-zoom', String(zoom));
+      grid.style.setProperty('--tw-grid-w', Math.ceil(baseW * zoom) + 'px');
+      grid.style.setProperty('--tw-grid-h', Math.ceil(baseH * zoom) + 'px');
+    }
+
     function setTrafficWarMapZoom(delta) {
       var next = Math.max(0.56, Math.min(1.28, Number(trafficWarMapZoom || 1) + Number(delta || 0)));
       if (Math.abs(next - trafficWarMapZoom) < 0.001) return;
-      trafficWarMapZoom = next;
       var scroller = document.querySelector('.traffic-war-window .traffic-war-map-scroll');
-      var oldLeft = scroller ? scroller.scrollLeft : 0;
-      var oldTop = scroller ? scroller.scrollTop : 0;
-      renderTrafficWarRegions(loadTrafficWarState());
-      var nextScroller = document.querySelector('.traffic-war-window .traffic-war-map-scroll');
-      if (nextScroller) {
-        nextScroller.scrollLeft = oldLeft;
-        nextScroller.scrollTop = oldTop;
+      var oldZoom = Number(trafficWarMapZoom || 1);
+      var centerX = scroller ? (scroller.scrollLeft + scroller.clientWidth / 2) / oldZoom : 0;
+      var centerY = scroller ? (scroller.scrollTop + scroller.clientHeight / 2) / oldZoom : 0;
+      trafficWarMapZoom = next;
+      applyTrafficWarMapZoom();
+      if (scroller) {
+        scroller.scrollLeft = Math.max(0, centerX * next - scroller.clientWidth / 2);
+        scroller.scrollTop = Math.max(0, centerY * next - scroller.clientHeight / 2);
       }
     }
 
@@ -9848,6 +9950,17 @@ function showCollectionHistory() {
       return '';
     }
 
+    function trafficWarTileKindText(tile) {
+      if (!tile) return '未知地塊';
+      if (tile.is_center_city) return '年度盛典';
+      var level = Number(tile.level || 1);
+      var rt = String(tile.resource_type || '').toLowerCase();
+      if (rt === 'tip' || rt === 'gift_energy' || rt === '打賞') return '打賞資源地｜駐唱酒吧';
+      if (rt === 'popularity' || rt === 'fans' || rt === '人氣') return '人氣資源地｜直播間';
+      if (level <= 2) return '荒地';
+      return '草地';
+    }
+
     function renderTrafficWarTileDetailBubble(state, tile) {
       if (!tile) return '';
       var player = state.player_season || {};
@@ -9862,13 +9975,15 @@ function showCollectionHistory() {
       var attackDisabled = !!reason;
       var collectDisabled = !tile.can_collect_resource;
       var tileId = trafficWarEsc(tile.tile_id);
-      var typeText = tile.is_center_city ? '年度盛典' : (tile.resource_type === 'tip' ? '駐唱酒吧資源點' : (tile.resource_type ? '直播間資源點' : '普通流量地'));
+      var typeText = trafficWarTileKindText(tile);
       return '<span class="tw-selected-popover" onclick="event.stopPropagation()">'
-        + '<b>' + trafficWarEsc(typeText) + '</b>'
+        + '<b>地塊資訊</b>'
+        + '<small>等級：LV' + Number(tile.level || 1).toLocaleString() + '</small>'
+        + '<small>種類：' + trafficWarEsc(typeText) + '</small>'
         + '<small>狀態：' + trafficWarEsc(owner) + '</small>'
-        + '<small>預估敵方戰力：' + Number(tile.enemy_power || 0).toLocaleString() + '</small>'
-        + '<small>預計攻打獲得：' + trafficWarEsc(resourceLabel) + ' +' + expectedReward.toLocaleString() + '</small>'
-        + '<small>' + (isOwnedByMe ? '目前每小時產出：' : '攻佔後每小時產出：') + trafficWarEsc(productionText) + '</small>'
+        + '<small>預估戰力：' + Number(tile.enemy_power || 0).toLocaleString() + '</small>'
+        + '<small>預估獲得：' + trafficWarEsc(resourceLabel) + ' +' + expectedReward.toLocaleString() + '</small>'
+        + '<small>' + (isOwnedByMe ? '目前產出：' : '攻佔後產出：') + trafficWarEsc(productionText) + '</small>'
         + '<small>持有格：' + Number(player.owned_tile_count || 0).toLocaleString() + ' / ' + Number(player.tile_limit || 15).toLocaleString() + '</small>'
         + (reason ? '<em>' + trafficWarEsc(reason) + '</em>' : '<em class="ok">可攻打</em>')
         + '<button type="button" class="primary" ' + (attackDisabled ? 'disabled' : '') + ' onclick="event.stopPropagation();challengeTrafficWarRegion(\'' + tileId + '\')">攻打</button>'
@@ -9952,8 +10067,13 @@ function showCollectionHistory() {
     }
 
     function openTrafficWarPanel(kind) {
+      var state = loadTrafficWarState();
+      if (kind === 'city') {
+        var homeId = state && state.player_season ? (state.player_season.home_tile_id || state.player_season.current_tile_id) : null;
+        if (homeId) focusTrafficWarTile(homeId);
+      }
       trafficWarActiveDrawer = kind || null;
-      renderTrafficWarDrawer(loadTrafficWarState());
+      renderTrafficWarDrawer(state);
     }
 
     function closeTrafficWarPanel() {
