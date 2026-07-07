@@ -2319,3 +2319,71 @@
     animation:none!important;
   }
 }
+
+/* v28 mobile runtime optimization: keep game logic untouched, reduce paint/GPU cost during active play. */
+.link-battle-board-wrap,
+.link-battle-stacked-board{
+  contain:layout style paint;
+}
+.link-battle-shell.in-battle .link-battle-tile{
+  contain:layout style paint;
+}
+@media (hover:none), (pointer:coarse), (max-width:560px){
+  .link-battle-shell.in-battle .link-battle-tile img{
+    backface-visibility:visible!important;
+    transform:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-tile{
+    transition:none!important;
+    will-change:auto!important;
+    box-shadow:0 4px 7px rgba(0,0,0,.58),0 1px 0 rgba(255,255,255,.14) inset!important;
+  }
+  .link-battle-shell.in-battle .link-battle-tile.selectable,
+  .link-battle-shell.in-battle .link-battle-tile.covered,
+  .link-battle-shell.in-battle .link-battle-tile.locked{
+    filter:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-tile.covered{
+    opacity:.58!important;
+  }
+  .link-battle-shell.in-battle .link-battle-tile.locked{
+    opacity:.66!important;
+  }
+  .link-battle-shell.in-battle .link-battle-tile.selected{
+    transform:translateY(-2px) scale(1.035)!important;
+    box-shadow:0 0 0 2px #00fff0,0 6px 10px rgba(0,0,0,.62)!important;
+  }
+  .link-battle-shell.in-battle .link-battle-boss-bg,
+  .link-battle-shell.in-battle .link-battle-boss-figure{
+    filter:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-boss-figure.has-image:before{
+    display:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-path-overlay,
+  .link-battle-shell.in-battle .link-battle-path-overlay.error{
+    animation:none!important;
+    filter:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-path-line{
+    animation:none!important;
+    stroke-dasharray:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-path-dot,
+  .link-battle-shell.in-battle .link-battle-path-x{
+    filter:none!important;
+  }
+  .link-battle-shell.in-battle .link-battle-hpfill,
+  .link-battle-shell.in-battle .link-battle-rage-fill{
+    box-shadow:none!important;
+    transition:width .12s linear!important;
+  }
+  .link-battle-shell.in-battle .link-battle-attack-card{
+    box-shadow:0 0 0 1px rgba(255,255,255,.45),0 8px 14px rgba(0,0,0,.5)!important;
+  }
+  .link-battle-shell.in-battle .link-battle-float-damage,
+  .link-battle-shell.in-battle .link-battle-float-player-damage,
+  .link-battle-shell.in-battle .link-battle-float-support-skill{
+    text-shadow:0 2px 4px rgba(0,0,0,.9)!important;
+  }
+}

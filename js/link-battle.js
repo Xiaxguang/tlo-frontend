@@ -26,6 +26,12 @@
     pendingScenePrimary: null,
     pendingSceneSecondary: null,
     boardDomStableKey: null,
+    tileButtonCache: Object.create(null),
+    boardStackEl: null,
+    linkPathOverlayEl: null,
+    lastBossBgKey: '',
+    lastBossFigureKey: '',
+    lastSupportSkillStatusKey: '',
     moveSeq: 0
   };
 
@@ -286,7 +292,11 @@
     var bg = $('link-battle-boss-bg');
     if (!bg) return;
     var visual = getBossVisual(stage);
-    bg.style.backgroundImage = visual.bossBackground ? 'url("' + visual.bossBackground + '")' : '';
+    var key = visual.bossBackground || '';
+    if (state.lastBossBgKey === key && bg.dataset.bossBgKey === key) return;
+    state.lastBossBgKey = key;
+    bg.dataset.bossBgKey = key;
+    bg.style.backgroundImage = key ? 'url("' + key + '")' : '';
   }
 
   function renderBossFigure(stage) {
@@ -294,9 +304,14 @@
     if (!figure) return;
     var visual = getBossVisual(stage || {});
     var tier = getStageTier(stage || {});
+    var bossName = getDisplayBossName(stage || {});
+    var key = tier + '|' + (visual.bossImage || '') + '|' + bossName;
+    if (state.lastBossFigureKey === key && figure.dataset.visualKey === key) return;
+    state.lastBossFigureKey = key;
+    figure.dataset.visualKey = key;
     figure.className = 'link-battle-boss-figure tier-' + tier + (visual.bossImage ? ' has-image' : ' no-image');
     if (visual.bossImage) {
-      figure.innerHTML = '<img class="link-battle-boss-main-image" src="' + escapeHtml(visual.bossImage) + '" alt="' + escapeHtml(getDisplayBossName(stage || {})) + '" loading="lazy" decoding="async">';
+      figure.innerHTML = '<img class="link-battle-boss-main-image" src="' + escapeHtml(visual.bossImage) + '" alt="' + escapeHtml(bossName) + '" loading="lazy" decoding="async">';
       var img = figure.querySelector('img');
       if (img && window.TLOImageLoader && typeof window.TLOImageLoader.enhanceImage === 'function') window.TLOImageLoader.enhanceImage(img);
     } else {
@@ -468,6 +483,48 @@
     ['link-battle-start-btn','link-battle-hint-btn','link-battle-shuffle-btn'].forEach(function(id) {
       var el = $(id);
       if (el) el.disabled = !!disabled;
+    });
+  }
+
+  function resetBoardDomCache() {
+    state.tileButtonCache = Object.create(null);
+    state.boardStackEl = null;
+    state.linkPathOverlayEl = null;
+    state.boardDomStableKey = null;
+  }
+
+  function getBoardTileCache(stack) {
+    if (state.boardStackEl !== stack) {
+      state.tileButtonCache = Object.create(null);
+      state.boardStackEl = stack;
+      state.linkPathOverlayEl = null;
+    }
+    return state.tileButtonCache || (state.tileButtonCache = Object.create(null));
+  }
+
+  function updateTileSelection(previousId, nextId) {
+    var cache = state.tileButtonCache || {};
+    [previousId, nextId].forEach(function(id) {
+      if (!id) return;
+      var btn = cache[String(id)];
+      if (btn) btn.classList.toggle('selected', String(id) === String(state.selectedTileId || ''));
+    });
+  }
+
+  function clearBoardHintClasses() {
+    var cache = state.tileButtonCache || {};
+    Object.keys(cache).forEach(function(tileId) {
+      var btn = cache[tileId];
+      if (btn) btn.classList.remove('hinted');
+    });
+  }
+
+  function setBoardTilesDisabled(disabled) {
+    var cache = state.tileButtonCache || {};
+    Object.keys(cache).forEach(function(tileId) {
+      var btn = cache[tileId];
+      if (!btn) return;
+      btn.disabled = !!disabled || btn.dataset.selectable !== '1';
     });
   }
 
@@ -871,7 +928,11 @@
     var profile = b.teamSkillProfile || (b.linkBattleTeam && b.linkBattleTeam.skillProfile) || null;
     var root = $('link-battle-support-skills');
     if (!root) return;
-    if (!profile || !profile.effects) { root.innerHTML = ''; return; }
+    if (!profile || !profile.effects) {
+      if (state.lastSupportSkillStatusKey !== '') root.innerHTML = '';
+      state.lastSupportSkillStatusKey = '';
+      return;
+    }
     var effects = profile.effects || {};
     var skillState = b.supportSkillState || {};
     var totals = b.supportSkillTotals || {};
@@ -882,7 +943,10 @@
     if (Number(effects.extraTreatUses || 0) > 0) items.push('💊 治療 +' + Number(effects.extraTreatUses || 0) + '次｜' + Number(effects.treatHealAmount || 20) + 'HP');
     if (Number(effects.stableCharges || 0) > 0) items.push('◇ 穩定 ' + Number(skillState.stableChargesUsed || 0) + '/' + Number(effects.stableCharges || 0));
     if (Number(effects.rageReductionPercent || 0) > 0) items.push('⛓️ 壓制 -' + Number(effects.rageReductionPercent || 0) + '%');
-    root.innerHTML = items.length ? items.map(function(text){ return '<span>' + escapeHtml(text) + '</span>'; }).join('') : '';
+    var html = items.length ? items.map(function(text){ return '<span>' + escapeHtml(text) + '</span>'; }).join('') : '';
+    if (state.lastSupportSkillStatusKey === html) return;
+    state.lastSupportSkillStatusKey = html;
+    root.innerHTML = html;
   }
 
   function formatSupportSkillTotals(b) {
@@ -1430,35 +1494,42 @@
 
   function syncTileButton(btn, tile, positionStyle, selectable) {
     var tileId = String(tile.tile_id || '');
-    btn.type = 'button';
-    btn.className = getTileClassName(tile, selectable);
-    btn.setAttribute('style', positionStyle || '');
-    btn.title = String(tile.card_name || '');
-    btn.setAttribute('aria-label', String(tile.card_name || ''));
-    btn.dataset.tileId = tileId;
-    btn.disabled = !selectable || !!state.isAnimating;
-    btn.onclick = function(ev) {
-      if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
-      if (ev && typeof ev.stopPropagation === 'function') ev.stopPropagation();
-      window.TLOLinkBattle.pickTile(tileId);
-      return false;
-    };
+    var title = String(tile.card_name || '');
+    var className = getTileClassName(tile, selectable);
+    var disabled = !selectable || !!state.isAnimating;
+    if (btn.type !== 'button') btn.type = 'button';
+    if (btn.className !== className) btn.className = className;
+    if (btn.getAttribute('style') !== (positionStyle || '')) btn.setAttribute('style', positionStyle || '');
+    if (btn.title !== title) btn.title = title;
+    if (btn.getAttribute('aria-label') !== title) btn.setAttribute('aria-label', title);
+    if (btn.dataset.tileId !== tileId) btn.dataset.tileId = tileId;
+    btn.dataset.selectable = selectable ? '1' : '0';
+    if (btn.disabled !== disabled) btn.disabled = disabled;
+    if (btn._tloLinkTileClickId !== tileId) {
+      btn._tloLinkTileClickId = tileId;
+      btn.onclick = function(ev) {
+        if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+        if (ev && typeof ev.stopPropagation === 'function') ev.stopPropagation();
+        window.TLOLinkBattle.pickTile(btn._tloLinkTileClickId);
+        return false;
+      };
+    }
 
     var src = normalizeTileImageUrl(tile);
     var currentSrc = btn.dataset.imageUrl || '';
     if (src) {
-      var img = btn.querySelector('img');
-      if (!img) {
+      var img = btn._tloTileImg && btn._tloTileImg.parentNode === btn ? btn._tloTileImg : btn.querySelector('img');
+      if (!img || img.parentNode !== btn) {
         btn.innerHTML = '';
         img = document.createElement('img');
-        img.alt = String(tile.card_name || '');
         img.draggable = false;
         img.loading = 'lazy';
         img.decoding = 'async';
         try { img.fetchPriority = 'auto'; } catch (_) {}
         btn.appendChild(img);
+        btn._tloTileImg = img;
       }
-      img.alt = String(tile.card_name || '');
+      if (img.alt !== title) img.alt = title;
       // 操作區卡牌是正在遊玩的核心物件，不能每次狀態更新都重新設定 src。
       // 只有當同一個按鈕真的換成不同圖片時才更新，避免手機瀏覽器反覆解碼、閃爍、白屏或退回主畫面。
       if (currentSrc !== src) {
@@ -1469,6 +1540,7 @@
       if (currentSrc || !btn.querySelector('.link-battle-tile-fallback')) {
         btn.innerHTML = '<div class="link-battle-tile-fallback">🎴</div>';
         btn.dataset.imageUrl = '';
+        btn._tloTileImg = null;
       }
     }
   }
@@ -1483,7 +1555,7 @@
       if (!wrap.querySelector('.link-battle-board-empty')) {
         wrap.innerHTML = '<div class="link-battle-board-empty">選擇關卡後開始挑戰。</div>';
       }
-      state.boardDomStableKey = null;
+      resetBoardDomCache();
       return;
     }
 
@@ -1563,46 +1635,53 @@
       stack.className = 'link-battle-stacked-board';
       wrap.appendChild(stack);
     }
-    stack.style.width = boardW + 'px';
-    stack.style.height = boardH + 'px';
-    stack.style.setProperty('--tile-w', tileW + 'px');
-    stack.style.setProperty('--tile-h', tileH + 'px');
+    if (stack.style.width !== boardW + 'px') stack.style.width = boardW + 'px';
+    if (stack.style.height !== boardH + 'px') stack.style.height = boardH + 'px';
+    if (stack.style.getPropertyValue('--tile-w') !== tileW + 'px') stack.style.setProperty('--tile-w', tileW + 'px');
+    if (stack.style.getPropertyValue('--tile-h') !== tileH + 'px') stack.style.setProperty('--tile-h', tileH + 'px');
 
-    var existing = {};
-    Array.prototype.slice.call(stack.querySelectorAll('.link-battle-tile[data-tile-id]')).forEach(function(btn) {
-      var tileId = String(btn.dataset.tileId || btn.getAttribute('data-tile-id') || '');
-      if (tileId) existing[tileId] = btn;
-    });
+    if (state.linkPathOverlayEl && state.linkPathOverlayEl.parentNode) {
+      state.linkPathOverlayEl.parentNode.removeChild(state.linkPathOverlayEl);
+      state.linkPathOverlayEl = null;
+    }
+
+    var cache = getBoardTileCache(stack);
+    var seen = Object.create(null);
+    var fragment = document.createDocumentFragment();
 
     var tileInset = Math.round(boardPadding / 2);
     renderTiles.forEach(function(tile) {
       var tileId = String(tile.tile_id || '');
+      if (!tileId) return;
+      seen[tileId] = true;
       var x = tileInset + (tile.col * colStep);
       var y = tileInset + (tile.row * rowStep);
       var z = (tile.layer * 1000) + (tile.row * 20) + tile.col;
       var positionStyle = 'left:' + x + 'px;top:' + y + 'px;z-index:' + z + ';--tile-layer:' + tile.layer + ';';
       var selectable = tile.selectable != null ? !!tile.selectable : isTileSelectable(tile);
-      var btn = existing[tileId];
-      if (!btn) {
+      var btn = cache[tileId];
+      if (!btn || btn.parentNode !== stack) {
         btn = document.createElement('button');
         btn.type = 'button';
-        stack.appendChild(btn);
-      } else {
-        delete existing[tileId];
+        cache[tileId] = btn;
+        fragment.appendChild(btn);
       }
       syncTileButton(btn, tile, positionStyle, selectable);
     });
+    if (fragment.childNodes.length) stack.appendChild(fragment);
 
-    Object.keys(existing).forEach(function(tileId) {
-      var btn = existing[tileId];
+    Object.keys(cache).forEach(function(tileId) {
+      if (seen[tileId]) return;
+      var btn = cache[tileId];
       if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+      delete cache[tileId];
     });
 
-    Array.prototype.slice.call(stack.querySelectorAll('.link-battle-path-overlay')).forEach(function(el) {
-      if (el && el.parentNode) el.parentNode.removeChild(el);
-    });
     var overlay = renderLinkPathOverlay();
-    if (overlay) stack.insertAdjacentHTML('beforeend', overlay);
+    if (overlay) {
+      stack.insertAdjacentHTML('beforeend', overlay);
+      state.linkPathOverlayEl = stack.lastElementChild;
+    }
   }
 
   function isTileSelectable(tile) {
@@ -1638,13 +1717,15 @@
   async function pickTile(tileId) {
     if (state.isAnimating || !state.battle || !state.runId) return;
     if (!state.selectedTileId) {
+      var previousSelectedId = state.selectedTileId;
       state.selectedTileId = tileId;
-      renderBoard();
+      updateTileSelection(previousSelectedId, tileId);
       return;
     }
     if (state.selectedTileId === tileId) {
+      var clearedSelectedId = state.selectedTileId;
       state.selectedTileId = null;
-      renderBoard();
+      updateTileSelection(clearedSelectedId, null);
       return;
     }
     var tileA = findTile(state.selectedTileId);
@@ -1653,8 +1734,9 @@
     state.selectedTileId = null;
     state.hintedIds = new Set();
     state.isAnimating = true;
-    // 只更新盤面選取/鎖定狀態，不重繪 BOSS、血條、支援技能等大型區塊，降低每次點牌卡頓。
-    renderBoard();
+    updateTileSelection(aId, null);
+    clearBoardHintClasses();
+    setBoardTilesDisabled(true);
     var didRenderFinalState = false;
     try {
       var moveSeq = ++state.moveSeq;
