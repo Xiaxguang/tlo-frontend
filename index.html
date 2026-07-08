@@ -2516,11 +2516,13 @@
       contain:strict;
       will-change:scroll-position;
       background:
-        radial-gradient(circle at 74% 34%, rgba(7,7,16,.96) 0 4%, rgba(84,34,150,.32) 5%, transparent 13%),
-        radial-gradient(circle at 24% 68%, rgba(5,6,16,.95) 0 5%, rgba(31,137,190,.22) 6%, transparent 15%),
-        linear-gradient(112deg, transparent 0 44%, rgba(122,205,255,.14) 45%, transparent 47% 100%),
-        linear-gradient(67deg, transparent 0 61%, rgba(255,221,124,.09) 62%, transparent 64% 100%),
-        radial-gradient(circle at 50% 50%, #14244a 0, #070918 62%, #02030a 100%)!important;
+        radial-gradient(circle at 16% 22%, rgba(121,178,255,.22) 0 1px, transparent 2px),
+        radial-gradient(circle at 72% 18%, rgba(255,235,170,.22) 0 1px, transparent 2px),
+        radial-gradient(circle at 38% 78%, rgba(124,255,234,.18) 0 1px, transparent 2px),
+        radial-gradient(ellipse at 26% 34%, rgba(65,118,255,.22), transparent 38%),
+        radial-gradient(ellipse at 76% 70%, rgba(151,82,255,.20), transparent 42%),
+        radial-gradient(circle at 50% 48%, rgba(255,255,255,.08), transparent 28%),
+        linear-gradient(135deg,#050817 0%,#0b1230 42%,#130b2d 70%,#03040d 100%)!important;
     }
     .traffic-war-window .traffic-war-map-grid{
       transform:translateZ(0)!important;
@@ -2538,11 +2540,12 @@
       z-index:0;
       pointer-events:none;
       background:
-        linear-gradient(118deg, transparent 0 47.8%, rgba(166,221,255,.16) 48.2%, transparent 49.2% 100%),
-        linear-gradient(34deg, transparent 0 58.5%, rgba(130,75,210,.14) 59%, transparent 60.2% 100%),
-        radial-gradient(ellipse at 70% 38%, rgba(0,0,0,.72) 0 3.8%, rgba(83,39,140,.22) 5.4%, transparent 12%),
-        radial-gradient(ellipse at 30% 63%, rgba(0,0,0,.68) 0 4.4%, rgba(38,145,160,.18) 6%, transparent 14%);
-      opacity:.72;
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,.55) 0 1px, transparent 2px),
+        radial-gradient(circle at 42% 32%, rgba(151,222,255,.38) 0 1px, transparent 2px),
+        radial-gradient(circle at 64% 58%, rgba(255,235,158,.35) 0 1px, transparent 2px),
+        radial-gradient(circle at 88% 76%, rgba(255,255,255,.42) 0 1px, transparent 2px),
+        radial-gradient(ellipse at 54% 46%, rgba(82,150,255,.13), transparent 48%);
+      opacity:.9;
     }
     .traffic-war-window .traffic-war-tile{
       width:var(--tw-tile-w,116px)!important;
@@ -2683,6 +2686,17 @@
     .traffic-war-window .traffic-war-tile.player-branch .tw-tile-label{display:grid!important;}
     .traffic-war-window .traffic-war-tile.player-hq .tw-tile-label{top:58px!important;}
     .traffic-war-window .traffic-war-tile.player-branch .tw-tile-label{top:44px!important;}
+    .traffic-war-window .traffic-war-tile::before,
+    .traffic-war-window .traffic-war-tile::after{
+      content:none!important;
+      display:none!important;
+      background:none!important;
+      box-shadow:none!important;
+    }
+    .traffic-war-window .tw-tile-hitbox{
+      display:none!important;
+      pointer-events:none!important;
+    }
     .traffic-war-window .tw-tile-art img{display:none!important;}
     .traffic-war-window .tw-tile-art img{filter:none!important;transform:translateZ(0);}
     .traffic-war-window .traffic-war-tile.friendly .tw-tile-art img,
@@ -10027,6 +10041,44 @@ function showCollectionHistory() {
     }
 
     var trafficWarMapWasDragged = false;
+    function trafficWarTileFromPoint(clientX, clientY) {
+      var nodes = document.querySelectorAll('.traffic-war-window .traffic-war-tile');
+      var best = null;
+      var bestScore = Infinity;
+      for (var i = 0; i < nodes.length; i += 1) {
+        var node = nodes[i];
+        if (!node || !node.dataset || !node.dataset.tileId) continue;
+        var art = node.querySelector('.tw-tile-art');
+        var tileRect = node.getBoundingClientRect();
+        var artRect = art && art.getBoundingClientRect ? art.getBoundingClientRect() : tileRect;
+        var isBuilding = node.classList.contains('player-hq') || node.classList.contains('player-branch') || node.classList.contains('center');
+        var rect = isBuilding ? artRect : tileRect;
+        if (!rect.width || !rect.height) continue;
+        var padX = Math.max(8, rect.width * (isBuilding ? 0.04 : 0.08));
+        var padY = Math.max(8, rect.height * (isBuilding ? 0.04 : 0.08));
+        var inArtBox = clientX >= rect.left - padX && clientX <= rect.right + padX && clientY >= rect.top - padY && clientY <= rect.bottom + padY;
+        var inTileBox = clientX >= tileRect.left - 8 && clientX <= tileRect.right + 8 && clientY >= tileRect.top - 8 && clientY <= tileRect.bottom + 8;
+        if (!inArtBox && !inTileBox) continue;
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height * (isBuilding ? 0.58 : 0.68);
+        var rx = Math.max(18, rect.width * (isBuilding ? 0.48 : 0.44));
+        var ry = Math.max(18, rect.height * (isBuilding ? 0.42 : 0.30));
+        var dx = (clientX - cx) / rx;
+        var dy = (clientY - cy) / ry;
+        var ellipse = dx * dx + dy * dy;
+        var centerDistance = Math.abs(clientX - cx) + Math.abs(clientY - cy);
+        var z = Number(window.getComputedStyle(node).zIndex || 0);
+        var score = ellipse * 1000 + centerDistance * 0.2 - z * 0.05;
+        if (inTileBox) score -= 140;
+        if (!isFinite(score)) continue;
+        if (score < bestScore) {
+          bestScore = score;
+          best = node;
+        }
+      }
+      return best;
+    }
+
     function initTrafficWarMapPan() {
       var scroller = document.querySelector('.traffic-war-window .traffic-war-map-scroll');
       if (!scroller || scroller.dataset.panReady === '1') return;
@@ -10038,6 +10090,7 @@ function showCollectionHistory() {
         if (e.button != null && e.button !== 0) return;
         if (e.target && e.target.closest && e.target.closest('.tw-selected-popover,button,a,input,select,textarea')) return;
         var downTile = e.target && e.target.closest ? e.target.closest('.traffic-war-tile') : null;
+        if (!downTile) downTile = trafficWarTileFromPoint(e.clientX, e.clientY);
         pointerDownTileId = downTile && downTile.dataset ? (downTile.dataset.tileId || '') : '';
         dragging = true;
         moved = false;
@@ -10061,7 +10114,8 @@ function showCollectionHistory() {
       }, { passive: false });
       function endDrag(e, cancelled) {
         if (!dragging) return;
-        var tapTileId = !cancelled && !moved ? pointerDownTileId : '';
+        var upTile = !cancelled && !moved ? trafficWarTileFromPoint(e.clientX, e.clientY) : null;
+        var tapTileId = !cancelled && !moved ? ((upTile && upTile.dataset && upTile.dataset.tileId) || pointerDownTileId) : '';
         dragging = false;
         scroller.classList.remove('dragging');
         if (moved) {
@@ -10088,6 +10142,7 @@ function showCollectionHistory() {
         }
         if (e.target && e.target.closest && e.target.closest('.tw-selected-popover,button,a,input,select,textarea')) return;
         var tileEl = e.target && e.target.closest ? e.target.closest('.traffic-war-tile') : null;
+        if (!tileEl) tileEl = trafficWarTileFromPoint(e.clientX, e.clientY);
         if (tileEl && tileEl.dataset && tileEl.dataset.tileId) {
           e.preventDefault();
           e.stopPropagation();
