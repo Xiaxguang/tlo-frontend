@@ -2630,7 +2630,29 @@
       z-index:2!important;
       pointer-events:none!important;
     }
+    .traffic-war-window .tw-tile-hitbox{
+      position:absolute!important;
+      left:50%!important;
+      right:auto!important;
+      top:auto!important;
+      bottom:-8px!important;
+      width:var(--tw-art-box-w,132px)!important;
+      height:var(--tw-art-box-h,156px)!important;
+      margin-left:calc(var(--tw-art-box-w,132px) / -2)!important;
+      z-index:12!important;
+      display:block!important;
+      cursor:pointer!important;
+      pointer-events:auto!important;
+      background:rgba(255,255,255,0)!important;
+      touch-action:none!important;
+    }
     .traffic-war-window .traffic-war-tile.center .tw-tile-art{background-size:var(--tw-center-art-w,198px) auto!important;}
+    .traffic-war-window .traffic-war-tile.center .tw-tile-hitbox{
+      width:var(--tw-center-w,198px)!important;
+      height:var(--tw-center-h,160px)!important;
+      margin-left:calc(var(--tw-center-w,198px) / -2)!important;
+      bottom:-8px!important;
+    }
     .traffic-war-window .traffic-war-tile.player-hq .tw-tile-art{
       width:var(--tw-hq-box-w,230px)!important;
       height:var(--tw-hq-box-h,220px)!important;
@@ -2638,12 +2660,24 @@
       background-size:var(--tw-hq-art-w,212px) auto!important;
       bottom:-8px!important;
     }
+    .traffic-war-window .traffic-war-tile.player-hq .tw-tile-hitbox{
+      width:var(--tw-hq-box-w,230px)!important;
+      height:var(--tw-hq-box-h,220px)!important;
+      margin-left:calc(var(--tw-hq-box-w,230px) / -2)!important;
+      bottom:-12px!important;
+    }
     .traffic-war-window .traffic-war-tile.player-branch .tw-tile-art{
       width:var(--tw-branch-box-w,178px)!important;
       height:var(--tw-branch-box-h,170px)!important;
       margin-left:calc(var(--tw-branch-box-w,178px) / -2)!important;
       background-size:var(--tw-branch-art-w,160px) auto!important;
       bottom:-5px!important;
+    }
+    .traffic-war-window .traffic-war-tile.player-branch .tw-tile-hitbox{
+      width:var(--tw-branch-box-w,178px)!important;
+      height:var(--tw-branch-box-h,170px)!important;
+      margin-left:calc(var(--tw-branch-box-w,178px) / -2)!important;
+      bottom:-9px!important;
     }
     .traffic-war-window .traffic-war-tile.player-hq .tw-tile-label,
     .traffic-war-window .traffic-war-tile.player-branch .tw-tile-label{display:grid!important;}
@@ -9931,6 +9965,7 @@ function showCollectionHistory() {
       var boostedZ = 100 + Number(tile.x || 0) + Number(tile.y || 0) + zBoost;
       var style = trafficWarIsoTileStyle(tile) + (zBoost ? '--tw-z:' + boostedZ + ';' : '') + "--tw-art:url('" + trafficWarCssUrl(asset) + "');";
       return '<div id="tw-' + tileId + '" role="button" tabindex="0" data-tile-id="' + tileId + '" class="' + classes.map(trafficWarEsc).join(' ') + '" style="' + trafficWarEsc(style) + '" onclick="selectTrafficWarTile(\'' + tileId + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();selectTrafficWarTile(\'' + tileId + '\')}" title="' + tileId + '">'
+        + '<span class="tw-tile-hitbox" aria-hidden="true"></span>'
         + '<span class="tw-tile-art" aria-hidden="true"></span>'
         + '<span class="tw-tile-state-ring"></span>'
         + '<span class="tw-tile-label"><em>' + trafficWarEsc(owner) + '</em><strong>' + trafficWarEsc(label) + '</strong></span>'
@@ -9997,10 +10032,13 @@ function showCollectionHistory() {
       if (!scroller || scroller.dataset.panReady === '1') return;
       scroller.dataset.panReady = '1';
       var startX = 0, startY = 0, startLeft = 0, startTop = 0, dragging = false, moved = false;
+      var pointerDownTileId = '';
       var pinchStartDistance = 0, pinchStartZoom = trafficWarMapZoom;
       scroller.addEventListener('pointerdown', function(e) {
         if (e.button != null && e.button !== 0) return;
         if (e.target && e.target.closest && e.target.closest('.tw-selected-popover,button,a,input,select,textarea')) return;
+        var downTile = e.target && e.target.closest ? e.target.closest('.traffic-war-tile') : null;
+        pointerDownTileId = downTile && downTile.dataset ? (downTile.dataset.tileId || '') : '';
         dragging = true;
         moved = false;
         startX = e.clientX;
@@ -10021,8 +10059,9 @@ function showCollectionHistory() {
           e.preventDefault();
         }
       }, { passive: false });
-      function endDrag(e) {
+      function endDrag(e, cancelled) {
         if (!dragging) return;
+        var tapTileId = !cancelled && !moved ? pointerDownTileId : '';
         dragging = false;
         scroller.classList.remove('dragging');
         if (moved) {
@@ -10030,9 +10069,16 @@ function showCollectionHistory() {
           setTimeout(function(){ trafficWarMapWasDragged = false; }, 120);
         }
         try { scroller.releasePointerCapture(e.pointerId); } catch (_) {}
+        pointerDownTileId = '';
+        if (tapTileId) {
+          trafficWarMapWasDragged = false;
+          if (e.preventDefault) e.preventDefault();
+          if (e.stopPropagation) e.stopPropagation();
+          selectTrafficWarTile(tapTileId);
+        }
       }
-      scroller.addEventListener('pointerup', endDrag);
-      scroller.addEventListener('pointercancel', endDrag);
+      scroller.addEventListener('pointerup', function(e) { endDrag(e, false); });
+      scroller.addEventListener('pointercancel', function(e) { endDrag(e, true); });
       scroller.addEventListener('click', function(e) {
         if (trafficWarMapWasDragged) {
           e.preventDefault();
