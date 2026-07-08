@@ -76,7 +76,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/config.js"></script>
   <script src="./js/api-bridge.js"></script>
-  <script src="./js/tlo-image-loader.js?v=20260627-image-loading-v1"></script>
+  <script src="./js/tlo-image-loader.js?v=20260708-mobile-perf-v2"></script>
   <link rel="stylesheet" href="./css/link-battle.css?v=20260708-v28-mobile-perf">
   
   <style>
@@ -2535,6 +2535,13 @@
       -webkit-tap-highlight-color:transparent;
     }
     .traffic-war-window .traffic-war-tile:hover{transform:none!important;filter:none!important;}
+    .traffic-war-window .tw-tile-art{
+      background:var(--tw-art) center bottom/116px auto no-repeat!important;
+      filter:none!important;
+      transform:translateZ(0);
+    }
+    .traffic-war-window .traffic-war-tile.center .tw-tile-art{background-size:198px auto!important;}
+    .traffic-war-window .tw-tile-art img{display:none!important;}
     .traffic-war-window .tw-tile-art img{filter:none!important;transform:translateZ(0);}
     .traffic-war-window .traffic-war-tile.friendly .tw-tile-art img,
     .traffic-war-window .traffic-war-tile.owned-by-me .tw-tile-art img,
@@ -2558,6 +2565,7 @@
       .traffic-war-window .traffic-war-tile-detail{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
       .traffic-war-window .traffic-war-map-legend,
       .traffic-war-window .tw-map-tools{display:none!important;}
+      .traffic-war-window .tw-tile-art{background-size:108px auto!important;}
       .traffic-war-window .tw-tile-label em{display:none!important;}
       .traffic-war-window .traffic-war-tile:not(.selected) .tw-selected-popover{display:none!important;}
     }
@@ -9154,6 +9162,7 @@ function showCollectionHistory() {
     var trafficWarState = null;
     var trafficWarLoading = false;
     var trafficWarLastError = '';
+    var trafficWarLastServerSync = 0;
     var trafficWarSelectedTileId = null;
     var trafficWarSortieCollapsed = false;
     var trafficWarActiveDrawer = null;
@@ -9163,6 +9172,7 @@ function showCollectionHistory() {
     var trafficWarRenderMetrics = null;
     var trafficWarRenderSelectedCards = [];
     var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_SANDBOX_V2';
+    var TRAFFIC_WAR_DASHBOARD_CACHE_MS = 12000;
     var TRAFFIC_WAR_CARD_BACK = 'assets/ui/cards/card_back_tlo.png';
     var TRAFFIC_WAR_CURRENT_SEASON = {
       season_id: 'season_001',
@@ -9410,10 +9420,23 @@ function showCollectionHistory() {
       return normalizeTrafficWarState(null);
     }
 
-    function saveTrafficWarState(state) {
+    function saveTrafficWarState(state, markFresh) {
       state = normalizeTrafficWarState(state);
       state.updated_at = new Date().toISOString();
       trafficWarState = state;
+      if (markFresh) trafficWarLastServerSync = Date.now();
+      return state;
+    }
+
+    function trafficWarHasFreshDashboard() {
+      return !!(trafficWarState && trafficWarLastServerSync && (Date.now() - trafficWarLastServerSync < TRAFFIC_WAR_DASHBOARD_CACHE_MS));
+    }
+
+    function applyTrafficWarDashboard(dashboard) {
+      if (!dashboard) return false;
+      saveTrafficWarState(dashboard, true);
+      renderTrafficWar(false);
+      return true;
     }
 
     function getTrafficWarCards() {
@@ -9467,19 +9490,21 @@ function showCollectionHistory() {
 
     async function renderTrafficWar(forceReload) {
       if (trafficWarLoading && !forceReload) return;
-      trafficWarLoading = true;
       trafficWarLastError = '';
-      var loadingBox = document.getElementById('traffic-war-player-stats');
-      if (loadingBox) loadingBox.innerHTML = '<div class="traffic-war-stat tw-hud-card"><span>狀態</span><b>讀取沙盤中</b></div>';
-      try {
-        var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid()]);
-        var state = normalizeTrafficWarState(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard);
-        saveTrafficWarState(state);
-      } catch (err) {
-        trafficWarLastError = err && err.message ? err.message : String(err || '讀取失敗');
-        saveTrafficWarState(normalizeTrafficWarState(trafficWarState || null));
-      } finally {
-        trafficWarLoading = false;
+      if (forceReload || !trafficWarHasFreshDashboard()) {
+        trafficWarLoading = true;
+        var loadingBox = document.getElementById('traffic-war-player-stats');
+        if (loadingBox) loadingBox.innerHTML = '<div class="traffic-war-stat tw-hud-card"><span>狀態</span><b>讀取沙盤中</b></div>';
+        try {
+          var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid()]);
+          var nextState = normalizeTrafficWarState(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard);
+          saveTrafficWarState(nextState, true);
+        } catch (err) {
+          trafficWarLastError = err && err.message ? err.message : String(err || '讀取失敗');
+          saveTrafficWarState(normalizeTrafficWarState(trafficWarState || null));
+        } finally {
+          trafficWarLoading = false;
+        }
       }
       var state = loadTrafficWarState();
       var screen = document.getElementById('trafficWarScreen');
@@ -9661,6 +9686,10 @@ function showCollectionHistory() {
       return '--tw-left:' + left + 'px;--tw-top:' + top + 'px;--tw-z:' + z + ';';
     }
 
+    function trafficWarCssUrl(url) {
+      return String(url || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\r\n]/g, '');
+    }
+
     function trafficWarTileAsset(tile) {
       var root = 'assets/map/';
       if (!tile) return root + 'tile_lv1_wasteland.png';
@@ -9726,8 +9755,9 @@ function showCollectionHistory() {
       var asset = trafficWarTileAsset(tile);
       var detailBubble = trafficWarSelectedTileId === tile.tile_id ? renderTrafficWarTileDetailBubble(state, tile) : '';
       var tileId = trafficWarEsc(tile.tile_id);
-      return '<div id="tw-' + tileId + '" role="button" tabindex="0" data-tile-id="' + tileId + '" class="' + classes.map(trafficWarEsc).join(' ') + '" style="' + trafficWarIsoTileStyle(tile) + '" onclick="selectTrafficWarTile(\'' + tileId + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();selectTrafficWarTile(\'' + tileId + '\')}" title="' + tileId + '">'
-        + '<span class="tw-tile-art"><img src="' + trafficWarEsc(asset) + '" alt="" loading="lazy" decoding="async"></span>'
+      var style = trafficWarIsoTileStyle(tile) + "--tw-art:url('" + trafficWarCssUrl(asset) + "');";
+      return '<div id="tw-' + tileId + '" role="button" tabindex="0" data-tile-id="' + tileId + '" class="' + classes.map(trafficWarEsc).join(' ') + '" style="' + trafficWarEsc(style) + '" onclick="selectTrafficWarTile(\'' + tileId + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();selectTrafficWarTile(\'' + tileId + '\')}" title="' + tileId + '">'
+        + '<span class="tw-tile-art" aria-hidden="true"></span>'
         + '<span class="tw-tile-state-ring"></span>'
         + '<span class="tw-tile-label"><em>' + trafficWarEsc(owner) + '</em><strong>' + trafficWarEsc(label) + '</strong></span>'
         + trafficWarTileResourceBadge(tile)
@@ -10235,10 +10265,7 @@ function showCollectionHistory() {
       try {
         var res = await trafficWarRpc('chooseTrafficWarFaction', [getTrafficWarUid(), key]);
         if (res && res.success === false) alert(res.msg || '陣營選擇失敗');
-        if (res && res.success === false) alert(res.msg || '目前不能重新編隊。');
-        if (res && res.success === false) alert(res.msg || '目前不能重新編隊。');
-        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
-        renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
       }
@@ -10260,8 +10287,7 @@ function showCollectionHistory() {
       renderTrafficWarDrawer(state);
       try {
         var res = await trafficWarRpc('setTrafficWarTeam', [getTrafficWarUid(), selected]);
-        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
-        renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
         renderTrafficWar(true);
@@ -10277,8 +10303,7 @@ function showCollectionHistory() {
       if (!tile.can_attack) return alert(trafficWarAttackDisabledReason(state, tile));
       try {
         var res = await trafficWarRpc('challengeTrafficWarRegion', [getTrafficWarUid(), tileId]);
-        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
-        renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) showTrafficWarResult(res.result);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
@@ -10288,8 +10313,7 @@ function showCollectionHistory() {
     async function collectTrafficWarTileResource(tileId) {
       try {
         var res = await trafficWarRpc('collectTrafficWarTileResource', [getTrafficWarUid(), tileId]);
-        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
-        renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) showTrafficWarResult(Object.assign({ success: true, collectOnly: true }, res.result));
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
@@ -10300,8 +10324,7 @@ function showCollectionHistory() {
       try {
         var res = await trafficWarRpc('upgradeTrafficWarTech', [getTrafficWarUid(), key]);
         if (res && res.success === false) alert(res.msg || '科技升級失敗');
-        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
-        renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
       }
@@ -10312,8 +10335,7 @@ function showCollectionHistory() {
       try {
         var res = await trafficWarRpc('upgradeTrafficWarSkill', [getTrafficWarUid(), cardId]);
         if (res && res.success === false) alert(res.msg || '技能升級失敗');
-        if (res && res.dashboard) saveTrafficWarState(res.dashboard);
-        renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
       }

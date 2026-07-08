@@ -74,8 +74,11 @@
   function enhanceAll(root) {
     try {
       var base = root && root.querySelectorAll ? root : document;
-      if (base.tagName && String(base.tagName).toLowerCase() === 'img') enhanceImage(base);
-      var imgs = base.querySelectorAll ? base.querySelectorAll('img') : [];
+      if (base.tagName && String(base.tagName).toLowerCase() === 'img') {
+        if (base.dataset && base.dataset.tloRetryBound === '1') return;
+        enhanceImage(base);
+      }
+      var imgs = base.querySelectorAll ? base.querySelectorAll('img:not([data-tlo-retry-bound="1"])') : [];
       for (var i = 0; i < imgs.length; i += 1) enhanceImage(imgs[i]);
     } catch (_) {}
   }
