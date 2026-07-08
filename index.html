@@ -9574,6 +9574,7 @@ function showCollectionHistory() {
           gift_energy: 0,
           contribution_score: 0,
           current_tile_id: '',
+          home_tile_id: '',
           selected_team_card_ids: []
         },
         tiles: tiles,
@@ -10027,14 +10028,14 @@ function showCollectionHistory() {
         + '<div class="traffic-war-side-row"><span>紅色卡牌</span><b>敵人守軍</b></div>'
         + '<div class="traffic-war-side-row"><span>黃色發光</span><b>相鄰可攻打</b></div>'
         + '<div class="traffic-war-side-row"><span>中央大城</span><b>' + (state.center_unlocked ? '可挑戰' : '未開放') + '</b></div>'
-        + '<button type="button" class="traffic-war-detail-action" onclick="selectTrafficWarTile(\'' + trafficWarEsc(state.player_season.home_tile_id || state.player_season.current_tile_id || 'tile_1_12') + '\'); focusTrafficWarTile(\'' + trafficWarEsc(state.player_season.home_tile_id || state.player_season.current_tile_id || 'tile_1_12') + '\')">定位團體</button>'
+        + '<button type="button" class="traffic-war-detail-action" onclick="selectTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || state.player_season.home_tile_id || 'tile_1_12') + '\'); focusTrafficWarTile(\'' + trafficWarEsc(state.player_season.current_tile_id || state.player_season.home_tile_id || 'tile_1_12') + '\')">定位團體</button>'
         + '<button type="button" class="traffic-war-detail-action" onclick="document.getElementById(\'traffic-war-feed\')?.scrollIntoView({behavior:\'smooth\',block:\'center\'})">查看戰報</button>'
         + '</aside>';
       box.innerHTML = '<div class="traffic-war-map-layout">' + sideHtml + mapHtml + rightHtml + '</div>';
       initTrafficWarMapPan();
       if (trafficWarShouldFocusCurrent || !box.dataset.twInitialCentered) {
         box.dataset.twInitialCentered = '1';
-        var focusId = state.player_season.home_tile_id || state.player_season.current_tile_id || trafficWarSelectedTileId || 'tile_19_12';
+        var focusId = state.player_season.current_tile_id || state.player_season.home_tile_id || trafficWarSelectedTileId || 'tile_19_12';
         trafficWarShouldFocusCurrent = false;
         setTimeout(function(){ focusTrafficWarTile(focusId); }, 30);
       }
@@ -10498,7 +10499,7 @@ function showCollectionHistory() {
         win.setAttribute('aria-hidden', 'false');
       }
       if (refresh) renderTrafficWar(true);
-      else setTimeout(function(){ var st = loadTrafficWarState(); focusTrafficWarTile((st.player_season && (st.player_season.home_tile_id || st.player_season.current_tile_id)) || 'tile_19_12'); }, 60);
+      else setTimeout(function(){ var st = loadTrafficWarState(); focusTrafficWarTile((st.player_season && (st.player_season.current_tile_id || st.player_season.home_tile_id)) || 'tile_19_12'); }, 60);
     }
 
     function closeTrafficWarWindow() {
@@ -10515,7 +10516,7 @@ function showCollectionHistory() {
     function openTrafficWarPanel(kind) {
       var state = loadTrafficWarState();
       if (kind === 'city') {
-        var homeId = state && state.player_season ? (state.player_season.home_tile_id || state.player_season.current_tile_id) : null;
+        var homeId = state && state.player_season ? state.player_season.home_tile_id : null;
         if (homeId) focusTrafficWarTile(homeId);
       }
       trafficWarActiveDrawer = kind || null;
@@ -10623,7 +10624,7 @@ function showCollectionHistory() {
     function trafficWarCityPanelHtml(state) {
       var p = state.player_season || {};
       return '<div class="traffic-war-drawer-note">總部是沙盤模式的基地。LV3 以上格子產出的人氣與打賞，會用來強化總部與發展。第一版先顯示規劃介面，後續再接正式升級資料。</div>'
-        + '<div class="traffic-war-stat-grid"><div class="traffic-war-stat"><span>人氣</span><b>' + Number(p.popularity || 0).toLocaleString() + '</b></div><div class="traffic-war-stat"><span>打賞</span><b>' + Number(p.tip || p.gift_energy || 0).toLocaleString() + '</b></div><div class="traffic-war-stat"><span>行動力</span><b>' + Number(p.stamina || 0).toLocaleString() + '/100</b></div><div class="traffic-war-stat"><span>目前位置</span><b>' + trafficWarEsc(p.current_tile_id || '尚未出生') + '</b></div><div class="traffic-war-stat"><span>持有格</span><b>' + Number(p.owned_tile_count || 0).toLocaleString() + ' / ' + Number(p.tile_limit || 15).toLocaleString() + '</b></div></div>'
+        + '<div class="traffic-war-stat-grid"><div class="traffic-war-stat"><span>人氣</span><b>' + Number(p.popularity || 0).toLocaleString() + '</b></div><div class="traffic-war-stat"><span>打賞</span><b>' + Number(p.tip || p.gift_energy || 0).toLocaleString() + '</b></div><div class="traffic-war-stat"><span>行動力</span><b>' + Number(p.stamina || 0).toLocaleString() + '/100</b></div><div class="traffic-war-stat"><span>總部位置</span><b>' + trafficWarEsc(p.home_tile_id || '尚未生成') + '</b></div><div class="traffic-war-stat"><span>巡演位置</span><b>' + trafficWarEsc(p.current_tile_id || '尚未出生') + '</b></div><div class="traffic-war-stat"><span>持有格</span><b>' + Number(p.owned_tile_count || 0).toLocaleString() + ' / ' + Number(p.tile_limit || 15).toLocaleString() + '</b></div></div>'
         + '<div class="traffic-war-tech-list" style="margin-top:10px;"><div class="traffic-war-tech-card"><b>總部功能</b><span>資源管理、巡演團體補給、行動力恢復、年度盛典攻城準備。</span><button type="button" disabled>正式版開放</button></div></div>';
     }
 
