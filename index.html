@@ -9375,9 +9375,9 @@ function showCollectionHistory() {
       winning_faction: null
     };
     var TRAFFIC_WAR_FACTIONS = {
-      entertainment: { key: 'entertainment', name: '娛樂主播', shortName: '娛樂', icon: '🎤', bonus: 1.03, desc: '唱歌、聊天、搞笑與氣氛型主播。擅長人氣擴散與資源收益。' },
-      streamer: { key: 'streamer', name: '實況主播', shortName: '實況', icon: '🎮', bonus: 1.05, desc: '遊戲實況、PK 與挑戰型主播。擅長正面攻格與高等格推進。' },
-      professional: { key: 'professional', name: '專業主播', shortName: '專業', icon: '🎓', bonus: 1.03, desc: '知識、技術、教學與分析型主播。擅長長線資源與發展經營。' }
+      entertainment: { key: 'entertainment', name: '娛樂主播', shortName: '娛樂', icon: '🎤', bonus: 1.12, desc: '人氣值與打賞產量提升，適合穩定推進與資源收益。' },
+      streamer: { key: 'streamer', name: '實況主播', shortName: '實況', icon: '🎮', bonus: 1.05, desc: '粉絲加成提升，適合正面攻格與高等格推進。' },
+      professional: { key: 'professional', name: '虛擬主播', shortName: '虛擬', icon: '🌐', bonus: 0.85, desc: '發展完成時間縮短，適合長線經營與快速解鎖功能。' }
     };
     var TRAFFIC_WAR_BUILDING_ASSETS = {
       entertainment: { hq: 'assets/map/traffic_hq_entertainment.png', branch: 'assets/map/traffic_branch_entertainment.png' },
@@ -9415,6 +9415,13 @@ function showCollectionHistory() {
 
     function trafficWarFactionShort(key) {
       return (TRAFFIC_WAR_FACTIONS[key] && TRAFFIC_WAR_FACTIONS[key].shortName) || '無';
+    }
+
+    function trafficWarFactionBonusText(key) {
+      if (key === 'entertainment') return '人氣 / 打賞產量 +12%';
+      if (key === 'streamer') return '粉絲 +5%';
+      if (key === 'professional') return '發展時間 -15%';
+      return '';
     }
 
     function trafficWarRewardLabel(type) {
@@ -9461,23 +9468,23 @@ function showCollectionHistory() {
     }
 
     function trafficWarMockTileInMap(x, y) {
-      var centerX = 16;
-      var centerY = 10;
+      var centerX = 23;
+      var centerY = 16;
       if (x === centerX && y === centerY) return true;
       var dx = Math.abs(x - centerX);
       var dy = Math.abs(y - centerY);
-      var inOval = Math.pow(dx / 17.0, 2) + Math.pow(dy / 10.8, 2) <= 1.04;
+      var inOval = Math.pow(dx / 24.6, 2) + Math.pow(dy / 15.4, 2) <= 1.04;
       if (!inOval) return false;
-      var protectedLane = (Math.abs(y - centerY) <= 1) || (Math.abs(x - centerX) <= 1) || (x <= 2 && Math.abs(y - centerY) <= 5) || (x >= 30 && Math.abs(y - centerY) <= 5) || (y >= 18 && Math.abs(x - centerX) <= 7);
+      var protectedLane = (Math.abs(y - centerY) <= 1) || (Math.abs(x - centerX) <= 1) || (x <= 7 && Math.abs(y - centerY) <= 7) || (x >= 39 && Math.abs(y - centerY) <= 7) || (y <= 4 && Math.abs(x - centerX) <= 9) || (y >= 28 && Math.abs(x - centerX) <= 9);
       if (protectedLane) return true;
-      var d = Math.max(dx, Math.ceil(dy * 1.65));
-      if (d > 5 && d < 16 && trafficWarTileHash(x, y, 303) < 0.075) return false;
-      if (d > 10 && trafficWarTileHash(x, y, 411) < 0.045) return false;
+      var d = Math.max(dx, Math.ceil(dy * 1.72));
+      if (d > 5 && d < 23 && trafficWarTileHash(x, y, 303) < 0.055) return false;
+      if (d > 16 && trafficWarTileHash(x, y, 411) < 0.035) return false;
       return true;
     }
 
     function trafficWarMockDistance(x, y) {
-      return Math.max(Math.abs(x - 16), Math.ceil(Math.abs(y - 10) * 1.65));
+      return Math.max(Math.abs(x - 23), Math.ceil(Math.abs(y - 16) * 1.72));
     }
 
     function trafficWarMockBaseLevel(distance, x, y) {
@@ -9506,22 +9513,31 @@ function showCollectionHistory() {
       return trafficWarTileHash(x, y, 29) > 0.52 ? 'tip' : 'popularity';
     }
 
+    function trafficWarTextHash(value) {
+      var text = String(value || '');
+      var hash = 0;
+      for (var i = 0; i < text.length; i += 1) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+      return Math.abs(hash);
+    }
+
     function trafficWarMockHomeTileId(faction) {
-      if (faction === 'streamer') return 'tile_31_10';
-      if (faction === 'professional') return 'tile_16_19';
-      return faction === 'entertainment' ? 'tile_1_10' : '';
+      if (faction === 'streamer') return 'tile_45_16';
+      if (faction === 'professional') return (trafficWarTextHash(getTrafficWarUid()) % 2 ? 'tile_23_31' : 'tile_23_1');
+      return faction === 'entertainment' ? 'tile_1_16' : '';
     }
 
     function trafficWarMockTile(x, y, faction) {
-      var centerX = 16;
-      var centerY = 10;
+      var centerX = 23;
+      var centerY = 16;
       var distance = trafficWarMockDistance(x, y);
       var isCenter = x === centerX && y === centerY;
+      var centerRing = Math.max(Math.abs(x - centerX), Math.abs(y - centerY));
       var homeId = trafficWarMockHomeTileId(faction);
       var tileId = 'tile_' + x + '_' + y;
       var isHome = tileId === homeId;
-      var resourceType = trafficWarMockResourceType(x, y, distance, isCenter, isHome);
-      var level = isCenter ? 10 : (resourceType ? trafficWarMockResourceLevel(x, y, distance) : trafficWarMockBaseLevel(distance, x, y));
+      var fixedResourceType = centerRing === 2 ? (trafficWarTileHash(x, y, 29) > 0.52 ? 'tip' : 'popularity') : null;
+      var resourceType = isCenter || isHome || centerRing === 1 ? null : (fixedResourceType || trafficWarMockResourceType(x, y, distance, isCenter, isHome));
+      var level = isCenter ? 10 : (centerRing === 1 ? 3 : (centerRing === 2 ? 10 : (resourceType ? trafficWarMockResourceLevel(x, y, distance) : trafficWarMockBaseLevel(distance, x, y))));
       var type = isCenter ? 'center' : (isHome ? 'spawn' : (resourceType ? 'resource' : 'normal'));
       return {
         tile_id: tileId,
@@ -9546,7 +9562,7 @@ function showCollectionHistory() {
     function createTrafficWarDefaultState() {
       var faction = null;
       var tiles = [];
-      for (var y = 0; y < 21; y += 1) for (var x = 0; x < 33; x += 1) if (trafficWarMockTileInMap(x, y)) tiles.push(trafficWarMockTile(x, y, faction));
+      for (var y = 0; y < 33; y += 1) for (var x = 0; x < 47; x += 1) if (trafficWarMockTileInMap(x, y)) tiles.push(trafficWarMockTile(x, y, faction));
       return {
         success: true,
         online: false,
@@ -9555,9 +9571,9 @@ function showCollectionHistory() {
         season_name: TRAFFIC_WAR_CURRENT_SEASON.season_name,
         display_name: TRAFFIC_WAR_CURRENT_SEASON.display_name,
         center_city_name: '年度盛典',
-        map_size: 33,
-        map_width: 33,
-        map_height: 21,
+        map_size: 47,
+        map_width: 47,
+        map_height: 33,
         start_time: TRAFFIC_WAR_CURRENT_SEASON.start_time,
         end_time: TRAFFIC_WAR_CURRENT_SEASON.end_time,
         status: TRAFFIC_WAR_CURRENT_SEASON.status,
@@ -9603,9 +9619,9 @@ function showCollectionHistory() {
       state.tech_levels = Object.assign({}, state.tech_levels || {});
       state.skill_levels = Object.assign({}, state.skill_levels || {});
       state.team_power = Number(state.team_power || 0);
-      state.map_width = Number(state.map_width || state.map_size || 33);
-      state.map_height = Number(state.map_height || 21);
-      state.map_size = Number(state.map_size || state.map_width || 33);
+      state.map_width = Number(state.map_width || state.map_size || 47);
+      state.map_height = Number(state.map_height || 33);
+      state.map_size = Number(state.map_size || state.map_width || 47);
       state.display_name = state.display_name || TRAFFIC_WAR_CURRENT_SEASON.display_name;
       state.season_name = state.season_name || TRAFFIC_WAR_CURRENT_SEASON.season_name;
       state.center_city_name = state.center_city_name || '年度盛典';
@@ -9629,10 +9645,31 @@ function showCollectionHistory() {
       return !!(trafficWarState && trafficWarLastServerSync && (Date.now() - trafficWarLastServerSync < TRAFFIC_WAR_DASHBOARD_CACHE_MS));
     }
 
-    function applyTrafficWarDashboard(dashboard) {
+    function applyTrafficWarDashboard(dashboard, options) {
       if (!dashboard) return false;
-      saveTrafficWarState(dashboard, true);
-      renderTrafficWar(false);
+      options = options || {};
+      var scroller = document.querySelector('.traffic-war-window .traffic-war-map-scroll');
+      var keepLeft = scroller ? scroller.scrollLeft : 0;
+      var keepTop = scroller ? scroller.scrollTop : 0;
+      var state = saveTrafficWarState(dashboard, true);
+      var needsMap = !!options.refreshMap || !document.querySelector('.traffic-war-window .traffic-war-map-grid');
+      if (needsMap) {
+        renderTrafficWar(false);
+        setTimeout(function() {
+          var nextScroller = document.querySelector('.traffic-war-window .traffic-war-map-scroll');
+          if (!nextScroller) return;
+          nextScroller.scrollLeft = keepLeft;
+          nextScroller.scrollTop = keepTop;
+        }, 20);
+      } else {
+        renderTrafficWarMeta(state);
+        renderTrafficWarStats(state);
+        renderTrafficWarTeam(state);
+        renderTrafficWarDrawer(state);
+        var selectedTile = findTrafficWarTile(state, trafficWarSelectedTileId)
+          || findTrafficWarTile(state, (state.player_season && (state.player_season.current_tile_id || state.player_season.home_tile_id)) || '');
+        updateTrafficWarMapInfoPanel(state, selectedTile);
+      }
       return true;
     }
 
@@ -10682,7 +10719,7 @@ function showCollectionHistory() {
       try {
         var res = await trafficWarRpc('chooseTrafficWarFaction', [getTrafficWarUid(), key]);
         if (res && res.success === false) alert(res.msg || '陣營選擇失敗');
-        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard, { refreshMap: true })) renderTrafficWar(true);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
       }
@@ -10735,7 +10772,7 @@ function showCollectionHistory() {
       if (!tile.can_attack) return alert(trafficWarAttackDisabledReason(state, tile));
       try {
         var res = await trafficWarRpc('challengeTrafficWarRegion', [getTrafficWarUid(), tileId]);
-        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard, { refreshMap: true })) renderTrafficWar(true);
         if (res && res.result) showTrafficWarResult(res.result);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
@@ -10761,7 +10798,7 @@ function showCollectionHistory() {
       try {
         var res = await trafficWarRpc('buildTrafficWarBranch', [getTrafficWarUid(), tileId]);
         if (res && res.success === false) return alert(res.msg || '分公司建造失敗');
-        if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
+        if (!applyTrafficWarDashboard(res && res.dashboard, { refreshMap: true })) renderTrafficWar(true);
         setTimeout(function() {
           selectTrafficWarTile(tileId);
           focusTrafficWarTile(tileId);
