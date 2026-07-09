@@ -1389,11 +1389,25 @@
   
 
     /* 星潮沙盤戰：正式地塊素材版 -------------------------------------------------- */
-    .traffic-war-window .traffic-war-map-scroll{position:relative!important;display:block!important;overflow:auto!important;overscroll-behavior:contain;touch-action:none;cursor:grab;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:radial-gradient(circle at 50% 42%,rgba(255,226,130,.16),transparent 24%),radial-gradient(circle at 48% 72%,rgba(100,255,242,.10),transparent 30%),linear-gradient(135deg,rgba(8,12,32,.96),rgba(3,5,16,.98))!important;}
+    .traffic-war-window{
+      background:
+        linear-gradient(180deg,rgba(2,3,12,.78),rgba(5,7,22,.96)),
+        repeating-radial-gradient(circle at 18% 22%,rgba(255,255,255,.58) 0 1px,transparent 1px 84px),
+        repeating-radial-gradient(circle at 76% 34%,rgba(137,218,255,.34) 0 1px,transparent 1px 118px),
+        linear-gradient(135deg,#02030c 0%,#08112b 38%,#160d32 68%,#03030a 100%)!important;
+    }
+    .traffic-war-window .traffic-war-window-inner,
+    .traffic-war-stage{
+      background:
+        radial-gradient(ellipse at 42% 36%,rgba(85,145,255,.16),transparent 34%),
+        radial-gradient(ellipse at 68% 66%,rgba(170,92,255,.13),transparent 38%),
+        linear-gradient(180deg,rgba(2,4,15,.18),rgba(2,3,12,.62))!important;
+    }
+    .traffic-war-window .traffic-war-map-scroll{position:relative!important;display:block!important;overflow:auto!important;overscroll-behavior:contain;touch-action:none;cursor:grab;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:radial-gradient(ellipse at 50% 42%,rgba(81,127,255,.16),transparent 30%),radial-gradient(ellipse at 48% 72%,rgba(125,255,238,.08),transparent 34%),linear-gradient(135deg,rgba(3,6,24,.94),rgba(3,4,13,.98))!important;}
     .traffic-war-window .traffic-war-map-scroll::-webkit-scrollbar{display:none;}
     .traffic-war-window .traffic-war-map-scroll.dragging{cursor:grabbing;}
     .traffic-war-window .traffic-war-map-grid{position:relative!important;display:block!important;width:var(--tw-grid-w,4200px)!important;height:var(--tw-grid-h,2700px)!important;min-width:var(--tw-grid-w,4200px)!important;margin:24px 24px 170px!important;transform:none!important;transform-origin:top left!important;filter:drop-shadow(0 38px 24px rgba(0,0,0,.46));}
-    .traffic-war-window .traffic-war-map-grid:before{content:"";position:absolute;left:280px;right:280px;top:190px;bottom:90px;background:radial-gradient(ellipse at center,rgba(70,118,72,.18),rgba(8,12,32,.03) 68%,transparent 78%);filter:blur(14px);pointer-events:none;}
+    .traffic-war-window .traffic-war-map-grid:before{content:"";position:absolute;left:280px;right:280px;top:190px;bottom:90px;background:radial-gradient(ellipse at center,rgba(75,122,255,.13),rgba(8,12,32,.03) 68%,transparent 78%);filter:blur(14px);pointer-events:none;}
     .traffic-war-window .traffic-war-tile{position:absolute!important;left:var(--tw-left)!important;top:var(--tw-top)!important;z-index:var(--tw-z)!important;width:142px!important;height:112px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;transform:none!important;padding:0!important;cursor:pointer;transition:filter .14s ease,transform .14s ease;}
     .traffic-war-window .traffic-war-tile:hover{transform:translateY(-3px)!important;filter:brightness(1.13) drop-shadow(0 0 12px rgba(255,230,163,.22));}
     .traffic-war-window .traffic-war-tile::before,.traffic-war-window .traffic-war-tile::after{content:none!important;display:none!important;}
@@ -1700,9 +1714,10 @@
     .lobby-community-mini{border:1px solid rgba(100,255,242,.38);border-radius:20px;background:linear-gradient(135deg,rgba(8,9,33,.78),rgba(8,72,74,.38));backdrop-filter:blur(9px);box-shadow:0 0 22px rgba(0,0,0,.28),inset 0 0 20px rgba(100,255,242,.05);padding:12px;color:#ddfffb;font-size:12px;line-height:1.62;display:grid;gap:8px;}
     .lobby-community-mini b{display:block;color:#bffcff;font-size:14px;text-shadow:0 0 10px rgba(100,255,242,.24);}
     .lobby-community-mini span{color:#cbd8ff;}
-    .lobby-community-mini a{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto;max-width:210px;justify-self:start;border-radius:999px;background:linear-gradient(135deg,#00fff0,#ffdf8a);color:#101426!important;font-weight:1000;text-decoration:none;padding:8px 14px;font-size:12px;line-height:1.2;white-space:nowrap;box-shadow:0 0 18px rgba(0,255,240,.16);}
-    @media(max-width:430px){.lobby-community-mini{padding:10px}.lobby-community-mini a{max-width:170px;padding:7px 12px;font-size:11px;}}
-    @media(max-height:740px){.lobby-home-info .lobby-tip-mini{display:flex!important}.lobby-home-info{margin-bottom:8px}.lobby-contact-mini,.lobby-community-mini{font-size:11px;padding:8px 10px;}.lobby-community-mini a{max-width:170px;padding:7px 12px;font-size:11px;}}
+    .lobby-community-links{display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:100%;}
+    .lobby-community-mini a{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:min(230px,100%);max-width:100%;justify-self:start;border-radius:999px;background:linear-gradient(135deg,#00fff0,#ffdf8a);color:#101426!important;font-weight:1000;text-decoration:none;padding:8px 14px;font-size:12px;line-height:1.2;white-space:normal;text-align:center;box-sizing:border-box;box-shadow:0 0 18px rgba(0,255,240,.16);}
+    @media(max-width:430px){.lobby-community-mini{padding:10px}.lobby-community-mini a{width:min(210px,100%);padding:7px 12px;font-size:11px;}}
+    @media(max-height:740px){.lobby-home-info .lobby-tip-mini{display:flex!important}.lobby-home-info{margin-bottom:8px}.lobby-contact-mini,.lobby-community-mini{font-size:11px;padding:8px 10px;}.lobby-community-mini a{width:min(210px,100%);padding:7px 12px;font-size:11px;}}
 
     .game-chat-dock{position:fixed!important;left:calc(50% - 64px)!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;transform:none!important;width:58px!important;height:58px!important;z-index:810!important;border:1px solid rgba(255,230,163,.54)!important;border-radius:18px!important;background:linear-gradient(145deg,rgba(30,23,82,.92),rgba(8,10,30,.88))!important;backdrop-filter:blur(14px)!important;box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(100,255,242,.16)!important;padding:0!important;box-sizing:border-box!important;color:#fff!important;}
     .game-chat-toggle{position:relative!important;width:100%!important;height:100%!important;border:0!important;border-radius:17px!important;background:linear-gradient(135deg,rgba(100,255,242,.22),rgba(255,0,127,.20))!important;color:#fff!important;padding:0!important;font-weight:1000!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;cursor:pointer!important;text-shadow:0 0 10px rgba(100,255,242,.3)!important;}
@@ -2509,6 +2524,19 @@
     /* TLO performance hotfix: 保留功能，降低手機端拖曳 / 縮放 / 點格子時的重繪成本 */
     html, body{overscroll-behavior-y:contain;}
     .traffic-war-window.show{overscroll-behavior:none;touch-action:none;}
+    .traffic-war-window.show{
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,.42) 0 1px, transparent 2px),
+        radial-gradient(circle at 74% 20%, rgba(126,212,255,.32) 0 1px, transparent 2px),
+        radial-gradient(circle at 38% 76%, rgba(255,230,170,.26) 0 1px, transparent 2px),
+        radial-gradient(ellipse at 50% 42%, rgba(74,111,255,.20), transparent 36%),
+        radial-gradient(ellipse at 70% 70%, rgba(170,82,255,.16), transparent 42%),
+        linear-gradient(135deg,#02030c 0%,#07122d 44%,#160d32 72%,#03040d 100%)!important;
+    }
+    .traffic-war-window .traffic-war-window-inner,
+    .traffic-war-window .traffic-war-stage{
+      background:transparent!important;
+    }
     .traffic-war-window .traffic-war-map-scroll{
       touch-action:none!important;
       overscroll-behavior:contain!important;
@@ -2547,6 +2575,11 @@
         radial-gradient(ellipse at 54% 46%, rgba(82,150,255,.13), transparent 48%);
       opacity:.9;
     }
+    .traffic-war-window .traffic-war-tile::before,
+    .traffic-war-window .traffic-war-tile::after{
+      content:none!important;
+      display:none!important;
+    }
     .traffic-war-window .traffic-war-tile{
       width:var(--tw-tile-w,116px)!important;
       height:var(--tw-tile-h,92px)!important;
@@ -2560,13 +2593,7 @@
       -webkit-tap-highlight-color:transparent;
     }
     .traffic-war-window .traffic-war-tile::before,
-    .traffic-war-window .traffic-war-tile::after{
-      content:""!important;
-      position:absolute!important;
-      left:50%!important;
-      pointer-events:none!important;
-      display:block!important;
-    }
+    .traffic-war-window .traffic-war-tile::after{content:none!important;display:none!important;}
     .traffic-war-window .traffic-war-tile::before{
       bottom:5px!important;
       width:calc(var(--tw-tile-w,116px) * .96)!important;
@@ -3004,7 +3031,10 @@
         <div class="lobby-community-mini" id="lobby-community-box">
           <b>🌟 加入星域經紀人社群</b>
           <span>加入「T-LO 實況星域」社群，一起交流抽卡、戰場、活動與直播主養成。</span>
-          <a href="https://line.me/ti/g2/Nj55_ery9lCgSXNNrMJG6BK8cUye28bvLEKZ2A?utm_source=invitation&amp;utm_medium=link_copy&amp;utm_campaign=default" target="_blank" rel="noopener">加入星域經紀人社群</a>
+          <div class="lobby-community-links">
+            <a href="https://line.me/ti/g2/Nj55_ery9lCgSXNNrMJG6BK8cUye28bvLEKZ2A?utm_source=invitation&amp;utm_medium=link_copy&amp;utm_campaign=default" target="_blank" rel="noopener">加入星域經紀人社群</a>
+            <a href="https://facebook.com/TloCards" target="_blank" rel="noopener">追蹤 T-LO 實況星域 FB 粉絲專頁</a>
+          </div>
         </div>
       </div>
 
@@ -10895,8 +10925,9 @@ function showCollectionHistory() {
       var rt = String(tile.resource_type || '').toLowerCase();
       if (rt === 'tip' || rt === 'gift_energy' || rt === '打賞') return '打賞資源地';
       if (rt === 'popularity' || rt === 'fans' || rt === '人氣') return '人氣資源地';
-      if (level <= 2) return '荒地';
-      return '草地';
+      if (level <= 1) return '星岩基座';
+      if (level === 2) return '星塔平台';
+      return '直播星域平台';
     }
 
     function renderTrafficWarTileDetailBubble(state, tile) {
