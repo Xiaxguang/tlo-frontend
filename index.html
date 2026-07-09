@@ -2806,12 +2806,77 @@
     .traffic-war-window .tw-team-slot-tabs button{min-height:30px!important;padding:5px 3px!important;font-size:10px!important;}
     body.tw-action-busy .traffic-war-window button:not(:disabled){pointer-events:none;opacity:.72;}
     .traffic-war-window .traffic-war-tile.action-target .tw-tile-art{filter:drop-shadow(0 0 18px rgba(100,255,242,.5))!important;}
-    .traffic-war-window .traffic-war-tile.team-moving .tw-map-card-stack{animation:twTeamMovePulse 1.1s ease-in-out infinite;}
+    .traffic-war-window .traffic-war-tile.action-from,
+    .traffic-war-window .traffic-war-tile.action-target{contain:none!important;overflow:visible!important;}
+    .traffic-war-window .tw-action-path{
+      position:absolute;
+      left:50%;
+      top:56%;
+      z-index:18;
+      width:var(--tw-path-len,0px);
+      height:4px;
+      transform:rotate(var(--tw-path-rot,0deg));
+      transform-origin:left center;
+      pointer-events:none;
+      filter:drop-shadow(0 0 7px rgba(100,255,242,.45));
+    }
+    .traffic-war-window .tw-action-path::before,
+    .traffic-war-window .tw-action-path::after{
+      content:"";
+      position:absolute;
+      left:0;
+      top:50%;
+      height:100%;
+      border-radius:999px;
+      transform:translateY(-50%);
+    }
+    .traffic-war-window .tw-action-path::before{width:100%;background:rgba(255,255,255,.16);}
+    .traffic-war-window .tw-action-path::after{width:var(--tw-path-pct,0%);background:linear-gradient(90deg,#64fff2,#fff1a8);}
+    .traffic-war-window .tw-action-path i{
+      position:absolute;
+      right:-6px;
+      top:50%;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#fff1a8;
+      transform:translateY(-50%);
+      box-shadow:0 0 12px rgba(255,241,168,.7);
+    }
+    .traffic-war-window .tw-map-card-stack.moving-route{
+      transform:translate3d(var(--tw-card-x,0px),var(--tw-card-y,0px),0)!important;
+      transition:transform .22s linear;
+      will-change:transform;
+      z-index:70!important;
+    }
+    .traffic-war-window .tw-map-card-stack.attacking{z-index:72!important;}
+    .traffic-war-window .tw-map-card-stack.attacking .tw-map-card{animation:twCardStrike .82s ease-in-out infinite;}
+    .traffic-war-window .tw-map-card-stack.attacking em{background:linear-gradient(135deg,#ffdf8a,#ff6b9e)!important;}
+    .traffic-war-window .tw-action-countdown{
+      position:absolute;
+      left:50%;
+      top:-16px;
+      min-width:42px;
+      transform:translateX(-50%);
+      border:1px solid rgba(255,241,168,.55);
+      border-radius:999px;
+      background:rgba(6,9,28,.9);
+      color:#fff1a8;
+      font-size:10px;
+      font-weight:1000;
+      line-height:1;
+      padding:4px 6px;
+      text-align:center;
+      box-shadow:0 0 12px rgba(255,241,168,.18);
+      pointer-events:none;
+    }
+    .traffic-war-window .traffic-war-tile.team-moving .tw-map-card-stack:not(.moving-route){animation:twTeamMovePulse 1.1s ease-in-out infinite;}
     .traffic-war-window .traffic-war-tile.team-performing .tw-tile-art{animation:twPerformGlow .7s ease-in-out infinite alternate;}
     .traffic-war-window .traffic-war-tile.team-success .tw-tile-art{animation:twSuccessRing .9s ease-out 1;}
     .traffic-war-window .traffic-war-tile.team-failed .tw-tile-art{animation:twFailFlash .45s ease-in-out 2;}
     @keyframes twScoutFlash{0%{box-shadow:0 0 0 rgba(255,223,138,0)}45%{box-shadow:0 0 28px rgba(255,223,138,.42)}100%{box-shadow:0 16px 34px rgba(0,0,0,.48),0 0 20px rgba(255,223,138,.16)}}
     @keyframes twTeamMovePulse{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(8px,-5px,0)}}
+    @keyframes twCardStrike{0%,100%{transform:translate3d(0,0,0) rotate(0deg)}35%{transform:translate3d(0,-12px,0) rotate(-4deg)}62%{transform:translate3d(11px,7px,0) rotate(6deg)}76%{transform:translate3d(-2px,-2px,0) rotate(-2deg)}}
     @keyframes twPerformGlow{from{filter:drop-shadow(0 0 8px rgba(255,223,138,.34))}to{filter:drop-shadow(0 0 24px rgba(100,255,242,.65))}}
     @keyframes twSuccessRing{0%{filter:drop-shadow(0 0 0 rgba(100,255,242,0))}65%{filter:drop-shadow(0 0 28px rgba(100,255,242,.85))}100%{filter:none}}
     @keyframes twFailFlash{0%,100%{filter:none}50%{filter:drop-shadow(0 0 24px rgba(255,80,120,.9)) saturate(1.4)}}
@@ -9435,6 +9500,7 @@ function showCollectionHistory() {
     var trafficWarRenderMetrics = null;
     var trafficWarRenderSelectedCards = [];
     var trafficWarActionPollTimer = null;
+    var trafficWarVisualTimer = null;
     var trafficWarPendingActions = {};
     var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_SANDBOX_V2';
     var TRAFFIC_WAR_DASHBOARD_CACHE_MS = 1200;
@@ -9850,6 +9916,124 @@ function showCollectionHistory() {
       trafficWarRenderSelectedCards = [];
     }
 
+    function trafficWarMovingStatus(status) {
+      return ['moving','returning_home','returning_branch'].indexOf(String(status || '')) >= 0;
+    }
+
+    function trafficWarDistanceBetweenTiles(a, b) {
+      if (!a || !b) return 1;
+      return Math.max(1, Math.abs(Number(a.x || 0) - Number(b.x || 0)) + Math.abs(Number(a.y || 0) - Number(b.y || 0)));
+    }
+
+    function trafficWarActionRemainingMs(player) {
+      var endMs = Date.parse(player && player.status_ends_at || '');
+      if (endMs) return Math.max(0, endMs - Date.now());
+      return Math.max(0, Number(player && player.status_remaining_ms || 0));
+    }
+
+    function trafficWarActionTotalMs(state, fromTile, toTile) {
+      var player = state && state.player_season ? state.player_season : {};
+      var status = String(player.team_status || '');
+      if (trafficWarMovingStatus(status)) return trafficWarDistanceBetweenTiles(fromTile, toTile) * 15000;
+      if (status === 'performing') return 3000;
+      if (status === 'success' || status === 'failed') return 1500;
+      return Math.max(1000, Number(player.status_remaining_ms || 1000));
+    }
+
+    function trafficWarTileScreenDelta(fromTile, toTile) {
+      var m = trafficWarRenderMetrics || trafficWarMapMetrics(trafficWarRenderState || loadTrafficWarState());
+      var zoom = Number(trafficWarMapZoom || 1);
+      var fromX = (Number(fromTile.x || 0) - Number(fromTile.y || 0)) * m.stepX;
+      var fromY = (Number(fromTile.x || 0) + Number(fromTile.y || 0)) * m.stepY;
+      var toX = (Number(toTile.x || 0) - Number(toTile.y || 0)) * m.stepX;
+      var toY = (Number(toTile.x || 0) + Number(toTile.y || 0)) * m.stepY;
+      return { x: Math.round((toX - fromX) * zoom), y: Math.round((toY - fromY) * zoom) };
+    }
+
+    function trafficWarActionMotion(state, tile) {
+      var player = state && state.player_season ? state.player_season : {};
+      var status = String(player.team_status || 'idle');
+      if (!trafficWarMovingStatus(status) || !tile || tile.tile_id !== player.moving_from_tile_id || !player.moving_to_tile_id) return null;
+      var target = findTrafficWarTile(state, player.moving_to_tile_id);
+      if (!target) return null;
+      var delta = trafficWarTileScreenDelta(tile, target);
+      var total = trafficWarActionTotalMs(state, tile, target);
+      var remaining = trafficWarActionRemainingMs(player);
+      var progress = Math.max(0, Math.min(1, 1 - (remaining / Math.max(1, total))));
+      var pathLen = Math.max(12, Math.sqrt(delta.x * delta.x + delta.y * delta.y));
+      var pathRot = Math.atan2(delta.y, delta.x) * 180 / Math.PI;
+      return { dx: delta.x, dy: delta.y, total: total, remaining: remaining, progress: progress, pathLen: pathLen, pathRot: pathRot };
+    }
+
+    function trafficWarActionPathHtml(state, tile) {
+      var motion = trafficWarActionMotion(state, tile);
+      if (!motion) return '';
+      var pct = Math.round(motion.progress * 100);
+      var style = '--tw-path-len:' + Math.round(motion.pathLen) + 'px;--tw-path-rot:' + motion.pathRot.toFixed(2) + 'deg;--tw-path-pct:' + pct + '%;';
+      return '<span class="tw-action-path" data-total-ms="' + Math.round(motion.total) + '" data-dx="' + Math.round(motion.dx) + '" data-dy="' + Math.round(motion.dy) + '" style="' + trafficWarEsc(style) + '"><i></i></span>';
+    }
+
+    function trafficWarScheduleVisualTick(state) {
+      if (trafficWarVisualTimer) {
+        clearTimeout(trafficWarVisualTimer);
+        trafficWarVisualTimer = null;
+      }
+      var player = state && state.player_season ? state.player_season : {};
+      var status = String(player.team_status || 'idle');
+      if (['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) < 0) return;
+      trafficWarUpdateActionVisuals();
+    }
+
+    function trafficWarUpdateActionVisuals() {
+      var state = trafficWarState || loadTrafficWarState();
+      var player = state && state.player_season ? state.player_season : {};
+      var status = String(player.team_status || 'idle');
+      var remaining = trafficWarActionRemainingMs(player);
+      var active = ['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) >= 0 && remaining > 0;
+      var countdown = trafficWarDurationText(remaining);
+      document.querySelectorAll('.traffic-war-window .tw-action-countdown').forEach(function(el) {
+        el.textContent = countdown;
+      });
+      var fromTile = findTrafficWarTile(state, player.moving_from_tile_id || '');
+      var toTile = findTrafficWarTile(state, player.moving_to_tile_id || '');
+      var total = trafficWarActionTotalMs(state, fromTile, toTile);
+      var progress = Math.max(0, Math.min(1, 1 - (remaining / Math.max(1, total))));
+      document.querySelectorAll('.traffic-war-window .tw-map-card-stack.moving-route').forEach(function(el) {
+        var dx = Number(el.dataset.dx || 0);
+        var dy = Number(el.dataset.dy || 0);
+        el.style.setProperty('--tw-card-x', Math.round(dx * progress) + 'px');
+        el.style.setProperty('--tw-card-y', Math.round(dy * progress) + 'px');
+      });
+      document.querySelectorAll('.traffic-war-window .tw-action-path').forEach(function(el) {
+        el.style.setProperty('--tw-path-pct', Math.round(progress * 100) + '%');
+      });
+      if (active) {
+        trafficWarVisualTimer = setTimeout(trafficWarUpdateActionVisuals, 250);
+      } else if (trafficWarVisualTimer) {
+        clearTimeout(trafficWarVisualTimer);
+        trafficWarVisualTimer = null;
+      }
+    }
+
+    function trafficWarRefreshActionMotionElements(state) {
+      state = state || trafficWarState || loadTrafficWarState();
+      var player = state && state.player_season ? state.player_season : {};
+      var fromTile = findTrafficWarTile(state, player.moving_from_tile_id || '');
+      var toTile = findTrafficWarTile(state, player.moving_to_tile_id || '');
+      if (!fromTile || !toTile || !trafficWarMovingStatus(player.team_status)) return;
+      var motion = trafficWarActionMotion(state, fromTile);
+      if (!motion) return;
+      document.querySelectorAll('.traffic-war-window .tw-map-card-stack.moving-route').forEach(function(el) {
+        el.dataset.dx = String(Math.round(motion.dx));
+        el.dataset.dy = String(Math.round(motion.dy));
+      });
+      document.querySelectorAll('.traffic-war-window .tw-action-path').forEach(function(el) {
+        el.style.setProperty('--tw-path-len', Math.round(motion.pathLen) + 'px');
+        el.style.setProperty('--tw-path-rot', motion.pathRot.toFixed(2) + 'deg');
+      });
+      trafficWarUpdateActionVisuals();
+    }
+
     function scheduleTrafficWarActionPoll(state) {
       if (trafficWarActionPollTimer) {
         clearTimeout(trafficWarActionPollTimer);
@@ -9857,6 +10041,7 @@ function showCollectionHistory() {
       }
       var player = state && state.player_season ? state.player_season : {};
       var status = String(player.team_status || 'idle');
+      trafficWarScheduleVisualTick(state);
       if (['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) < 0) return;
       var delay = Math.max(350, Math.min(30000, Number(player.status_remaining_ms || 0) + 220));
       trafficWarActionPollTimer = setTimeout(async function() {
@@ -10189,7 +10374,24 @@ function showCollectionHistory() {
     function trafficWarTileCards(state, tile) {
       var html = '';
       var selectedCards = trafficWarRenderSelectedCards && trafficWarRenderSelectedCards.length ? trafficWarRenderSelectedCards : getTrafficWarSelectedCards(state);
-      if (tile.is_current_team_tile && selectedCards.length) {
+      var player = state && state.player_season ? state.player_season : {};
+      var status = String(player.team_status || 'idle');
+      if (selectedCards.length && trafficWarMovingStatus(status) && tile.is_action_from_tile) {
+        var movingLeader = selectedCards[0];
+        var motion = trafficWarActionMotion(state, tile);
+        var progress = motion ? motion.progress : 0;
+        var cardX = motion ? Math.round(motion.dx * progress) : 0;
+        var cardY = motion ? Math.round(motion.dy * progress) : 0;
+        var countdown = trafficWarDurationText(motion ? motion.remaining : trafficWarActionRemainingMs(player));
+        html += '<span class="tw-map-card-stack friendly single moving-route" data-moving="1" data-dx="' + (motion ? Math.round(motion.dx) : 0) + '" data-dy="' + (motion ? Math.round(motion.dy) : 0) + '" style="--tw-card-x:' + cardX + 'px;--tw-card-y:' + cardY + 'px;">'
+          + '<span class="tw-action-countdown">' + trafficWarEsc(countdown) + '</span>'
+          + '<span class="tw-map-card mini-0"><img src="' + trafficWarEsc(getTrafficWarCardImage(movingLeader)) + '" alt="" loading="eager" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span><em>移動中</em></span>';
+      } else if (selectedCards.length && status === 'performing' && tile.is_action_target_tile) {
+        var attackingLeader = selectedCards[0];
+        html += '<span class="tw-map-card-stack friendly single attacking">'
+          + '<span class="tw-action-countdown">' + trafficWarEsc(trafficWarDurationText(trafficWarActionRemainingMs(player))) + '</span>'
+          + '<span class="tw-map-card mini-0"><img src="' + trafficWarEsc(getTrafficWarCardImage(attackingLeader)) + '" alt="" loading="eager" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span><em>表演中</em></span>';
+      } else if (tile.is_current_team_tile && selectedCards.length && !(status === 'performing' && player.moving_to_tile_id)) {
         var leader = selectedCards[0];
         html += '<span class="tw-map-card-stack friendly single"><span class="tw-map-card mini-0"><img src="' + trafficWarEsc(getTrafficWarCardImage(leader)) + '" alt="" loading="eager" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span><em>隊長</em></span>';
       } else if (!tile.owner_faction && !tile.is_center_city && trafficWarSelectedTileId === tile.tile_id) {
@@ -10228,6 +10430,7 @@ function showCollectionHistory() {
       var spark = tile.can_attack ? '<i class="tw-tile-spark"></i>' : '';
       var asset = trafficWarTileAsset(tile, state);
       var detailBubble = trafficWarSelectedTileId === tile.tile_id ? renderTrafficWarTileDetailBubble(state, tile) : '';
+      var actionPath = trafficWarActionPathHtml(state, tile);
       var tileId = trafficWarEsc(tile.tile_id);
       var zBoost = buildingType === 'hq' ? 60 : (buildingType === 'branch' ? 36 : 0);
       var boostedZ = 100 + Number(tile.x || 0) + Number(tile.y || 0) + zBoost;
@@ -10239,6 +10442,7 @@ function showCollectionHistory() {
         + '<span class="tw-tile-label"><em>' + trafficWarEsc(owner) + '</em><strong>' + trafficWarEsc(label) + '</strong></span>'
         + trafficWarTileResourceBadge(tile)
         + spark
+        + actionPath
         + trafficWarTileCards(state, tile)
         + detailBubble
         + '</div>';
@@ -10493,6 +10697,7 @@ function showCollectionHistory() {
         node.style.setProperty('--tw-left', Math.round(baseLeft * zoom) + 'px');
         node.style.setProperty('--tw-top', Math.round(baseTop * zoom) + 'px');
       }
+      trafficWarRefreshActionMotionElements(trafficWarState || null);
     }
 
     function setTrafficWarMapZoom(delta) {
