@@ -11440,6 +11440,12 @@ function showCollectionHistory() {
       var body = '';
       if (log.summary) {
         body = trafficWarEsc(log.summary);
+      } else if (result === 'COLLECT') {
+        body = '領取資源：' + trafficWarEsc(trafficWarRewardLabel(log.reward_type)) + ' +' + Number(log.reward_amount || 0).toLocaleString() + '｜' + trafficWarEsc(log.region_name || log.tile_id || '');
+      } else if (result === 'DEVELOP') {
+        body = trafficWarEsc(log.region_name || ('開始發展：' + trafficWarTechName(log.reward_type)));
+      } else if (result === 'SKILL') {
+        body = trafficWarEsc(log.region_name || ('升級技能：' + (log.reward_type || '卡牌')));
       } else {
         body = trafficWarEsc(trafficWarFactionShort(log.faction)) + '在「' + trafficWarEsc(log.region_name || log.tile_id || '') + '」' + trafficWarEsc(trafficWarLogActionText(result)) + '，貢獻 +' + Number(log.contribution_score || 0).toLocaleString();
       }
@@ -11703,24 +11709,6 @@ function showCollectionHistory() {
       return state;
     }
 
-    function appendTrafficWarActionSummary(state, result, summary, tileId) {
-      state = state || loadTrafficWarState();
-      var player = state.player_season || {};
-      return appendTrafficWarLocalLog(state, {
-        season_id: state.season_id || TRAFFIC_WAR_CURRENT_SEASON.season_id,
-        uid: player.uid || getTrafficWarUid(),
-        display_name: player.display_name || player.uid || getTrafficWarUid(),
-        faction: player.faction || '',
-        region_id: tileId || player.current_tile_id || player.home_tile_id || '',
-        region_name: tileId || player.current_tile_id || player.home_tile_id || '沙盤行動',
-        tile_id: tileId || '',
-        result: result,
-        contribution_score: 0,
-        summary: summary,
-        created_at: trafficWarNowText()
-      });
-    }
-
     function trafficWarTechName(key) {
       return ({
         training:'藝人訓練室',
@@ -11822,9 +11810,6 @@ function showCollectionHistory() {
         var res = await trafficWarRpc('collectTrafficWarTileResource', [getTrafficWarUid(), tileId]);
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) {
-          var collectLabel = trafficWarRewardLabel(res.result.rewardType || res.result.resourceType);
-          var collectAmount = Number(res.result.rewardAmount || res.result.amount || 0);
-          appendTrafficWarActionSummary(loadTrafficWarState(), 'COLLECT', '領取資源：' + collectLabel + ' +' + collectAmount.toLocaleString() + '｜' + (res.result.tile_id || tileId), res.result.tile_id || tileId);
           showTrafficWarResult(Object.assign({ success: true, collectOnly: true }, res.result));
         }
       } catch (err) {
@@ -11859,7 +11844,6 @@ function showCollectionHistory() {
         var res = await trafficWarRpc('upgradeTrafficWarTech', [getTrafficWarUid(), key]);
         if (res && res.success === false) alert(res.msg || '發展升級失敗');
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
-        if (!res || res.success !== false) appendTrafficWarActionSummary(loadTrafficWarState(), 'DEVELOP', '開始發展：' + trafficWarTechName(key) + (res && res.msg ? '｜' + res.msg : ''), '');
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
       } });
@@ -11871,7 +11855,6 @@ function showCollectionHistory() {
         var res = await trafficWarRpc('upgradeTrafficWarSkill', [getTrafficWarUid(), cardId]);
         if (res && res.success === false) alert(res.msg || '技能升級失敗');
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
-        if (!res || res.success !== false) appendTrafficWarActionSummary(loadTrafficWarState(), 'SKILL', '升級技能：' + (cardId || '卡牌') + (res && res.msg ? '｜' + res.msg : ''), '');
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
       } });
