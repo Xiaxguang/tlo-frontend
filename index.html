@@ -2940,6 +2940,46 @@
       .traffic-war-window .traffic-war-drawer{left:8px!important;right:auto!important;bottom:58px!important;width:86vw!important;max-height:min(72vh,calc(100dvh - 92px))!important;}
       .traffic-war-window .traffic-war-drawer-body{max-height:calc(min(72vh,calc(100dvh - 92px)) - 50px)!important;padding-bottom:24px!important;}
     }
+    .traffic-war-window .traffic-war-resource-hud{
+      width:min(920px,calc(100vw - 84px))!important;
+      grid-template-columns:repeat(7,minmax(72px,1fr))!important;
+    }
+    .traffic-war-window .traffic-war-stat.tw-hud-card b{
+      overflow-wrap:anywhere;
+      white-space:normal;
+    }
+    .traffic-war-window .tw-hud-production b{
+      font-size:11px!important;
+    }
+    @media(max-width:720px){
+      .traffic-war-window .traffic-war-resource-hud{
+        display:flex!important;
+        overflow-x:auto!important;
+        overflow-y:hidden!important;
+        grid-template-columns:none!important;
+        scrollbar-width:none;
+        -webkit-overflow-scrolling:touch;
+      }
+      .traffic-war-window .traffic-war-resource-hud::-webkit-scrollbar{display:none;}
+      .traffic-war-window .traffic-war-stat.tw-hud-card{
+        flex:0 0 82px!important;
+        min-width:82px!important;
+      }
+      .traffic-war-window .tw-hud-production{
+        flex-basis:124px!important;
+        min-width:124px!important;
+      }
+    }
+    @media(max-width:430px){
+      .traffic-war-window .traffic-war-stat.tw-hud-card{
+        flex-basis:78px!important;
+        min-width:78px!important;
+      }
+      .traffic-war-window .tw-hud-production{
+        flex-basis:116px!important;
+        min-width:116px!important;
+      }
+    }
     @media(prefers-reduced-motion:reduce){
       *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
     }
@@ -10400,21 +10440,27 @@ function showCollectionHistory() {
     }
 
     function renderTrafficWarStats(state) {
+      state = state || {};
       var player = state.player_season || {};
       var box = document.getElementById('traffic-war-player-stats');
       if (!box) return;
+      var ownedTileCount = Number(player.owned_tile_count || 0);
+      var tileLimit = Number(player.tile_limit || 0);
+      var ownedLimitText = ownedTileCount.toLocaleString() + ' / ' + (tileLimit || '-');
       var values = [
-        ['👥', '人氣', Number(player.popularity || 0).toLocaleString()],
-        ['🎁', '打賞', Number(player.tip || player.gift_energy || 0).toLocaleString()],
-        ['⚡', '行動力', Number(player.stamina || 0).toLocaleString() + ' / ' + Number(player.stamina_max || 100).toLocaleString()],
-        ['🏆', '賽季積分', Number(player.contribution_score || 0).toLocaleString()],
-        ['⏳', '賽季結束', trafficWarCountdownText(state.end_time)]
+        { icon:'👥', label:'人氣', value:Number(player.popularity || 0).toLocaleString() },
+        { icon:'🎁', label:'打賞', value:Number(player.tip || player.gift_energy || 0).toLocaleString() },
+        { icon:'⚡', label:'行動力', value:Number(player.stamina || 0).toLocaleString() + ' / ' + Number(player.stamina_max || 100).toLocaleString() },
+        { icon:'▣', label:'持有格', value:ownedLimitText },
+        { icon:'↗', label:'產出/h', value:trafficWarHourlyProductionLine(state), className:'tw-hud-production' },
+        { icon:'🏆', label:'賽季積分', value:Number(player.contribution_score || 0).toLocaleString() },
+        { icon:'⏳', label:'賽季結束', value:trafficWarCountdownText(state.end_time) }
       ];
-      var signature = values.map(function(item) { return item.join(':'); }).join('|');
+      var signature = values.map(function(item) { return [item.icon, item.label, item.value].join(':'); }).join('|');
       if (box.dataset.twStatsSignature === signature) return;
       box.dataset.twStatsSignature = signature;
       box.innerHTML = values.map(function(item) {
-        return '<div class="traffic-war-stat tw-hud-card"><i>' + trafficWarEsc(item[0]) + '</i><span>' + trafficWarEsc(item[1]) + '</span><b>' + trafficWarEsc(item[2]) + '</b></div>';
+        return '<div class="traffic-war-stat tw-hud-card ' + trafficWarEsc(item.className || '') + '"><i>' + trafficWarEsc(item.icon) + '</i><span>' + trafficWarEsc(item.label) + '</span><b>' + trafficWarEsc(item.value) + '</b></div>';
       }).join('');
     }
 
@@ -11069,6 +11115,40 @@ function showCollectionHistory() {
     function trafficWarProductionLine(tile) {
       if (!tile || !tile.resource_type) return '無固定產出';
       return trafficWarRewardLabel(tile.resource_type) + ' +' + Number(tile.resource_amount || 0).toLocaleString() + '/h';
+    }
+
+    function trafficWarHourlyProductionLine(state) {
+      var totals = trafficWarHourlyProductionTotals(state);
+      var parts = [];
+      if (totals.popularity > 0) parts.push('人氣+' + totals.popularity.toLocaleString());
+      if (totals.tip > 0) parts.push('打賞+' + totals.tip.toLocaleString());
+      return parts.length ? parts.join('｜') + '/h' : '無固定產出';
+    }
+
+    function trafficWarHourlyProductionTotals(state) {
+      var totals = { popularity: 0, tip: 0 };
+      if (!state || !Array.isArray(state.tiles)) return totals;
+      var uid = trafficWarPlayerUid(state);
+      var faction = state.player_season && state.player_season.faction;
+      state.tiles.forEach(function(tile) {
+        if (!tile || String(tile.owner_uid || '') !== uid || !tile.resource_type) return;
+        var resourceType = String(tile.resource_type || '');
+        var amount = Math.max(0, Number(tile.resource_amount || 0));
+        if (!amount) return;
+        var boostedAmount = Math.floor(amount * trafficWarFactionResourceRate(faction, resourceType));
+        if (resourceType === 'tip' || resourceType === 'gift_energy' || resourceType === 'coins') {
+          totals.tip += boostedAmount;
+        } else if (resourceType === 'popularity' || resourceType === 'fans') {
+          totals.popularity += boostedAmount;
+        }
+      });
+      return totals;
+    }
+
+    function trafficWarFactionResourceRate(faction, resourceType) {
+      if (String(faction || '') !== 'entertainment') return 1;
+      if (resourceType === 'popularity' || resourceType === 'fans' || resourceType === 'tip' || resourceType === 'gift_energy' || resourceType === 'coins') return 1.12;
+      return 1;
     }
 
     function trafficWarPlayerUid(state) {
