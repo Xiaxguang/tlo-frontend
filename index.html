@@ -2872,7 +2872,7 @@
     }
     .traffic-war-window .tw-map-card-stack.moving-route{
       transform:translate3d(var(--tw-card-x,0px),var(--tw-card-y,0px),0)!important;
-      transition:transform .22s linear;
+      transition:none!important;
       will-change:transform;
       z-index:70!important;
     }
@@ -6130,6 +6130,141 @@ function showCollectionHistory() {
 
     var TLO_IMAGE_RAW_BASE = 'https://raw.githubusercontent.com/Xiaxguang/lbr-images/main/';
 
+    if (!window.TLO_IMAGE_LOAD_CACHE || typeof window.TLO_IMAGE_LOAD_CACHE.get !== 'function') window.TLO_IMAGE_LOAD_CACHE = new Map();
+    (function() {
+      var cache = window.TLO_IMAGE_LOAD_CACHE;
+      var queue = [];
+      var active = 0;
+      var maxActive = 8;
+
+      function cleanImageUrl(url) {
+        try { return tloNormalizeImageUrl(url); } catch (_) { return String(url || '').trim(); }
+      }
+
+      function pumpImageQueue() {
+        while (active < maxActive && queue.length) {
+          loadQueuedImage(queue.shift());
+        }
+      }
+
+      function loadQueuedImage(task) {
+        active += 1;
+        var url = task.url;
+        var options = task.options || {};
+        var img = new Image();
+        var done = false;
+        var timer = null;
+
+        function finish(ok) {
+          if (done) return;
+          done = true;
+          if (timer) clearTimeout(timer);
+          cache.set(url, { status: ok ? 'loaded' : 'error', promise: Promise.resolve({ url: url, ok: ok }) });
+          task.resolve({ url: url, ok: ok });
+          active = Math.max(0, active - 1);
+          pumpImageQueue();
+        }
+
+        img.onload = function() {
+          if (options.decode !== false && img.decode) {
+            img.decode().then(function() { finish(true); }).catch(function() { finish(true); });
+          } else {
+            finish(true);
+          }
+        };
+        img.onerror = function() { finish(false); };
+        if ('decoding' in img) img.decoding = 'async';
+        if ('fetchPriority' in img) img.fetchPriority = options.fetchPriority || 'auto';
+        timer = setTimeout(function() { finish(false); }, Number(options.timeout || 5200));
+        img.src = url;
+        if (img.complete && img.naturalWidth > 0) finish(true);
+      }
+
+      function preloadOne(url, options) {
+        url = cleanImageUrl(url);
+        if (!url || /^data:/i.test(url)) return Promise.resolve({ url: url, ok: true });
+        var cached = cache.get(url);
+        if (cached && cached.promise) return cached.promise;
+        var promise = new Promise(function(resolve) {
+          var task = { url: url, options: options || {}, resolve: resolve };
+          if (task.options.fetchPriority === 'high') queue.unshift(task);
+          else queue.push(task);
+          pumpImageQueue();
+        });
+        cache.set(url, { status: 'pending', promise: promise });
+        return promise;
+      }
+
+      function preloadMany(urls, options) {
+        var list = Array.isArray(urls) ? urls : [urls];
+        var seen = {};
+        var unique = list.map(cleanImageUrl).filter(function(url) {
+          if (!url || seen[url]) return false;
+          seen[url] = true;
+          return true;
+        });
+        var requestedConcurrency = Number(options && options.concurrency || 0);
+        if (requestedConcurrency > 0) maxActive = Math.max(4, Math.min(10, requestedConcurrency));
+        return Promise.all(unique.map(function(url) { return preloadOne(url, options || {}); }));
+      }
+
+      function enhanceImage(img, options) {
+        if (!img || !img.getAttribute) return Promise.resolve([]);
+        var important = !!(options && options.important);
+        var src = cleanImageUrl(img.currentSrc || img.getAttribute('src') || img.getAttribute('data-src') || '');
+        img.setAttribute('draggable', 'false');
+        if (!img.getAttribute('decoding')) img.setAttribute('decoding', 'async');
+        if (important) {
+          img.setAttribute('loading', 'eager');
+          img.setAttribute('fetchpriority', 'high');
+        } else if (!img.getAttribute('loading')) {
+          img.setAttribute('loading', 'lazy');
+        }
+        if (!src || /^data:/i.test(src)) return Promise.resolve([]);
+        return preloadOne(src, {
+          timeout: important ? 4200 : 6500,
+          fetchPriority: important ? 'high' : 'low',
+          decode: important
+        });
+      }
+
+      window.TLOImageLoader = Object.assign(window.TLOImageLoader || {}, {
+        preload: preloadMany,
+        enhanceImage: enhanceImage,
+        preloadOne: preloadOne
+      });
+    })();
+
+    var tloQueuedCardImageUrls = {};
+    var tloCardImagePreloadQueue = [];
+    var tloCardImagePreloadTimer = null;
+
+    function tloFlushCardImagePreloads() {
+      tloCardImagePreloadTimer = null;
+      var batch = tloCardImagePreloadQueue.splice(0, 28);
+      if (batch.length && window.TLOImageLoader && typeof window.TLOImageLoader.preload === 'function') {
+        window.TLOImageLoader.preload(batch, { timeout: 6500, concurrency: 4, fetchPriority: 'low', decode: false });
+      }
+      if (tloCardImagePreloadQueue.length) {
+        tloCardImagePreloadTimer = setTimeout(tloFlushCardImagePreloads, 420);
+      }
+    }
+
+    function tloQueueCardImagePreload(url, highPriority) {
+      url = tloNormalizeImageUrl(url);
+      if (!url || /^data:/i.test(url) || tloQueuedCardImageUrls[url]) return;
+      tloQueuedCardImageUrls[url] = true;
+      if (highPriority) tloCardImagePreloadQueue.unshift(url);
+      else tloCardImagePreloadQueue.push(url);
+      if (highPriority && tloCardImagePreloadTimer) {
+        clearTimeout(tloCardImagePreloadTimer);
+        tloCardImagePreloadTimer = null;
+      }
+      if (!tloCardImagePreloadTimer) {
+        tloCardImagePreloadTimer = setTimeout(tloFlushCardImagePreloads, highPriority ? 20 : 120);
+      }
+    }
+
     function tloEncodeGithubImagePath(path) {
       return String(path || '')
         .replace(/^\.?\/+/, '')
@@ -6208,6 +6343,7 @@ function showCollectionHistory() {
       url = tloNormalizeImageUrl(url);
       if (!name || !url) return;
       window.TLO_CARD_IMAGE_MAP[name] = url;
+      tloQueueCardImagePreload(url, false);
     }
 
     function registerCardImages(source) {
@@ -6281,7 +6417,12 @@ function showCollectionHistory() {
 
     function getCardImageUrl(cardOrName) {
       var name = tloGetCardName(cardOrName);
-      return getRawCardImageUrl(cardOrName) || tloSvgPlaceholderImage(name || 'NO IMAGE', '#333333', '#ffffff', 150, 200, 18);
+      var url = getRawCardImageUrl(cardOrName);
+      if (url) {
+        tloQueueCardImagePreload(url, true);
+        return url;
+      }
+      return tloSvgPlaceholderImage(name || 'NO IMAGE', '#333333', '#ffffff', 150, 200, 18);
     }
 
     // 保留舊函式名稱，避免原本其他功能壞掉。
@@ -8761,21 +8902,44 @@ function showCollectionHistory() {
     function optimizeTloImages(root) {
       try {
         const scope = root || document;
-        scope.querySelectorAll('img').forEach(function(img) {
-          if (!img.getAttribute('loading')) img.setAttribute('loading', 'lazy');
+        let urgentCount = 0;
+        const images = [];
+        if (scope.matches && scope.matches('img')) images.push(scope);
+        if (scope.querySelectorAll) scope.querySelectorAll('img').forEach(function(img) { images.push(img); });
+        images.forEach(function(img) {
+          const src = img.currentSrc || img.getAttribute('src') || img.getAttribute('data-src') || '';
+          const isCardArt = img.matches && img.matches('img.tlo-card-art,img.card-img,img.card-img-sm,img.card-art-thumbnail,.tw-card-frame img,.tw-map-card img,.traffic-war-team-card img,.clash-avatar');
+          const inActiveArea = img.closest && img.closest('.game-screen.active,.traffic-war-window,.modal[style*="flex"]');
+          const important = !!(isCardArt && inActiveArea && urgentCount < 36);
+          const signature = src + '|' + (important ? '1' : '0');
+          if (img.dataset.tloImageOptimized === signature) return;
+          img.dataset.tloImageOptimized = signature;
+          if (important) {
+            urgentCount += 1;
+            img.setAttribute('loading', 'eager');
+            img.setAttribute('fetchpriority', 'high');
+          } else if (!img.getAttribute('loading')) {
+            img.setAttribute('loading', 'lazy');
+          }
           if (!img.getAttribute('decoding')) img.setAttribute('decoding', 'async');
           img.setAttribute('draggable', 'false');
-          if (window.TLOImageLoader && typeof window.TLOImageLoader.enhanceImage === 'function') window.TLOImageLoader.enhanceImage(img);
+          if (window.TLOImageLoader && typeof window.TLOImageLoader.enhanceImage === 'function') window.TLOImageLoader.enhanceImage(img, { important: important });
         });
       } catch (_) {}
     }
 
     let optimizeTloImagesTimer = null;
+    let optimizeTloImagesRoot = null;
     function scheduleOptimizeTloImages(root) {
+      root = root || document;
+      if (!optimizeTloImagesRoot) optimizeTloImagesRoot = root;
+      else if (optimizeTloImagesRoot !== root) optimizeTloImagesRoot = document;
       if (optimizeTloImagesTimer) return;
       optimizeTloImagesTimer = setTimeout(function() {
+        const target = optimizeTloImagesRoot || document;
         optimizeTloImagesTimer = null;
-        optimizeTloImages(root || document);
+        optimizeTloImagesRoot = null;
+        optimizeTloImages(target);
       }, 60);
     }
 
@@ -8784,7 +8948,19 @@ function showCollectionHistory() {
         var initialScreenName = document.querySelector('.game-screen.active')?.getAttribute('data-screen') || 'home';
         if (initialScreenName === 'shop') loadShopDashboard();
       scheduleOptimizeTloImages(document);
-        const mo = new MutationObserver(function() { scheduleOptimizeTloImages(document); });
+        const mo = new MutationObserver(function(mutations) {
+          let target = null;
+          let count = 0;
+          mutations.forEach(function(m) {
+            (m.addedNodes || []).forEach(function(node) {
+              if (node && node.nodeType === 1) {
+                count += 1;
+                if (!target) target = node;
+              }
+            });
+          });
+          scheduleOptimizeTloImages(count === 1 ? target : document);
+        });
         mo.observe(document.body, { childList: true, subtree: true });
       });
     } catch (_) {}
@@ -9531,6 +9707,8 @@ function showCollectionHistory() {
     var trafficWarRenderSelectedCards = [];
     var trafficWarActionPollTimer = null;
     var trafficWarVisualTimer = null;
+    var trafficWarVisualFrame = null;
+    var trafficWarLocalLogs = [];
     var trafficWarPendingActions = {};
     var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_SANDBOX_V2';
     var TRAFFIC_WAR_DASHBOARD_CACHE_MS = 1200;
@@ -9827,7 +10005,15 @@ function showCollectionHistory() {
       state.tiles = Array.isArray(state.tiles) && state.tiles.length ? state.tiles : defaults.tiles;
       state.card_options = Array.isArray(state.card_options) ? state.card_options : [];
       state.faction_scores = Object.assign({ entertainment: 0, streamer: 0, professional: 0 }, state.faction_scores || {});
-      state.action_logs = Array.isArray(state.action_logs) ? state.action_logs.slice(0, 18) : [];
+      var serverLogs = Array.isArray(state.action_logs) ? state.action_logs.slice(0, 18) : [];
+      var mergedLogs = [].concat(trafficWarLocalLogs || [], serverLogs);
+      var seenLogs = {};
+      state.action_logs = mergedLogs.filter(function(log) {
+        var key = [log && log.created_at, log && log.result, log && log.tile_id, log && log.summary].join('|');
+        if (seenLogs[key]) return false;
+        seenLogs[key] = true;
+        return true;
+      }).slice(0, 30);
       state.personal_ranking = Array.isArray(state.personal_ranking) ? state.personal_ranking : [];
       state.tech_levels = Object.assign({}, state.tech_levels || {});
       state.tech_pending = Object.assign({}, state.tech_pending || {});
@@ -10008,6 +10194,10 @@ function showCollectionHistory() {
         clearTimeout(trafficWarVisualTimer);
         trafficWarVisualTimer = null;
       }
+      if (trafficWarVisualFrame) {
+        cancelAnimationFrame(trafficWarVisualFrame);
+        trafficWarVisualFrame = null;
+      }
       var player = state && state.player_season ? state.player_season : {};
       var status = String(player.team_status || 'idle');
       if (['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) < 0) return;
@@ -10022,7 +10212,10 @@ function showCollectionHistory() {
       var active = ['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) >= 0 && remaining > 0;
       var countdown = trafficWarDurationText(remaining);
       document.querySelectorAll('.traffic-war-window .tw-action-countdown').forEach(function(el) {
-        el.textContent = countdown;
+        if (el.dataset.lastCountdown !== countdown) {
+          el.textContent = countdown;
+          el.dataset.lastCountdown = countdown;
+        }
       });
       var fromTile = findTrafficWarTile(state, player.moving_from_tile_id || '');
       var toTile = findTrafficWarTile(state, player.moving_to_tile_id || '');
@@ -10031,15 +10224,21 @@ function showCollectionHistory() {
       document.querySelectorAll('.traffic-war-window .tw-map-card-stack.moving-route').forEach(function(el) {
         var dx = Number(el.dataset.dx || 0);
         var dy = Number(el.dataset.dy || 0);
-        el.style.setProperty('--tw-card-x', Math.round(dx * progress) + 'px');
-        el.style.setProperty('--tw-card-y', Math.round(dy * progress) + 'px');
+        el.style.setProperty('--tw-card-x', (dx * progress).toFixed(2) + 'px');
+        el.style.setProperty('--tw-card-y', (dy * progress).toFixed(2) + 'px');
       });
       document.querySelectorAll('.traffic-war-window .tw-action-path').forEach(function(el) {
         el.style.setProperty('--tw-path-pct', Math.round(progress * 100) + '%');
       });
       if (active) {
-        trafficWarVisualTimer = setTimeout(trafficWarUpdateActionVisuals, 250);
-      } else if (trafficWarVisualTimer) {
+        trafficWarVisualFrame = requestAnimationFrame(trafficWarUpdateActionVisuals);
+      } else {
+        if (trafficWarVisualFrame) {
+          cancelAnimationFrame(trafficWarVisualFrame);
+          trafficWarVisualFrame = null;
+        }
+      }
+      if (!active && trafficWarVisualTimer) {
         clearTimeout(trafficWarVisualTimer);
         trafficWarVisualTimer = null;
       }
@@ -10061,7 +10260,7 @@ function showCollectionHistory() {
         el.style.setProperty('--tw-path-len', Math.round(motion.pathLen) + 'px');
         el.style.setProperty('--tw-path-rot', motion.pathRot.toFixed(2) + 'deg');
       });
-      trafficWarUpdateActionVisuals();
+      trafficWarScheduleVisualTick(state);
     }
 
     function scheduleTrafficWarActionPoll(state) {
@@ -10424,11 +10623,6 @@ function showCollectionHistory() {
       } else if (tile.is_current_team_tile && selectedCards.length && !(status === 'performing' && player.moving_to_tile_id)) {
         var leader = selectedCards[0];
         html += '<span class="tw-map-card-stack friendly single"><span class="tw-map-card mini-0"><img src="' + trafficWarEsc(getTrafficWarCardImage(leader)) + '" alt="" loading="eager" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span><em>隊長</em></span>';
-      } else if (!tile.owner_faction && !tile.is_center_city && trafficWarSelectedTileId === tile.tile_id) {
-        var img = tile.enemy_card_image_url || '';
-        if (img) {
-          html += '<span class="tw-map-enemy-card card"><img src="' + trafficWarEsc(img) + '" alt="" loading="eager" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span>';
-        }
       }
       return html;
     }
@@ -11014,15 +11208,25 @@ function showCollectionHistory() {
       box.innerHTML = html;
     }
 
+    function trafficWarFeedRowHtml(log, state, includeSeason) {
+      log = log || {};
+      var title = trafficWarEsc(log.created_at || '') + '｜' + trafficWarEsc(log.display_name || log.uid || '玩家');
+      var result = String(log.result || '');
+      var body = '';
+      if (result === 'SCOUT' && log.summary) {
+        body = trafficWarEsc(log.summary);
+      } else {
+        body = trafficWarEsc(trafficWarFactionShort(log.faction)) + '在「' + trafficWarEsc(log.region_name || log.tile_id || '') + '」' + trafficWarEsc(trafficWarLogActionText(result)) + '，貢獻 +' + Number(log.contribution_score || 0).toLocaleString();
+      }
+      return '<div class="traffic-war-feed-row"><b>' + title + '</b><div>' + body + '</div>' + (includeSeason ? '<small>season_id: ' + trafficWarEsc(log.season_id || (state && state.season_id) || '') + '</small>' : '') + '</div>';
+    }
+
     function renderTrafficWarFeed(state) {
       var box = document.getElementById('traffic-war-feed');
       if (!box) return;
       var logs = (state.action_logs || []).slice(0, 10);
       box.innerHTML = logs.map(function(log) {
-        var action = log.result === 'WIN' ? '攻佔成功' : (log.result === 'FAIL' ? '挑戰失敗' : (log.result === 'JOIN' ? '加入戰場' : (log.result === 'BRANCH' ? '建造分公司' : '推進')));
-        return '<div class="traffic-war-feed-row"><b>' + trafficWarEsc(log.created_at || '') + '｜' + trafficWarEsc(log.display_name || log.uid || '玩家') + '</b>'
-          + '<div>' + trafficWarEsc(trafficWarFactionShort(log.faction)) + '在「' + trafficWarEsc(log.region_name || log.tile_id || '') + '」' + trafficWarEsc(action) + '，貢獻 +' + Number(log.contribution_score || 0).toLocaleString() + '</div>'
-          + '<small>season_id: ' + trafficWarEsc(log.season_id || state.season_id) + '</small></div>';
+        return trafficWarFeedRowHtml(log, state, true);
       }).join('') || '<div class="traffic-war-feed-row">尚無戰報。</div>';
     }
 
@@ -11145,8 +11349,7 @@ function showCollectionHistory() {
     function trafficWarResultPanelHtml(state) {
       var logs = (state.action_logs || []).slice(0, 30);
       var rows = logs.map(function(log) {
-        var action = trafficWarLogActionText(log.result);
-        return '<div class="traffic-war-feed-row"><b>' + trafficWarEsc(log.created_at || '') + '｜' + trafficWarEsc(log.display_name || log.uid || '玩家') + '</b><div>' + trafficWarEsc(trafficWarFactionShort(log.faction)) + '在「' + trafficWarEsc(log.region_name || log.tile_id || '') + '」' + trafficWarEsc(action) + '，貢獻 +' + Number(log.contribution_score || 0).toLocaleString() + '</div></div>';
+        return trafficWarFeedRowHtml(log, state, false);
       }).join('') || '<div class="traffic-war-feed-row">尚無戰鬥紀錄。</div>';
       return '<div class="traffic-war-drawer-note">這裡顯示本季最近的戰鬥紀錄與推進成果。</div><div class="traffic-war-feed">' + rows + '</div>';
     }
@@ -11163,7 +11366,8 @@ function showCollectionHistory() {
         RETURN_HOME: '返回總部',
         RETURN_BRANCH: '返回分部',
         REST: '休息恢復',
-        STATION: '入駐分部'
+        STATION: '入駐分部',
+        SCOUT: '場刊偵查'
       })[String(result || '')] || '推進';
     }
 
@@ -11180,8 +11384,7 @@ function showCollectionHistory() {
       html += personalRows.map(function(row, idx) { return '<div class="traffic-war-rank-row"><b>#' + (idx + 1) + ' ' + trafficWarEsc(row.display_name || row.uid) + (row.self ? '（我）' : '') + '</b><span>' + Number(row.contribution_score || 0).toLocaleString() + '</span></div>'; }).join('');
       html += '</div></section></div><div class="traffic-war-panel" style="margin-top:10px;"><h3>最近戰報</h3><div class="traffic-war-feed">';
       html += logs.map(function(log) {
-        var action = trafficWarLogActionText(log.result);
-        return '<div class="traffic-war-feed-row"><b>' + trafficWarEsc(log.created_at || '') + '｜' + trafficWarEsc(log.display_name || log.uid || '玩家') + '</b><div>' + trafficWarEsc(trafficWarFactionShort(log.faction)) + '在「' + trafficWarEsc(log.region_name || log.tile_id || '') + '」' + trafficWarEsc(action) + '，貢獻 +' + Number(log.contribution_score || 0).toLocaleString() + '</div></div>';
+        return trafficWarFeedRowHtml(log, state, false);
       }).join('') || '<div class="traffic-war-feed-row">尚無戰報。</div>';
       return html + '</div></div>';
     }
@@ -11243,6 +11446,27 @@ function showCollectionHistory() {
       drawer.setAttribute('aria-hidden', 'false');
     }
 
+    function trafficWarScoutSummary(state, tile) {
+      var reason = trafficWarAttackDisabledReason(state, tile);
+      return '場刊偵查：' + (tile.tile_id || '未知地塊')
+        + '｜LV' + Number(tile.level || 1).toLocaleString()
+        + ' ' + trafficWarTileKindText(tile)
+        + '｜狀態 ' + trafficWarTileStatusText(state, tile)
+        + '｜預估敵方粉絲 ' + Number(tile.enemy_power || 0).toLocaleString()
+        + '｜預計獲得 ' + trafficWarRewardLine(tile)
+        + '｜每小時產出 ' + trafficWarProductionLine(tile)
+        + '｜' + (reason || '可攻打');
+    }
+
+    function appendTrafficWarLocalLog(state, log) {
+      trafficWarLocalLogs = [log].concat(trafficWarLocalLogs || []).slice(0, 12);
+      state = normalizeTrafficWarState(state);
+      saveTrafficWarState(state);
+      renderTrafficWarFeed(state);
+      if (trafficWarActiveDrawer === 'result' || trafficWarActiveDrawer === 'rank') renderTrafficWarDrawer(state);
+      return state;
+    }
+
     async function chooseTrafficWarFaction(key) {
       var state = loadTrafficWarState();
       if (!TRAFFIC_WAR_FACTIONS[key]) return;
@@ -11285,6 +11509,21 @@ function showCollectionHistory() {
       var tile = findTrafficWarTile(state, tileId);
       if (!tile) return;
       if (trafficWarSelectedTileId !== tileId) selectTrafficWarTile(tileId);
+      var player = state.player_season || {};
+      state = appendTrafficWarLocalLog(state, {
+        season_id: state.season_id || TRAFFIC_WAR_CURRENT_SEASON.season_id,
+        uid: player.uid || getTrafficWarUid(),
+        display_name: player.display_name || player.uid || getTrafficWarUid(),
+        faction: player.faction || '',
+        region_id: tile.tile_id,
+        region_name: tile.tile_id,
+        tile_id: tile.tile_id,
+        result: 'SCOUT',
+        contribution_score: 0,
+        summary: trafficWarScoutSummary(state, tile),
+        created_at: trafficWarNowText()
+      });
+      tile = findTrafficWarTile(state, tileId) || tile;
       updateTrafficWarMapInfoPanel(state, tile);
       focusTrafficWarTile(tileId);
       var panel = document.getElementById('traffic-war-map-info-panel');
