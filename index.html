@@ -1896,10 +1896,6 @@
     .tw-tile-spark{position:absolute;right:2px;top:2px;width:8px;height:8px;border-radius:50%;background:#fff7a8;box-shadow:0 0 12px #fff7a8;transform:rotate(-45deg);pointer-events:none;}
     .traffic-war-tile.current:after{content:none;}
     .traffic-war-tile small,.traffic-war-tile b{display:none;}
-    .traffic-war-map-legend{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 0;justify-content:center;color:#dce3ff;font-size:11px;font-weight:900;}
-    .traffic-war-map-legend span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(0,0,0,.18);padding:5px 8px;}
-    .traffic-war-map-legend i{width:10px;height:10px;border-radius:3px;transform:rotate(45deg);display:inline-block;background:#7fb863;}
-    .traffic-war-map-legend .entertainment i{background:#ff74bc}.traffic-war-map-legend .streamer i{background:#64fff2}.traffic-war-map-legend .professional i{background:#8cff80}.traffic-war-map-legend .center i{background:#ffdf8a}
     @media(max-width:900px){.traffic-war-map-layout{grid-template-columns:1fr}.traffic-war-map-scroll{min-height:470px}.traffic-war-side,.traffic-war-tile-detail{min-height:0}.traffic-war-bottom-nav{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:720px){.traffic-war-board-grid{grid-template-columns:1fr}.traffic-war-topline{grid-template-columns:1fr}.traffic-war-mini-btn{width:100%;}.traffic-war-hero h3,.traffic-war-panel h3{font-size:20px;}.traffic-war-map-grid{transform:scale(.82);transform-origin:center center;margin:-22px auto -24px;}.traffic-war-map-scroll{min-height:430px;}}
     @media(max-width:430px){.traffic-war-shell{gap:10px}.traffic-war-hero,.traffic-war-panel{border-radius:17px;padding:10px}.traffic-war-grid{grid-template-columns:1fr}.traffic-war-team-grid{grid-template-columns:1fr}.traffic-war-region-meta{grid-template-columns:1fr}.traffic-war-progress-row{grid-template-columns:62px 1fr 30px}.traffic-war-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.traffic-war-map-grid{transform:scale(.68);margin:-62px auto -74px;}.traffic-war-map-scroll{min-height:360px}.traffic-war-bottom-nav{grid-template-columns:repeat(2,1fr)}}
@@ -1957,7 +1953,6 @@
     .tw-map-enemy-card{position:absolute;left:3px;top:-37px;width:58px;height:49px;transform:rotate(-45deg);z-index:20;pointer-events:none;display:grid;place-items:center;}
     .tw-map-enemy-card b{display:grid;place-items:center;width:34px;height:43px;border-radius:6px;border:2px solid #ff5d7e;background:linear-gradient(160deg,#431323,#180711);color:#ffdce6;font-size:17px;box-shadow:0 0 12px rgba(255,93,126,.35),0 8px 14px rgba(0,0,0,.34);}
     .tw-map-enemy-card em{position:absolute;left:-10px;right:-10px;bottom:-4px;border-radius:999px;background:#2b0714;color:#ffdce6;border:1px solid rgba(255,93,126,.5);font-size:8px;font-style:normal;font-weight:1000;text-align:center;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .traffic-war-map-legend .attack i{background:#fff1a8;box-shadow:0 0 10px #fff1a8;}
     .tw-map-tools .traffic-war-detail-action{margin-top:8px;}
     .tw-tile-info-card{grid-column:1/-1;min-height:0;}
     .tw-detail-title{margin:4px 0 8px;font-size:18px;color:#fff;font-weight:1000;}
@@ -2006,8 +2001,6 @@
     .traffic-war-window .tw-map-tools{position:absolute;right:12px;bottom:98px;z-index:12;width:156px;min-height:0;}
     .traffic-war-window .tw-tile-info-card{position:absolute;left:14px;bottom:14px;z-index:13;width:300px;min-height:0;box-shadow:0 18px 42px rgba(0,0,0,.38);}
     .traffic-war-window .traffic-war-side,.traffic-war-window .traffic-war-tile-detail{background:linear-gradient(145deg,rgba(7,10,31,.86),rgba(19,13,45,.82));border-color:rgba(196,184,255,.22);backdrop-filter:blur(10px);}
-    .traffic-war-window .traffic-war-map-legend{position:absolute;right:12px;top:8px;z-index:13;width:150px;margin:0;display:grid;gap:5px;}
-    .traffic-war-window .traffic-war-map-legend span{justify-content:flex-start;background:rgba(5,8,24,.72);backdrop-filter:blur(8px);}
     .traffic-war-window .traffic-war-bottom-nav{display:none!important;}
     .traffic-war-window-nav{position:absolute;left:8px;right:8px;bottom:8px;z-index:32;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;border:1px solid rgba(196,184,255,.22);border-radius:18px;background:linear-gradient(145deg,rgba(8,10,31,.9),rgba(20,13,48,.86));backdrop-filter:blur(12px);padding:7px;box-shadow:0 -16px 42px rgba(0,0,0,.28);}
     .traffic-war-window-nav button{min-height:58px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.07);color:#f6f0ff;font-size:13px;font-weight:1000;display:grid;place-items:center;gap:2px;cursor:pointer;}
@@ -2068,7 +2061,7 @@
     .tw-tile-markers i.flash{color:#ffdf8a;border-color:rgba(255,223,138,.35);}
     .tw-tile-markers i.progress{color:#ffa6ff;border-color:rgba(255,166,255,.35);}
     .tw-tile-markers i.abandon{color:#ff9db5;border-color:rgba(255,98,132,.35);}
-    @media(max-width:720px){.traffic-war-window-top{left:6px;right:6px;top:6px}.traffic-war-window-title span{display:none}.traffic-war-window-actions button:not(.traffic-war-close-btn){font-size:0;width:34px;height:34px;padding:0}.traffic-war-window-actions button:not(.traffic-war-close-btn)::first-letter{font-size:14px}.traffic-war-announcement{top:56px}.traffic-war-window .traffic-war-resource-hud{top:94px;grid-template-columns:repeat(3,minmax(0,1fr));}.traffic-war-stage{inset:220px 0 82px}.traffic-war-window .traffic-war-map-grid{transform:scale(.72);transform-origin:top center;margin:0 auto 40px}.traffic-war-window .tw-sortie-panel{width:168px;font-size:11px}.traffic-war-window .tw-tile-info-card{width:270px}.traffic-war-window .tw-map-tools{display:none}.traffic-war-window .traffic-war-map-legend{display:none}.traffic-war-window-nav{gap:5px}.traffic-war-window-nav button{min-height:52px;font-size:12px}.traffic-war-drawer{left:8px;right:8px;bottom:80px}}
+    @media(max-width:720px){.traffic-war-window-top{left:6px;right:6px;top:6px}.traffic-war-window-title span{display:none}.traffic-war-window-actions button:not(.traffic-war-close-btn){font-size:0;width:34px;height:34px;padding:0}.traffic-war-window-actions button:not(.traffic-war-close-btn)::first-letter{font-size:14px}.traffic-war-announcement{top:56px}.traffic-war-window .traffic-war-resource-hud{top:94px;grid-template-columns:repeat(3,minmax(0,1fr));}.traffic-war-stage{inset:220px 0 82px}.traffic-war-window .traffic-war-map-grid{transform:scale(.72);transform-origin:top center;margin:0 auto 40px}.traffic-war-window .tw-sortie-panel{width:168px;font-size:11px}.traffic-war-window .tw-tile-info-card{width:270px}.traffic-war-window .tw-map-tools{display:none}.traffic-war-window-nav{gap:5px}.traffic-war-window-nav button{min-height:52px;font-size:12px}.traffic-war-drawer{left:8px;right:8px;bottom:80px}}
     @media(max-width:430px){.traffic-war-window .traffic-war-resource-hud{grid-template-columns:repeat(2,minmax(0,1fr));}.traffic-war-stage{inset:255px 0 76px}.traffic-war-window .traffic-war-map-grid{transform:scale(.58);margin:-10px auto 20px}.traffic-war-window .tw-sortie-panel{display:none}.traffic-war-window .tw-tile-info-card{left:8px;right:8px;bottom:8px;width:auto}.traffic-war-window-nav{grid-template-columns:repeat(5,minmax(0,1fr));}.traffic-war-window-nav button{font-size:11px;min-height:48px}.traffic-war-window-nav button span{font-size:17px}}
 
 
@@ -2096,7 +2089,7 @@
       .traffic-war-window .traffic-war-map-scroll{padding:0;}
       .traffic-war-window .traffic-war-map-grid{transform:none!important;width:1040px;height:780px;min-width:1040px;margin:18px 180px 120px 130px;}
       .traffic-war-window .tw-sortie-panel{top:8px;left:8px;width:184px;max-height:38%;font-size:11px;opacity:.96;}
-      .traffic-war-window .traffic-war-map-legend,.traffic-war-window .tw-map-tools{display:none;}
+      .traffic-war-window .tw-map-tools{display:none;}
       .traffic-war-window .tw-tile-info-card{left:8px;right:8px;bottom:8px;width:auto;max-height:34%;overflow:auto;}
       .traffic-war-window-nav{left:6px;right:6px;bottom:6px;gap:5px;padding:6px;border-radius:16px;}
       .traffic-war-window-nav button{min-height:50px;font-size:11px;border-radius:12px;}.traffic-war-window-nav button span{font-size:17px;}
@@ -2176,8 +2169,8 @@
     .traffic-war-window .tw-selected-popover small:nth-of-type(2){display:none!important;}
     .traffic-war-window .tw-sortie-panel{width:170px!important;top:6px!important;left:8px!important;max-height:34%!important;padding:8px!important;}
     .traffic-war-window .tw-sortie-cards{display:grid!important;grid-template-columns:repeat(3,42px)!important;gap:4px!important;}.traffic-war-window .tw-sortie-card{min-width:0!important;}.traffic-war-window .tw-sortie-card em{display:none!important;}
-    .traffic-war-window .traffic-war-map-legend,.traffic-war-window .tw-map-tools{transform:scale(.86);transform-origin:top right;}
-    @media(max-width:720px){.traffic-war-window .traffic-war-resource-hud{top:88px!important;width:calc(100vw - 74px)!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;}.traffic-war-stage{inset:136px 0 58px!important;}.traffic-war-window .tw-sortie-panel{display:none!important;}.traffic-war-window .traffic-war-map-legend,.traffic-war-window .tw-map-tools{display:none!important;}.traffic-war-window-nav button{width:54px!important;min-height:43px!important;font-size:9px!important;}}
+    .traffic-war-window .tw-map-tools{transform:scale(.86);transform-origin:top right;}
+    @media(max-width:720px){.traffic-war-window .traffic-war-resource-hud{top:88px!important;width:calc(100vw - 74px)!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;}.traffic-war-stage{inset:136px 0 58px!important;}.traffic-war-window .tw-sortie-panel{display:none!important;}.traffic-war-window .tw-map-tools{display:none!important;}.traffic-war-window-nav button{width:54px!important;min-height:43px!important;font-size:9px!important;}}
     @media(max-width:430px){.traffic-war-window .traffic-war-resource-hud{top:86px!important;gap:3px!important;width:calc(100vw - 72px)!important;}.traffic-war-window .traffic-war-stat.tw-hud-card{padding:4px 3px!important;min-height:38px!important;}.traffic-war-window .traffic-war-stat.tw-hud-card i{font-size:13px!important;}.traffic-war-window .traffic-war-stat.tw-hud-card span{font-size:8px!important;}.traffic-war-window .traffic-war-stat.tw-hud-card b{font-size:10px!important;}.traffic-war-stage{inset:132px 0 56px!important;}.traffic-war-window-nav button{width:50px!important;min-height:40px!important;}}
 
 
@@ -2217,7 +2210,7 @@
       .traffic-war-window .traffic-war-stat.tw-hud-card i{font-size:12px!important;}.traffic-war-window .traffic-war-stat.tw-hud-card span{font-size:8px!important;}.traffic-war-window .traffic-war-stat.tw-hud-card b{font-size:10px!important;}
       .traffic-war-stage{inset:94px 0 50px!important;}
       .traffic-war-window-nav button{width:44px!important;min-height:36px!important;font-size:8px!important;}.traffic-war-window-nav button span{font-size:12px!important;}
-      .traffic-war-window .tw-sortie-panel,.traffic-war-window .traffic-war-map-legend,.traffic-war-window .tw-map-tools{display:none!important;}
+      .traffic-war-window .tw-sortie-panel,.traffic-war-window .tw-map-tools{display:none!important;}
       .traffic-war-window .traffic-war-tile{width:108px!important;height:86px!important;}
       .traffic-war-window .tw-tile-art img{width:108px!important;}
     }
@@ -2822,7 +2815,6 @@
     .traffic-war-window .tw-map-info-panel.is-hidden{display:none!important;}
     .traffic-war-window .tw-sortie-panel{scrollbar-width:none!important;}
     .traffic-war-window .tw-sortie-panel::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;}
-    .traffic-war-window .traffic-war-map-legend,
     .traffic-war-window .tw-map-tools{display:none!important;}
     .traffic-war-window .traffic-war-drawer{
       left:12px!important;
@@ -2964,7 +2956,6 @@
       .traffic-war-window .traffic-war-drawer,
       .traffic-war-window .traffic-war-side,
       .traffic-war-window .traffic-war-tile-detail{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
-      .traffic-war-window .traffic-war-map-legend,
       .traffic-war-window .tw-map-tools{display:none!important;}
       .traffic-war-window .tw-tile-art{background-size:var(--tw-tile-art-w,108px) auto!important;}
       .traffic-war-window .tw-tile-label em{display:none!important;}
