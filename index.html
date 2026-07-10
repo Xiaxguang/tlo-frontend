@@ -1837,6 +1837,12 @@
     .traffic-war-rank-row,.traffic-war-feed-row{border:1px solid rgba(255,255,255,.1);border-radius:13px;background:rgba(0,0,0,.2);padding:8px;color:#dce3ff;font-size:12px;line-height:1.45;}
     .traffic-war-rank-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
     .traffic-war-rank-row b{color:#fff;}
+    .tw-progress-countdown{display:inline-flex;margin-top:2px;color:#ffd98a;font-size:11px;font-weight:900;}
+    .tw-festival-progress{display:grid;gap:6px;margin-top:10px;}
+    .tw-festival-row{display:grid;grid-template-columns:96px 1fr auto;gap:8px;align-items:center;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:7px;background:rgba(255,255,255,.05);font-size:12px;color:#dce3ff;}
+    .tw-festival-row em{font-style:normal;color:#ffd98a;font-weight:900;}
+    .tw-festival-meter{display:block;height:6px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;}
+    .tw-festival-meter i{display:block;height:100%;width:var(--tw-progress,0%);background:linear-gradient(90deg,#7df9ff,#ffd98a);}
     .traffic-war-feed-row small{display:block;color:#9fb0dc;margin-top:3px;}
     .traffic-war-result-body{display:grid;gap:8px;text-align:left;}
     .traffic-war-result-badge{display:inline-flex;width:max-content;border-radius:999px;padding:5px 9px;font-weight:1000;font-size:12px;}
@@ -2888,6 +2894,7 @@
       transform-origin:left center;
       pointer-events:none;
       filter:drop-shadow(0 0 7px rgba(100,255,242,.45));
+      will-change:transform;
     }
     .traffic-war-window .tw-action-path::before,
     .traffic-war-window .tw-action-path::after{
@@ -2916,6 +2923,8 @@
       transform:translate3d(var(--tw-card-x,0px),var(--tw-card-y,0px),0)!important;
       transition:none!important;
       will-change:transform;
+      filter:none!important;
+      backface-visibility:hidden;
       z-index:70!important;
     }
     .traffic-war-window .tw-map-card-stack.attacking{z-index:72!important;}
@@ -6318,7 +6327,7 @@ function showCollectionHistory() {
         }
         if (!src || /^data:/i.test(src)) return Promise.resolve([]);
         return preloadOne(src, {
-          timeout: important ? 4200 : 6500,
+          timeout: important ? 5500 : 9000,
           fetchPriority: important ? 'high' : 'low',
           decode: important
         });
@@ -6337,12 +6346,12 @@ function showCollectionHistory() {
 
     function tloFlushCardImagePreloads() {
       tloCardImagePreloadTimer = null;
-      var batch = tloCardImagePreloadQueue.splice(0, 28);
+      var batch = tloCardImagePreloadQueue.splice(0, 36);
       if (batch.length && window.TLOImageLoader && typeof window.TLOImageLoader.preload === 'function') {
-        window.TLOImageLoader.preload(batch, { timeout: 6500, concurrency: 4, fetchPriority: 'low', decode: false });
+        window.TLOImageLoader.preload(batch, { timeout: 9000, concurrency: 5, fetchPriority: 'low', decode: false });
       }
       if (tloCardImagePreloadQueue.length) {
-        tloCardImagePreloadTimer = setTimeout(tloFlushCardImagePreloads, 420);
+        tloCardImagePreloadTimer = setTimeout(tloFlushCardImagePreloads, 360);
       }
     }
 
@@ -9805,6 +9814,7 @@ function showCollectionHistory() {
     var trafficWarVisualTimer = null;
     var trafficWarVisualFrame = null;
     var trafficWarAbandonCountdownTimer = null;
+    var trafficWarProgressCountdownTimer = null;
     var trafficWarLocalLogs = [];
     var trafficWarPreloadedAssetUrls = {};
     var trafficWarZoomFrame = null;
@@ -9813,7 +9823,7 @@ function showCollectionHistory() {
     var trafficWarOwnedSort = 'level';
     var trafficWarResultFilter = 'all';
     var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_SANDBOX_V2';
-    var TRAFFIC_WAR_DASHBOARD_CACHE_MS = 1200;
+    var TRAFFIC_WAR_DASHBOARD_CACHE_MS = 2000;
     var TRAFFIC_WAR_CARD_BACK = 'assets/ui/cards/card_back_tlo.png';
     var TRAFFIC_WAR_CURRENT_SEASON = {
       season_id: 'season_001',
@@ -10296,13 +10306,10 @@ function showCollectionHistory() {
         clearTimeout(trafficWarVisualTimer);
         trafficWarVisualTimer = null;
       }
-      if (trafficWarVisualFrame) {
-        cancelAnimationFrame(trafficWarVisualFrame);
-        trafficWarVisualFrame = null;
-      }
       var player = state && state.player_season ? state.player_season : {};
       var status = String(player.team_status || 'idle');
       if (['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) < 0) return;
+      if (trafficWarVisualFrame) return;
       trafficWarUpdateActionVisuals();
     }
 
@@ -10374,11 +10381,14 @@ function showCollectionHistory() {
       var status = String(player.team_status || 'idle');
       trafficWarScheduleVisualTick(state);
       trafficWarScheduleAbandonCountdown(state);
+      trafficWarScheduleProgressCountdown(state);
       var teamActive = ['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) >= 0;
       var abandonRemaining = trafficWarNextAbandonRemaining(state);
-      if (!teamActive && abandonRemaining === null) return;
+      var progressRemaining = trafficWarNextProgressRemaining(state);
+      if (!teamActive && abandonRemaining === null && progressRemaining === null) return;
       var delay = teamActive ? Math.max(350, Math.min(30000, Number(player.status_remaining_ms || 0) + 220)) : 30000;
       if (abandonRemaining !== null) delay = Math.min(delay, Math.max(350, Math.min(30000, abandonRemaining + 260)));
+      if (progressRemaining !== null) delay = Math.min(delay, Math.max(350, Math.min(30000, progressRemaining + 260)));
       trafficWarActionPollTimer = setTimeout(async function() {
         try {
           if (teamActive) {
@@ -10731,10 +10741,10 @@ function showCollectionHistory() {
       }
       (state.tiles || []).forEach(function(tile) { add(trafficWarTileAsset(tile, state)); });
       getTrafficWarSelectedCards(state).forEach(function(card) { add(getTrafficWarCardImage(card)); });
-      getTrafficWarCards().slice(0, 30).forEach(function(card) { add(getTrafficWarCardImage(card)); });
+      getTrafficWarCards().slice(0, 48).forEach(function(card) { add(getTrafficWarCardImage(card)); });
       if (!urls.length) return;
       var run = function() {
-        try { window.TLOImageLoader.preload(urls, { timeout: 6500, concurrency: 4, fetchPriority: 'low', decode: false }); } catch (_) {}
+        try { window.TLOImageLoader.preload(urls, { timeout: 9000, concurrency: 5, fetchPriority: 'low', decode: false }); } catch (_) {}
       };
       if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 900 });
       else setTimeout(run, 120);
@@ -11206,6 +11216,27 @@ function showCollectionHistory() {
       return '防守剩 ' + Number(tile.defense_remaining_percent || 100).toLocaleString() + '%';
     }
 
+    function trafficWarProgressReadyMs(tile) {
+      var endMs = Date.parse(tile && tile.attack_progress_expires_at || '');
+      if (endMs) return endMs;
+      var remaining = Math.max(0, Number(tile && tile.attack_progress_remaining_ms || 0));
+      return remaining > 0 ? Date.now() + remaining : 0;
+    }
+
+    function trafficWarAttackProgressCountdownHtml(tile) {
+      if (!tile || Number(tile.attack_progress_percent || 0) <= 0 || Number(tile.attack_progress_remaining_ms || 0) <= 0) return '';
+      var readyMs = trafficWarProgressReadyMs(tile);
+      var readyAt = tile.attack_progress_expires_at || (readyMs ? new Date(readyMs).toISOString() : '');
+      var text = '進度保留 ' + trafficWarDurationText(tile.attack_progress_remaining_ms || 0);
+      return '<span class="tw-progress-countdown" data-progress-expires-at="' + trafficWarEsc(readyAt) + '" data-progress-remaining-ms="' + Math.max(0, Number(tile.attack_progress_remaining_ms || 0)) + '">' + trafficWarEsc(text) + '</span>';
+    }
+
+    function trafficWarAttackProgressHtml(tile) {
+      var line = trafficWarAttackProgressLine(tile);
+      var countdown = trafficWarAttackProgressCountdownHtml(tile);
+      return trafficWarEsc(line) + (countdown ? '<br>' + countdown : '');
+    }
+
     function trafficWarProductionLine(tile, state) {
       if (!tile || !tile.resource_type) return '無固定產出';
       var amount = Number(tile.resource_amount || 0);
@@ -11363,6 +11394,56 @@ function showCollectionHistory() {
           trafficWarAbandonCountdownTimer = setTimeout(tick, 1000);
         } else {
           trafficWarAbandonCountdownTimer = null;
+        }
+      }, 1000);
+    }
+
+    function trafficWarNextProgressRemaining(state) {
+      var min = null;
+      (state && state.tiles || []).forEach(function(tile) {
+        if (!tile || Number(tile.attack_progress_percent || 0) <= 0) return;
+        var readyMs = trafficWarProgressReadyMs(tile);
+        var remaining = readyMs ? Math.max(0, readyMs - Date.now()) : Math.max(0, Number(tile.attack_progress_remaining_ms || 0));
+        if (remaining <= 0) return;
+        if (min === null || remaining < min) min = remaining;
+      });
+      var festival = state && state.festival_progress && state.festival_progress.factions ? state.festival_progress.factions : {};
+      Object.keys(festival).forEach(function(key) {
+        var row = festival[key] || {};
+        if (Number(row.attack_progress_percent || 0) <= 0) return;
+        var readyMs = Date.parse(row.attack_progress_expires_at || '');
+        var remaining = readyMs ? Math.max(0, readyMs - Date.now()) : Math.max(0, Number(row.attack_progress_remaining_ms || 0));
+        if (remaining <= 0) return;
+        if (min === null || remaining < min) min = remaining;
+      });
+      return min;
+    }
+
+    function trafficWarUpdateProgressCountdowns() {
+      var now = Date.now();
+      var active = false;
+      document.querySelectorAll('.traffic-war-window .tw-progress-countdown').forEach(function(el) {
+        var readyMs = Date.parse(el.getAttribute('data-progress-expires-at') || '');
+        var remaining = readyMs ? Math.max(0, readyMs - now) : Math.max(0, Number(el.getAttribute('data-progress-remaining-ms') || 0));
+        if (!readyMs) el.setAttribute('data-progress-remaining-ms', String(Math.max(0, remaining - 1000)));
+        if (remaining > 0) active = true;
+        var text = remaining > 0 ? ('進度保留 ' + trafficWarDurationText(remaining)) : '進度已重置';
+        if (el.textContent !== text) el.textContent = text;
+      });
+      return active;
+    }
+
+    function trafficWarScheduleProgressCountdown(state) {
+      if (trafficWarProgressCountdownTimer) {
+        clearTimeout(trafficWarProgressCountdownTimer);
+        trafficWarProgressCountdownTimer = null;
+      }
+      if (!trafficWarUpdateProgressCountdowns()) return;
+      trafficWarProgressCountdownTimer = setTimeout(function tick() {
+        if (trafficWarUpdateProgressCountdowns()) {
+          trafficWarProgressCountdownTimer = setTimeout(tick, 1000);
+        } else {
+          trafficWarProgressCountdownTimer = null;
         }
       }, 1000);
     }
@@ -11647,7 +11728,7 @@ function showCollectionHistory() {
         + '<span>佔領者</span><b>' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</b>'
         + '<span>所屬陣營</span><b>' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</b>'
         + '<span>敵人預估粉絲</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b>'
-        + '<span>防守進度</span><b>' + trafficWarEsc(trafficWarAttackProgressLine(tile)) + '</b>'
+        + '<span>防守進度</span><b>' + trafficWarAttackProgressHtml(tile) + '</b>'
         + '<span>預計可獲得資源</span><b>' + trafficWarEsc(trafficWarRewardLine(tile)) + '</b>'
         + '<span>佔領後產出</span><b>' + trafficWarEsc(trafficWarProductionLine(tile, state)) + '</b>'
         + '<span>是否可攻打</span><b>' + (attackDisabled ? '否' : '是') + '</b>'
@@ -11679,6 +11760,8 @@ function showCollectionHistory() {
       if (panel.dataset.twInfoHtml === html && panel.innerHTML) return;
       panel.dataset.twInfoHtml = html;
       panel.innerHTML = html;
+      trafficWarScheduleProgressCountdown(state || loadTrafficWarState());
+      trafficWarScheduleAbandonCountdown(state || loadTrafficWarState());
     }
 
     function trafficWarTileKindText(tile) {
@@ -11719,7 +11802,7 @@ function showCollectionHistory() {
         + '<small>佔領者：' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</small>'
         + '<small>陣營：' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</small>'
         + '<small>預估粉絲：' + Number(tile.enemy_power || 0).toLocaleString() + '</small>'
-        + '<small>防守進度：' + trafficWarEsc(trafficWarAttackProgressLine(tile)) + '</small>'
+        + '<small>防守進度：' + trafficWarAttackProgressHtml(tile) + '</small>'
         + '<small>預計可獲得資源：' + trafficWarEsc(expectedReward) + '</small>'
         + '<small>' + (isOwnedByMe ? '目前產出：' : '攻佔後產出：') + trafficWarEsc(productionText) + '</small>'
         + '<small>分公司：' + trafficWarEsc(trafficWarBranchLine(state, tile)) + '</small>'
@@ -11761,7 +11844,7 @@ function showCollectionHistory() {
         + '<div class="traffic-war-detail-row"><span>佔領者</span><b>' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>所屬陣營</span><b>' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>預估敵方粉絲</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b></div>'
-        + '<div class="traffic-war-detail-row"><span>防守進度</span><b>' + trafficWarEsc(trafficWarAttackProgressLine(tile)) + '</b></div>'
+        + '<div class="traffic-war-detail-row"><span>防守進度</span><b>' + trafficWarAttackProgressHtml(tile) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>預計可獲得資源</span><b>' + trafficWarEsc(trafficWarRewardLine(tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>攻佔後每小時產出</span><b>' + trafficWarEsc(resource) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>持有格數 / 上限</span><b>' + Number((state.player_season || {}).owned_tile_count || 0).toLocaleString() + ' / ' + Number((state.player_season || {}).tile_limit || 15).toLocaleString() + '</b></div>'
@@ -12013,6 +12096,26 @@ function showCollectionHistory() {
       })[String(result || '')] || '推進';
     }
 
+    function trafficWarFestivalProgressHtml(state) {
+      var progress = state && state.festival_progress ? state.festival_progress : null;
+      if (!progress || !progress.factions) return '';
+      var rows = Object.keys(TRAFFIC_WAR_FACTIONS).map(function(key) {
+        var faction = TRAFFIC_WAR_FACTIONS[key] || {};
+        var row = progress.factions[key] || {};
+        var percent = Math.max(0, Math.min(99, Number(row.attack_progress_percent || 0)));
+        var remaining = Math.max(1, Math.min(100, Number(row.defense_remaining_percent || (100 - percent))));
+        var countdown = Number(row.attack_progress_remaining_ms || 0) > 0
+          ? '<span class="tw-progress-countdown" data-progress-expires-at="' + trafficWarEsc(row.attack_progress_expires_at || '') + '" data-progress-remaining-ms="' + Number(row.attack_progress_remaining_ms || 0) + '">進度保留 ' + trafficWarEsc(trafficWarDurationText(row.attack_progress_remaining_ms || 0)) + '</span>'
+          : '<small>尚未累積共鬥進度</small>';
+        return '<div class="tw-festival-row">'
+          + '<b>' + trafficWarEsc(faction.shortName || faction.name || key) + '</b>'
+          + '<span><span class="tw-festival-meter" style="--tw-progress:' + percent + '%"><i></i></span>' + countdown + '</span>'
+          + '<em>剩 ' + remaining.toLocaleString() + '%</em>'
+          + '</div>';
+      }).join('');
+      return '<section class="traffic-war-panel" style="margin-top:10px;"><h3>年度盛典共鬥</h3><div class="tw-festival-progress">' + rows + '</div></section>';
+    }
+
     function trafficWarRankPanelHtml(state) {
       var factionRows = Object.keys(TRAFFIC_WAR_FACTIONS).map(function(key) {
         return { key: key, name: trafficWarFactionLabel(key), score: Number(state.faction_scores && state.faction_scores[key] || 0) };
@@ -12024,7 +12127,7 @@ function showCollectionHistory() {
       html += factionRows.map(function(row, idx) { return '<div class="traffic-war-rank-row"><b>#' + (idx + 1) + ' ' + trafficWarEsc(row.name) + '</b><span>' + row.score.toLocaleString() + '</span></div>'; }).join('');
       html += '</div></section><section class="traffic-war-panel"><h3>個人貢獻</h3><div class="traffic-war-rank-list">';
       html += personalRows.map(function(row, idx) { return '<div class="traffic-war-rank-row"><b>#' + (idx + 1) + ' ' + trafficWarEsc(row.display_name || row.uid) + (row.self ? '（我）' : '') + '</b><span>' + Number(row.contribution_score || 0).toLocaleString() + '</span></div>'; }).join('');
-      html += '</div></section></div><div class="traffic-war-panel" style="margin-top:10px;"><h3>最近戰報</h3><div class="traffic-war-feed">';
+      html += '</div></section></div>' + trafficWarFestivalProgressHtml(state) + '<div class="traffic-war-panel" style="margin-top:10px;"><h3>最近戰報</h3><div class="traffic-war-feed">';
       html += logs.map(function(log) {
         return trafficWarFeedRowHtml(log, state, false);
       }).join('') || '<div class="traffic-war-feed-row">尚無戰報。</div>';
@@ -12243,6 +12346,7 @@ function showCollectionHistory() {
       drawer.classList.add('show');
       drawer.setAttribute('aria-hidden', 'false');
       trafficWarScheduleAbandonCountdown(state);
+      trafficWarScheduleProgressCountdown(state);
     }
 
     function trafficWarScoutSummary(state, tile) {
