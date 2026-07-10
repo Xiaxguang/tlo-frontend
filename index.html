@@ -2033,10 +2033,18 @@
     .tw-route-chips span{border:1px solid rgba(255,223,138,.24);border-radius:999px;background:rgba(255,223,138,.08);color:#ffdf8a;font-size:10px;font-weight:1000;padding:4px 7px;}
     .traffic-war-feed-row.scout,.traffic-war-feed-row.collect,.traffic-war-feed-row.develop,.traffic-war-feed-row.skill{border-color:rgba(100,255,242,.22);background:rgba(100,255,242,.055);}
     .traffic-war-feed-row strong{color:#ffdf8a;}
+    .traffic-war-feed-row button{margin-top:5px;border:0;border-radius:8px;background:rgba(255,223,138,.14);color:#ffdf8a;padding:5px 8px;font-size:10px;font-weight:1000;}
     .traffic-war-tech-list{display:grid;gap:10px;}
     .traffic-war-tech-card{border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(255,255,255,.06);padding:12px;display:grid;gap:6px;}
     .traffic-war-tech-card b{color:#fff;}.traffic-war-tech-card span{color:#cbd5ff;font-size:12px;line-height:1.55;}.traffic-war-tech-card button{border:0;border-radius:12px;background:linear-gradient(135deg,#00fff0,#ffdf8a);color:#111;padding:9px;font-weight:1000;}
     .tw-owned-tile-list{display:grid;gap:7px;margin-top:8px;}
+    .tw-owned-controls,.tw-result-controls{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0;}
+    .tw-owned-controls button,.tw-result-controls button{border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.07);color:#dce5ff;padding:5px 8px;font-size:10px;font-weight:1000;cursor:pointer;}
+    .tw-owned-controls button.active,.tw-result-controls button.active{background:linear-gradient(135deg,#00fff0,#ffdf8a);color:#101018;border-color:transparent;}
+    .tw-resource-detail-list,.tw-branch-list{display:grid;gap:6px;margin-top:7px;}
+    .tw-resource-detail-row,.tw-branch-row{border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.045);padding:7px;display:grid;grid-template-columns:1fr auto;gap:5px;color:#cbd5ff;font-size:10px;}
+    .tw-resource-detail-row b,.tw-branch-row b{color:#fff;font-size:11px;}
+    .tw-resource-detail-row button,.tw-branch-row button{border:0;border-radius:8px;background:rgba(255,223,138,.14);color:#ffdf8a;padding:5px 8px;font-weight:1000;font-size:10px;}
     .tw-owned-tile-row{border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.055);padding:8px;display:grid;gap:6px;color:#dce5ff;}
     .tw-owned-tile-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
     .tw-owned-tile-head b{color:#fff;font-size:12px;}
@@ -2048,6 +2056,11 @@
     .tw-owned-tile-actions button.primary{background:linear-gradient(135deg,#00fff0,#ffdf8a);color:#101018;}
     .tw-owned-tile-actions button.danger{background:rgba(255,98,132,.16);color:#ff9db5;}
     .tw-owned-tile-actions button:disabled{opacity:.45;filter:grayscale(.35);cursor:not-allowed;}
+    .tw-tile-markers{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:18;display:flex;gap:2px;pointer-events:none;}
+    .tw-tile-markers i{font-style:normal;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(5,8,24,.72);color:#fff;font-size:8px;font-weight:1000;line-height:1;padding:2px 4px;}
+    .tw-tile-markers i.claim{color:#8cffd7;border-color:rgba(140,255,215,.35);}
+    .tw-tile-markers i.flash{color:#ffdf8a;border-color:rgba(255,223,138,.35);}
+    .tw-tile-markers i.abandon{color:#ff9db5;border-color:rgba(255,98,132,.35);}
     @media(max-width:720px){.traffic-war-window-top{left:6px;right:6px;top:6px}.traffic-war-window-title span{display:none}.traffic-war-window-actions button:not(.traffic-war-close-btn){font-size:0;width:34px;height:34px;padding:0}.traffic-war-window-actions button:not(.traffic-war-close-btn)::first-letter{font-size:14px}.traffic-war-announcement{top:56px}.traffic-war-window .traffic-war-resource-hud{top:94px;grid-template-columns:repeat(3,minmax(0,1fr));}.traffic-war-stage{inset:220px 0 82px}.traffic-war-window .traffic-war-map-grid{transform:scale(.72);transform-origin:top center;margin:0 auto 40px}.traffic-war-window .tw-sortie-panel{width:168px;font-size:11px}.traffic-war-window .tw-tile-info-card{width:270px}.traffic-war-window .tw-map-tools{display:none}.traffic-war-window .traffic-war-map-legend{display:none}.traffic-war-window-nav{gap:5px}.traffic-war-window-nav button{min-height:52px;font-size:12px}.traffic-war-drawer{left:8px;right:8px;bottom:80px}}
     @media(max-width:430px){.traffic-war-window .traffic-war-resource-hud{grid-template-columns:repeat(2,minmax(0,1fr));}.traffic-war-stage{inset:255px 0 76px}.traffic-war-window .traffic-war-map-grid{transform:scale(.58);margin:-10px auto 20px}.traffic-war-window .tw-sortie-panel{display:none}.traffic-war-window .tw-tile-info-card{left:8px;right:8px;bottom:8px;width:auto}.traffic-war-window-nav{grid-template-columns:repeat(5,minmax(0,1fr));}.traffic-war-window-nav button{font-size:11px;min-height:48px}.traffic-war-window-nav button span{font-size:17px}}
 
@@ -9790,10 +9803,14 @@ function showCollectionHistory() {
     var trafficWarActionPollTimer = null;
     var trafficWarVisualTimer = null;
     var trafficWarVisualFrame = null;
+    var trafficWarAbandonCountdownTimer = null;
     var trafficWarLocalLogs = [];
     var trafficWarPreloadedAssetUrls = {};
     var trafficWarZoomFrame = null;
     var trafficWarPendingActions = {};
+    var trafficWarOwnedFilter = 'all';
+    var trafficWarOwnedSort = 'level';
+    var trafficWarResultFilter = 'all';
     var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_SANDBOX_V2';
     var TRAFFIC_WAR_DASHBOARD_CACHE_MS = 1200;
     var TRAFFIC_WAR_CARD_BACK = 'assets/ui/cards/card_back_tlo.png';
@@ -10355,13 +10372,22 @@ function showCollectionHistory() {
       var player = state && state.player_season ? state.player_season : {};
       var status = String(player.team_status || 'idle');
       trafficWarScheduleVisualTick(state);
-      if (['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) < 0) return;
-      var delay = Math.max(350, Math.min(30000, Number(player.status_remaining_ms || 0) + 220));
+      trafficWarScheduleAbandonCountdown(state);
+      var teamActive = ['moving','performing','success','failed','returning_home','returning_branch','resting'].indexOf(status) >= 0;
+      var abandonRemaining = trafficWarNextAbandonRemaining(state);
+      if (!teamActive && abandonRemaining === null) return;
+      var delay = teamActive ? Math.max(350, Math.min(30000, Number(player.status_remaining_ms || 0) + 220)) : 30000;
+      if (abandonRemaining !== null) delay = Math.min(delay, Math.max(350, Math.min(30000, abandonRemaining + 260)));
       trafficWarActionPollTimer = setTimeout(async function() {
         try {
-          var res = await trafficWarRpc('resolveTrafficWarTeamAction', [getTrafficWarUid()]);
-          if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
-          if (res && res.result) showTrafficWarResult(res.result);
+          if (teamActive) {
+            var res = await trafficWarRpc('resolveTrafficWarTeamAction', [getTrafficWarUid()]);
+            if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
+            if (res && res.result) showTrafficWarResult(res.result);
+          } else {
+            var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid()]);
+            if (!applyTrafficWarDashboard(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard)) renderTrafficWar(true);
+          }
         } catch (_) {
           renderTrafficWar(true);
         }
@@ -10480,8 +10506,8 @@ function showCollectionHistory() {
         { icon:'🎁', label:'打賞', value:Number(player.tip || player.gift_energy || 0).toLocaleString() },
         { icon:'⚡', label:'行動力', value:Number(player.stamina || 0).toLocaleString() + ' / ' + Number(player.stamina_max || 100).toLocaleString() },
         { icon:'▣', label:'持有格', value:ownedLimitText, className:ownedClass },
-        { icon:'↗', label:'產出/h', value:trafficWarHourlyProductionLine(state), className:'tw-hud-production' },
-        { icon:'⭳', label:'可領取', value:trafficWarCollectableLine(state), className:'tw-hud-claimable' },
+        { icon:'↗', label:'產出/h', value:trafficWarHourlyProductionLine(state), className:'tw-hud-production', action:"openTrafficWarPanel('city')" },
+        { icon:'⭳', label:'可領取', value:trafficWarCollectableLine(state), className:'tw-hud-claimable', action:"openTrafficWarPanel('city')" },
         { icon:'🏆', label:'賽季積分', value:Number(player.contribution_score || 0).toLocaleString() },
         { icon:'⏳', label:'賽季結束', value:trafficWarCountdownText(state.end_time) }
       ];
@@ -10489,7 +10515,7 @@ function showCollectionHistory() {
       if (box.dataset.twStatsSignature === signature) return;
       box.dataset.twStatsSignature = signature;
       box.innerHTML = values.map(function(item) {
-        return '<div class="traffic-war-stat tw-hud-card ' + trafficWarEsc(item.className || '') + '"><i>' + trafficWarEsc(item.icon) + '</i><span>' + trafficWarEsc(item.label) + '</span><b>' + trafficWarEsc(item.value) + '</b></div>';
+        return '<div class="traffic-war-stat tw-hud-card ' + trafficWarEsc(item.className || '') + '"' + (item.action ? ' role="button" tabindex="0" onclick="' + trafficWarEsc(item.action) + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();' + trafficWarEsc(item.action) + '}"' : '') + '><i>' + trafficWarEsc(item.icon) + '</i><span>' + trafficWarEsc(item.label) + '</span><b>' + trafficWarEsc(item.value) + '</b></div>';
       }).join('');
     }
 
@@ -10591,6 +10617,7 @@ function showCollectionHistory() {
       updateTrafficWarMapInfoPanel(state, nextTile);
       var panel = document.getElementById('traffic-war-map-info-panel');
       if (panel) panel.classList.remove('is-hidden');
+      trafficWarScheduleAbandonCountdown(state);
     }
 
     function trafficWarMapMetrics(state) {
@@ -10648,11 +10675,18 @@ function showCollectionHistory() {
       return String(url || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\r\n]/g, '');
     }
 
+    function trafficWarTileOwnedBySelf(state, tile) {
+      if (!tile) return false;
+      if (tile.owner_is_self) return true;
+      var uid = trafficWarPlayerUid(state || trafficWarState || loadTrafficWarState());
+      return !!uid && String(tile.owner_uid || '') === uid;
+    }
+
     function trafficWarTileBuildingType(state, tile) {
       if (!tile || tile.is_center_city) return '';
       var player = state && state.player_season ? state.player_season : {};
       var uid = String(player.uid || getTrafficWarUid() || '');
-      var isMine = String(tile.owner_uid || '') === uid || (player.home_tile_id && tile.tile_id === player.home_tile_id);
+      var isMine = trafficWarTileOwnedBySelf(state, tile) || (player.home_tile_id && tile.tile_id === player.home_tile_id);
       if (!isMine) return '';
       if (player.home_tile_id && tile.tile_id === player.home_tile_id) return 'hq';
       if (tile.has_branch && String(tile.branch_owner_uid || uid) === uid) return 'branch';
@@ -10709,7 +10743,7 @@ function showCollectionHistory() {
       var playerFaction = state && state.player_season ? state.player_season.faction : '';
       if (!tile || tile.is_center_city) return '';
       if (tile.owner_faction && playerFaction && tile.owner_faction === playerFaction) return 'friendly';
-      if (tile.owner_uid && tile.owner_uid === getTrafficWarUid()) return 'friendly';
+      if (trafficWarTileOwnedBySelf(state, tile)) return 'friendly';
       if (tile.owner_faction && playerFaction && tile.owner_faction !== playerFaction) return 'enemy';
       if (!tile.owner_faction && tile.can_attack) return 'enemy';
       return '';
@@ -10719,6 +10753,21 @@ function showCollectionHistory() {
       if (!tile || Number(tile.level || 0) < 3 || !tile.resource_type) return '';
       var icon = tile.resource_type === 'tip' || tile.resource_type === 'gift_energy' ? '🎁' : '👥';
       return '<i class="tw-resource-badge" title="資源產出">' + icon + '</i>';
+    }
+
+    function trafficWarTileMarkers(state, tile) {
+      if (!tile) return '';
+      var markers = [];
+      if (trafficWarTileCollectableAmount(state, tile) > 0) markers.push(['claim','領']);
+      if (tile.can_gather_resource) markers.push(['flash','閃']);
+      if (trafficWarHasBranch(tile, state)) markers.push(['branch','分']);
+      if (tile.is_abandoning) markers.push(['abandon','撤']);
+      if (trafficWarIsFrontlineTile(state, tile)) markers.push(['front','線']);
+      if (tile.resource_type && Number(tile.level || 0) >= 7) markers.push(['rich','高']);
+      if (!markers.length) return '';
+      return '<span class="tw-tile-markers">' + markers.slice(0, 3).map(function(row) {
+        return '<i class="' + trafficWarEsc(row[0]) + '">' + trafficWarEsc(row[1]) + '</i>';
+      }).join('') + '</span>';
     }
 
     function trafficWarTileCards(state, tile) {
@@ -10766,7 +10815,7 @@ function showCollectionHistory() {
       if (tile.is_action_target_tile) classes.push('action-target');
       if ((tile.is_current_team_tile || tile.is_action_from_tile || tile.is_action_target_tile) && tile.team_status && tile.team_status !== 'idle') classes.push('team-' + String(tile.team_status).replace(/[^a-z_]/g, ''));
       if (trafficWarSelectedTileId === tile.tile_id) classes.push('selected');
-      if (tile.owner_uid === getTrafficWarUid()) classes.push('owned-by-me');
+      if (trafficWarTileOwnedBySelf(state, tile)) classes.push('owned-by-me');
       var buildingType = trafficWarTileBuildingType(state, tile);
       if (buildingType) classes.push(buildingType === 'hq' ? 'player-hq' : 'player-branch');
       var label = tile.is_center_city ? '年度盛典' : '';
@@ -10786,6 +10835,7 @@ function showCollectionHistory() {
         + '<span class="tw-tile-state-ring"></span>'
         + '<span class="tw-tile-label"><em>' + trafficWarEsc(owner) + '</em><strong>' + trafficWarEsc(label) + '</strong></span>'
         + trafficWarTileResourceBadge(tile)
+        + trafficWarTileMarkers(state, tile)
         + spark
         + actionPath
         + trafficWarTileCards(state, tile)
@@ -11127,7 +11177,7 @@ function showCollectionHistory() {
       if (Number(state.player_season.team_hp || 0) < 10) return '不可攻打：隊伍體力不足，請返回總部或分部休息';
       if (tile && tile.is_center_city && !state.center_unlocked) return '不可攻打：年度盛典尚未開放';
       if (tile && tile.owner_faction && tile.owner_faction === state.player_season.faction) return '不可攻打：同陣營地塊不需要攻打';
-      if (tile && String(tile.owner_uid || '') !== uid && !tile.is_center_city && Number(state.player_season.owned_tile_count || 0) >= Number(state.player_season.tile_limit || 15)) return '不可攻打：持有格已達上限，請升級發展「公司擴編」';
+      if (tile && !trafficWarTileOwnedBySelf(state, tile) && !tile.is_center_city && Number(state.player_season.owned_tile_count || 0) >= Number(state.player_season.tile_limit || 15)) return '不可攻打：持有格已達上限，請升級發展「公司擴編」';
       if (!tile || !tile.can_attack) return '不可攻打：請先移動到相鄰格';
       return '';
     }
@@ -11163,7 +11213,7 @@ function showCollectionHistory() {
       if (!state || !Array.isArray(state.tiles)) return totals;
       var uid = trafficWarPlayerUid(state);
       state.tiles.forEach(function(tile) {
-        if (!tile || String(tile.owner_uid || '') !== uid || !tile.resource_type) return;
+        if (!tile || !trafficWarTileOwnedBySelf(state, tile) || !tile.resource_type) return;
         var resourceType = String(tile.resource_type || '');
         var amount = Math.max(0, Number(tile.resource_amount || 0));
         if (!amount) return;
@@ -11191,7 +11241,7 @@ function showCollectionHistory() {
       var uid = trafficWarPlayerUid(state);
       var nowMs = Date.now();
       state.tiles.forEach(function(tile) {
-        if (!tile || String(tile.owner_uid || '') !== uid || !tile.resource_type || Number(tile.level || 0) < 3) return;
+        if (!tile || !trafficWarTileOwnedBySelf(state, tile) || !tile.resource_type || Number(tile.level || 0) < 3) return;
         var amount = trafficWarTileCollectableAmount(state, tile, nowMs);
         if (amount <= 0) return;
         summary.count += 1;
@@ -11226,7 +11276,7 @@ function showCollectionHistory() {
 
     function trafficWarGatherPreviewLine(state, tile) {
       if (!tile) return '不可快閃';
-      if (String(tile.owner_uid || '') !== trafficWarPlayerUid(state)) return '需先佔領';
+      if (!trafficWarTileOwnedBySelf(state, tile)) return '需先佔領';
       if (tile.is_abandoning) return '撤離中';
       var type = tile.resource_type || 'popularity';
       return trafficWarRewardLabel(type) + ' +' + trafficWarGatherPreviewAmount(state, tile).toLocaleString() + '｜行動力 -' + Number(tile.gather_stamina_cost || 2).toLocaleString();
@@ -11236,7 +11286,7 @@ function showCollectionHistory() {
       if (!tile) return '尚未選擇地塊';
       var player = state && state.player_season ? state.player_season : {};
       if (tile.is_abandoning) return '撤離中';
-      if (String(tile.owner_uid || '') !== trafficWarPlayerUid(state)) return '非我方持有';
+      if (!trafficWarTileOwnedBySelf(state, tile)) return '非我方持有';
       if (tile.is_center_city) return '年度盛典不可放棄';
       if (player.home_tile_id && tile.tile_id === player.home_tile_id) return '總部不可放棄';
       if (player.current_tile_id && tile.tile_id === player.current_tile_id) return '巡演團體所在格';
@@ -11248,6 +11298,60 @@ function showCollectionHistory() {
       if (!tile) return '可放棄';
       if (!tile.is_abandoning) return tile.resource_type ? '撤離約 3 分鐘' : '撤離約 1 分鐘';
       return '撤離中 ' + trafficWarDurationText(tile.abandon_remaining_ms || 0);
+    }
+
+    function trafficWarAbandonReadyMs(tile) {
+      var readyMs = Date.parse(tile && tile.abandon_ready_at || '');
+      if (readyMs) return readyMs;
+      var remaining = Math.max(0, Number(tile && tile.abandon_remaining_ms || 0));
+      return remaining > 0 ? Date.now() + remaining : 0;
+    }
+
+    function trafficWarAbandonCountdownHtml(tile) {
+      var text = trafficWarAbandonText(tile);
+      if (!tile || !tile.is_abandoning) return trafficWarEsc(text);
+      var readyAt = trafficWarEsc(tile.abandon_ready_at || '');
+      return '<span class="tw-abandon-countdown" data-abandon-ready-at="' + readyAt + '" data-abandon-remaining-ms="' + Math.max(0, Number(tile.abandon_remaining_ms || 0)) + '">' + trafficWarEsc(text) + '</span>';
+    }
+
+    function trafficWarNextAbandonRemaining(state) {
+      var min = null;
+      (state && state.tiles || []).forEach(function(tile) {
+        if (!tile || !tile.is_abandoning) return;
+        var readyMs = trafficWarAbandonReadyMs(tile);
+        var remaining = readyMs ? Math.max(0, readyMs - Date.now()) : Math.max(0, Number(tile.abandon_remaining_ms || 0));
+        if (min === null || remaining < min) min = remaining;
+      });
+      return min;
+    }
+
+    function trafficWarUpdateAbandonCountdowns() {
+      var now = Date.now();
+      var active = false;
+      document.querySelectorAll('.traffic-war-window .tw-abandon-countdown').forEach(function(el) {
+        var readyMs = Date.parse(el.getAttribute('data-abandon-ready-at') || '');
+        var remaining = readyMs ? Math.max(0, readyMs - now) : Math.max(0, Number(el.getAttribute('data-abandon-remaining-ms') || 0));
+        if (!readyMs) el.setAttribute('data-abandon-remaining-ms', String(Math.max(0, remaining - 1000)));
+        if (remaining > 0) active = true;
+        var text = remaining > 0 ? ('撤離中 ' + trafficWarDurationText(remaining)) : '撤離完成';
+        if (el.textContent !== text) el.textContent = text;
+      });
+      return active;
+    }
+
+    function trafficWarScheduleAbandonCountdown(state) {
+      if (trafficWarAbandonCountdownTimer) {
+        clearTimeout(trafficWarAbandonCountdownTimer);
+        trafficWarAbandonCountdownTimer = null;
+      }
+      if (!trafficWarUpdateAbandonCountdowns()) return;
+      trafficWarAbandonCountdownTimer = setTimeout(function tick() {
+        if (trafficWarUpdateAbandonCountdowns()) {
+          trafficWarAbandonCountdownTimer = setTimeout(tick, 1000);
+        } else {
+          trafficWarAbandonCountdownTimer = null;
+        }
+      }, 1000);
     }
 
     function trafficWarResourceBucket(resourceType) {
@@ -11301,7 +11405,7 @@ function showCollectionHistory() {
     function trafficWarOwnedTiles(state) {
       var uid = trafficWarPlayerUid(state);
       return (state.tiles || []).filter(function(tile) {
-        return tile && (String(tile.owner_uid || '') === uid || trafficWarHasBranch(tile, state));
+        return tile && (trafficWarTileOwnedBySelf(state, tile) || trafficWarHasBranch(tile, state));
       });
     }
 
@@ -11393,7 +11497,7 @@ function showCollectionHistory() {
       if (tile.resource_type) return '資源擴張點：攻下後能增加每小時產出。';
       if (tile.can_attack && Number(tile.level || 0) <= 3) return '安全擴張點：適合用來鋪路與增加持有格。';
       if (tile.can_attack) return '前線推進點：先場刊確認風險，再決定是否進攻。';
-      if (String(tile.owner_uid || '') === trafficWarPlayerUid(state)) return '我方地盤：可作為後續擴張路線的一部分。';
+      if (trafficWarTileOwnedBySelf(state, tile)) return '我方地盤：可作為後續擴張路線的一部分。';
       return '待鋪路區域：需先佔領相鄰地塊或移動隊伍。';
     }
 
@@ -11445,9 +11549,21 @@ function showCollectionHistory() {
       if (player.home_tile_id && tile.tile_id === player.home_tile_id) return '主城';
       if (trafficWarHasBranch(tile, state)) return '分部';
       if (tile.is_unknown || tile.hidden || tile.fog) return '未知';
-      if (String(tile.owner_uid || '') === uid) return '我方佔領';
+      if (trafficWarTileOwnedBySelf(state, tile)) return '我方佔領';
       if (tile.owner_uid || tile.owner_faction) return '敵方佔領';
       return '未佔領';
+    }
+
+    function trafficWarTileOwnerText(state, tile) {
+      if (!tile || (!tile.owner_faction && !tile.owner_name && !tile.owner_uid)) return '無';
+      var player = state && state.player_season ? state.player_season : {};
+      if (trafficWarTileOwnedBySelf(state, tile)) return player.display_name || '自己';
+      return tile.owner_name || trafficWarFactionLabel(tile.owner_faction) || '未知玩家';
+    }
+
+    function trafficWarTileOwnerFactionText(tile) {
+      if (!tile || !tile.owner_faction) return '無';
+      return trafficWarFactionLabel(tile.owner_faction);
     }
 
     function trafficWarBranchCost(tile) {
@@ -11462,7 +11578,7 @@ function showCollectionHistory() {
       if (!tile) return false;
       var player = state && state.player_season ? state.player_season : {};
       var uid = String(player.uid || getTrafficWarUid() || '');
-      return !!tile.has_branch && (!tile.branch_owner_uid || String(tile.branch_owner_uid) === uid);
+      return !!tile.has_branch && (!!tile.branch_is_self || String(tile.branch_owner_uid || '') === uid);
     }
 
     function trafficWarBranchDisabledReason(state, tile) {
@@ -11472,7 +11588,7 @@ function showCollectionHistory() {
       if (tile.is_center_city) return '不可建造：年度盛典不能建造分公司';
       if (player.home_tile_id && tile.tile_id === player.home_tile_id) return '不可建造：總部地塊不需要分公司';
       if (trafficWarHasBranch(tile, state)) return '不可建造：此格已建造分公司';
-      if (String(tile.owner_uid || '') !== uid) return '不可建造：需先佔領此格';
+      if (!trafficWarTileOwnedBySelf(state, tile)) return '不可建造：需先佔領此格';
       var expansionLv = Number((state.tech_levels && state.tech_levels.company_expansion) || player.tech_company_expansion || 0);
       if (expansionLv < 1) return '不可建造：需要發展「公司擴編」LV1';
       var cost = trafficWarBranchCost(tile);
@@ -11511,6 +11627,8 @@ function showCollectionHistory() {
         + '<span>格子等級</span><b>LV' + Number(tile.level || 1).toLocaleString() + '</b>'
         + '<span>地塊種類</span><b>' + trafficWarEsc(typeText) + '</b>'
         + '<span>地塊狀態</span><b>' + trafficWarEsc(statusText) + '</b>'
+        + '<span>佔領者</span><b>' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</b>'
+        + '<span>所屬陣營</span><b>' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</b>'
         + '<span>敵人預估粉絲</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b>'
         + '<span>預計可獲得資源</span><b>' + trafficWarEsc(trafficWarRewardLine(tile)) + '</b>'
         + '<span>佔領後產出</span><b>' + trafficWarEsc(trafficWarProductionLine(tile, state)) + '</b>'
@@ -11521,7 +11639,7 @@ function showCollectionHistory() {
         + '<span>持有格數 / 上限</span><b>' + Number(player.owned_tile_count || 0).toLocaleString() + ' / ' + Number(player.tile_limit || 15).toLocaleString() + '</b>'
         + '<span>分公司</span><b>' + trafficWarEsc(trafficWarBranchLine(state, tile)) + '</b>'
         + '<span>快閃</span><b>' + trafficWarEsc(trafficWarGatherPreviewLine(state, tile)) + '</b>'
-        + '<span>放棄持有</span><b>' + trafficWarEsc(abandonReason || trafficWarAbandonText(tile)) + '</b>'
+        + '<span>放棄持有</span><b>' + (abandonReason ? trafficWarEsc(abandonReason) : trafficWarAbandonCountdownHtml(tile)) + '</b>'
         + '</div>'
         + trafficWarTileStrategyHtml(state, tile)
         + '<div class="tw-map-info-note ' + (attackDisabled ? '' : 'ok') + '">' + trafficWarEsc(reason || '可以佔領：此格可進攻') + '</div>'
@@ -11562,7 +11680,7 @@ function showCollectionHistory() {
       if (!tile) return '';
       var player = state.player_season || {};
       var owner = trafficWarTileStatusText(state, tile);
-      var isOwnedByMe = String(tile.owner_uid || '') === String(player.uid || '');
+      var isOwnedByMe = trafficWarTileOwnedBySelf(state, tile);
       var expectedReward = trafficWarRewardLine(tile);
       var productionText = trafficWarProductionLine(tile, state);
       var reason = trafficWarAttackDisabledReason(state, tile);
@@ -11580,6 +11698,8 @@ function showCollectionHistory() {
         + '<small>等級：LV' + Number(tile.level || 1).toLocaleString() + '</small>'
         + '<small>種類：' + trafficWarEsc(typeText) + '</small>'
         + '<small>狀態：' + trafficWarEsc(owner) + '</small>'
+        + '<small>佔領者：' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</small>'
+        + '<small>陣營：' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</small>'
         + '<small>預估粉絲：' + Number(tile.enemy_power || 0).toLocaleString() + '</small>'
         + '<small>預計可獲得資源：' + trafficWarEsc(expectedReward) + '</small>'
         + '<small>' + (isOwnedByMe ? '目前產出：' : '攻佔後產出：') + trafficWarEsc(productionText) + '</small>'
@@ -11587,7 +11707,7 @@ function showCollectionHistory() {
         + '<small>隊伍：' + trafficWarEsc(trafficWarStatusText(player.team_status)) + '｜體力 ' + Number(player.team_hp || 0).toLocaleString() + ' / ' + Number(player.team_max_hp || 100).toLocaleString() + '</small>'
         + '<small>持有格：' + Number(player.owned_tile_count || 0).toLocaleString() + ' / ' + Number(player.tile_limit || 15).toLocaleString() + '</small>'
         + '<small>快閃：' + trafficWarEsc(trafficWarGatherPreviewLine(state, tile)) + '</small>'
-        + '<small>放棄：' + trafficWarEsc(abandonReason || trafficWarAbandonText(tile)) + '</small>'
+        + '<small>放棄：' + (abandonReason ? trafficWarEsc(abandonReason) : trafficWarAbandonCountdownHtml(tile)) + '</small>'
         + '<small>定位：' + trafficWarEsc(trafficWarTileStrategicRole(state, tile)) + '</small>'
         + (reason ? '<em>' + trafficWarEsc(reason) + '</em>' : '<em class="ok">可攻打</em>')
         + '<button type="button" class="primary" ' + (attackDisabled ? 'disabled' : '') + ' onclick="event.stopPropagation();challengeTrafficWarRegion(\'' + tileId + '\')">佔領(進攻)</button>'
@@ -11619,6 +11739,8 @@ function showCollectionHistory() {
         + '<div class="traffic-war-detail-row"><span>格子等級</span><b>LV' + Number(tile.level || 1) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>地塊種類</span><b>' + trafficWarEsc(typeText) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>地塊狀態</span><b>' + trafficWarEsc(owner) + '</b></div>'
+        + '<div class="traffic-war-detail-row"><span>佔領者</span><b>' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</b></div>'
+        + '<div class="traffic-war-detail-row"><span>所屬陣營</span><b>' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>預估敵方粉絲</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>預計可獲得資源</span><b>' + trafficWarEsc(trafficWarRewardLine(tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>攻佔後每小時產出</span><b>' + trafficWarEsc(resource) + '</b></div>'
@@ -11626,7 +11748,7 @@ function showCollectionHistory() {
         + '<div class="traffic-war-detail-row"><span>是否可攻打</span><b>' + (attackDisabled ? '否' : '是') + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>分公司</span><b>' + trafficWarEsc(trafficWarBranchLine(state, tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>快閃</span><b>' + trafficWarEsc(trafficWarGatherPreviewLine(state, tile)) + '</b></div>'
-        + '<div class="traffic-war-detail-row"><span>放棄持有</span><b>' + trafficWarEsc(abandonReason || trafficWarAbandonText(tile)) + '</b></div>'
+        + '<div class="traffic-war-detail-row"><span>放棄持有</span><b>' + (abandonReason ? trafficWarEsc(abandonReason) : trafficWarAbandonCountdownHtml(tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>戰略定位</span><b>' + trafficWarEsc(trafficWarTileStrategicRole(state, tile)) + '</b></div>'
         + '<div class="tw-detail-note">' + trafficWarEsc(reason || '可攻打：此格鄰接目前巡演團體位置') + '</div>'
         + '<button type="button" class="traffic-war-detail-action primary" ' + (attackDisabled ? 'disabled' : '') + ' onclick="challengeTrafficWarRegion(\'' + trafficWarEsc(tile.tile_id) + '\')">佔領(進攻)</button>'
@@ -11680,7 +11802,9 @@ function showCollectionHistory() {
         body = trafficWarEsc(trafficWarFactionShort(log.faction)) + '在「' + trafficWarEsc(log.region_name || log.tile_id || '') + '」' + trafficWarEsc(trafficWarLogActionText(result)) + '，貢獻 +' + Number(log.contribution_score || 0).toLocaleString();
       }
       var cls = ({ SCOUT:' scout', COLLECT:' collect', GATHER:' collect', ABANDON:' develop', DEVELOP:' develop', SKILL:' skill' })[result] || '';
-      return '<div class="traffic-war-feed-row' + cls + '"><b>' + title + '</b><div>' + body + '</div>' + (includeSeason ? '<small>season_id: ' + trafficWarEsc(log.season_id || (state && state.season_id) || '') + '</small>' : '') + '</div>';
+      var tileId = log.tile_id || log.region_id || '';
+      var locate = tileId && String(tileId).indexOf('tile_') === 0 ? '<button type="button" onclick="event.stopPropagation();selectTrafficWarTile(\'' + trafficWarEsc(tileId) + '\')">定位</button>' : '';
+      return '<div class="traffic-war-feed-row' + cls + '"><b>' + title + '</b><div>' + body + '</div>' + (includeSeason ? '<small>season_id: ' + trafficWarEsc(log.season_id || (state && state.season_id) || '') + '</small>' : '') + locate + '</div>';
     }
 
     function renderTrafficWarFeed(state) {
@@ -11811,11 +11935,40 @@ function showCollectionHistory() {
     }
 
     function trafficWarResultPanelHtml(state) {
-      var logs = (state.action_logs || []).slice(0, 30);
+      var logs = (state.action_logs || []).slice(0, 30).filter(function(log) { return trafficWarResultFilterMatches(log, trafficWarResultFilter); });
+      var filters = [
+        ['all','全部'],
+        ['battle','佔領'],
+        ['resource','領取'],
+        ['flash','快閃'],
+        ['develop','發展'],
+        ['branch','分公司'],
+        ['abandon','撤離']
+      ];
+      var controls = '<div class="tw-result-controls">' + filters.map(function(row) {
+        return '<button type="button" class="' + (trafficWarResultFilter === row[0] ? 'active' : '') + '" onclick="setTrafficWarResultFilter(\'' + row[0] + '\')">' + trafficWarEsc(row[1]) + '</button>';
+      }).join('') + '</div>';
       var rows = logs.map(function(log) {
         return trafficWarFeedRowHtml(log, state, false);
       }).join('') || '<div class="traffic-war-feed-row">尚無戰鬥紀錄。</div>';
-      return trafficWarObjectiveBoardHtml(state, 'daily') + '<div class="traffic-war-drawer-note">這裡顯示本季最近的戰鬥紀錄與推進成果。場刊、領取、快閃、放棄持有、發展與技能操作也會在這裡留下紀錄。</div><div class="traffic-war-feed">' + rows + '</div>';
+      return trafficWarObjectiveBoardHtml(state, 'daily') + '<div class="traffic-war-drawer-note">這裡顯示本季最近的戰鬥紀錄與推進成果。場刊、領取、快閃、放棄持有、發展與技能操作也會在這裡留下紀錄。</div>' + controls + '<div class="traffic-war-feed">' + rows + '</div>';
+    }
+
+    function trafficWarResultFilterMatches(log, filter) {
+      var result = String(log && log.result || '');
+      if (!filter || filter === 'all') return true;
+      if (filter === 'battle') return ['WIN','FAIL','MOVE','PERFORM','HP'].indexOf(result) >= 0;
+      if (filter === 'resource') return result === 'COLLECT';
+      if (filter === 'flash') return result === 'GATHER';
+      if (filter === 'develop') return result === 'DEVELOP' || result === 'SKILL';
+      if (filter === 'branch') return result === 'BRANCH' || result === 'STATION' || result === 'RETURN_BRANCH';
+      if (filter === 'abandon') return result === 'ABANDON';
+      return true;
+    }
+
+    function setTrafficWarResultFilter(filter) {
+      trafficWarResultFilter = filter || 'all';
+      renderTrafficWarDrawer(loadTrafficWarState());
     }
 
     function trafficWarLogActionText(result) {
@@ -11885,18 +12038,68 @@ function showCollectionHistory() {
         + '<div class="traffic-war-tech-card"><b>補給規則</b><span>巡演團體體力不足時可返回總部休息；若已入駐分公司，也能返回分部休息。移動期間不能改名、重組或再次攻打。</span><button type="button" onclick="returnTrafficWarTeamHome()" ' + (p.home_tile_id && p.current_tile_id !== p.home_tile_id && !trafficWarTeamBusyState(p) ? '' : 'disabled') + '>回總部休息</button></div>'
         + '<div class="traffic-war-tech-card"><b>分公司用途</b><span>分公司不是敵方地塊，是佔領後建造的補給據點。需要發展「公司擴編」LV1，並消耗人氣與打賞。</span><button type="button" onclick="openTrafficWarPanel(\'tech\')">查看發展</button></div>'
         + '</div>'
+        + trafficWarResourceDetailHtml(state)
+        + trafficWarBranchManagementHtml(state)
         + trafficWarOwnedTileManagementHtml(state);
+    }
+
+    function trafficWarResourceDetailHtml(state) {
+      var uid = trafficWarPlayerUid(state);
+      var tiles = (state.tiles || []).filter(function(tile) { return tile && trafficWarTileOwnedBySelf(state, tile) && tile.resource_type; })
+        .sort(function(a, b) { return trafficWarTileProductionValue(state, b) - trafficWarTileProductionValue(state, a); })
+        .slice(0, 12);
+      if (!tiles.length) return '<div class="traffic-war-drawer-note"><b>資源明細</b><br>目前沒有固定產出的資源地。</div>';
+      return '<div class="traffic-war-drawer-note"><b>資源明細</b><br>每小時產出與目前可領取來源。</div><div class="tw-resource-detail-list">'
+        + tiles.map(function(tile) {
+          var claim = trafficWarTileCollectableLine(state, tile);
+          return '<div class="tw-resource-detail-row"><span><b>' + trafficWarEsc(tile.tile_id) + '</b><br>'
+            + trafficWarEsc(trafficWarTileKindText(tile)) + '｜' + trafficWarEsc(trafficWarProductionLine(tile, state)) + '｜可領取 ' + trafficWarEsc(claim)
+            + '</span><button type="button" onclick="selectTrafficWarTile(\'' + trafficWarEsc(tile.tile_id) + '\')">定位</button></div>';
+        }).join('') + '</div>';
+    }
+
+    function trafficWarBranchManagementHtml(state) {
+      var branches = (state.tiles || []).filter(function(tile) { return trafficWarHasBranch(tile, state); })
+        .sort(function(a, b) { return String(a.tile_id).localeCompare(String(b.tile_id)); });
+      if (!branches.length) return '<div class="traffic-war-drawer-note"><b>分公司管理</b><br>尚未建立分公司。</div>';
+      return '<div class="traffic-war-drawer-note"><b>分公司管理</b><br>查看分公司位置與回補據點。</div><div class="tw-branch-list">'
+        + branches.map(function(tile) {
+          var stationed = (state.player_season || {}).branch_tile_id === tile.tile_id || (state.player_season || {}).assigned_branch_id;
+          return '<div class="tw-branch-row"><span><b>' + trafficWarEsc(tile.tile_id) + '</b><br>'
+            + 'LV' + Number(tile.level || 1).toLocaleString() + '｜' + trafficWarEsc(trafficWarTileKindText(tile)) + '｜' + (stationed ? '已入駐/可回補' : '可作為回補點')
+            + '</span><button type="button" onclick="selectTrafficWarTile(\'' + trafficWarEsc(tile.tile_id) + '\')">定位</button></div>';
+        }).join('') + '</div>';
     }
 
     function trafficWarOwnedTileManagementHtml(state) {
       var uid = trafficWarPlayerUid(state);
-      var tiles = (state.tiles || []).filter(function(tile) { return tile && String(tile.owner_uid || '') === uid; })
-        .sort(function(a, b) {
-          if (a.is_center_city !== b.is_center_city) return a.is_center_city ? -1 : 1;
-          return Number(b.level || 0) - Number(a.level || 0) || String(a.tile_id).localeCompare(String(b.tile_id));
-        });
-      if (!tiles.length) return '<div class="traffic-war-drawer-note"><b>持有地塊</b><br>尚未持有地塊。</div>';
+      var allTiles = (state.tiles || []).filter(function(tile) { return tile && trafficWarTileOwnedBySelf(state, tile); });
+      var tiles = trafficWarFilterOwnedTiles(state, allTiles, trafficWarOwnedFilter).sort(function(a, b) {
+        return trafficWarCompareOwnedTiles(state, a, b, trafficWarOwnedSort);
+      });
+      var filters = [
+        ['all','全部'],
+        ['claim','可領取'],
+        ['flash','可快閃'],
+        ['resource','資源地'],
+        ['branch','有分公司'],
+        ['abandon','撤離中']
+      ];
+      var sorts = [
+        ['level','等級'],
+        ['production','產出'],
+        ['claimable','可領取'],
+        ['frontline','前線']
+      ];
+      var controls = '<div class="tw-owned-controls">' + filters.map(function(row) {
+        return '<button type="button" class="' + (trafficWarOwnedFilter === row[0] ? 'active' : '') + '" onclick="setTrafficWarOwnedFilter(\'' + row[0] + '\')">' + trafficWarEsc(row[1]) + '</button>';
+      }).join('') + '</div><div class="tw-owned-controls">' + sorts.map(function(row) {
+        return '<button type="button" class="' + (trafficWarOwnedSort === row[0] ? 'active' : '') + '" onclick="setTrafficWarOwnedSort(\'' + row[0] + '\')">排序｜' + trafficWarEsc(row[1]) + '</button>';
+      }).join('') + '</div>';
+      if (!allTiles.length) return '<div class="traffic-war-drawer-note"><b>持有地塊</b><br>尚未持有地塊。</div>';
+      if (!tiles.length) return '<div class="traffic-war-drawer-note"><b>持有地塊</b><br>目前篩選沒有符合的地塊。</div>' + controls;
       return '<div class="traffic-war-drawer-note"><b>持有地塊</b><br>查看目前地盤、定位地塊、免費領取被動產出，或消耗行動力進行「快閃」。放棄持有會進入撤離倒數。</div>'
+        + controls
         + '<div class="tw-owned-tile-list">' + tiles.map(function(tile) {
           var tileId = trafficWarEsc(tile.tile_id);
           var collectAmount = trafficWarTileCollectableAmount(state, tile);
@@ -11904,7 +12107,7 @@ function showCollectionHistory() {
           var gatherDisabled = !tile.can_gather_resource || Number((state.player_season || {}).stamina || 0) < Number(tile.gather_stamina_cost || 2);
           var abandonReason = trafficWarAbandonDisabledReason(state, tile);
           return '<div class="tw-owned-tile-row">'
-            + '<div class="tw-owned-tile-head"><b>' + tileId + '</b><span>' + trafficWarEsc(trafficWarAbandonText(tile)) + '</span></div>'
+            + '<div class="tw-owned-tile-head"><b>' + tileId + '</b><span>' + trafficWarAbandonCountdownHtml(tile) + '</span></div>'
             + '<div class="tw-owned-tile-meta">'
             + '<span>等級 <b>LV' + Number(tile.level || 1).toLocaleString() + '</b></span>'
             + '<span>種類 <b>' + trafficWarEsc(trafficWarTileKindText(tile)) + '</b></span>'
@@ -11921,6 +12124,50 @@ function showCollectionHistory() {
             + '</div>'
             + '</div>';
         }).join('') + '</div>';
+    }
+
+    function trafficWarFilterOwnedTiles(state, tiles, filter) {
+      filter = String(filter || 'all');
+      return tiles.filter(function(tile) {
+        if (filter === 'claim') return trafficWarTileCollectableAmount(state, tile) > 0;
+        if (filter === 'flash') return !!tile.can_gather_resource;
+        if (filter === 'resource') return !!tile.resource_type;
+        if (filter === 'branch') return trafficWarHasBranch(tile, state);
+        if (filter === 'abandon') return !!tile.is_abandoning;
+        return true;
+      });
+    }
+
+    function trafficWarCompareOwnedTiles(state, a, b, sort) {
+      if (a.is_center_city !== b.is_center_city) return a.is_center_city ? -1 : 1;
+      if (sort === 'production') return trafficWarTileProductionValue(state, b) - trafficWarTileProductionValue(state, a) || Number(b.level || 0) - Number(a.level || 0);
+      if (sort === 'claimable') return trafficWarTileCollectableAmount(state, b) - trafficWarTileCollectableAmount(state, a) || trafficWarTileProductionValue(state, b) - trafficWarTileProductionValue(state, a);
+      if (sort === 'frontline') return Number(trafficWarIsFrontlineTile(state, b)) - Number(trafficWarIsFrontlineTile(state, a)) || Number(b.level || 0) - Number(a.level || 0);
+      return Number(b.level || 0) - Number(a.level || 0) || String(a.tile_id).localeCompare(String(b.tile_id));
+    }
+
+    function trafficWarTileProductionValue(state, tile) {
+      if (!tile || !tile.resource_type) return 0;
+      return Math.floor(Number(tile.resource_amount || 0) * trafficWarResourceProductionRate(state, tile.resource_type));
+    }
+
+    function trafficWarIsFrontlineTile(state, tile) {
+      if (!tile || !state || !Array.isArray(state.tiles)) return false;
+      return state.tiles.some(function(other) {
+        return other && other.tile_id !== tile.tile_id
+          && Math.abs(Number(other.x || 0) - Number(tile.x || 0)) + Math.abs(Number(other.y || 0) - Number(tile.y || 0)) === 1
+          && other.owner_faction && other.owner_faction !== (state.player_season || {}).faction;
+      });
+    }
+
+    function setTrafficWarOwnedFilter(filter) {
+      trafficWarOwnedFilter = filter || 'all';
+      renderTrafficWarDrawer(loadTrafficWarState());
+    }
+
+    function setTrafficWarOwnedSort(sort) {
+      trafficWarOwnedSort = sort || 'level';
+      renderTrafficWarDrawer(loadTrafficWarState());
     }
 
     function trafficWarTechPanelHtml(state) {
@@ -11975,6 +12222,7 @@ function showCollectionHistory() {
       else body.innerHTML = '<div class="traffic-war-drawer-note">尚未開放。</div>';
       drawer.classList.add('show');
       drawer.setAttribute('aria-hidden', 'false');
+      trafficWarScheduleAbandonCountdown(state);
     }
 
     function trafficWarScoutSummary(state, tile) {
@@ -11983,6 +12231,8 @@ function showCollectionHistory() {
         + '｜LV' + Number(tile.level || 1).toLocaleString()
         + ' ' + trafficWarTileKindText(tile)
         + '｜狀態 ' + trafficWarTileStatusText(state, tile)
+        + '｜佔領者 ' + trafficWarTileOwnerText(state, tile)
+        + '｜陣營 ' + trafficWarTileOwnerFactionText(tile)
         + '｜預估敵方粉絲 ' + Number(tile.enemy_power || 0).toLocaleString()
         + '｜預計獲得 ' + trafficWarRewardLine(tile)
         + '｜每小時產出 ' + trafficWarProductionLine(tile, state)
@@ -12339,6 +12589,9 @@ function showCollectionHistory() {
     window.refreshTrafficWar = refreshTrafficWar;
     window.focusTrafficWarTile = focusTrafficWarTile;
     window.setTrafficWarMapZoom = setTrafficWarMapZoom;
+    window.setTrafficWarOwnedFilter = setTrafficWarOwnedFilter;
+    window.setTrafficWarOwnedSort = setTrafficWarOwnedSort;
+    window.setTrafficWarResultFilter = setTrafficWarResultFilter;
     window.resetTrafficWarMvp = refreshTrafficWar;
 
     var ROOKIE_GUIDE_STORAGE_KEY = 'TLO_ROOKIE_GUIDE_SEEN_V1';
