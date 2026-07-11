@@ -9838,6 +9838,8 @@ function showCollectionHistory() {
     var trafficWarActionPollTimer = null;
     var trafficWarVisualTimer = null;
     var trafficWarVisualFrame = null;
+    var trafficWarPollRequestInFlight = false;
+    var trafficWarDashboardRequestSeq = 0;
     var trafficWarAbandonCountdownTimer = null;
     var trafficWarProgressCountdownTimer = null;
     var trafficWarLocalLogs = [];
@@ -9850,6 +9852,7 @@ function showCollectionHistory() {
     var trafficWarResultFilter = 'all';
     var TRAFFIC_WAR_STORAGE_KEY = 'TLO_TRAFFIC_WAR_SANDBOX_V2';
     var TRAFFIC_WAR_DASHBOARD_CACHE_MS = 2000;
+    var TRAFFIC_WAR_RPC_TIMEOUT_MS = 20000;
     var TRAFFIC_WAR_CARD_BACK = 'assets/ui/cards/card_back_tlo.png';
     var TRAFFIC_WAR_CURRENT_SEASON = {
       season_id: 'season_001',
@@ -9958,6 +9961,28 @@ function showCollectionHistory() {
       } catch (_) { return ''; }
     }
 
+    function trafficWarWithTimeout(promise, method) {
+      return new Promise(function(resolve, reject) {
+        var settled = false;
+        var timer = setTimeout(function() {
+          if (settled) return;
+          settled = true;
+          reject(new Error('Traffic War RPC timeout: ' + method));
+        }, TRAFFIC_WAR_RPC_TIMEOUT_MS);
+        Promise.resolve(promise).then(function(value) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          resolve(value);
+        }, function(err) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          reject(err);
+        });
+      });
+    }
+
     function trafficWarRpc(method, args) {
       if (!window.TLO_IS_AUTHENTICATED) {
         if (typeof showAuthScreen === 'function') showAuthScreen('星潮沙盤戰需要正式帳號登入。');
@@ -9967,11 +9992,17 @@ function showCollectionHistory() {
         if (typeof showAuthScreen === 'function') showAuthScreen('星潮沙盤戰需要正式帳號登入。');
         return Promise.reject(new Error('星潮沙盤戰需要正式帳號登入。'));
       }
-      if (typeof window.TLO_RAW_RPC === 'function') return window.TLO_RAW_RPC(method, args || []);
-      return new Promise(function(resolve, reject) {
+      if (typeof window.TLO_RAW_RPC === 'function') {
+        try {
+          return trafficWarWithTimeout(window.TLO_RAW_RPC(method, args || []), method);
+        } catch (err) {
+          return Promise.reject(err);
+        }
+      }
+      return trafficWarWithTimeout(new Promise(function(resolve, reject) {
         if (!window.google || !google.script || !google.script.run) return reject(new Error('線上 API 尚未載入，請重新整理。'));
         google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[method].apply(null, args || []);
-      });
+      }), method);
     }
 
     function trafficWarTileHash(x, y, salt) {
@@ -10350,17 +10381,52 @@ function showCollectionHistory() {
       return String(hash >>> 0) + ':' + text.length;
     }
 
+    function trafficWarHasPendingWriteAction() {
+      return Object.keys(trafficWarPendingActions).some(function(key) {
+        return !!trafficWarPendingActions[key];
+      });
+    }
+
     async function runTrafficWarAction(actionKey, fn) {
-      if (trafficWarPendingActions[actionKey]) return null;
+      if (trafficWarHasPendingWriteAction()) return null;
       trafficWarPendingActions[actionKey] = true;
       document.body.classList.add('tw-action-busy');
       try {
         return await fn();
       } finally {
-        trafficWarPendingActions[actionKey] = false;
-        var anyBusy = Object.keys(trafficWarPendingActions).some(function(key) { return !!trafficWarPendingActions[key]; });
-        if (!anyBusy) document.body.classList.remove('tw-action-busy');
+        delete trafficWarPendingActions[actionKey];
+        if (!trafficWarHasPendingWriteAction()) document.body.classList.remove('tw-action-busy');
       }
+    }
+
+    function clearTrafficWarRuntimeTimers() {
+      if (trafficWarActionPollTimer) {
+        clearTimeout(trafficWarActionPollTimer);
+        trafficWarActionPollTimer = null;
+      }
+      if (trafficWarVisualTimer) {
+        clearTimeout(trafficWarVisualTimer);
+        trafficWarVisualTimer = null;
+      }
+      if (trafficWarAbandonCountdownTimer) {
+        clearTimeout(trafficWarAbandonCountdownTimer);
+        trafficWarAbandonCountdownTimer = null;
+      }
+      if (trafficWarProgressCountdownTimer) {
+        clearTimeout(trafficWarProgressCountdownTimer);
+        trafficWarProgressCountdownTimer = null;
+      }
+      if (trafficWarVisualFrame && window.cancelAnimationFrame) {
+        cancelAnimationFrame(trafficWarVisualFrame);
+      }
+      trafficWarVisualFrame = null;
+      trafficWarPollRequestInFlight = false;
+      trafficWarVisualCache = { key: '', cards: [], paths: [], countdowns: [] };
+    }
+
+    function trafficWarWindowIsOpen() {
+      var win = document.getElementById('traffic-war-window');
+      return !!(win && win.classList.contains('show'));
     }
 
     function applyTrafficWarDashboard(dashboard, options) {
@@ -10722,17 +10788,32 @@ function showCollectionHistory() {
       if (abandonRemaining !== null) delay = Math.min(delay, Math.max(350, Math.min(30000, abandonRemaining + 260)));
       if (progressRemaining !== null) delay = Math.min(delay, Math.max(350, Math.min(30000, progressRemaining + 260)));
       trafficWarActionPollTimer = setTimeout(async function() {
+        if (!trafficWarWindowIsOpen()) return;
+        if (trafficWarPollRequestInFlight) {
+          trafficWarActionPollTimer = setTimeout(function() {
+            scheduleTrafficWarActionPoll(loadTrafficWarState());
+          }, 900);
+          return;
+        }
+        trafficWarPollRequestInFlight = true;
         try {
           if (teamActive) {
             var res = await trafficWarRpc('resolveTrafficWarTeamAction', [getTrafficWarUid(), trafficWarActiveTeamId]);
+            if (!trafficWarWindowIsOpen()) return;
             if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
             if (res && res.result) showTrafficWarResult(res.result);
           } else {
             var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid(), trafficWarActiveTeamId]);
+            if (!trafficWarWindowIsOpen()) return;
             if (!applyTrafficWarDashboard(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard)) renderTrafficWar(true);
           }
-        } catch (_) {
-          renderTrafficWar(true);
+        } catch (err) {
+          trafficWarLastError = err && err.message ? err.message : String(err || '');
+          trafficWarActionPollTimer = setTimeout(function() {
+            scheduleTrafficWarActionPoll(loadTrafficWarState());
+          }, 2500);
+        } finally {
+          trafficWarPollRequestInFlight = false;
         }
       }, delay);
     }
@@ -10801,18 +10882,21 @@ function showCollectionHistory() {
       if (trafficWarLoading && !forceReload) return;
       trafficWarLastError = '';
       if (forceReload || !trafficWarHasFreshDashboard()) {
+        var requestSeq = ++trafficWarDashboardRequestSeq;
         trafficWarLoading = true;
         var loadingBox = document.getElementById('traffic-war-player-stats');
         if (loadingBox) loadingBox.innerHTML = '<div class="traffic-war-stat tw-hud-card"><span>狀態</span><b>讀取沙盤中</b></div>';
         try {
           var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid(), trafficWarActiveTeamId]);
+          if (requestSeq !== trafficWarDashboardRequestSeq) return;
           var nextState = normalizeTrafficWarState(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard);
           saveTrafficWarState(nextState, true);
         } catch (err) {
+          if (requestSeq !== trafficWarDashboardRequestSeq) return;
           trafficWarLastError = err && err.message ? err.message : String(err || '讀取失敗');
           saveTrafficWarState(normalizeTrafficWarState(trafficWarState || null));
         } finally {
-          trafficWarLoading = false;
+          if (requestSeq === trafficWarDashboardRequestSeq) trafficWarLoading = false;
         }
       }
       var state = loadTrafficWarState();
@@ -12426,6 +12510,9 @@ function showCollectionHistory() {
     }
 
     function closeTrafficWarWindow() {
+      clearTrafficWarRuntimeTimers();
+      if (trafficWarPendingDispatchResolve) closeTrafficWarDispatchModal(false);
+      trafficWarDashboardRequestSeq += 1;
       var win = document.getElementById('traffic-war-window');
       if (win) {
         win.classList.remove('show');
