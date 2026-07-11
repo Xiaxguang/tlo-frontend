@@ -9871,11 +9871,14 @@ function showCollectionHistory() {
     var TRAFFIC_WAR_RPC_TIMEOUT_MS = 20000;
     var TRAFFIC_WAR_CARD_BACK = 'assets/ui/cards/card_back_tlo.png';
     var TRAFFIC_WAR_CURRENT_SEASON = {
-      season_id: 'season_001',
-      season_name: '星潮開播季',
-      display_name: '流量戰爭測試版｜未開放',
-      start_time: '2026-07-01T00:00:00+08:00',
-      end_time: '2026-07-31T23:59:59+08:00',
+      season_id: 'season_002',
+      season_name: '星潮測試季 S2',
+      display_name: '星潮沙盤戰 S2｜賽季測試',
+      season_no: 2,
+      rules_version: 'traffic_war_v1_seasonal',
+      map_version: 'stellar_ladder_51x37',
+      start_time: '2026-07-12T00:00:00+08:00',
+      end_time: '2026-08-11T23:59:59+08:00',
       status: 'active',
       winning_faction: null
     };
@@ -10128,6 +10131,10 @@ function showCollectionHistory() {
         season_id: TRAFFIC_WAR_CURRENT_SEASON.season_id,
         season_name: TRAFFIC_WAR_CURRENT_SEASON.season_name,
         display_name: TRAFFIC_WAR_CURRENT_SEASON.display_name,
+        season_no: TRAFFIC_WAR_CURRENT_SEASON.season_no || 1,
+        rules_version: TRAFFIC_WAR_CURRENT_SEASON.rules_version || 'traffic_war_v1_seasonal',
+        map_version: TRAFFIC_WAR_CURRENT_SEASON.map_version || 'stellar_ladder_51x37',
+        reset_at: null,
         center_city_name: '年度盛典',
         map_size: 51,
         map_width: 51,
@@ -10180,7 +10187,7 @@ function showCollectionHistory() {
 
     function normalizeTrafficWarState(state) {
       var defaults = createTrafficWarDefaultState();
-      if (!state || state.season_id !== TRAFFIC_WAR_CURRENT_SEASON.season_id) state = defaults;
+      state = state ? Object.assign({}, defaults, state) : defaults;
       state.player_season = Object.assign({}, defaults.player_season, state.player_season || {});
       state.player_season.uid = getTrafficWarUid();
       state.player_season.display_name = getTrafficWarDisplayName();
@@ -10257,6 +10264,10 @@ function showCollectionHistory() {
       state.map_size = Number(state.map_size || state.map_width || 51);
       state.display_name = state.display_name || TRAFFIC_WAR_CURRENT_SEASON.display_name;
       state.season_name = state.season_name || TRAFFIC_WAR_CURRENT_SEASON.season_name;
+      state.season_no = Number(state.season_no || TRAFFIC_WAR_CURRENT_SEASON.season_no || 1);
+      state.rules_version = state.rules_version || TRAFFIC_WAR_CURRENT_SEASON.rules_version || 'traffic_war_v1_seasonal';
+      state.map_version = state.map_version || TRAFFIC_WAR_CURRENT_SEASON.map_version || 'stellar_ladder_51x37';
+      state.reset_at = state.reset_at || null;
       state.center_city_name = state.center_city_name || '年度盛典';
       return state;
     }
@@ -10920,7 +10931,7 @@ function showCollectionHistory() {
       if (screen) {
         var screenTitle = screen.querySelector('.screen-title');
         var screenSub = screen.querySelector('.screen-sub');
-        if (screenTitle) screenTitle.textContent = '流量戰爭測試版｜未開放';
+        if (screenTitle) screenTitle.textContent = state.display_name || TRAFFIC_WAR_CURRENT_SEASON.display_name;
         if (screenSub) screenSub.textContent = '卡牌式沙盤戰場：外圍出生、相鄰攻格、佔地產出、決戰年度盛典。';
       }
       var title = document.getElementById('traffic-war-season-title');
@@ -10939,7 +10950,21 @@ function showCollectionHistory() {
     function renderTrafficWarMeta(state) {
       var meta = document.getElementById('traffic-war-season-meta');
       if (!meta) return;
-      meta.innerHTML = '';
+      state = state || {};
+      var rows = [
+        ['S' + Number(state.season_no || 1).toLocaleString(), 'cyan'],
+        [state.season_id || 'season_001', ''],
+        [state.status === 'finished' ? '已完季' : '進行中', state.status === 'finished' ? 'pink' : 'cyan'],
+        [state.map_version || (String(state.map_width || '') + 'x' + String(state.map_height || '')), ''],
+        [state.rules_version || 'traffic_war_v1', '']
+      ];
+      if (state.reset_at) rows.push(['已重置 ' + String(state.reset_at).slice(0, 10), 'pink']);
+      var html = rows.filter(function(row) { return !!row[0]; }).map(function(row) {
+        return '<span class="traffic-war-chip ' + trafficWarEsc(row[1] || '') + '">' + trafficWarEsc(row[0]) + '</span>';
+      }).join('');
+      if (meta.dataset.twSeasonMeta === html) return;
+      meta.dataset.twSeasonMeta = html;
+      meta.innerHTML = html;
     }
 
     function renderTrafficWarStats(state) {
