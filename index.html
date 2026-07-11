@@ -9826,6 +9826,7 @@ function showCollectionHistory() {
     var trafficWarSelectedTileId = null;
     var trafficWarSortieCollapsed = false;
     var trafficWarActiveDrawer = null;
+    var trafficWarActiveTeamId = 'team_1';
     var trafficWarShouldFocusCurrent = false;
     var trafficWarMapZoom = 1;
     var trafficWarRenderState = null;
@@ -10190,6 +10191,17 @@ function showCollectionHistory() {
           assigned_branch_id: ''
         }, team || {});
       });
+      state.active_team_id = normalizeTrafficWarTeamId(state.active_team_id || (state.player_season && state.player_season.active_team_id) || trafficWarActiveTeamId);
+      trafficWarActiveTeamId = state.active_team_id;
+      var normalizedActiveTeam = state.teams.find(function(team) { return normalizeTrafficWarTeamId(team.team_id || team.team_slot) === state.active_team_id; });
+      if (normalizedActiveTeam && normalizedActiveTeam.unlocked) {
+        state.teams.forEach(function(team) { team.active = normalizeTrafficWarTeamId(team.team_id || team.team_slot) === state.active_team_id; });
+        state.player_season.active_team_id = state.active_team_id;
+        ['team_name','team_hp','team_max_hp','team_level','team_status','status_ends_at','status_remaining_ms','current_tile_id','home_tile_id','moving_from_tile_id','moving_to_tile_id','moving_path_tile_ids','pending_action','pending_action_tile_id','branch_tile_id','assigned_branch_id','selected_team_card_ids'].forEach(function(key) {
+          if (Object.prototype.hasOwnProperty.call(normalizedActiveTeam, key)) state.player_season[key] = normalizedActiveTeam[key];
+        });
+        state.team_power = Number(normalizedActiveTeam.team_power || state.team_power || 0);
+      }
       state.map_width = Number(state.map_width || state.map_size || 51);
       state.map_height = Number(state.map_height || 37);
       state.map_size = Number(state.map_size || state.map_width || 51);
@@ -10216,6 +10228,67 @@ function showCollectionHistory() {
       if (Number(slot) === 2) return '巡演團體二';
       if (Number(slot) === 3) return '巡演團體三';
       return '巡演團體一';
+    }
+
+    function normalizeTrafficWarTeamId(value) {
+      var match = String(value || '').match(/[123]/);
+      var slot = match ? Number(match[0]) : 1;
+      return 'team_' + Math.max(1, Math.min(3, slot));
+    }
+
+    function trafficWarActiveTeam(state) {
+      state = state || loadTrafficWarState();
+      var activeId = normalizeTrafficWarTeamId(state.active_team_id || (state.player_season && state.player_season.active_team_id) || trafficWarActiveTeamId);
+      var teams = Array.isArray(state.teams) ? state.teams : [];
+      return teams.find(function(team) { return normalizeTrafficWarTeamId(team.team_id || team.team_slot) === activeId; }) || teams[0] || null;
+    }
+
+    function applyTrafficWarActiveTeam(state, teamIdInput) {
+      state = normalizeTrafficWarState(state);
+      var teamId = normalizeTrafficWarTeamId(teamIdInput || state.active_team_id || trafficWarActiveTeamId);
+      trafficWarActiveTeamId = teamId;
+      state.active_team_id = teamId;
+      var team = (state.teams || []).find(function(row) { return normalizeTrafficWarTeamId(row.team_id || row.team_slot) === teamId; });
+      if (team && team.unlocked) {
+        state.teams = state.teams.map(function(row) {
+          row.active = normalizeTrafficWarTeamId(row.team_id || row.team_slot) === teamId;
+          return row;
+        });
+        state.player_season.active_team_id = teamId;
+        ['team_name','team_hp','team_max_hp','team_level','team_status','status_ends_at','status_remaining_ms','current_tile_id','home_tile_id','moving_from_tile_id','moving_to_tile_id','moving_path_tile_ids','pending_action','pending_action_tile_id','branch_tile_id','assigned_branch_id','selected_team_card_ids'].forEach(function(key) {
+          if (Object.prototype.hasOwnProperty.call(team, key)) state.player_season[key] = team[key];
+        });
+        state.team_power = Number(team.team_power || state.team_power || 0);
+      }
+      return state;
+    }
+
+    function trafficWarActiveSlotLimit(state) {
+      var team = trafficWarActiveTeam(state);
+      return Math.max(1, Number(team && team.slot_limit || 3));
+    }
+
+    function setTrafficWarActiveTeam(teamIdInput) {
+      var state = loadTrafficWarState();
+      var teamId = normalizeTrafficWarTeamId(teamIdInput);
+      var team = trafficWarTeams(state).find(function(row) {
+        return normalizeTrafficWarTeamId(row.team_id || row.team_slot) === teamId;
+      });
+      if (!team) return;
+      if (!team.unlocked) {
+        alert(team.lock_reason || '此巡演團體尚未解鎖。');
+        return;
+      }
+      var previousState = normalizeTrafficWarState(state);
+      state.teams = trafficWarTeams(state);
+      state = applyTrafficWarActiveTeam(state, teamId);
+      saveTrafficWarState(state);
+      patchTrafficWarMapTiles(state, previousState);
+      renderTrafficWarStats(state);
+      renderTrafficWarTeam(state);
+      renderTrafficWarDrawer(state);
+      updateTrafficWarMapInfoPanel(state, findTrafficWarTile(state, trafficWarSelectedTileId));
+      scheduleTrafficWarActionPoll(state);
     }
 
     function trafficWarTeams(state) {
@@ -10609,11 +10682,11 @@ function showCollectionHistory() {
       trafficWarActionPollTimer = setTimeout(async function() {
         try {
           if (teamActive) {
-            var res = await trafficWarRpc('resolveTrafficWarTeamAction', [getTrafficWarUid()]);
+            var res = await trafficWarRpc('resolveTrafficWarTeamAction', [getTrafficWarUid(), trafficWarActiveTeamId]);
             if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
             if (res && res.result) showTrafficWarResult(res.result);
           } else {
-            var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid()]);
+            var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid(), trafficWarActiveTeamId]);
             if (!applyTrafficWarDashboard(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard)) renderTrafficWar(true);
           }
         } catch (_) {
@@ -10666,12 +10739,12 @@ function showCollectionHistory() {
       selected.forEach(function(id) { selectedSet[String(id)] = true; });
       return getTrafficWarCards().filter(function(card) {
         return selectedSet[String(card.card_id)] || selectedSet[String(card.name)] || selectedSet[String(card.card_name)];
-      }).slice(0, 3);
+      }).slice(0, trafficWarActiveSlotLimit(state));
     }
 
     function getTrafficWarTeamPower(state) {
-      if (state && Number(state.team_power || 0) > 0) return Number(state.team_power || 0);
-      return getTrafficWarSelectedCards(state).reduce(function(sum, card) { return sum + Number(card.total_power || 0); }, 0);
+      var computed = getTrafficWarSelectedCards(state).reduce(function(sum, card) { return sum + Number(card.total_power || 0); }, 0);
+      return computed || Number(state && state.team_power || 0);
     }
 
     async function renderTrafficWar(forceReload) {
@@ -10682,7 +10755,7 @@ function showCollectionHistory() {
         var loadingBox = document.getElementById('traffic-war-player-stats');
         if (loadingBox) loadingBox.innerHTML = '<div class="traffic-war-stat tw-hud-card"><span>狀態</span><b>讀取沙盤中</b></div>';
         try {
-          var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid()]);
+          var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid(), trafficWarActiveTeamId]);
           var nextState = normalizeTrafficWarState(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard);
           saveTrafficWarState(nextState, true);
         } catch (err) {
@@ -10768,12 +10841,13 @@ function showCollectionHistory() {
       var powerBox = document.getElementById('traffic-war-team-power');
       if (!box) return;
       var selected = state.player_season.selected_team_card_ids || [];
+      var slotLimit = trafficWarActiveSlotLimit(state);
       var cards = getTrafficWarCards();
       var player = state.player_season || {};
       var canEditTeam = !!player.home_tile_id && player.current_tile_id === player.home_tile_id && !trafficWarTeamBusyState(player);
       if (!cards.length) {
         box.innerHTML = '<div class="traffic-war-team-card tw-empty-team"><b>尚未取得可巡演卡牌</b><span>請使用正式帳號並持有卡牌後，再進入星潮沙盤戰組團。</span></div>';
-        if (powerBox) powerBox.textContent = '巡演粉絲：0｜已選 0 / 3';
+        if (powerBox) powerBox.textContent = '巡演粉絲：0｜已選 0 / ' + slotLimit;
         return;
       }
       box.innerHTML = cards.map(function(card) {
@@ -10790,7 +10864,7 @@ function showCollectionHistory() {
           + '<span class="tw-card-power-action"><strong>沙盤粉絲：' + Number(card.total_power || 0).toLocaleString() + '</strong>' + trafficWarSkillUpgradeButton(card, canEditTeam) + '</span></span>'
           + '</div>';
       }).join('');
-      if (powerBox) powerBox.textContent = '巡演粉絲：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜已選 ' + selected.length + ' / 3';
+      if (powerBox) powerBox.textContent = '巡演粉絲：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜已選 ' + selected.length + ' / ' + slotLimit;
     }
 
     function findTrafficWarTile(state, tileId) {
@@ -11402,7 +11476,8 @@ function showCollectionHistory() {
       var teams = trafficWarTeams(state);
       return '<div class="tw-squad-tabs">' + teams.map(function(team) {
         var active = (team.team_id || ('team_' + team.team_slot)) === activeId || (!!team.active && activeId === 'team_1');
-        return '<button type="button" ' + (active ? 'class="active" ' : '') + (team.unlocked ? '' : 'disabled') + ' title="' + trafficWarEsc(team.lock_reason || '') + '">' + trafficWarEsc(team.team_name || trafficWarTeamSlotName(team.team_slot)) + '</button>';
+        var teamId = normalizeTrafficWarTeamId(team.team_id || team.team_slot);
+        return '<button type="button" ' + (active ? 'class="active" ' : '') + (team.unlocked ? 'onclick="setTrafficWarActiveTeam(\'' + teamId + '\')"' : 'disabled') + ' title="' + trafficWarEsc(team.lock_reason || '') + '">' + trafficWarEsc(team.team_name || trafficWarTeamSlotName(team.team_slot)) + '</button>';
       }).join('') + '</div>';
     }
 
@@ -11454,9 +11529,10 @@ function showCollectionHistory() {
 
     function trafficWarAttackDisabledReason(state, tile) {
       var selectedCount = (state.player_season.selected_team_card_ids || []).length;
+      var requiredCount = trafficWarActiveSlotLimit(state);
       var uid = trafficWarPlayerUid(state);
       if (!state.player_season.faction) return '不可攻打：請先選擇陣營';
-      if (selectedCount !== 3) return '不可攻打：請先組成 3 張卡巡演團體';
+      if (selectedCount !== requiredCount) return '不可攻打：請先組成 ' + requiredCount + ' 張卡巡演團體';
       if (Number(state.player_season.stamina || 0) <= 0) return '不可攻打：行動力不足';
       if (trafficWarTeamBusyState(state.player_season)) return '不可攻打：隊伍' + trafficWarStatusText(state.player_season.team_status) + '，剩餘 ' + trafficWarDurationText(state.player_season.status_remaining_ms);
       if (Number(state.player_season.team_hp || 0) < 10) return '不可攻打：隊伍體力不足，系統會自動返回總部或分部休息';
@@ -11813,12 +11889,13 @@ function showCollectionHistory() {
     function trafficWarRookieObjectives(state) {
       var player = state.player_season || {};
       var selected = player.selected_team_card_ids || [];
+      var requiredCount = trafficWarActiveSlotLimit(state);
       var attackTile = trafficWarFirstAttackableTile(state);
       var buildableBranch = trafficWarFirstBuildableBranchTile(state);
       var startedTech = trafficWarPendingTechCount(state) > 0 || trafficWarCompletedTechCount(state) > 0;
       return [
         { title:'選定陣營', desc: player.faction ? '已加入 ' + trafficWarFactionLabel(player.faction) : '先決定出生區與陣營加成。', done: !!player.faction, action:"openTrafficWarPanel('faction')" },
-        { title:'組成巡演團體', desc: '選滿 3 張卡後才能推進地塊。', done: selected.length === 3, action:"openTrafficWarPanel('team')" },
+        { title:'組成巡演團體', desc: '選滿 ' + requiredCount + ' 張卡後才能推進地塊。', done: selected.length === requiredCount, action:"openTrafficWarPanel('team')" },
         { title:'場刊偵查地塊', desc: '先偵查一格，確認粉絲門檻與資源。', done: trafficWarActionHappened(state, 'SCOUT'), action: attackTile ? "selectTrafficWarTile('" + trafficWarEsc(attackTile.tile_id) + "')" : "closeTrafficWarPanel()" },
         { title:'佔領第一格', desc: '從總部相鄰格開始安全擴張。', done: Number(player.owned_tile_count || 0) > 1 || trafficWarActionHappened(state, 'WIN'), action: attackTile ? "selectTrafficWarTile('" + trafficWarEsc(attackTile.tile_id) + "')" : "closeTrafficWarPanel()" },
         { title:'開始一項發展', desc: '推薦先看公司擴編、新團出道或流量營運。', done: startedTech, action:"openTrafficWarPanel('tech')" },
@@ -12346,15 +12423,19 @@ function showCollectionHistory() {
     }
 
     function trafficWarTeamPanelHtml(state) {
-      var selected = state.player_season.selected_team_card_ids || [];
+      var teams = trafficWarTeams(state);
+      var activeTeam = trafficWarActiveTeam(state) || {};
+      var selected = activeTeam.selected_team_card_ids || state.player_season.selected_team_card_ids || [];
+      var slotLimit = Math.max(1, Number(activeTeam.slot_limit || trafficWarActiveSlotLimit(state)));
       var cards = getTrafficWarCards();
       var player = state.player_season || {};
       var isHome = !!player.home_tile_id && player.current_tile_id === player.home_tile_id;
       var canEditTeam = isHome && !trafficWarTeamBusyState(player);
-      var teams = trafficWarTeams(state);
-      var header = '<div class="traffic-war-drawer-note"><b>巡演團體一 / 巡演團體二 / 巡演團體三</b><br>巡演團體一固定 3 張卡。發展「新團出道」可解鎖巡演團體二、巡演團體三；新巡演團體初始只能放入 2 張卡，發展「添加新血」可解鎖第三張卡。<br><b>巡演團體一粉絲：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜體力 ' + Number(player.team_hp || 0).toLocaleString() + ' / ' + Number(player.team_max_hp || 100).toLocaleString() + '｜已選 ' + selected.length + ' / 3</b><br>' + (canEditTeam ? '目前在總部，可以重新組團、回復血量與改團體名。' : '隊伍需在總部且非行動中，才能重新組團。') + '</div>';
+      var activeName = activeTeam.team_name || player.team_name || trafficWarTeamSlotName(1);
+      var header = '<div class="traffic-war-drawer-note"><b>巡演團體一 / 巡演團體二 / 巡演團體三</b><br>巡演團體一固定 3 張卡。發展「新團出道」可解鎖巡演團體二、巡演團體三；新巡演團體初始只能放入 2 張卡，發展「添加新血」可解鎖第三張卡。<br><b>' + trafficWarEsc(activeName) + '粉絲：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜體力 ' + Number(player.team_hp || 0).toLocaleString() + ' / ' + Number(player.team_max_hp || 100).toLocaleString() + '｜已選 ' + selected.length + ' / ' + slotLimit + '</b><br>' + (canEditTeam ? '目前在總部，可以重新組團、回復血量與改團體名。' : '隊伍需在總部且非行動中，才能重新組團。') + '</div>';
       header += '<div class="tw-team-slot-tabs">' + teams.map(function(team) {
-        return '<button type="button" ' + (team.active ? 'class="active" ' : '') + (team.unlocked ? '' : 'disabled') + '>' + trafficWarEsc(team.team_name || trafficWarTeamSlotName(team.team_slot)) + '｜' + (team.unlocked ? (Number(team.slot_limit || 0) + '槽') : '發展解鎖') + '</button>';
+        var teamId = normalizeTrafficWarTeamId(team.team_id || team.team_slot);
+        return '<button type="button" ' + (team.active ? 'class="active" ' : '') + (team.unlocked ? 'onclick="setTrafficWarActiveTeam(\'' + teamId + '\')"' : 'disabled') + '>' + trafficWarEsc(team.team_name || trafficWarTeamSlotName(team.team_slot)) + '｜' + (team.unlocked ? (Number(team.slot_limit || 0) + '槽') : '發展解鎖') + '</button>';
       }).join('') + '</div>';
       var lockedTeams = teams.filter(function(team) { return Number(team.team_slot || 1) > 1 && !team.unlocked; });
       if (lockedTeams.length) header += '<div class="tw-team-lock-list">' + lockedTeams.map(function(team) {
@@ -12743,22 +12824,34 @@ function showCollectionHistory() {
     }
 
     async function toggleTrafficWarCard(cardId) {
-      var state = loadTrafficWarState();
+      var state = applyTrafficWarActiveTeam(loadTrafficWarState(), trafficWarActiveTeamId);
       if (trafficWarPendingActions.setTeam) return;
-      var selected = (state.player_season.selected_team_card_ids || []).slice();
+      var teamId = normalizeTrafficWarTeamId(state.active_team_id || trafficWarActiveTeamId);
+      var activeTeam = trafficWarActiveTeam(state) || {};
+      if (!activeTeam.unlocked) return alert(activeTeam.lock_reason || '此巡演團體尚未解鎖。');
+      var slotLimit = Math.max(1, Number(activeTeam.slot_limit || 3));
+      var selected = (activeTeam.selected_team_card_ids || state.player_season.selected_team_card_ids || []).slice();
       var index = selected.indexOf(cardId);
       if (index >= 0) selected.splice(index, 1);
       else {
-        if (selected.length >= 3) return alert('星潮沙盤戰目前固定 3 張卡巡演，請先取消一張卡。');
+        if (selected.length >= slotLimit) return alert('此巡演團體目前最多放入 ' + slotLimit + ' 張卡，請先取消一張卡。');
         selected.push(cardId);
       }
-      state.player_season.selected_team_card_ids = selected;
+      state.teams = trafficWarTeams(state).map(function(team) {
+        if (normalizeTrafficWarTeamId(team.team_id || team.team_slot) === teamId) {
+          team.selected_team_card_ids = selected.slice();
+          team.active = true;
+        }
+        return team;
+      });
+      state.player_season.selected_team_card_ids = selected.slice();
+      state = applyTrafficWarActiveTeam(state, teamId);
       saveTrafficWarState(state);
       renderTrafficWarTeam(state);
       patchTrafficWarMapTiles(state, null);
       renderTrafficWarDrawer(state);
       return runTrafficWarAction('setTeam', async function() { try {
-        var res = await trafficWarRpc('setTrafficWarTeam', [getTrafficWarUid(), selected]);
+        var res = await trafficWarRpc('setTrafficWarTeam', [getTrafficWarUid(), selected, teamId]);
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
         alert(err && err.message ? err.message : String(err));
@@ -12797,15 +12890,17 @@ function showCollectionHistory() {
     }
 
     async function challengeTrafficWarRegion(tileId) {
-      var state = loadTrafficWarState();
+      var state = applyTrafficWarActiveTeam(loadTrafficWarState(), trafficWarActiveTeamId);
+      var teamId = normalizeTrafficWarTeamId(state.active_team_id || trafficWarActiveTeamId);
       var tile = findTrafficWarTile(state, tileId);
       if (!tile) return;
       if (!state.player_season.faction) return alert('請先選擇陣營。');
-      if ((state.player_season.selected_team_card_ids || []).length !== 3) return alert('請先選滿 3 張卡牌巡演團體。');
+      var requiredCount = trafficWarActiveSlotLimit(state);
+      if ((state.player_season.selected_team_card_ids || []).length !== requiredCount) return alert('請先選滿 ' + requiredCount + ' 張卡牌巡演團體。');
       if (!tile.can_attack) return alert(trafficWarAttackDisabledReason(state, tile));
       if (!(await trafficWarConfirmDispatch(state, tile, 'attack'))) return;
       return runTrafficWarAction('challenge', async function() { try {
-        var res = await trafficWarRpc('challengeTrafficWarRegion', [getTrafficWarUid(), tileId]);
+        var res = await trafficWarRpc('challengeTrafficWarRegion', [getTrafficWarUid(), tileId, teamId]);
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) showTrafficWarResult(res.result);
       } catch (err) {
@@ -12815,7 +12910,7 @@ function showCollectionHistory() {
 
     async function collectTrafficWarTileResource(tileId) {
       return runTrafficWarAction('collect:' + tileId, async function() { try {
-        var res = await trafficWarRpc('collectTrafficWarTileResource', [getTrafficWarUid(), tileId]);
+        var res = await trafficWarRpc('collectTrafficWarTileResource', [getTrafficWarUid(), tileId, trafficWarActiveTeamId]);
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) {
           showTrafficWarResult(Object.assign({ success: true, collectOnly: true }, res.result));
@@ -12827,7 +12922,7 @@ function showCollectionHistory() {
 
     async function collectAllTrafficWarTileResources() {
       return runTrafficWarAction('collectAll', async function() { try {
-        var res = await trafficWarRpc('collectAllTrafficWarTileResources', [getTrafficWarUid()]);
+        var res = await trafficWarRpc('collectAllTrafficWarTileResources', [getTrafficWarUid(), trafficWarActiveTeamId]);
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) {
           showTrafficWarResult(Object.assign({ success: true, collectOnly: true, collectAll: true }, res.result));
@@ -12838,7 +12933,8 @@ function showCollectionHistory() {
     }
 
     async function gatherTrafficWarTileResource(tileId) {
-      var state = loadTrafficWarState();
+      var state = applyTrafficWarActiveTeam(loadTrafficWarState(), trafficWarActiveTeamId);
+      var teamId = normalizeTrafficWarTeamId(state.active_team_id || trafficWarActiveTeamId);
       var tile = findTrafficWarTile(state, tileId);
       if (!tile) return;
       if (!tile.can_gather_resource) return alert('此地塊目前不能快閃。');
@@ -12846,7 +12942,7 @@ function showCollectionHistory() {
       if (Number((state.player_season || {}).stamina || 0) < Number(tile.gather_stamina_cost || 2)) return alert('行動力不足，無法快閃。');
       if (!(await trafficWarConfirmDispatch(state, tile, 'gather'))) return;
       return runTrafficWarAction('gather:' + tileId, async function() { try {
-        var res = await trafficWarRpc('gatherTrafficWarTileResource', [getTrafficWarUid(), tileId]);
+        var res = await trafficWarRpc('gatherTrafficWarTileResource', [getTrafficWarUid(), tileId, teamId]);
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) {
           showTrafficWarResult(res.result);
@@ -12865,7 +12961,7 @@ function showCollectionHistory() {
       var ok = confirm('確定要放棄 ' + tileId + '？\\n' + trafficWarAbandonText(tile) + '，完成前此格會進入撤離中。');
       if (!ok) return;
       return runTrafficWarAction('abandon:' + tileId, async function() { try {
-        var res = await trafficWarRpc('abandonTrafficWarTile', [getTrafficWarUid(), tileId]);
+        var res = await trafficWarRpc('abandonTrafficWarTile', [getTrafficWarUid(), tileId, trafficWarActiveTeamId]);
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) {
           showTrafficWarResult(Object.assign({ success: true, abandonOnly: true }, res.result));
@@ -12876,14 +12972,15 @@ function showCollectionHistory() {
     }
 
     async function buildTrafficWarBranch(tileId) {
-      var state = loadTrafficWarState();
+      var state = applyTrafficWarActiveTeam(loadTrafficWarState(), trafficWarActiveTeamId);
+      var teamId = normalizeTrafficWarTeamId(state.active_team_id || trafficWarActiveTeamId);
       var tile = findTrafficWarTile(state, tileId);
       if (!tile) return;
       var reason = trafficWarBranchDisabledReason(state, tile);
       if (reason) return alert(reason);
       if (!(await trafficWarConfirmDispatch(state, tile, 'branch'))) return;
       return runTrafficWarAction('buildBranch:' + tileId, async function() { try {
-        var res = await trafficWarRpc('buildTrafficWarBranch', [getTrafficWarUid(), tileId]);
+        var res = await trafficWarRpc('buildTrafficWarBranch', [getTrafficWarUid(), tileId, teamId]);
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         setTimeout(function() {
           var st = loadTrafficWarState();
@@ -12901,7 +12998,7 @@ function showCollectionHistory() {
 
     async function upgradeTrafficWarTech(key) {
       return runTrafficWarAction('tech:' + key, async function() { try {
-        var res = await trafficWarRpc('upgradeTrafficWarTech', [getTrafficWarUid(), key]);
+        var res = await trafficWarRpc('upgradeTrafficWarTech', [getTrafficWarUid(), key, trafficWarActiveTeamId]);
         if (res && res.success === false) alert(res.msg || '發展升級失敗');
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
@@ -12912,7 +13009,7 @@ function showCollectionHistory() {
     async function upgradeTrafficWarSkill(encodedCardId) {
       var cardId = decodeURIComponent(encodedCardId || '');
       return runTrafficWarAction('skill:' + cardId, async function() { try {
-        var res = await trafficWarRpc('upgradeTrafficWarSkill', [getTrafficWarUid(), cardId]);
+        var res = await trafficWarRpc('upgradeTrafficWarSkill', [getTrafficWarUid(), cardId, trafficWarActiveTeamId]);
         if (res && res.success === false) alert(res.msg || '技能升級失敗');
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
@@ -12922,7 +13019,7 @@ function showCollectionHistory() {
 
     async function returnTrafficWarTeamHome() {
       return runTrafficWarAction('returnHome', async function() { try {
-        var res = await trafficWarRpc('returnTrafficWarTeamHome', [getTrafficWarUid()]);
+        var res = await trafficWarRpc('returnTrafficWarTeamHome', [getTrafficWarUid(), trafficWarActiveTeamId]);
         if (res && res.success === false) alert(res.msg || '返回總部失敗');
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) showTrafficWarResult(res.result);
@@ -12933,7 +13030,7 @@ function showCollectionHistory() {
 
     async function returnTrafficWarTeamBranch() {
       return runTrafficWarAction('returnBranch', async function() { try {
-        var res = await trafficWarRpc('returnTrafficWarTeamBranch', [getTrafficWarUid()]);
+        var res = await trafficWarRpc('returnTrafficWarTeamBranch', [getTrafficWarUid(), trafficWarActiveTeamId]);
         if (res && res.success === false) alert(res.msg || '返回分部失敗');
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
         if (res && res.result) showTrafficWarResult(res.result);
@@ -12944,7 +13041,7 @@ function showCollectionHistory() {
 
     async function stationTrafficWarTeamAtBranch(tileId) {
       return runTrafficWarAction('stationBranch:' + tileId, async function() { try {
-        var res = await trafficWarRpc('stationTrafficWarTeamAtBranch', [getTrafficWarUid(), tileId]);
+        var res = await trafficWarRpc('stationTrafficWarTeamAtBranch', [getTrafficWarUid(), tileId, trafficWarActiveTeamId]);
         if (res && res.success === false) alert(res.msg || '入駐分部失敗');
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
@@ -12953,14 +13050,14 @@ function showCollectionHistory() {
     }
 
     async function renameTrafficWarTeam() {
-      var state = loadTrafficWarState();
+      var state = applyTrafficWarActiveTeam(loadTrafficWarState(), trafficWarActiveTeamId);
       var currentName = state.player_season.team_name || '巡演團體一';
       var nextName = prompt('輸入新的巡演團體名稱', currentName);
       if (nextName == null) return;
       nextName = String(nextName || '').trim();
       if (!nextName) return;
       return runTrafficWarAction('renameTeam', async function() { try {
-        var res = await trafficWarRpc('renameTrafficWarTeam', [getTrafficWarUid(), nextName]);
+        var res = await trafficWarRpc('renameTrafficWarTeam', [getTrafficWarUid(), nextName, trafficWarActiveTeamId]);
         if (res && res.success === false) alert(res.msg || '改名失敗');
         if (!applyTrafficWarDashboard(res && res.dashboard)) renderTrafficWar(true);
       } catch (err) {
@@ -13067,6 +13164,7 @@ function showCollectionHistory() {
     }, true);
 
     window.renderTrafficWar = renderTrafficWar;
+    window.setTrafficWarActiveTeam = setTrafficWarActiveTeam;
     window.chooseTrafficWarFaction = chooseTrafficWarFaction;
     window.toggleTrafficWarCard = toggleTrafficWarCard;
     window.scoutTrafficWarTile = scoutTrafficWarTile;
