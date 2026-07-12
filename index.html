@@ -3068,7 +3068,7 @@
     <div class="rookie-guide-spotlight" id="rookie-guide-spotlight"></div>
     <div class="rookie-guide-cursor" id="rookie-guide-cursor"></div>
     <div class="rookie-guide-card" role="dialog" aria-live="polite" aria-label="新手引導">
-      <div class="rookie-guide-meta"><span id="rookie-guide-step-label">新手引導</span><span id="rookie-guide-progress">1 / 5</span></div>
+      <div class="rookie-guide-meta"><span id="rookie-guide-step-label">新手引導</span><span id="rookie-guide-progress">1 / 11</span></div>
       <h3 id="rookie-guide-title">歡迎來到 T-LO</h3>
       <p id="rookie-guide-body">主玩法是卡牌連線討伐戰。</p>
       <div class="rookie-guide-demo" id="rookie-guide-demo" style="display:none;"><span class="pair">A</span><span>A</span><span class="pair">B</span><span>B</span></div>
@@ -3141,7 +3141,7 @@
         <button type="button" id="guide-collection-entry" onclick="openCollectionModal()"><span>▣</span>卡盒</button>
         <button type="button" onclick="openMissionModal()"><span>✓</span>任務</button>
         <button type="button" onclick="openTrainingModal()"><span>🏆</span>排行</button>
-        <button type="button" onclick="showGameScreen('traffic')"><span>♛</span>流量戰爭<br><small>星潮沙盤戰</small></button>
+        <button type="button" id="guide-traffic-entry" onclick="showGameScreen('traffic')"><span>♛</span>流量戰爭<br><small>星潮沙盤戰</small></button>
         <button type="button" onclick="showGameScreen('social')"><span>🤝</span>社交</button>
         <button type="button" onclick="showGameScreen('profile')"><span>👤</span>個人</button>
         <button type="button" onclick="openLobbyMoreModal()"><span>•••</span>更多</button>
@@ -3175,22 +3175,23 @@
           <div class="lobby-modal-head">
             <div>
               <h3>📘 T-LO 新手指南</h3>
-              <p>主玩法是卡牌連線討伐戰；抽卡、養成與支線都是為了讓你更好地討伐 Boss。</p>
+              <p>先熟悉抽卡、卡盒、戰鬥與星潮沙盤戰；需要完整規則時，可開啟官方新手教學。</p>
             </div>
             <button type="button" class="lobby-modal-close" onclick="closeGameGuideModal()">×</button>
           </div>
           <div class="guide-panel-list">
-            <section><h4>主要目標</h4><p>收集卡牌、培養角色，進入「連線討伐戰」用配對與連線打倒 Boss。</p></section>
+            <section><h4>第一步：抽卡與卡盒</h4><p>先確認目前卡池與機率公告，再使用抽卡次數取得角色。卡盒會顯示持有狀態、稀有度、星等與可使用卡牌。</p></section>
             <section><h4>主玩法：連線討伐戰</h4><p>在盤面中找出相同卡牌並連線消除，累積 Combo 與傷害。關卡會有時間、錯誤次數、轉彎限制與 Boss 技能。</p></section>
-            <section><h4>卡盒圖鑑</h4><p>卡盒會顯示你的持有狀態、限定分類與訂製卡。沒有抽到的卡也可能透過關卡或活動取得。</p></section>
-            <section><h4>支線做什麼</h4><p>爭霸戰、遠征異世界、每日副本、競技場、魔王挑戰與世界 Boss，主要用來取得抽卡、能量、限定卡與養成材料。</p></section>
+            <section><h4>星潮沙盤戰</h4><p>選擇娛樂主播、實況主播或虛擬主播陣營，從總部相鄰地塊開始推進，佔領資源地累積人氣與打賞。</p></section>
+            <section><h4>回補與發展</h4><p>隊伍體力不足時回總部或分公司休息；行動力不足時先領取地盤產出，並用人氣與打賞安排發展科技。</p></section>
           </div>
           <div class="guide-route" aria-label="建議路線">
-            <span>看卡盒</span><span>進連線討伐</span><span>打支線拿資源</span><span>養成卡牌</span><span>挑戰更高難度</span>
+            <span>抽卡</span><span>看卡盒</span><span>進戰場</span><span>開沙盤</span><span>發展科技</span>
           </div>
           <div class="guide-modal-actions">
             <button type="button" onclick="closeGameGuideModal(); startRookieGuide(true)">播放動畫引導</button>
             <button type="button" class="primary" onclick="closeGameGuideModal(); showGameScreen('battle')">前往星域戰場</button>
+            <button type="button" onclick="window.open('https://xiaxguang.github.io/guide/','_blank','noopener')">官方新手教學</button>
           </div>
         </div>
       </div>
@@ -3241,6 +3242,7 @@
             <button type="button" onclick="openWorldBossModal(); closeLobbyMoreModal()"><span>🌍</span><b>世界BOSS</b><small>全服同步討伐與傷害排名</small></button>
             <button type="button" onclick="openCharacterGrowthModal(); closeLobbyMoreModal()"><span>★</span><b>角色養成</b><small>等級、經驗、技能與升星</small></button>
             <button type="button" onclick="openMissionModal(); closeLobbyMoreModal()"><span>🎁</span><b>福利任務</b><small>每日、新手、主線與一鍵領取</small></button>
+            <button type="button" onclick="closeLobbyMoreModal(); startRookieGuide(true)"><span>?</span><b>新手引導</b><small>重新播放操作導覽</small></button>
             <button type="button" onclick="showGameScreen('traffic'); closeLobbyMoreModal()"><span>♛</span><b>流量戰爭</b><small>星潮沙盤戰</small></button>
             <button type="button" onclick="showGameScreen('shop'); closeLobbyMoreModal()"><span>🛒</span><b>商城</b><small>補給與儲值商品</small></button>
             <button type="button" onclick="showGameScreen('profile'); closeLobbyMoreModal()"><span>👤</span><b>個人</b><small>資產、券與自我介紹</small></button>
@@ -13666,13 +13668,19 @@ function showCollectionHistory() {
         screen: 'home',
         selector: '#homeScreen .lobby-stage',
         title: '歡迎來到 T-LO',
-        body: '你的核心目標是收集卡牌、培養角色，進入主玩法「卡牌連線討伐戰」挑戰 Boss。'
+        body: '先從抽卡、卡盒與星域戰場開始，再進入星潮沙盤戰佔領地塊、取得資源並升級科技。'
+      },
+      {
+        screen: 'home',
+        selector: '#guide-gacha-entry',
+        title: '第一步：前往抽卡',
+        body: '抽卡祭壇可切換目前開放中的卡池。抽卡前可查看機率公告，抽卡結果會寫入卡盒與抽卡紀錄。'
       },
       {
         screen: 'home',
         selector: '#guide-collection-entry',
         title: '先認識你的卡盒',
-        body: '卡盒是你的圖鑑。這裡會顯示已持有、未持有、限定分類與訂製卡牌。'
+        body: '卡盒會顯示已持有、未持有、限定分類與訂製卡牌。之後編隊會從已持有卡牌中選擇。'
       },
       {
         screen: 'home',
@@ -13688,10 +13696,44 @@ function showCollectionHistory() {
         demo: true
       },
       {
-        screen: 'battle',
-        selector: '#guide-side-modes',
-        title: '支線是變強的路線',
-        body: '爭霸戰是日常支線；遠征、每日副本、競技場、魔王挑戰與世界 Boss，主要用來取得資源、限定卡與養成材料。'
+        screen: 'home',
+        selector: '#guide-traffic-entry',
+        title: '進入星潮沙盤戰',
+        body: '流量戰爭是星域地圖玩法。選擇陣營後，從總部相鄰地塊開始推進。'
+      },
+      {
+        screen: 'traffic',
+        selector: '#traffic-war-region-grid',
+        title: '查看星域地圖',
+        body: '點擊地塊可查看等級、種類、預估敵方戰力、預估產出與佔領後每小時產出。'
+      },
+      {
+        screen: 'traffic',
+        panel: 'team',
+        selector: '.traffic-war-window-nav [data-tw-panel="team"]',
+        title: '組團與出征',
+        body: '在組團面板選擇巡演團體與卡牌。隊伍需在總部且非行動中，才能重新編隊。'
+      },
+      {
+        screen: 'traffic',
+        panel: 'city',
+        selector: '.traffic-war-window-nav [data-tw-panel="city"]',
+        title: '查看資源與回補',
+        body: '總部面板可查看人氣、打賞、行動力、持有格與每小時產出。隊伍體力不足時可回總部或分公司休息。'
+      },
+      {
+        screen: 'traffic',
+        panel: 'tech',
+        selector: '.traffic-war-window-nav [data-tw-panel="tech"]',
+        title: '升級發展科技',
+        body: '用人氣與打賞升級新團出道、添加新血、公司擴編等發展項目，解鎖更多隊伍、卡位與持有格。'
+      },
+      {
+        screen: 'traffic',
+        panel: 'result',
+        selector: '.traffic-war-window-nav [data-tw-panel="result"]',
+        title: '查看成果與戰報',
+        body: '出征後可在成果與戰報中查看移動、表演、佔領成功、佔領失敗、資源領取與返回休息紀錄。'
       }
     ];
 
@@ -13719,13 +13761,22 @@ function showCollectionHistory() {
       }
     }
 
-    function guideSafeShowScreen(screenName) {
+    function guideSafeShowScreen(screenName, step) {
       if (typeof window.showGameScreen === 'function') window.showGameScreen(screenName || 'home');
       if (screenName === 'battle') {
         var main = document.querySelector('.mode-group-main');
         var side = document.getElementById('guide-side-modes');
         if (main) main.open = true;
         if (side) side.open = true;
+      }
+      if (screenName === 'traffic') {
+        setTimeout(function() {
+          if (typeof window.openTrafficWarWindow === 'function') window.openTrafficWarWindow(false);
+          if (step && typeof step.panel !== 'undefined' && typeof window.openTrafficWarPanel === 'function') {
+            if (step.panel) window.openTrafficWarPanel(step.panel);
+            else if (typeof window.closeTrafficWarPanel === 'function') window.closeTrafficWarPanel();
+          }
+        }, 180);
       }
     }
 
@@ -13759,7 +13810,7 @@ function showCollectionHistory() {
     function renderRookieGuideStep() {
       if (!rookieGuideActive) return;
       var step = rookieGuideSteps[rookieGuideIndex] || rookieGuideSteps[0];
-      guideSafeShowScreen(step.screen || 'home');
+      guideSafeShowScreen(step.screen || 'home', step);
       var title = document.getElementById('rookie-guide-title');
       var body = document.getElementById('rookie-guide-body');
       var progress = document.getElementById('rookie-guide-progress');
