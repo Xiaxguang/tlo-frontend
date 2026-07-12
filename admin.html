@@ -106,6 +106,7 @@
         <button class="tab" onclick="showTab('shop', this); loadShopAdmin();">商城管理</button>
         <button class="tab" onclick="showTab('chat', this); loadChatAdmin();">聊天公告</button>
         <button class="tab" onclick="showTab('worldboss', this); loadWorldBossAdmin();">世界BOSS</button>
+        <button class="tab" onclick="showTab('trafficwar', this); loadTrafficWarAdmin();">沙盤戰</button>
         <button class="tab" onclick="showTab('redeem', this); loadRedeemCodes();">兌換碼</button>
         <button class="tab" onclick="showTab('backup', this);">備份匯出</button>
         <button class="tab" onclick="showTab('settings', this); loadOpsSettings();">公告/維護</button>
@@ -648,6 +649,53 @@
         <div id="worldBossTable"></div>
       </div>
 
+      <div id="tab-trafficwar" class="hide panel">
+        <h2>星潮沙盤戰 / 流量戰爭後台</h2>
+        <div class="muted">管理目前啟用賽季、查看沙盤進度統計，並可重置本賽季測試進度。此區不會修改抽卡機率、抽卡權重或卡池內容。</div>
+        <div id="trafficWarStats" class="statgrid" style="margin-top:14px"></div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>賽季設定</h3>
+            <label>目前啟用賽季 ID</label><input id="twSeasonId" disabled>
+            <div class="row3">
+              <div><label>賽季編號</label><input id="twSeasonNo" type="number" min="1" value="1"></div>
+              <div><label>賽季名稱</label><input id="twSeasonName" maxlength="80"></div>
+              <div><label>前台顯示名稱</label><input id="twDisplayName" maxlength="120"></div>
+            </div>
+            <div class="row3">
+              <div><label>狀態</label><select id="twStatus"><option value="active">開放中</option><option value="paused">暫停</option><option value="finished">已結算</option></select></div>
+              <div><label>勝利陣營</label><select id="twWinningFaction"><option value="">尚未結算</option><option value="entertainment">娛樂主播</option><option value="streamer">實況主播</option><option value="professional">虛擬主播</option></select></div>
+              <div><label>最後重置時間</label><input id="twResetAt" disabled></div>
+            </div>
+            <div class="row">
+              <div><label>開始時間</label><input id="twStartTime" type="datetime-local"></div>
+              <div><label>結束時間</label><input id="twEndTime" type="datetime-local"></div>
+            </div>
+            <div class="row">
+              <div><label>規則版本</label><input id="twRulesVersion" maxlength="80"></div>
+              <div><label>地圖版本</label><input id="twMapVersion" maxlength="80"></div>
+            </div>
+            <label>後台備註</label><textarea id="twNotes" maxlength="1000" placeholder="例如：S2 測試、調整地圖後待驗證"></textarea>
+            <div class="row" style="grid-template-columns:1fr auto auto">
+              <div id="trafficWarAdminMsg" class="msg"></div>
+              <button class="ghost" onclick="loadTrafficWarAdmin()">重新讀取</button>
+              <button class="primary" onclick="saveTrafficWarSeason()">儲存賽季設定</button>
+            </div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>地圖與重置</h3>
+            <div id="trafficWarConfig" class="muted">尚未讀取。</div>
+            <hr style="border:0;border-top:1px solid #333;margin:16px 0">
+            <div class="muted">重置只會清除沙盤戰本賽季進度：玩家陣營、地塊持有、隊伍、分公司、發展、技能、戰報、攻擊進度。卡牌、卡池、抽卡紀錄不會被動到。</div>
+            <label>重置確認文字</label><input id="twResetConfirm" placeholder="輸入 RESET">
+            <button class="danger" onclick="resetTrafficWarSeason()" style="width:100%;margin-top:10px">重置目前賽季測試進度</button>
+            <div id="trafficWarResetMsg" class="msg"></div>
+          </div>
+        </div>
+        <h3>賽季列表</h3>
+        <div id="trafficWarSeasonTable"></div>
+      </div>
+
 <div id="tab-redeem" class="hide panel">
         <h2>🎟️ 兌換碼 / 補償碼</h2>
         <div class="muted">可建立活動碼、補償碼。玩家前台輸入後可領抽卡次數、指定卡片、排行榜分數或潮流能量。</div>
@@ -786,6 +834,7 @@ let worldBossRows = [];
 let linkBattleStageRows = [];
 let linkBattleBossRows = [];
 let linkBattleChapterRows = [];
+let trafficWarAdminData = null;
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
@@ -823,6 +872,7 @@ function getAdminTabPanels(tabId){
   if(tabId === 'cards') return Array.from(document.querySelectorAll('#tab-cards > .split > .panel, #tab-cards > .panel'));
   if(tabId === 'stages') return Array.from(document.querySelectorAll('#tab-stages > .panel, #tab-stages > .split > .panel'));
   if(tabId === 'linkbattle') return Array.from(document.querySelectorAll('#tab-linkbattle > .panel, #tab-linkbattle > .split > .panel'));
+  if(tabId === 'trafficwar') return Array.from(document.querySelectorAll('#tab-trafficwar > .panel, #tab-trafficwar > .split > .panel'));
   return [];
 }
 
@@ -842,7 +892,7 @@ function addAdminTabTools(tabId){
 }
 
 function enhanceAdminLayout(){
-  ['cards','stages','linkbattle'].forEach(tabId => {
+  ['cards','stages','linkbattle','trafficwar'].forEach(tabId => {
     addAdminTabTools(tabId);
     getAdminTabPanels(tabId).forEach((panel, index) => setupCollapsiblePanel(panel, {collapsed:index > 0}));
   });
@@ -1121,6 +1171,120 @@ async function settleWorldBossEvent(i){
   }catch(e){ msg('worldBossMsg',e.message); }
 }
 
+function trafficWarFactionLabel(faction){
+  return ({entertainment:'娛樂主播',streamer:'實況主播',professional:'虛擬主播',unowned:'未佔領',none:'未選擇'})[String(faction || '')] || String(faction || '-');
+}
+
+function trafficWarStatusLabel(status){
+  return ({active:'開放中',paused:'暫停',finished:'已結算'})[String(status || '')] || String(status || '-');
+}
+
+function trafficWarStatCard(label, value, sub=''){
+  return `<div class="stat">${esc(label)}<b>${fmt(value)}</b>${sub ? `<span class="muted">${esc(sub)}</span>` : ''}</div>`;
+}
+
+async function loadTrafficWarAdmin(){
+  try{
+    msg('trafficWarAdminMsg','讀取沙盤戰後台資料中...',true);
+    const data = await rpc('adminGetTrafficWarDashboard', []);
+    trafficWarAdminData = data;
+    renderTrafficWarAdmin(data);
+    msg('trafficWarAdminMsg','沙盤戰資料已更新。',true);
+  }catch(e){ msg('trafficWarAdminMsg', e.message); }
+}
+
+function renderTrafficWarAdmin(data){
+  if(!data || !$('twSeasonId')) return;
+  const season = data.activeSeason || {};
+  const stats = data.stats || {};
+  const config = data.config || {};
+  $('twSeasonId').value = season.season_id || config.active_season_id || '';
+  $('twSeasonNo').value = season.season_no || 1;
+  $('twSeasonName').value = season.season_name || '';
+  $('twDisplayName').value = season.display_name || '';
+  $('twStatus').value = season.status || 'active';
+  $('twWinningFaction').value = season.winning_faction || '';
+  $('twResetAt').value = season.reset_at ? new Date(season.reset_at).toLocaleString() : '尚未重置';
+  $('twStartTime').value = toLocalDateTimeInput(season.start_time);
+  $('twEndTime').value = toLocalDateTimeInput(season.end_time);
+  $('twRulesVersion').value = season.rules_version || config.rules_version || '';
+  $('twMapVersion').value = season.map_version || config.map_version || '';
+  $('twNotes').value = season.notes || '';
+  if($('trafficWarStats')){
+    $('trafficWarStats').innerHTML = [
+      trafficWarStatCard('地圖格數', stats.tile_count || 0, `${fmt(stats.occupied_tile_count || 0)} 已佔領`),
+      trafficWarStatCard('資源地', stats.resource_tile_count || 0, `${fmt(stats.branch_tile_count || 0)} 分公司`),
+      trafficWarStatCard('參與玩家', stats.player_count || 0, `${fmt(stats.faction_player_count || 0)} 已選陣營`),
+      trafficWarStatCard('巡演團體', stats.team_count || 0, `${fmt(stats.busy_team_count || 0)} 行動中`),
+      trafficWarStatCard('發展項目', stats.tech_count || 0, `${fmt(stats.pending_tech_count || 0)} 研發中`),
+      trafficWarStatCard('戰報紀錄', stats.log_count || 0, `${fmt(stats.attack_progress_count || 0)} 攻擊進度保留中`)
+    ].join('');
+  }
+  if($('trafficWarConfig')){
+    const factionTiles = (stats.faction_tiles || []).map(x => `${trafficWarFactionLabel(x.faction)} ${fmt(x.count)}`).join('｜') || '尚無地塊歸屬';
+    const factionPlayers = (stats.faction_players || []).map(x => `${trafficWarFactionLabel(x.faction)} ${fmt(x.count)}`).join('｜') || '尚無玩家陣營';
+    $('trafficWarConfig').innerHTML = `
+      <b>地圖</b>：${fmt(config.map_width)} x ${fmt(config.map_height)}，中央年度盛典 ${esc(config.center_tile_id || '-')}<br>
+      <b>目前賽季</b>：${esc(config.active_season_id || season.season_id || '-')}｜${esc(trafficWarStatusLabel(season.status))}<br>
+      <b>地塊分布</b>：${esc(factionTiles)}<br>
+      <b>玩家陣營</b>：${esc(factionPlayers)}
+    `;
+  }
+  if($('trafficWarSeasonTable')){
+    const rows = data.seasons || [];
+    $('trafficWarSeasonTable').innerHTML = rows.length ? `<table><thead><tr><th>賽季</th><th>時間</th><th>狀態</th><th>版本</th><th>重置</th></tr></thead><tbody>` +
+      rows.map(s => `<tr>
+        <td><b>${esc(s.display_name || s.season_name || s.season_id)}</b><br><span class="muted">${esc(s.season_id)}｜S${fmt(s.season_no || 1)}</span></td>
+        <td>${s.start_time ? esc(new Date(s.start_time).toLocaleString()) : '-'}<br><span class="muted">～ ${s.end_time ? esc(new Date(s.end_time).toLocaleString()) : '-'}</span></td>
+        <td>${esc(trafficWarStatusLabel(s.status))}<br><span class="muted">${s.winning_faction ? '勝利：' + esc(trafficWarFactionLabel(s.winning_faction)) : '尚未結算'}</span></td>
+        <td>${esc(s.rules_version || '-')}<br><span class="muted">${esc(s.map_version || '-')}</span></td>
+        <td>${s.reset_at ? esc(new Date(s.reset_at).toLocaleString()) : '<span class="muted">尚未重置</span>'}</td>
+      </tr>`).join('') + `</tbody></table>` : '<div class="muted">尚無賽季資料。</div>';
+  }
+}
+
+async function saveTrafficWarSeason(){
+  try{
+    const payload = {
+      seasonNo:$('twSeasonNo').value,
+      seasonName:$('twSeasonName').value.trim(),
+      displayName:$('twDisplayName').value.trim(),
+      status:$('twStatus').value,
+      winningFaction:$('twWinningFaction').value,
+      startTime:localDateTimeInputToIso($('twStartTime').value),
+      endTime:localDateTimeInputToIso($('twEndTime').value),
+      rulesVersion:$('twRulesVersion').value.trim(),
+      mapVersion:$('twMapVersion').value.trim(),
+      notes:$('twNotes').value.trim()
+    };
+    if(!payload.seasonName || !payload.displayName){ msg('trafficWarAdminMsg','請輸入賽季名稱與前台顯示名稱。'); return; }
+    if(!confirm('確定儲存沙盤戰賽季設定？')) return;
+    msg('trafficWarAdminMsg','儲存中...',true);
+    const data = await rpc('adminUpdateTrafficWarSeason', [payload]);
+    trafficWarAdminData = data;
+    renderTrafficWarAdmin(data);
+    msg('trafficWarAdminMsg', data.msg || '沙盤戰賽季設定已更新。', true);
+  }catch(e){ msg('trafficWarAdminMsg', e.message); }
+}
+
+async function resetTrafficWarSeason(){
+  try{
+    const seasonId = $('twSeasonId').value || (trafficWarAdminData?.config?.active_season_id || '');
+    const confirmText = $('twResetConfirm').value.trim();
+    if(confirmText.toUpperCase() !== 'RESET'){ msg('trafficWarResetMsg','請先輸入 RESET。'); return; }
+    if(!confirm(`確定重置「${seasonId}」的沙盤戰測試進度？此操作不會重置抽卡與卡牌資料。`)) return;
+    msg('trafficWarResetMsg','重置中...',true);
+    const data = await rpc('adminResetTrafficWarSeason', [seasonId, confirmText]);
+    trafficWarAdminData = data;
+    renderTrafficWarAdmin(data);
+    $('twResetConfirm').value = '';
+    const reset = data.reset || {};
+    const deleted = reset.deleted || {};
+    const detail = Object.entries(deleted).map(([table,count]) => `${table} ${fmt(count)}`).join('｜');
+    msg('trafficWarResetMsg', `${data.msg || '沙盤戰測試進度已重置。'} 清除地塊 ${fmt(reset.tilesCleared || 0)}；${detail}`, true);
+  }catch(e){ msg('trafficWarResetMsg', e.message); }
+}
+
 async function rpc(method, args=[], auth=true){
   const headers = {'Content-Type':'application/json'};
   if(auth && token()) headers.Authorization = 'Bearer ' + token();
@@ -1160,7 +1324,7 @@ async function logout(){
 
 function openGame(){ location.href = './'; }
 function showTab(name, btn){
-  ['players','cards','stages','linkbattle','shop','chat','worldboss','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
+  ['players','cards','stages','linkbattle','shop','chat','worldboss','trafficwar','redeem','backup','settings','logs','password'].forEach(t => $('tab-'+t).classList.toggle('hide', t!==name));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   enhanceAdminLayout();
