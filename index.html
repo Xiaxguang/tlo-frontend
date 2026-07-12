@@ -11349,7 +11349,7 @@ function showCollectionHistory() {
       var zBoost = buildingType === 'hq' ? 60 : (buildingType === 'branch' ? 36 : 0);
       var boostedZ = 100 + Number(tile.x || 0) + Number(tile.y || 0) + zBoost;
       var style = trafficWarIsoTileStyle(tile) + (zBoost ? '--tw-z:' + boostedZ + ';' : '') + "--tw-art:url('" + trafficWarCssUrl(asset) + "');";
-      return '<div id="tw-' + tileId + '" role="button" tabindex="0" data-tile-id="' + tileId + '" class="' + classes.map(trafficWarEsc).join(' ') + '" style="' + trafficWarEsc(style) + '" onclick="selectTrafficWarTile(\'' + tileId + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();selectTrafficWarTile(\'' + tileId + '\')}" title="' + tileId + '">'
+      return '<div id="tw-' + tileId + '" role="button" tabindex="0" data-tile-id="' + tileId + '" class="' + classes.map(trafficWarEsc).join(' ') + '" style="' + trafficWarEsc(style) + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();selectTrafficWarTile(\'' + tileId + '\')}" title="' + tileId + '">'
         + '<span class="tw-tile-hitbox" aria-hidden="true"></span>'
         + '<span class="tw-tile-art" aria-hidden="true"></span>'
         + '<span class="tw-tile-state-ring"></span>'
