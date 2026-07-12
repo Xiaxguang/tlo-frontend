@@ -10081,6 +10081,18 @@ function showCollectionHistory() {
       return trafficWarTileHash(x, y, 29) > 0.52 ? 'tip' : 'popularity';
     }
 
+    function trafficWarMockResourceEnemyMultiplier(level) {
+      var lv = Math.max(1, Math.min(10, Number(level || 1)));
+      if (lv <= 3) return 1.2;
+      if (lv === 4) return 1.55;
+      if (lv === 5) return 2;
+      if (lv === 6) return 2.6;
+      if (lv === 7) return 3.35;
+      if (lv === 8) return 4.25;
+      if (lv === 9) return 5.3;
+      return 5.8;
+    }
+
     function trafficWarTextHash(value) {
       var text = String(value || '');
       var hash = 0;
@@ -10107,6 +10119,7 @@ function showCollectionHistory() {
       var resourceType = isCenter || isHome || centerRing === 1 ? null : (fixedResourceType || trafficWarMockResourceType(x, y, distance, isCenter, isHome));
       var level = isCenter ? 10 : (centerRing === 1 ? 3 : (centerRing === 2 ? 10 : (resourceType ? trafficWarMockResourceLevel(x, y, distance) : trafficWarMockBaseLevel(distance, x, y))));
       var type = isCenter ? 'center' : (isHome ? 'spawn' : (resourceType ? 'resource' : 'normal'));
+      var baseEnemyPower = isCenter ? 260000 : [0,900,2200,4800,8500,14500,23000,36000,54000,78000,110000][level];
       return {
         tile_id: tileId,
         x: x,
@@ -10117,9 +10130,11 @@ function showCollectionHistory() {
         owner_faction: isHome ? faction : null,
         owner_uid: isHome ? getTrafficWarUid() : null,
         enemy_name: '卡池守軍',
-        enemy_power: isCenter ? 100000 : [0,1000,2500,5000,8000,12000,18000,26000,36000,50000,70000][level],
+        enemy_power: resourceType ? Math.floor(baseEnemyPower * trafficWarMockResourceEnemyMultiplier(level)) : baseEnemyPower,
         resource_type: resourceType,
-        resource_amount: resourceType ? Math.floor([0,0,0,30,50,80,120,180,250,350,500][level]) : 0,
+        resource_amount: resourceType ? Math.floor((resourceType === 'tip' ? [0,0,0,12,24,42,64,100,150,230,340] : [0,0,0,36,60,96,145,220,320,460,650])[level]) : 0,
+        attack_stamina_cost: Math.max(4, Math.min(28, 4 + Math.ceil(level * 1.65) + (resourceType ? 2 : 0) + (isCenter ? 6 : 0))),
+        gather_stamina_cost: Math.max(2, Math.min(12, 2 + Math.ceil(level / 2) + (resourceType ? 2 : 0))),
         is_center_city: isCenter,
         can_attack: false,
         can_collect_resource: false,
@@ -11738,12 +11753,12 @@ function showCollectionHistory() {
       var uid = trafficWarPlayerUid(state);
       if (!state.player_season.faction) return '不可攻打：請先選擇陣營';
       if (selectedCount !== requiredCount) return '不可攻打：請先組成 ' + requiredCount + ' 張卡巡演團體';
-      if (Number(state.player_season.stamina || 0) <= 0) return '不可攻打：行動力不足';
       if (trafficWarTeamBusyState(state.player_season)) return '不可攻打：隊伍' + trafficWarStatusText(state.player_season.team_status) + '，剩餘 ' + trafficWarDurationText(state.player_season.status_remaining_ms);
       if (Number(state.player_season.team_hp || 0) < 10) return '不可攻打：隊伍體力不足，系統會自動返回總部或分部休息';
       if (tile && tile.is_center_city && !state.center_unlocked) return '不可攻打：年度盛典尚未開放';
       if (tile && tile.owner_faction && tile.owner_faction === state.player_season.faction) return '不可攻打：同陣營地塊不需要攻打';
       if (tile && !trafficWarTileOwnedBySelf(state, tile) && !tile.is_center_city && Number(state.player_season.owned_tile_count || 0) >= Number(state.player_season.tile_limit || 15)) return '不可攻打：持有格已達上限，請升級發展「公司擴編」';
+      if (Number(state.player_season.stamina || 0) < trafficWarAttackStaminaCost(tile)) return '不可攻打：行動力不足，需要 ' + trafficWarAttackStaminaCost(tile).toLocaleString() + ' 點';
       if (!tile || !tile.can_attack) return '不可攻打：請先移動到相鄰格';
       return '';
     }
@@ -11868,8 +11883,15 @@ function showCollectionHistory() {
       if (!tile || tile.is_abandoning) return 0;
       var level = Math.max(1, Number(tile.level || 1));
       var base = Number(tile.resource_amount || 0) || level * 18;
-      var rate = tile.resource_type ? 0.45 : 0.3;
+      var rate = tile.resource_type ? (0.36 + level * 0.012) : 0.22;
       return Math.max(12, Math.floor(base * rate * trafficWarResourceProductionRate(state, tile.resource_type || 'popularity')));
+    }
+
+    function trafficWarAttackStaminaCost(tile) {
+      var level = Math.max(1, Math.min(10, Number(tile && tile.level || 1)));
+      var resourceBonus = tile && tile.resource_type ? 2 : 0;
+      var centerBonus = tile && tile.is_center_city ? 6 : 0;
+      return Math.max(4, Math.min(28, 4 + Math.ceil(level * 1.65) + resourceBonus + centerBonus));
     }
 
     function trafficWarGatherPreviewLine(state, tile) {
@@ -12426,9 +12448,10 @@ function showCollectionHistory() {
 
     function trafficWarBranchCost(tile) {
       var level = Math.max(1, Math.min(10, Number(tile && tile.level || 1)));
+      var highLevelSurcharge = Math.pow(Math.max(0, level - 3), 2);
       return {
-        popularity: Number(tile && tile.branch_cost_popularity || 0) || (500 + level * 120),
-        tip: Number(tile && tile.branch_cost_tip || 0) || (250 + level * 80)
+        popularity: Number(tile && tile.branch_cost_popularity || 0) || Math.round(520 + level * 145 + highLevelSurcharge * 38),
+        tip: Number(tile && tile.branch_cost_tip || 0) || Math.round(260 + level * 95 + highLevelSurcharge * 24)
       };
     }
 
@@ -12481,7 +12504,7 @@ function showCollectionHistory() {
         rows[2] = ['預計移動', '0 秒，將直接執行'];
       }
       if (action === 'attack') {
-        var attackCost = Math.max(5, Math.min(20, Number(tile && tile.level || 1) * 2));
+        var attackCost = Number(tile && tile.attack_stamina_cost || 0) || trafficWarAttackStaminaCost(tile);
         rows.push(['消耗行動力', attackCost.toLocaleString()]);
         rows.push(['預估敵方粉絲', Number(tile && tile.enemy_power || 0).toLocaleString()]);
       } else if (action === 'gather') {
@@ -12562,6 +12585,7 @@ function showCollectionHistory() {
         + '<span>所屬陣營</span><b>' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</b>'
         + '<span>進攻類型</span><b>' + trafficWarEsc(trafficWarAttackTypeText(state, tile)) + '</b>'
         + '<span>敵人預估粉絲</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b>'
+        + '<span>攻打行動力</span><b>' + Number(tile.attack_stamina_cost || trafficWarAttackStaminaCost(tile)).toLocaleString() + '</b>'
         + '<span>防守進度</span><b>' + trafficWarAttackProgressHtml(tile) + '</b>'
         + '<span>預計可獲得資源</span><b>' + trafficWarEsc(trafficWarRewardLine(tile)) + '</b>'
         + '<span>佔領後產出</span><b>' + trafficWarEsc(trafficWarProductionLine(tile, state)) + '</b>'
@@ -13148,14 +13172,14 @@ function showCollectionHistory() {
       var popularity = Number(player.popularity || 0);
       var tip = Number(player.tip || player.gift_energy || 0);
       var techs = [
-        { key:'training', route:'粉絲戰力', name:'藝人訓練室', desc:'旗下巡演團體總粉絲 +3% / 每級', resource:'人氣', max:10, lv:Number(tech.training||0), cost:function(lv){return 300 + lv*180;} },
-        { key:'popularity_output', route:'人氣產出', name:'流量營運', desc:'所有人氣產出 +5% / 每級', resource:'人氣', max:10, lv:Number(tech.popularity_output||0), cost:function(lv){return 260 + lv*160;} },
-        { key:'tip_output', route:'打賞產出', name:'打賞企劃', desc:'所有打賞產出 +5% / 每級', resource:'打賞', max:10, lv:Number(tech.tip_output||0), cost:function(lv){return 180 + lv*130;} },
-        { key:'extra_teams', route:'隊伍擴張', name:'新團出道', desc:'LV1 解鎖巡演團體二；LV2 解鎖巡演團體三。新巡演團體初始只能放入 2 張卡。', resource:'打賞', max:2, lv:Number(tech.extra_teams||0), cost:function(lv){return lv === 0 ? 800 : 1600;} },
-        { key:'team_size', route:'隊伍擴張', name:'添加新血', desc:'LV1 解鎖巡演團體二第三張卡；LV2 解鎖巡演團體三第三張卡。', resource:'人氣', max:2, lv:Number(tech.team_size||0), cost:function(lv){return lv === 0 ? 1200 : 2200;} },
-        { key:'company_expansion', route:'地盤擴張', name:'公司擴編', desc:'持有格上限 +3 / 每級，預設 15 格；LV1 解鎖分公司建造。', resource:'打賞', max:5, lv:Number(tech.company_expansion||0), cost:function(lv){return [700,1100,1600,2200,3000][lv] || 3000;} },
-        { key:'mobility', route:'機動補給', name:'通告快轉', desc:'降低行動力壓力，提升跑圖效率。', resource:'人氣', max:5, lv:Number(tech.mobility||0), cost:function(lv){return 400 + lv*260;} },
-        { key:'festival', route:'年度盛典', name:'盛典公關', desc:'攻打年度盛典時粉絲提升。', resource:'打賞', max:5, lv:Number(tech.festival||0), cost:function(lv){return 500 + lv*320;} }
+        { key:'training', route:'粉絲戰力', name:'藝人訓練室', desc:'旗下巡演團體總粉絲 +3% / 每級', resource:'人氣', max:10, lv:Number(tech.training||0), cost:function(lv){return 320 + lv*210;} },
+        { key:'popularity_output', route:'人氣產出', name:'流量營運', desc:'所有人氣產出 +5% / 每級', resource:'人氣', max:10, lv:Number(tech.popularity_output||0), cost:function(lv){return 300 + lv*190;} },
+        { key:'tip_output', route:'打賞產出', name:'打賞企劃', desc:'所有打賞產出 +5% / 每級', resource:'打賞', max:10, lv:Number(tech.tip_output||0), cost:function(lv){return 240 + lv*165;} },
+        { key:'extra_teams', route:'隊伍擴張', name:'新團出道', desc:'LV1 解鎖巡演團體二；LV2 解鎖巡演團體三。新巡演團體初始只能放入 2 張卡。', resource:'打賞', max:2, lv:Number(tech.extra_teams||0), cost:function(lv){return lv === 0 ? 1000 : 2400;} },
+        { key:'team_size', route:'隊伍擴張', name:'添加新血', desc:'LV1 解鎖巡演團體二第三張卡；LV2 解鎖巡演團體三第三張卡。', resource:'人氣', max:2, lv:Number(tech.team_size||0), cost:function(lv){return lv === 0 ? 1500 : 3200;} },
+        { key:'company_expansion', route:'地盤擴張', name:'公司擴編', desc:'持有格上限 +3 / 每級，預設 15 格；LV1 解鎖分公司建造。', resource:'打賞', max:5, lv:Number(tech.company_expansion||0), cost:function(lv){return [900,1500,2300,3400,4800][lv] || 4800;} },
+        { key:'mobility', route:'機動補給', name:'通告快轉', desc:'降低行動力壓力，提升跑圖效率。', resource:'人氣', max:5, lv:Number(tech.mobility||0), cost:function(lv){return 460 + lv*300;} },
+        { key:'festival', route:'年度盛典', name:'盛典公關', desc:'攻打年度盛典時粉絲提升。', resource:'打賞', max:5, lv:Number(tech.festival||0), cost:function(lv){return 700 + lv*460;} }
       ];
       var recommended = Number(tech.company_expansion || 0) < 1 ? '公司擴編 LV1：先解鎖分公司與持有格上限。'
         : (Number(tech.extra_teams || 0) < 1 ? '新團出道 LV1：解鎖第二支巡演團體。'
