@@ -692,6 +692,38 @@
             <div id="trafficWarResetMsg" class="msg"></div>
           </div>
         </div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>健康檢查</h3>
+            <div id="trafficWarHealth" class="muted">尚未讀取。</div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>24 小時行動統計</h3>
+            <div id="trafficWarActionCounts" class="muted">尚未讀取。</div>
+          </div>
+        </div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>熱門地塊</h3>
+            <div id="trafficWarHotTiles" class="muted">尚未讀取。</div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>玩家持地排行</h3>
+            <div id="trafficWarTopOwners" class="muted">尚未讀取。</div>
+          </div>
+        </div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
+            <h3>需注意隊伍</h3>
+            <div id="trafficWarOverdueTeams" class="muted">尚未讀取。</div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>攻擊進度保留</h3>
+            <div id="trafficWarAttackProgress" class="muted">尚未讀取。</div>
+          </div>
+        </div>
+        <h3>近期沙盤行動</h3>
+        <div id="trafficWarRecentLogs" class="muted">尚未讀取。</div>
         <h3>賽季列表</h3>
         <div id="trafficWarSeasonTable"></div>
       </div>
@@ -1183,6 +1215,37 @@ function trafficWarStatCard(label, value, sub=''){
   return `<div class="stat">${esc(label)}<b>${fmt(value)}</b>${sub ? `<span class="muted">${esc(sub)}</span>` : ''}</div>`;
 }
 
+function trafficWarTime(value){
+  if(!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+}
+
+function trafficWarHealthBadge(status){
+  const s = String(status || '');
+  if(s === 'ok') return '<span class="badge">OK</span>';
+  if(s === 'error') return '<span class="badge" style="border-color:#ff5555;color:#ff7777">ERROR</span>';
+  return '<span class="badge" style="border-color:#ffcc66;color:#ffdd77">WARN</span>';
+}
+
+function trafficWarResultLabel(result){
+  const key = String(result || '').toUpperCase();
+  return ({
+    MOVE:'移動',
+    PERFORM:'表演',
+    SUCCESS:'佔領成功',
+    FAILED:'佔領失敗',
+    HP:'體力',
+    REST:'休息',
+    RETURN_HOME:'返回總部',
+    RETURN_BRANCH:'返回分公司',
+    BRANCH:'建造分公司',
+    GATHER:'快閃',
+    COLLECT:'領取',
+    JOIN:'加入'
+  })[key] || String(result || '-');
+}
+
 async function loadTrafficWarAdmin(){
   try{
     msg('trafficWarAdminMsg','讀取沙盤戰後台資料中...',true);
@@ -1198,6 +1261,7 @@ function renderTrafficWarAdmin(data){
   const season = data.activeSeason || {};
   const stats = data.stats || {};
   const config = data.config || {};
+  const obs = data.observability || {};
   $('twSeasonId').value = season.season_id || config.active_season_id || '';
   $('twSeasonNo').value = season.season_no || 1;
   $('twSeasonName').value = season.season_name || '';
@@ -1216,8 +1280,8 @@ function renderTrafficWarAdmin(data){
       trafficWarStatCard('資源地', stats.resource_tile_count || 0, `${fmt(stats.branch_tile_count || 0)} 分公司`),
       trafficWarStatCard('參與玩家', stats.player_count || 0, `${fmt(stats.faction_player_count || 0)} 已選陣營`),
       trafficWarStatCard('巡演團體', stats.team_count || 0, `${fmt(stats.busy_team_count || 0)} 行動中`),
-      trafficWarStatCard('發展項目', stats.tech_count || 0, `${fmt(stats.pending_tech_count || 0)} 研發中`),
-      trafficWarStatCard('戰報紀錄', stats.log_count || 0, `${fmt(stats.attack_progress_count || 0)} 攻擊進度保留中`)
+      trafficWarStatCard('24小時行動', stats.log_24h_count || 0, `${fmt(stats.attack_progress_count || 0)} 攻擊進度保留中`),
+      trafficWarStatCard('需注意', (stats.overdue_team_count || 0) + (stats.invalid_team_tile_count || 0) + (stats.orphan_branch_count || 0), '逾期 / 異常資料')
     ].join('');
   }
   if($('trafficWarConfig')){
@@ -1229,6 +1293,75 @@ function renderTrafficWarAdmin(data){
       <b>地塊分布</b>：${esc(factionTiles)}<br>
       <b>玩家陣營</b>：${esc(factionPlayers)}
     `;
+  }
+  if($('trafficWarHealth')){
+    const checks = obs.checks || [];
+    $('trafficWarHealth').innerHTML = checks.length ? `<table><thead><tr><th>項目</th><th>狀態</th><th>說明</th></tr></thead><tbody>` +
+      checks.map(c => `<tr><td>${esc(c.label)}</td><td>${trafficWarHealthBadge(c.status)}</td><td>${esc(c.detail || '')}</td></tr>`).join('') +
+      `</tbody></table>` : '<div class="muted">尚無健康檢查資料。</div>';
+  }
+  if($('trafficWarActionCounts')){
+    const rows = obs.action_counts || [];
+    $('trafficWarActionCounts').innerHTML = rows.length ? `<table><thead><tr><th>行動</th><th>次數</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td>${esc(trafficWarResultLabel(r.result))}<br><span class="muted">${esc(r.result || '')}</span></td><td>${fmt(r.count)}</td></tr>`).join('') +
+      `</tbody></table>` : '<div class="muted">最近 24 小時尚無沙盤行動。</div>';
+  }
+  if($('trafficWarHotTiles')){
+    const rows = obs.hot_tiles || [];
+    $('trafficWarHotTiles').innerHTML = rows.length ? `<table><thead><tr><th>地塊</th><th>行動</th><th>收益/分數</th><th>最後時間</th></tr></thead><tbody>` +
+      rows.map(r => `<tr>
+        <td><b>${esc(r.tile_id)}</b><br><span class="muted">${esc(r.region_name || '-')}</span></td>
+        <td>${fmt(r.action_count)}<br><span class="muted">有效 ${fmt(r.positive_count)}</span></td>
+        <td>分數 ${fmt(r.challenge_score)}<br><span class="muted">資源 ${fmt(r.reward_amount)}</span></td>
+        <td>${esc(trafficWarTime(r.last_action_at))}</td>
+      </tr>`).join('') + `</tbody></table>` : '<div class="muted">最近 24 小時沒有熱門地塊。</div>';
+  }
+  if($('trafficWarTopOwners')){
+    const rows = obs.top_owners || [];
+    $('trafficWarTopOwners').innerHTML = rows.length ? `<table><thead><tr><th>玩家</th><th>陣營</th><th>持地</th><th>每小時產出</th></tr></thead><tbody>` +
+      rows.map(r => `<tr>
+        <td><b>${esc(r.display_name)}</b><br><span class="muted">${esc(r.uid)}</span></td>
+        <td>${esc(trafficWarFactionLabel(r.faction))}</td>
+        <td>${fmt(r.tile_count)}<br><span class="muted">資源 ${fmt(r.resource_tile_count)}</span></td>
+        <td>${fmt(r.hourly_output)}</td>
+      </tr>`).join('') + `</tbody></table>` : '<div class="muted">目前沒有玩家持有地塊。</div>';
+  }
+  if($('trafficWarOverdueTeams')){
+    const overdue = (obs.overdue_teams || []).map(r => ({...r, alert:'逾期'}));
+    const lowHp = (obs.low_hp_teams || []).map(r => ({...r, alert:'低體力'}));
+    const rows = [...overdue, ...lowHp].slice(0, 30);
+    $('trafficWarOverdueTeams').innerHTML = rows.length ? `<table><thead><tr><th>類型</th><th>玩家 / 隊伍</th><th>狀態</th><th>位置</th><th>體力</th></tr></thead><tbody>` +
+      rows.map(r => `<tr>
+        <td>${esc(r.alert)}</td>
+        <td><b>${esc(r.display_name)}</b><br><span class="muted">${esc(r.uid)}｜${esc(r.team_name || r.team_id)}</span></td>
+        <td>${esc(r.team_status || '-')}<br><span class="muted">${esc(trafficWarFactionLabel(r.faction))}</span></td>
+        <td>${esc(r.current_tile_id || '-')}${r.moving_to_tile_id ? `<br><span class="muted">往 ${esc(r.moving_to_tile_id)}</span>` : ''}</td>
+        <td>${fmt(r.team_hp)} / ${fmt(r.team_max_hp)}</td>
+      </tr>`).join('') + `</tbody></table>` : '<div class="muted">目前沒有逾期或低體力隊伍。</div>';
+  }
+  if($('trafficWarAttackProgress')){
+    const rows = obs.attack_progress || [];
+    $('trafficWarAttackProgress').innerHTML = rows.length ? `<table><thead><tr><th>地塊</th><th>範圍</th><th>進度</th><th>到期</th></tr></thead><tbody>` +
+      rows.map(r => {
+        const percent = Number(r.enemy_power || 0) > 0 ? Math.min(100, Math.round(Number(r.damage || 0) / Number(r.enemy_power || 1) * 100)) : 0;
+        return `<tr>
+          <td><b>${esc(r.tile_id)}</b></td>
+          <td>${esc(r.progress_scope || '-')}<br><span class="muted">${esc(r.faction || r.progress_owner || '-')}</span></td>
+          <td>${fmt(r.damage)} / ${fmt(r.enemy_power)}<br><span class="muted">${fmt(percent)}%</span></td>
+          <td>${esc(trafficWarTime(r.expires_at))}</td>
+        </tr>`;
+      }).join('') + `</tbody></table>` : '<div class="muted">目前沒有保留中的攻擊進度。</div>';
+  }
+  if($('trafficWarRecentLogs')){
+    const rows = obs.recent_logs || [];
+    $('trafficWarRecentLogs').innerHTML = rows.length ? `<table><thead><tr><th>時間</th><th>玩家</th><th>行動</th><th>地塊</th><th>數值</th></tr></thead><tbody>` +
+      rows.map(r => `<tr>
+        <td>${esc(trafficWarTime(r.created_at))}</td>
+        <td><b>${esc(r.display_name)}</b><br><span class="muted">${esc(r.uid || '-')}</span></td>
+        <td>${esc(trafficWarResultLabel(r.result))}<br><span class="muted">${esc(r.result || '')}</span></td>
+        <td>${esc(r.tile_id || '-')}<br><span class="muted">${esc(r.region_name || '')}</span></td>
+        <td>戰力 ${fmt(r.team_power)}<br><span class="muted">資源 ${fmt(r.reward_amount)}｜貢獻 ${fmt(r.contribution_score)}</span></td>
+      </tr>`).join('') + `</tbody></table>` : '<div class="muted">目前沒有近期沙盤行動。</div>';
   }
   if($('trafficWarSeasonTable')){
     const rows = data.seasons || [];
