@@ -651,7 +651,7 @@
 
       <div id="tab-trafficwar" class="hide panel">
         <h2>星潮沙盤戰 / 流量戰爭後台</h2>
-        <div class="muted">管理目前啟用賽季、查看沙盤進度統計，並可重置本賽季測試進度。此區不會修改抽卡機率、抽卡權重或卡池內容。</div>
+        <div class="muted">管理目前啟用賽季、查看沙盤進度統計，並可重置本賽季進度。此區不會修改抽卡機率、抽卡權重或卡池內容。</div>
         <div id="trafficWarStats" class="statgrid" style="margin-top:14px"></div>
         <div class="split">
           <div class="panel" style="box-shadow:none">
@@ -664,7 +664,7 @@
           </div>
         </div>
         <div class="panel" style="box-shadow:none">
-          <h3>玩家測試輔助</h3>
+          <h3>玩家沙盤輔助</h3>
           <div class="muted">輸入玩家 UID，快速查看沙盤狀態、巡演團體、持有地、分公司、發展中項目與可攻打目標。此工具只讀取資料，不修改抽卡與卡池。</div>
           <div class="row" style="grid-template-columns:1fr auto auto">
             <input id="twDebugUid" placeholder="玩家 UID">
@@ -696,7 +696,7 @@
               <div><label>規則版本</label><input id="twRulesVersion" maxlength="80"></div>
               <div><label>地圖版本</label><input id="twMapVersion" maxlength="80"></div>
             </div>
-            <label>後台備註</label><textarea id="twNotes" maxlength="1000" placeholder="例如：S2 測試、調整地圖後待驗證"></textarea>
+            <label>後台備註</label><textarea id="twNotes" maxlength="1000" placeholder="例如：S2 正式賽季、調整地圖後待驗證"></textarea>
             <div class="row" style="grid-template-columns:1fr auto auto">
               <div id="trafficWarAdminMsg" class="msg"></div>
               <button class="ghost" onclick="loadTrafficWarAdmin()">重新讀取</button>
@@ -709,7 +709,7 @@
             <hr style="border:0;border-top:1px solid #333;margin:16px 0">
             <div class="muted">重置只會清除沙盤戰本賽季進度：玩家陣營、地塊持有、隊伍、分公司、發展、技能、戰報、攻擊進度。卡牌、卡池、抽卡紀錄不會被動到。</div>
             <label>重置確認文字</label><input id="twResetConfirm" placeholder="輸入 RESET">
-            <button class="danger" onclick="resetTrafficWarSeason()" style="width:100%;margin-top:10px">重置目前賽季測試進度</button>
+            <button class="danger" onclick="resetTrafficWarSeason()" style="width:100%;margin-top:10px">重置目前賽季進度</button>
             <div id="trafficWarResetMsg" class="msg"></div>
           </div>
         </div>
@@ -1590,7 +1590,7 @@ async function resetTrafficWarSeason(){
     const seasonId = $('twSeasonId').value || (trafficWarAdminData?.config?.active_season_id || '');
     const confirmText = $('twResetConfirm').value.trim();
     if(confirmText.toUpperCase() !== 'RESET'){ msg('trafficWarResetMsg','請先輸入 RESET。'); return; }
-    if(!confirm(`確定重置「${seasonId}」的沙盤戰測試進度？此操作不會重置抽卡與卡牌資料。`)) return;
+    if(!confirm(`確定重置「${seasonId}」的沙盤戰進度？此操作不會重置抽卡與卡牌資料。`)) return;
     msg('trafficWarResetMsg','重置中...',true);
     const data = await rpc('adminResetTrafficWarSeason', [seasonId, confirmText]);
     trafficWarAdminData = data;
@@ -1599,7 +1599,7 @@ async function resetTrafficWarSeason(){
     const reset = data.reset || {};
     const deleted = reset.deleted || {};
     const detail = Object.entries(deleted).map(([table,count]) => `${table} ${fmt(count)}`).join('｜');
-    msg('trafficWarResetMsg', `${data.msg || '沙盤戰測試進度已重置。'} 清除地塊 ${fmt(reset.tilesCleared || 0)}；${detail}`, true);
+    msg('trafficWarResetMsg', `${data.msg || '沙盤戰進度已重置。'} 清除地塊 ${fmt(reset.tilesCleared || 0)}；${detail}`, true);
   }catch(e){ msg('trafficWarResetMsg', e.message); }
 }
 

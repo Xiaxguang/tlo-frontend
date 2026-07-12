@@ -3141,7 +3141,7 @@
         <button type="button" id="guide-collection-entry" onclick="openCollectionModal()"><span>▣</span>卡盒</button>
         <button type="button" onclick="openMissionModal()"><span>✓</span>任務</button>
         <button type="button" onclick="openTrainingModal()"><span>🏆</span>排行</button>
-        <button type="button" onclick="showGameScreen('traffic')"><span>♛</span>流量戰爭<br><small>測試版・未開放</small></button>
+        <button type="button" onclick="showGameScreen('traffic')"><span>♛</span>流量戰爭<br><small>星潮沙盤戰</small></button>
         <button type="button" onclick="showGameScreen('social')"><span>🤝</span>社交</button>
         <button type="button" onclick="showGameScreen('profile')"><span>👤</span>個人</button>
         <button type="button" onclick="openLobbyMoreModal()"><span>•••</span>更多</button>
@@ -3241,7 +3241,7 @@
             <button type="button" onclick="openWorldBossModal(); closeLobbyMoreModal()"><span>🌍</span><b>世界BOSS</b><small>全服同步討伐與傷害排名</small></button>
             <button type="button" onclick="openCharacterGrowthModal(); closeLobbyMoreModal()"><span>★</span><b>角色養成</b><small>等級、經驗、技能與升星</small></button>
             <button type="button" onclick="openMissionModal(); closeLobbyMoreModal()"><span>🎁</span><b>福利任務</b><small>每日、新手、主線與一鍵領取</small></button>
-            <button type="button" onclick="showGameScreen('traffic'); closeLobbyMoreModal()"><span>♛</span><b>流量戰爭</b><small>測試版・未開放</small></button>
+            <button type="button" onclick="showGameScreen('traffic'); closeLobbyMoreModal()"><span>♛</span><b>流量戰爭</b><small>星潮沙盤戰</small></button>
             <button type="button" onclick="showGameScreen('shop'); closeLobbyMoreModal()"><span>🛒</span><b>商城</b><small>補給與儲值商品</small></button>
             <button type="button" onclick="showGameScreen('profile'); closeLobbyMoreModal()"><span>👤</span><b>個人</b><small>資產、券與自我介紹</small></button>
             <button type="button" onclick="showGameScreen('social'); closeLobbyMoreModal()"><span>🤝</span><b>社交</b><small>好友邀請、列表與狀態</small></button>
@@ -3322,9 +3322,9 @@
           <summary><span>📖 主線任務</span><small>主線推進與核心劇情模式</small></summary>
           <div class="mode-group-scroll">
             <div class="scene-panel traffic-war-entry-card mode-card-priority">
-              <h3>♛ 流量戰爭測試版｜未開放</h3>
-              <p>未開放測試版。選擇陣營，派出三張持有卡牌進入星潮沙盤戰，從總部往年度盛典推進。</p>
-              <button class="scene-btn btn-neon-purple" onclick="showGameScreen('traffic')">進入測試版<small>目前未開放正式賽季</small></button>
+              <h3>♛ 流量戰爭｜星潮沙盤戰</h3>
+              <p>選擇陣營，派出三張持有卡牌進入星潮沙盤戰，從總部往年度盛典推進。</p>
+              <button class="scene-btn btn-neon-purple" onclick="showGameScreen('traffic')">進入星潮沙盤戰<small>正式賽季進行中</small></button>
             </div>
 
             <div class="scene-panel link-battle-entry-card mode-card-priority">
@@ -3399,9 +3399,9 @@
       <div class="traffic-war-screen-stub">
         <div class="traffic-war-screen-card">
           <div class="traffic-war-kicker">STAR TIDE SANDBOX WAR</div>
-          <h2 class="screen-title">流量戰爭測試版｜未開放</h2>
+          <h2 class="screen-title">流量戰爭｜星潮沙盤戰</h2>
           <p>此模式會以獨立戰場視窗開啟。主畫面只保留地圖，組團、總部、發展、排行等內容會整合在地圖內，透過按鈕彈出。</p>
-          <button type="button" class="traffic-war-open-btn" onclick="openTrafficWarWindow(true)">開啟測試版戰場</button>
+          <button type="button" class="traffic-war-open-btn" onclick="openTrafficWarWindow(true)">開啟星潮沙盤戰場</button>
           <button type="button" class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
         </div>
       </div>
@@ -6284,7 +6284,7 @@ function showCollectionHistory() {
       var cache = window.TLO_IMAGE_LOAD_CACHE;
       var queue = [];
       var active = 0;
-      var maxActive = 8;
+      var maxActive = 6;
 
       function cleanImageUrl(url) {
         try { return tloNormalizeImageUrl(url); } catch (_) { return String(url || '').trim(); }
@@ -6353,7 +6353,7 @@ function showCollectionHistory() {
           return true;
         });
         var requestedConcurrency = Number(options && options.concurrency || 0);
-        if (requestedConcurrency > 0) maxActive = Math.max(4, Math.min(10, requestedConcurrency));
+        if (requestedConcurrency > 0) maxActive = Math.max(3, Math.min(8, requestedConcurrency));
         return Promise.all(unique.map(function(url) { return preloadOne(url, options || {}); }));
       }
 
@@ -6390,7 +6390,7 @@ function showCollectionHistory() {
 
     function tloFlushCardImagePreloads() {
       tloCardImagePreloadTimer = null;
-      var batch = tloCardImagePreloadQueue.splice(0, 36);
+      var batch = tloCardImagePreloadQueue.splice(0, 24);
       if (batch.length && window.TLOImageLoader && typeof window.TLOImageLoader.preload === 'function') {
         window.TLOImageLoader.preload(batch, { timeout: 9000, concurrency: 5, fetchPriority: 'low', decode: false });
       }
@@ -9059,7 +9059,7 @@ function showCollectionHistory() {
           const src = img.currentSrc || img.getAttribute('src') || img.getAttribute('data-src') || '';
           const isCardArt = img.matches && img.matches('img.tlo-card-art,img.card-img,img.card-img-sm,img.card-art-thumbnail,.tw-card-frame img,.tw-map-card img,.traffic-war-team-card img,.clash-avatar');
           const inActiveArea = img.closest && img.closest('.game-screen.active,.traffic-war-window,.modal[style*="flex"]');
-          const important = !!(isCardArt && inActiveArea && urgentCount < 36);
+          const important = !!(isCardArt && inActiveArea && urgentCount < 24);
           const signature = src + '|' + (important ? '1' : '0');
           if (img.dataset.tloImageOptimized === signature) return;
           img.dataset.tloImageOptimized = signature;
@@ -9084,12 +9084,13 @@ function showCollectionHistory() {
       if (!optimizeTloImagesRoot) optimizeTloImagesRoot = root;
       else if (optimizeTloImagesRoot !== root) optimizeTloImagesRoot = document;
       if (optimizeTloImagesTimer) return;
-      optimizeTloImagesTimer = setTimeout(function() {
+      var run = function() {
         const target = optimizeTloImagesRoot || document;
         optimizeTloImagesTimer = null;
         optimizeTloImagesRoot = null;
         optimizeTloImages(target);
-      }, 60);
+      };
+      optimizeTloImagesTimer = window.requestIdleCallback ? requestIdleCallback(run, { timeout: 180 }) : setTimeout(run, 80);
     }
 
     try {
@@ -9100,15 +9101,17 @@ function showCollectionHistory() {
         const mo = new MutationObserver(function(mutations) {
           let target = null;
           let count = 0;
+          const activeRoot = document.querySelector('.game-screen.active,.traffic-war-window[aria-hidden="false"],.modal[style*="flex"]') || document;
           mutations.forEach(function(m) {
             (m.addedNodes || []).forEach(function(node) {
               if (node && node.nodeType === 1) {
                 count += 1;
-                if (!target) target = node;
+                if (!target) target = node.parentElement || node;
+                else if (target !== (node.parentElement || node)) target = activeRoot;
               }
             });
           });
-          scheduleOptimizeTloImages(count === 1 ? target : document);
+          if (count) scheduleOptimizeTloImages(count <= 10 ? target : activeRoot);
         });
         mo.observe(document.body, { childList: true, subtree: true });
       });
@@ -9810,7 +9813,7 @@ function showCollectionHistory() {
 
     window.showGameScreen = function(screenName) {
       var map = { home: 'homeScreen', gacha: 'gachaScreen', battle: 'battleScreen', shop: 'shopScreen', profile: 'profileScreen', social: 'socialScreen', traffic: 'trafficWarScreen' };
-      var labels = { home: '主介面', gacha: '抽卡', battle: '戰鬥', shop: '商城', profile: '個人', social: '社交', traffic: '流量戰爭測試版｜未開放' };
+      var labels = { home: '主介面', gacha: '抽卡', battle: '戰鬥', shop: '商城', profile: '個人', social: '社交', traffic: '流量戰爭｜星潮沙盤戰' };
       var targetId = map[screenName] || map.home;
       if (!map[screenName]) screenName = 'home';
       var shell = document.getElementById('game-shell') || document.querySelector('.container.game-shell');
@@ -9879,8 +9882,8 @@ function showCollectionHistory() {
     var TRAFFIC_WAR_CARD_BACK = 'assets/ui/cards/card_back_tlo.png';
     var TRAFFIC_WAR_CURRENT_SEASON = {
       season_id: 'season_002',
-      season_name: '星潮測試季 S2',
-      display_name: '星潮沙盤戰 S2｜賽季測試',
+      season_name: '星潮開播季 S2',
+      display_name: '星潮沙盤戰 S2',
       season_no: 2,
       rules_version: 'traffic_war_v1_seasonal',
       map_version: 'stellar_ladder_51x37',
@@ -10957,7 +10960,7 @@ function showCollectionHistory() {
         if (screenSub) screenSub.textContent = '卡牌式沙盤戰場：外圍出生、相鄰攻格、佔地產出、決戰年度盛典。';
       }
       var title = document.getElementById('traffic-war-season-title');
-      if (title) title.textContent = (state.display_name || '流量戰爭測試版｜未開放') + '｜' + (state.season_name || '星潮開播季');
+      if (title) title.textContent = (state.display_name || '流量戰爭｜星潮沙盤戰') + '｜' + (state.season_name || '星潮開播季');
       var desc = document.getElementById('traffic-war-season-desc');
       if (desc) desc.textContent = '玩家帶領直播主卡牌從外圍推進，攻下 LV3 以上格子產出人氣與打賞，最後爭奪中央年度盛典。';
       renderTrafficWarMeta(state);
@@ -11247,12 +11250,12 @@ function showCollectionHistory() {
         if (url && url !== TRAFFIC_WAR_CARD_BACK) selectedUrls.push(url);
         add(url);
       });
-      getTrafficWarCards().slice(0, 96).forEach(function(card) { add(getTrafficWarCardImage(card)); });
+      getTrafficWarCards().slice(0, 36).forEach(function(card) { add(getTrafficWarCardImage(card)); });
       if (!urls.length) return;
       var run = function() {
         try {
           if (selectedUrls.length) window.TLOImageLoader.preload(selectedUrls, { timeout: 7000, concurrency: 4, fetchPriority: 'high', decode: true });
-          window.TLOImageLoader.preload(urls, { timeout: 9000, concurrency: 5, fetchPriority: 'low', decode: false });
+          window.TLOImageLoader.preload(urls, { timeout: 9000, concurrency: 4, fetchPriority: 'low', decode: false });
         } catch (_) {}
       };
       if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 900 });
@@ -13217,7 +13220,7 @@ function showCollectionHistory() {
       else if (trafficWarActiveDrawer === 'result') drawerHtml = trafficWarResultPanelHtml(state);
       else if (trafficWarActiveDrawer === 'city') drawerHtml = trafficWarCityPanelHtml(state);
       else if (trafficWarActiveDrawer === 'tech') drawerHtml = trafficWarTechPanelHtml(state);
-      else drawerHtml = '<div class="traffic-war-drawer-note">尚未開放。</div>';
+      else drawerHtml = '<div class="traffic-war-drawer-note">請選擇功能面板。</div>';
       var drawerSig = trafficWarMarkupSignature(drawerHtml);
       if (body.dataset.twDrawerSig !== drawerSig || body.dataset.twDrawerKind !== trafficWarActiveDrawer) {
         var oldScrollTop = body.dataset.twDrawerKind === trafficWarActiveDrawer ? (body.scrollTop || 0) : 0;
@@ -13273,7 +13276,7 @@ function showCollectionHistory() {
     async function chooseTrafficWarFaction(key) {
       var state = loadTrafficWarState();
       if (!TRAFFIC_WAR_FACTIONS[key]) return;
-      if (state.player_season.faction && state.player_season.faction !== key) return alert('本季已選定陣營，測試版暫不開放更換。');
+      if (state.player_season.faction && state.player_season.faction !== key) return alert('本季已選定陣營，暫不開放更換。');
       return runTrafficWarAction('chooseFaction', async function() { try {
         var res = await trafficWarRpc('chooseTrafficWarFaction', [getTrafficWarUid(), key]);
         if (res && res.success === false) alert(res.msg || '陣營選擇失敗');

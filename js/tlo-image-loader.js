@@ -141,20 +141,46 @@
     return Promise.all(workers).then(function(){ return results; });
   }
 
+  var pendingEnhanceRoots = [];
+  var enhanceScheduled = false;
+
+  function scheduleEnhance(root) {
+    if (root) pendingEnhanceRoots.push(root);
+    if (enhanceScheduled) return;
+    enhanceScheduled = true;
+    var run = function () {
+      enhanceScheduled = false;
+      var roots = pendingEnhanceRoots.splice(0, pendingEnhanceRoots.length);
+      if (!roots.length || roots.length > 10) {
+        enhanceAll(document);
+        return;
+      }
+      roots.forEach(enhanceAll);
+    };
+    if (window.requestIdleCallback) window.requestIdleCallback(run, { timeout: 250 });
+    else setTimeout(run, 90);
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ enhanceAll(document); });
+    document.addEventListener('DOMContentLoaded', function(){ scheduleEnhance(document); });
   } else {
-    enhanceAll(document);
+    scheduleEnhance(document);
   }
 
   try {
     var observer = new MutationObserver(function(mutations) {
+      var count = 0;
+      var firstRoot = null;
       mutations.forEach(function(m) {
         for (var i = 0; i < m.addedNodes.length; i += 1) {
           var node = m.addedNodes[i];
-          if (node && node.nodeType === 1) enhanceAll(node);
+          if (node && node.nodeType === 1) {
+            count += 1;
+            if (!firstRoot) firstRoot = node;
+          }
         }
       });
+      if (count) scheduleEnhance(count === 1 ? firstRoot : document);
     });
     observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
   } catch (_) {}
