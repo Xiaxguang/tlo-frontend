@@ -655,6 +655,16 @@
         <div id="trafficWarStats" class="statgrid" style="margin-top:14px"></div>
         <div class="split">
           <div class="panel" style="box-shadow:none">
+            <h3>平衡總覽</h3>
+            <div id="trafficWarBalanceSummary" class="muted">尚未讀取。</div>
+          </div>
+          <div class="panel" style="box-shadow:none">
+            <h3>難度 / 產出級距</h3>
+            <div id="trafficWarBalanceTable" class="muted">尚未讀取。</div>
+          </div>
+        </div>
+        <div class="split">
+          <div class="panel" style="box-shadow:none">
             <h3>賽季設定</h3>
             <label>目前啟用賽季 ID</label><input id="twSeasonId" disabled>
             <div class="row3">
@@ -1228,6 +1238,11 @@ function trafficWarHealthBadge(status){
   return '<span class="badge" style="border-color:#ffcc66;color:#ffdd77">WARN</span>';
 }
 
+function trafficWarResourceTypeLabel(type, isCenter=false){
+  if(isCenter) return '年度盛典';
+  return ({normal:'普通地',popularity:'人氣資源地',tip:'打賞資源地'})[String(type || 'normal')] || String(type || '-');
+}
+
 function trafficWarResultLabel(result){
   const key = String(result || '').toUpperCase();
   return ({
@@ -1283,6 +1298,31 @@ function renderTrafficWarAdmin(data){
       trafficWarStatCard('24小時行動', stats.log_24h_count || 0, `${fmt(stats.attack_progress_count || 0)} 攻擊進度保留中`),
       trafficWarStatCard('需注意', (stats.overdue_team_count || 0) + (stats.invalid_team_tile_count || 0) + (stats.orphan_branch_count || 0), '逾期 / 異常資料')
     ].join('');
+  }
+  if($('trafficWarBalanceSummary')){
+    const balance = obs.balance || {};
+    const rows = [
+      ['規則版本', `${esc(balance.active_rules_version || '-')} / 程式 ${esc(balance.rules_version || '-')}`],
+      ['年度盛典', `${esc(balance.center_tile_id || '-')}｜粉絲 ${fmt(balance.center_power || 0)} / 目標 ${fmt(balance.target_center_power || 0)}`],
+      ['資源密度', `${fmt(stats.resource_tile_count || 0)} / ${fmt(stats.tile_count || 0)}｜${fmt(balance.resource_ratio_percent || 0)}%`],
+      ['敵方粉絲範圍', `${fmt(balance.min_enemy_power || 0)} ～ ${fmt(balance.max_enemy_power || 0)}｜平均 ${fmt(balance.avg_enemy_power || 0)}`],
+      ['每小時基礎產出', fmt(balance.total_hourly_output || 0)],
+      ['中高等地塊', `LV7+ ${fmt(balance.high_level_tile_count || 0)} 格｜資源地 ${fmt(balance.high_level_resource_count || 0)} 格`],
+      ['資源種類', `人氣 ${fmt(balance.popularity_resource_count || 0)}｜打賞 ${fmt(balance.tip_resource_count || 0)}`]
+    ];
+    $('trafficWarBalanceSummary').innerHTML = `<table><tbody>` + rows.map(r => `<tr><th>${esc(r[0])}</th><td>${r[1]}</td></tr>`).join('') + `</tbody></table>`;
+  }
+  if($('trafficWarBalanceTable')){
+    const rows = (obs.balance && obs.balance.level_rows) || [];
+    $('trafficWarBalanceTable').innerHTML = rows.length ? `<table><thead><tr><th>級距</th><th>類型</th><th>格數</th><th>敵方粉絲</th><th>行動力</th><th>產出/h</th></tr></thead><tbody>` +
+      rows.map(r => `<tr>
+        <td>LV${fmt(r.level)}</td>
+        <td>${esc(trafficWarResourceTypeLabel(r.resource_type, r.is_center_city))}</td>
+        <td>${fmt(r.tile_count)}</td>
+        <td>${fmt(r.min_enemy_power)} ～ ${fmt(r.max_enemy_power)}<br><span class="muted">平均 ${fmt(r.avg_enemy_power)}</span></td>
+        <td>攻打 ${fmt(r.attack_stamina_cost)}<br><span class="muted">快閃 ${fmt(r.gather_stamina_cost)}</span></td>
+        <td>${fmt(r.hourly_output)}</td>
+      </tr>`).join('') + `</tbody></table>` : '<div class="muted">尚無平衡級距資料。</div>';
   }
   if($('trafficWarConfig')){
     const factionTiles = (stats.faction_tiles || []).map(x => `${trafficWarFactionLabel(x.faction)} ${fmt(x.count)}`).join('｜') || '尚無地塊歸屬';
