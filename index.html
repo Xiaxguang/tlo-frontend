@@ -1843,6 +1843,13 @@
     .tw-festival-row em{font-style:normal;color:#ffd98a;font-weight:900;}
     .tw-festival-meter{display:block;height:6px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;}
     .tw-festival-meter i{display:block;height:100%;width:var(--tw-progress,0%);background:linear-gradient(90deg,#7df9ff,#ffd98a);}
+    .tw-battlefield-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;}
+    .tw-battlefield-card{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.055);padding:8px;font-size:12px;line-height:1.45;color:#dce3ff;}
+    .tw-battlefield-card b{display:block;color:#fff;font-size:13px;margin-bottom:2px;}
+    .tw-battlefield-card span{color:#9fb0dd;}
+    .tw-multiplayer-note{border:1px solid rgba(100,255,242,.18);border-radius:12px;background:rgba(100,255,242,.06);padding:8px;margin:8px 0;color:#dce8ff;font-size:11px;line-height:1.45;text-align:left;}
+    .tw-multiplayer-note b{color:#fff1a8;}
+    @media(max-width:520px){.tw-battlefield-grid{grid-template-columns:1fr;}}
     .traffic-war-feed-row small{display:block;color:#9fb0dc;margin-top:3px;}
     .traffic-war-result-body{display:grid;gap:8px;text-align:left;}
     .traffic-war-result-badge{display:inline-flex;width:max-content;border-radius:999px;padding:5px 9px;font-weight:1000;font-size:12px;}
@@ -12350,6 +12357,73 @@ function showCollectionHistory() {
       return trafficWarFactionLabel(tile.owner_faction);
     }
 
+    function trafficWarAttackTypeText(state, tile) {
+      if (!tile) return '未知';
+      var player = state && state.player_season ? state.player_season : {};
+      var faction = player.faction || '';
+      if (tile.is_center_city) return '年度盛典共鬥：同陣營共享 5 分鐘攻擊進度';
+      if (trafficWarTileOwnedBySelf(state, tile)) return '我方地盤：可領取、快閃、建設或撤離';
+      if (tile.owner_faction && faction && tile.owner_faction === faction) return '同陣營地塊：不可攻打';
+      if (tile.owner_faction && faction && tile.owner_faction !== faction) return '跨陣營進攻：成功後接管此格';
+      if (tile.owner_faction) return '敵方佔領地：選擇陣營後可判斷進攻';
+      return '未佔領地塊：成功後納入持有格';
+    }
+
+    function trafficWarMultiplayerNoteHtml(state, tile) {
+      if (!tile) return '';
+      var owner = trafficWarTileOwnerText(state, tile);
+      var faction = trafficWarTileOwnerFactionText(tile);
+      var attackType = trafficWarAttackTypeText(state, tile);
+      var progress = trafficWarAttackProgressLine(tile);
+      return '<div class="tw-multiplayer-note"><b>多人戰局</b><br>'
+        + '進攻類型：' + trafficWarEsc(attackType)
+        + '<br>對方名稱：' + trafficWarEsc(owner || '無')
+        + '｜所屬陣營：' + trafficWarEsc(faction || '無')
+        + '<br>攻擊進度：' + trafficWarEsc(progress || '無') + '</div>';
+    }
+
+    function trafficWarControlSummary(state) {
+      var rows = {};
+      Object.keys(TRAFFIC_WAR_FACTIONS).forEach(function(key) {
+        rows[key] = { key:key, tileCount:0, resourceCount:0, hourly:0, attackable:0 };
+      });
+      var neutral = { key:'neutral', tileCount:0, resourceCount:0, hourly:0, attackable:0 };
+      (state.tiles || []).forEach(function(tile) {
+        if (!tile || tile.is_center_city) return;
+        var bucket = rows[tile.owner_faction] || neutral;
+        bucket.tileCount += 1;
+        if (tile.resource_type) bucket.resourceCount += 1;
+        bucket.hourly += trafficWarTileProductionValue(state, tile);
+        if (tile.can_attack) bucket.attackable += 1;
+      });
+      return { factions:Object.keys(TRAFFIC_WAR_FACTIONS).map(function(key) { return rows[key]; }), neutral:neutral };
+    }
+
+    function trafficWarBattlefieldSummaryHtml(state) {
+      var summary = trafficWarControlSummary(state);
+      var playerFaction = state && state.player_season ? state.player_season.faction : '';
+      var enemyOwners = {};
+      var enemyAttackable = 0;
+      (state.tiles || []).forEach(function(tile) {
+        if (!tile || !tile.owner_faction || trafficWarTileOwnedBySelf(state, tile)) return;
+        if (playerFaction && tile.owner_faction !== playerFaction && tile.owner_name) enemyOwners[tile.owner_name] = true;
+        if (tile.can_attack && tile.owner_faction && tile.owner_faction !== playerFaction) enemyAttackable += 1;
+      });
+      var cards = summary.factions.map(function(row) {
+        var faction = TRAFFIC_WAR_FACTIONS[row.key] || {};
+        var mine = row.key === playerFaction ? '｜我方' : '';
+        return '<div class="tw-battlefield-card"><b>' + trafficWarEsc((faction.icon || '') + ' ' + trafficWarFactionLabel(row.key) + mine) + '</b>'
+          + '<span>持地 ' + Number(row.tileCount || 0).toLocaleString()
+          + '｜資源 ' + Number(row.resourceCount || 0).toLocaleString()
+          + '｜產出/h ' + Number(row.hourly || 0).toLocaleString() + '</span></div>';
+      });
+      cards.push('<div class="tw-battlefield-card"><b>未佔領星域</b><span>空地 ' + Number(summary.neutral.tileCount || 0).toLocaleString()
+        + '｜可推進 ' + Number(summary.neutral.attackable || 0).toLocaleString() + '</span></div>');
+      cards.push('<div class="tw-battlefield-card"><b>敵方前線</b><span>可攻打敵方 ' + Number(enemyAttackable || 0).toLocaleString()
+        + '｜已知對手 ' + Object.keys(enemyOwners).length.toLocaleString() + '</span></div>');
+      return '<section class="traffic-war-panel" style="margin-bottom:10px;"><h3>多人戰局摘要</h3><p>敵方地塊顯示玩家名稱，不顯示 UID；不同陣營地塊可由相鄰巡演團體進攻。</p><div class="tw-battlefield-grid">' + cards.join('') + '</div></section>';
+    }
+
     function trafficWarBranchCost(tile) {
       var level = Math.max(1, Math.min(10, Number(tile && tile.level || 1)));
       return {
@@ -12486,6 +12560,7 @@ function showCollectionHistory() {
         + '<span>地塊狀態</span><b>' + trafficWarEsc(statusText) + '</b>'
         + '<span>佔領者</span><b>' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</b>'
         + '<span>所屬陣營</span><b>' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</b>'
+        + '<span>進攻類型</span><b>' + trafficWarEsc(trafficWarAttackTypeText(state, tile)) + '</b>'
         + '<span>敵人預估粉絲</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b>'
         + '<span>防守進度</span><b>' + trafficWarAttackProgressHtml(tile) + '</b>'
         + '<span>預計可獲得資源</span><b>' + trafficWarEsc(trafficWarRewardLine(tile)) + '</b>'
@@ -12499,6 +12574,8 @@ function showCollectionHistory() {
         + '<span>快閃</span><b>' + trafficWarEsc(trafficWarGatherPreviewLine(state, tile)) + '</b>'
         + '<span>放棄持有</span><b>' + (abandonReason ? trafficWarEsc(abandonReason) : trafficWarAbandonCountdownHtml(tile)) + '</b>'
         + '</div>'
+        + trafficWarMultiplayerNoteHtml(state, tile)
+        + (tile.is_center_city ? trafficWarFestivalProgressHtml(state) : '')
         + trafficWarTileStrategyHtml(state, tile)
         + '<div class="tw-map-info-note ' + (attackDisabled ? '' : 'ok') + '">' + trafficWarEsc(reason || '可以佔領：此格可進攻') + '</div>'
         + '<div class="tw-map-info-actions">'
@@ -12560,6 +12637,7 @@ function showCollectionHistory() {
         + '<small>狀態：' + trafficWarEsc(owner) + '</small>'
         + '<small>佔領者：' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</small>'
         + '<small>陣營：' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</small>'
+        + '<small>進攻類型：' + trafficWarEsc(trafficWarAttackTypeText(state, tile)) + '</small>'
         + '<small>預估粉絲：' + Number(tile.enemy_power || 0).toLocaleString() + '</small>'
         + '<small>防守進度：' + trafficWarAttackProgressHtml(tile) + '</small>'
         + '<small>預計可獲得資源：' + trafficWarEsc(expectedReward) + '</small>'
@@ -12604,6 +12682,7 @@ function showCollectionHistory() {
         + '<div class="traffic-war-detail-row"><span>地塊狀態</span><b>' + trafficWarEsc(owner) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>佔領者</span><b>' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>所屬陣營</span><b>' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</b></div>'
+        + '<div class="traffic-war-detail-row"><span>進攻類型</span><b>' + trafficWarEsc(trafficWarAttackTypeText(state, tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>預估敵方粉絲</span><b>' + Number(tile.enemy_power || 0).toLocaleString() + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>防守進度</span><b>' + trafficWarAttackProgressHtml(tile) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>預計可獲得資源</span><b>' + trafficWarEsc(trafficWarRewardLine(tile)) + '</b></div>'
@@ -12614,6 +12693,8 @@ function showCollectionHistory() {
         + '<div class="traffic-war-detail-row"><span>快閃</span><b>' + trafficWarEsc(trafficWarGatherPreviewLine(state, tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>放棄持有</span><b>' + (abandonReason ? trafficWarEsc(abandonReason) : trafficWarAbandonCountdownHtml(tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>戰略定位</span><b>' + trafficWarEsc(trafficWarTileStrategicRole(state, tile)) + '</b></div>'
+        + trafficWarMultiplayerNoteHtml(state, tile)
+        + (tile.is_center_city ? trafficWarFestivalProgressHtml(state) : '')
         + '<div class="tw-detail-note">' + trafficWarEsc(reason || '可攻打：此格鄰接目前巡演團體位置') + '</div>'
         + '<button type="button" class="traffic-war-detail-action primary" ' + (attackDisabled ? 'disabled' : '') + ' onclick="challengeTrafficWarRegion(\'' + trafficWarEsc(tile.tile_id) + '\')">佔領(進攻)</button>'
         + '<button type="button" class="traffic-war-detail-action" onclick="scoutTrafficWarTile(\'' + trafficWarEsc(tile.tile_id) + '\')">場刊(偵查)</button>'
@@ -12889,7 +12970,7 @@ function showCollectionHistory() {
       var personalRows = (state.personal_ranking || []).slice(0, 8);
       if (!personalRows.length) personalRows = [{ uid: state.player_season.uid, display_name: state.player_season.display_name || state.player_season.uid, faction: state.player_season.faction, contribution_score: state.player_season.contribution_score, self: true }];
       var logs = (state.action_logs || []).slice(0, 10);
-      var html = '<div class="traffic-war-board-grid"><section class="traffic-war-panel"><h3>陣營排名</h3><div class="traffic-war-rank-list">';
+      var html = trafficWarBattlefieldSummaryHtml(state) + '<div class="traffic-war-board-grid"><section class="traffic-war-panel"><h3>陣營排名</h3><div class="traffic-war-rank-list">';
       html += factionRows.map(function(row, idx) { return '<div class="traffic-war-rank-row"><b>#' + (idx + 1) + ' ' + trafficWarEsc(row.name) + '</b><span>' + row.score.toLocaleString() + '</span></div>'; }).join('');
       html += '</div></section><section class="traffic-war-panel"><h3>個人貢獻</h3><div class="traffic-war-rank-list">';
       html += personalRows.map(function(row, idx) { return '<div class="traffic-war-rank-row"><b>#' + (idx + 1) + ' ' + trafficWarEsc(row.display_name || row.uid) + (row.self ? '（我）' : '') + '</b><span>' + Number(row.contribution_score || 0).toLocaleString() + '</span></div>'; }).join('');
@@ -13135,6 +13216,7 @@ function showCollectionHistory() {
         + '｜狀態 ' + trafficWarTileStatusText(state, tile)
         + '｜佔領者 ' + trafficWarTileOwnerText(state, tile)
         + '｜陣營 ' + trafficWarTileOwnerFactionText(tile)
+        + '｜進攻類型 ' + trafficWarAttackTypeText(state, tile)
         + '｜預估敵方粉絲 ' + Number(tile.enemy_power || 0).toLocaleString()
         + '｜防守進度 ' + trafficWarAttackProgressLine(tile)
         + '｜預計獲得 ' + trafficWarRewardLine(tile)
