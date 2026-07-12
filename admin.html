@@ -663,6 +663,17 @@
             <div id="trafficWarBalanceTable" class="muted">尚未讀取。</div>
           </div>
         </div>
+        <div class="panel" style="box-shadow:none">
+          <h3>玩家測試輔助</h3>
+          <div class="muted">輸入玩家 UID，快速查看沙盤狀態、巡演團體、持有地、分公司、發展中項目與可攻打目標。此工具只讀取資料，不修改抽卡與卡池。</div>
+          <div class="row" style="grid-template-columns:1fr auto auto">
+            <input id="twDebugUid" placeholder="玩家 UID">
+            <button class="ghost" onclick="fillTrafficWarDebugUidFromPlayer()">帶入目前玩家</button>
+            <button class="primary" onclick="loadTrafficWarPlayerDebug()">查詢沙盤狀態</button>
+          </div>
+          <div id="trafficWarPlayerDebugMsg" class="msg"></div>
+          <div id="trafficWarPlayerDebug" class="muted">尚未查詢。</div>
+        </div>
         <div class="split">
           <div class="panel" style="box-shadow:none">
             <h3>賽季設定</h3>
@@ -1243,6 +1254,33 @@ function trafficWarResourceTypeLabel(type, isCenter=false){
   return ({normal:'普通地',popularity:'人氣資源地',tip:'打賞資源地'})[String(type || 'normal')] || String(type || '-');
 }
 
+function trafficWarTeamStatusLabel(status){
+  return ({
+    idle:'待命中',
+    moving:'移動中',
+    performing:'表演中',
+    success:'佔領成功',
+    failed:'佔領失敗',
+    returning_home:'返回總部中',
+    returning_branch:'返回分公司中',
+    resting:'休息恢復中',
+    stationed:'入駐分公司中',
+    locked:'尚未解鎖'
+  })[String(status || '')] || String(status || '-');
+}
+
+function trafficWarDuration(ms){
+  const sec = Math.max(0, Math.ceil(Number(ms || 0) / 1000));
+  if(sec <= 0) return '0 秒';
+  if(sec < 60) return `${sec} 秒`;
+  const min = Math.floor(sec / 60);
+  const rest = sec % 60;
+  if(min < 60) return rest ? `${min} 分 ${rest} 秒` : `${min} 分`;
+  const hr = Math.floor(min / 60);
+  const m = min % 60;
+  return m ? `${hr} 小時 ${m} 分` : `${hr} 小時`;
+}
+
 function trafficWarResultLabel(result){
   const key = String(result || '').toUpperCase();
   return ({
@@ -1414,6 +1452,113 @@ function renderTrafficWarAdmin(data){
         <td>${s.reset_at ? esc(new Date(s.reset_at).toLocaleString()) : '<span class="muted">尚未重置</span>'}</td>
       </tr>`).join('') + `</tbody></table>` : '<div class="muted">尚無賽季資料。</div>';
   }
+}
+
+function fillTrafficWarDebugUidFromPlayer(){
+  if(!$('twDebugUid')) return;
+  $('twDebugUid').value = currentPlayerUid || '';
+  if(!currentPlayerUid) msg('trafficWarPlayerDebugMsg','目前尚未在玩家管理選擇玩家。');
+}
+
+async function loadTrafficWarPlayerDebug(uid){
+  try{
+    const targetUid = String(uid || ($('twDebugUid') && $('twDebugUid').value) || currentPlayerUid || '').trim();
+    if(!targetUid){ msg('trafficWarPlayerDebugMsg','請輸入玩家 UID。'); return; }
+    if($('twDebugUid')) $('twDebugUid').value = targetUid;
+    msg('trafficWarPlayerDebugMsg','讀取玩家沙盤狀態中...',true);
+    const data = await rpc('adminGetTrafficWarPlayerDebug', [targetUid]);
+    renderTrafficWarPlayerDebug(data);
+    msg('trafficWarPlayerDebugMsg','玩家沙盤狀態已更新。',true);
+  }catch(e){ msg('trafficWarPlayerDebugMsg', e.message); }
+}
+
+function trafficWarDebugTileStatus(tile, uid){
+  if(!tile) return '-';
+  if(tile.is_center_city) return '年度盛典';
+  if(tile.owner_uid && tile.owner_uid === uid) return '我方持有';
+  if(tile.owner_faction) return '敵方佔領｜' + trafficWarFactionLabel(tile.owner_faction);
+  return '未佔領';
+}
+
+function trafficWarDebugProgressText(tile){
+  const damage = Number(tile && tile.attack_progress_damage || 0);
+  const enemy = Number(tile && tile.attack_progress_enemy_power || tile.enemy_power || 0);
+  if(!damage || !enemy) return '-';
+  const percent = Math.min(99, Math.floor(damage / Math.max(1, enemy) * 100));
+  return `${fmt(damage)} / ${fmt(enemy)}｜${fmt(percent)}%`;
+}
+
+function renderTrafficWarPlayerDebug(data){
+  const box = $('trafficWarPlayerDebug');
+  if(!box || !data) return;
+  const p = data.player || {};
+  const s = data.season || {};
+  const joined = !!s.joined;
+  const teams = data.teams || [];
+  const owned = data.owned_tiles || [];
+  const targets = data.attackable_targets || [];
+  const branches = data.branches || [];
+  const techs = data.techs || [];
+  const logs = data.recent_logs || [];
+  const summary = `<table><tbody>
+    <tr><th>玩家</th><td><b>${esc(p.display_name || p.uid || '-')}</b>｜${esc(p.uid || '-')}</td><th>陣營</th><td>${joined ? esc(trafficWarFactionLabel(s.faction)) : '<span class="muted">尚未加入沙盤戰</span>'}</td></tr>
+    <tr><th>行動力</th><td>${fmt(s.stamina)} / 100</td><th>資源</th><td>人氣 ${fmt(s.popularity)}｜打賞 ${fmt(s.tip)}</td></tr>
+    <tr><th>持有格</th><td>${fmt(s.owned_tile_count)} / ${fmt(s.tile_limit)}</td><th>貢獻</th><td>${fmt(s.contribution_score)}</td></tr>
+    <tr><th>最後登入</th><td>${esc(p.last_login_at || '-')}</td><th>產生時間</th><td>${esc(trafficWarTime(data.generated_at))}</td></tr>
+  </tbody></table>`;
+  const teamHtml = teams.length ? `<table><thead><tr><th>巡演團體</th><th>狀態</th><th>體力</th><th>位置</th><th>卡牌 / 粉絲</th><th>可攻打</th></tr></thead><tbody>` +
+    teams.map(t => {
+      const cards = (t.cards || []).map(c => `${esc(c.name)} ${esc(c.rarity)}｜粉絲 ${fmt(c.total_power)}｜技${fmt(c.skill_level)}`).join('<br>') || '<span class="muted">尚未組團</span>';
+      const status = trafficWarTeamStatusLabel(t.team_status) + (Number(t.status_remaining_ms || 0) > 0 ? `<br><span class="muted">剩餘 ${trafficWarDuration(t.status_remaining_ms)}</span>` : '');
+      const path = (t.moving_path_tile_ids || []).length ? `<br><span class="muted">路徑 ${esc(t.moving_path_tile_ids.join(' → '))}</span>` : '';
+      return `<tr>
+        <td><b>${esc(t.team_name || t.team_id)}</b><br><span class="muted">${esc(t.team_id)}｜${t.unlocked ? '已解鎖' : '未解鎖'}｜${fmt(t.card_count)}/${fmt(t.slot_limit)}</span></td>
+        <td>${status}</td>
+        <td>${fmt(t.team_hp)} / ${fmt(t.team_max_hp)}<br><span class="muted">LV${fmt(t.team_level)}</span></td>
+        <td>目前 ${esc(t.current_tile_id || '-')}<br><span class="muted">總部 ${esc(t.home_tile_id || '-')}</span>${path}</td>
+        <td>${cards}<br><b>總粉絲 ${fmt(t.team_power)}</b></td>
+        <td>${fmt(t.attackable_count)}</td>
+      </tr>`;
+    }).join('') + `</tbody></table>` : '<div class="muted">尚無巡演團體資料。</div>';
+  const targetHtml = targets.length ? `<table><thead><tr><th>團體</th><th>地塊</th><th>類型 / 狀態</th><th>敵方粉絲</th><th>行動力</th><th>進度</th></tr></thead><tbody>` +
+    targets.slice(0, 40).map(t => `<tr>
+      <td>${esc(t.team_name || t.team_id)}</td>
+      <td><b>${esc(t.tile_id)}</b><br><span class="muted">LV${fmt(t.level)}｜${fmt(t.x)},${fmt(t.y)}</span></td>
+      <td>${esc(trafficWarResourceTypeLabel(t.resource_type, t.is_center_city))}<br><span class="muted">${esc(trafficWarDebugTileStatus(t, p.uid))}</span></td>
+      <td>${fmt(t.enemy_power)}</td>
+      <td>攻打 ${fmt(t.attack_stamina_cost)}<br><span class="muted">快閃 ${fmt(t.gather_stamina_cost)}</span></td>
+      <td>${esc(trafficWarDebugProgressText(t))}</td>
+    </tr>`).join('') + `</tbody></table>` : '<div class="muted">目前沒有可攻打目標。若玩家尚未組團、隊伍行動中、行動力不足或不在相鄰格，這裡會是空的。</div>';
+  const ownedHtml = owned.length ? `<table><thead><tr><th>地塊</th><th>類型</th><th>產出/h</th><th>可領取</th><th>快閃</th><th>分公司</th></tr></thead><tbody>` +
+    owned.slice(0, 80).map(t => `<tr>
+      <td><b>${esc(t.tile_id)}</b><br><span class="muted">LV${fmt(t.level)}｜${fmt(t.x)},${fmt(t.y)}</span></td>
+      <td>${esc(trafficWarResourceTypeLabel(t.resource_type, t.is_center_city))}${t.is_abandoning ? '<br><span class="muted">撤離中</span>' : ''}</td>
+      <td>${fmt(t.resource_amount)}</td>
+      <td>${fmt(t.collectable_amount)}</td>
+      <td>行動力 ${fmt(t.gather_stamina_cost)}</td>
+      <td>${t.has_branch ? (t.branch_is_self ? '有' : '他人') : '無'}</td>
+    </tr>`).join('') + `</tbody></table>` : '<div class="muted">目前沒有持有地塊。</div>';
+  const branchHtml = branches.length ? `<table><thead><tr><th>分公司</th><th>地塊</th><th>入駐團體</th><th>建立時間</th></tr></thead><tbody>` +
+    branches.map(b => `<tr><td>${esc(b.branch_name || b.branch_id || '-')}</td><td>${esc(b.tile_id || '-')}</td><td>${esc(b.stationed_team_id || '-')}</td><td>${esc(trafficWarTime(b.created_at))}</td></tr>`).join('') +
+    `</tbody></table>` : '<div class="muted">目前沒有分公司。</div>';
+  const techHtml = techs.length ? `<table><thead><tr><th>發展</th><th>等級</th><th>狀態</th></tr></thead><tbody>` +
+    techs.map(t => `<tr><td>${esc(t.name || t.key)}</td><td>LV${fmt(t.level)}</td><td>${Number(t.pending_level || 0) > Number(t.level || 0) ? `發展中 LV${fmt(t.pending_level)}｜剩餘 ${trafficWarDuration(t.remaining_ms)}` : '已完成'}</td></tr>`).join('') +
+    `</tbody></table>` : '<div class="muted">目前沒有發展資料。</div>';
+  const logHtml = logs.length ? `<table><thead><tr><th>時間</th><th>行動</th><th>地塊</th><th>數值</th></tr></thead><tbody>` +
+    logs.map(r => `<tr>
+      <td>${esc(trafficWarTime(r.created_at))}</td>
+      <td>${esc(trafficWarResultLabel(r.result))}<br><span class="muted">${esc(r.result || '')}</span></td>
+      <td>${esc(r.tile_id || '-')}<br><span class="muted">${esc(r.region_name || '')}</span></td>
+      <td>粉絲 ${fmt(r.team_power)}｜資源 ${fmt(r.reward_amount)}｜貢獻 ${fmt(r.contribution_score)}</td>
+    </tr>`).join('') + `</tbody></table>` : '<div class="muted">目前沒有沙盤行動紀錄。</div>';
+  box.innerHTML = `
+    <h3>玩家摘要</h3>${summary}
+    <h3>巡演團體</h3>${teamHtml}
+    <h3>可攻打目標</h3>${targetHtml}
+    <h3>持有地塊</h3>${ownedHtml}
+    <div class="split"><div>${'<h3>分公司</h3>' + branchHtml}</div><div>${'<h3>發展狀態</h3>' + techHtml}</div></div>
+    <h3>近期沙盤紀錄</h3>${logHtml}
+  `;
 }
 
 async function saveTrafficWarSeason(){
@@ -2574,6 +2719,7 @@ async function changeAdminPassword(){
 }
 
 $('searchKeyword').addEventListener('keydown', e => { if(e.key==='Enter') searchPlayers(); });
+if($('twDebugUid')) $('twDebugUid').addEventListener('keydown', e => { if(e.key==='Enter') loadTrafficWarPlayerDebug(); });
 boot();
 </script>
 </body>
