@@ -2903,7 +2903,19 @@
     .traffic-war-window .tw-team-lock-list span{border:1px dashed rgba(255,255,255,.16);border-radius:10px;background:rgba(255,255,255,.04);color:#cbd5ff;padding:6px 8px;font-size:11px;font-weight:900;}
     .traffic-war-window .tw-team-slot-tabs{gap:4px!important;}
     .traffic-war-window .tw-team-slot-tabs button{min-height:30px!important;padding:5px 3px!important;font-size:10px!important;}
+    .traffic-war-window .tw-team-vital-card{display:grid;gap:8px;margin:8px 0 10px;padding:10px;border:1px solid rgba(140,255,215,.28);border-radius:12px;background:linear-gradient(135deg,rgba(100,255,242,.10),rgba(255,223,138,.08));box-shadow:0 10px 24px rgba(0,0,0,.24);}
+    .traffic-war-window .tw-team-vital-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:1000;color:#eef4ff;}
+    .traffic-war-window .tw-team-vital-head span{color:#9fffe7;}
+    .traffic-war-window .tw-team-vital-head b{color:#fff1a8;text-align:right;white-space:nowrap;}
+    .traffic-war-window .tw-team-hp-meter{display:block;position:relative;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);}
+    .traffic-war-window .tw-team-hp-meter i{display:block;height:100%;width:var(--tw-team-hp,0%);border-radius:inherit;background:linear-gradient(90deg,#33f5e3,#b8f0a1,#fff081);box-shadow:0 0 16px rgba(100,255,242,.4);}
+    .traffic-war-window .tw-team-vital-card small{color:#cbd5ff;font-size:11px;line-height:1.35;}
     body.tw-action-busy .traffic-war-window button:not(:disabled){pointer-events:none;opacity:.72;}
+    .traffic-war-window .traffic-war-tile.attackable:not(.selected){outline:0!important;box-shadow:none!important;}
+    .traffic-war-window .traffic-war-tile.attackable:not(.selected) .tw-tile-state-ring{opacity:0!important;border-color:transparent!important;box-shadow:none!important;}
+    .traffic-war-window .traffic-war-tile.attackable:not(.selected) .tw-tile-spark{display:none!important;}
+    .traffic-war-window .traffic-war-tile.selected{outline:3px solid rgba(255,241,168,.82)!important;outline-offset:-18px!important;}
+    .traffic-war-window .traffic-war-tile.selected .tw-tile-state-ring{opacity:1!important;border:3px solid #fff1a8!important;box-shadow:0 0 36px rgba(255,241,168,.62),inset 0 0 22px rgba(255,241,168,.2)!important;}
     .traffic-war-window .traffic-war-tile.action-target .tw-tile-art{filter:drop-shadow(0 0 18px rgba(100,255,242,.5))!important;}
     .traffic-war-window .traffic-war-tile.action-from,
     .traffic-war-window .traffic-war-tile.action-target{contain:none!important;overflow:visible!important;}
@@ -2934,23 +2946,26 @@
     .traffic-war-window .tw-action-path::after{width:var(--tw-path-pct,0%);background:linear-gradient(90deg,#64fff2,#fff1a8);}
     .traffic-war-window .tw-action-path i{
       position:absolute;
-      right:-6px;
+      left:var(--tw-path-pct,0%);
       top:50%;
       width:10px;
       height:10px;
       border-radius:50%;
       background:#fff1a8;
-      transform:translateY(-50%);
+      transform:translate(-50%,-50%);
       box-shadow:0 0 12px rgba(255,241,168,.7);
+      transition:left .12s linear;
     }
     .traffic-war-window .tw-map-card-stack.moving-route{
       transform:translate3d(var(--tw-card-x,0px),var(--tw-card-y,0px),0)!important;
-      transition:none!important;
+      transition:transform .22s linear!important;
       will-change:transform;
       filter:none!important;
       backface-visibility:hidden;
       z-index:70!important;
     }
+    .traffic-war-window .tw-map-card-stack.moving-route.motion-enter{transition:transform .48s cubic-bezier(.2,.72,.24,1)!important;}
+    .traffic-war-window .tw-map-card-stack.moving-route .tw-map-card{animation:twCardCruise .92s ease-in-out infinite;}
     .traffic-war-window .tw-map-card-stack.attacking{z-index:72!important;}
     .traffic-war-window .tw-map-card-stack.attacking .tw-map-card{animation:twCardStrike .82s ease-in-out infinite;}
     .traffic-war-window .tw-map-card-stack.attacking em{background:linear-gradient(135deg,#ffdf8a,#ff6b9e)!important;}
@@ -2978,6 +2993,7 @@
     .traffic-war-window .traffic-war-tile.team-failed .tw-tile-art{animation:twFailFlash .45s ease-in-out 2;}
     @keyframes twScoutFlash{0%{box-shadow:0 0 0 rgba(255,223,138,0)}45%{box-shadow:0 0 28px rgba(255,223,138,.42)}100%{box-shadow:0 16px 34px rgba(0,0,0,.48),0 0 20px rgba(255,223,138,.16)}}
     @keyframes twTeamMovePulse{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(8px,-5px,0)}}
+    @keyframes twCardCruise{0%,100%{transform:translate3d(0,0,0) rotate(-1deg)}50%{transform:translate3d(0,-5px,0) rotate(2deg)}}
     @keyframes twCardStrike{0%,100%{transform:translate3d(0,0,0) rotate(0deg)}35%{transform:translate3d(0,-12px,0) rotate(-4deg)}62%{transform:translate3d(11px,7px,0) rotate(6deg)}76%{transform:translate3d(-2px,-2px,0) rotate(-2deg)}}
     @keyframes twPerformGlow{from{filter:drop-shadow(0 0 8px rgba(255,223,138,.34))}to{filter:drop-shadow(0 0 24px rgba(100,255,242,.65))}}
     @keyframes twSuccessRing{0%{filter:drop-shadow(0 0 0 rgba(100,255,242,0))}65%{filter:drop-shadow(0 0 28px rgba(100,255,242,.85))}100%{filter:none}}
@@ -9861,6 +9877,7 @@ function showCollectionHistory() {
     var trafficWarRenderMetrics = null;
     var trafficWarRenderSelectedCards = [];
     var trafficWarVisualCache = { key: '', cards: [], paths: [], countdowns: [] };
+    var trafficWarMotionBootKeys = {};
     var trafficWarCardOptionsRef = null;
     var trafficWarCardsCache = [];
     var trafficWarActionPollTimer = null;
@@ -10782,6 +10799,13 @@ function showCollectionHistory() {
       dom.cards.forEach(function(el) {
         el.style.setProperty('--tw-card-x', Number(cardDelta.x || 0).toFixed(2) + 'px');
         el.style.setProperty('--tw-card-y', Number(cardDelta.y || 0).toFixed(2) + 'px');
+        if (el.classList && el.classList.contains('motion-enter') && !el.dataset.motionEnterTimer) {
+          el.dataset.motionEnterTimer = '1';
+          setTimeout(function() {
+            if (el.classList) el.classList.remove('motion-enter');
+            if (el.dataset) delete el.dataset.motionEnterTimer;
+          }, 520);
+        }
       });
       dom.paths.forEach(function(el) {
         var count = Math.max(1, Number(el.dataset.segmentCount || 1));
@@ -11306,8 +11330,13 @@ function showCollectionHistory() {
         var motion = trafficWarActionMotion(state, tile);
         var cardX = motion ? Math.round(motion.cardDx || 0) : 0;
         var cardY = motion ? Math.round(motion.cardDy || 0) : 0;
+        var motionKey = [status, player.moving_from_tile_id || '', player.moving_to_tile_id || '', player.status_ends_at || ''].join('|');
+        var bootMotion = motionKey && !trafficWarMotionBootKeys[motionKey];
+        if (bootMotion) trafficWarMotionBootKeys[motionKey] = true;
+        var renderCardX = bootMotion ? 0 : cardX;
+        var renderCardY = bootMotion ? 0 : cardY;
         var countdown = trafficWarDurationText(motion ? motion.remaining : trafficWarActionRemainingMs(player));
-        html += '<span class="tw-map-card-stack friendly single moving-route" data-moving="1" data-dx="' + (motion ? Math.round(motion.dx) : 0) + '" data-dy="' + (motion ? Math.round(motion.dy) : 0) + '" style="--tw-card-x:' + cardX + 'px;--tw-card-y:' + cardY + 'px;">'
+        html += '<span class="tw-map-card-stack friendly single moving-route' + (bootMotion ? ' motion-enter' : '') + '" data-moving="1" data-motion-key="' + trafficWarEsc(motionKey) + '" data-dx="' + (motion ? Math.round(motion.dx) : 0) + '" data-dy="' + (motion ? Math.round(motion.dy) : 0) + '" style="--tw-card-x:' + renderCardX + 'px;--tw-card-y:' + renderCardY + 'px;">'
           + '<span class="tw-action-countdown">' + trafficWarEsc(countdown) + '</span>'
           + '<span class="tw-map-card mini-0"><img src="' + trafficWarEsc(getTrafficWarCardImage(movingLeader)) + '" alt="" loading="eager" decoding="async" onerror="this.src=\'' + TRAFFIC_WAR_CARD_BACK + '\'"></span><em>移動中</em></span>';
       } else if (selectedCards.length && status === 'performing' && tile.is_action_target_tile) {
@@ -11346,7 +11375,7 @@ function showCollectionHistory() {
       var label = tile.is_center_city ? '年度盛典' : '';
       if (buildingType) label = buildingType === 'hq' ? '總部' : '分公司';
       var owner = '';
-      var spark = tile.can_attack ? '<i class="tw-tile-spark"></i>' : '';
+      var spark = tile.can_attack && trafficWarSelectedTileId === tile.tile_id ? '<i class="tw-tile-spark"></i>' : '';
       var asset = trafficWarTileAsset(tile, state);
       var detailBubble = trafficWarSelectedTileId === tile.tile_id ? renderTrafficWarTileDetailBubble(state, tile) : '';
       var actionPath = trafficWarActionPathHtml(state, tile);
@@ -11764,7 +11793,7 @@ function showCollectionHistory() {
       if (tile && tile.owner_faction && tile.owner_faction === state.player_season.faction) return '不可攻打：同陣營地塊不需要攻打';
       if (tile && !trafficWarTileOwnedBySelf(state, tile) && !tile.is_center_city && Number(state.player_season.owned_tile_count || 0) >= Number(state.player_season.tile_limit || 15)) return '不可攻打：持有格已達上限，請升級發展「公司擴編」';
       if (Number(state.player_season.stamina || 0) < trafficWarAttackStaminaCost(tile)) return '不可攻打：行動力不足，需要 ' + trafficWarAttackStaminaCost(tile).toLocaleString() + ' 點';
-      if (!tile || !tile.can_attack) return '不可攻打：請先移動到相鄰格';
+      if (!tile || !tile.can_attack) return '不可攻打：需先佔領此格上下左右任一相鄰地塊';
       return '';
     }
 
@@ -12312,7 +12341,7 @@ function showCollectionHistory() {
       if (tile.can_attack && Number(tile.level || 0) <= 3) return '安全擴張點：適合用來鋪路與增加持有格。';
       if (tile.can_attack) return '前線推進點：先場刊確認風險，再決定是否進攻。';
       if (trafficWarTileOwnedBySelf(state, tile)) return '我方地盤：可作為後續擴張路線的一部分。';
-      return '待鋪路區域：需先佔領相鄰地塊或移動隊伍。';
+      return '待鋪路區域：需先佔領相鄰地塊。';
     }
 
     function trafficWarTileRiskText(state, tile) {
@@ -12724,7 +12753,7 @@ function showCollectionHistory() {
         + '<div class="traffic-war-detail-row"><span>戰略定位</span><b>' + trafficWarEsc(trafficWarTileStrategicRole(state, tile)) + '</b></div>'
         + trafficWarMultiplayerNoteHtml(state, tile)
         + (tile.is_center_city ? trafficWarFestivalProgressHtml(state) : '')
-        + '<div class="tw-detail-note">' + trafficWarEsc(reason || '可攻打：此格鄰接目前巡演團體位置') + '</div>'
+        + '<div class="tw-detail-note">' + trafficWarEsc(reason || '可攻打：此格鄰接我方已佔領地塊') + '</div>'
         + '<button type="button" class="traffic-war-detail-action primary" ' + (attackDisabled ? 'disabled' : '') + ' onclick="challengeTrafficWarRegion(\'' + trafficWarEsc(tile.tile_id) + '\')">佔領(進攻)</button>'
         + '<button type="button" class="traffic-war-detail-action" onclick="scoutTrafficWarTile(\'' + trafficWarEsc(tile.tile_id) + '\')">場刊(偵查)</button>'
         + '<button type="button" class="traffic-war-detail-action" ' + (collectDisabled ? 'disabled' : '') + ' onclick="collectTrafficWarTileResource(\'' + trafficWarEsc(tile.tile_id) + '\')">領取資源</button>'
@@ -12884,11 +12913,16 @@ function showCollectionHistory() {
       var isHome = !!player.home_tile_id && player.current_tile_id === player.home_tile_id;
       var canEditTeam = isHome && !trafficWarTeamBusyState(player);
       var activeName = activeTeam.team_name || player.team_name || trafficWarTeamSlotName(1);
-      var header = '<div class="traffic-war-drawer-note"><b>巡演團體一 / 巡演團體二 / 巡演團體三</b><br>巡演團體一固定 3 張卡。發展「新團出道」可解鎖巡演團體二、巡演團體三；新巡演團體初始只能放入 2 張卡，發展「添加新血」可解鎖第三張卡。<br><b>' + trafficWarEsc(activeName) + '粉絲：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜體力 ' + Number(player.team_hp || 0).toLocaleString() + ' / ' + Number(player.team_max_hp || 100).toLocaleString() + '｜已選 ' + selected.length + ' / ' + slotLimit + '</b><br>' + (canEditTeam ? '目前在總部，可以重新組團、回復血量與改團體名。' : '隊伍需在總部且非行動中，才能重新組團。') + '</div>';
+      var activeHp = Math.max(0, Number(activeTeam.team_hp != null ? activeTeam.team_hp : player.team_hp || 0));
+      var activeMaxHp = Math.max(1, Number(activeTeam.team_max_hp != null ? activeTeam.team_max_hp : player.team_max_hp || 100));
+      var activeHpPct = Math.max(0, Math.min(100, Math.round((activeHp / activeMaxHp) * 100)));
+      var activeStatus = trafficWarStatusText(activeTeam.team_status || player.team_status || 'idle');
+      var header = '<div class="traffic-war-drawer-note"><b>巡演團體一 / 巡演團體二 / 巡演團體三</b><br>巡演團體一固定 3 張卡。發展「新團出道」可解鎖巡演團體二、巡演團體三；新巡演團體初始只能放入 2 張卡，發展「添加新血」可解鎖第三張卡。<br><b>' + trafficWarEsc(activeName) + '粉絲：' + Number(getTrafficWarTeamPower(state)).toLocaleString() + '｜體力 ' + activeHp.toLocaleString() + ' / ' + activeMaxHp.toLocaleString() + '｜已選 ' + selected.length + ' / ' + slotLimit + '</b><br>' + (canEditTeam ? '目前在總部，可以重新組團、回復血量與改團體名。' : '隊伍需在總部且非行動中，才能重新組團。') + '</div>';
       header += '<div class="tw-team-slot-tabs">' + teams.map(function(team) {
         var teamId = normalizeTrafficWarTeamId(team.team_id || team.team_slot);
         return '<button type="button" ' + (team.active ? 'class="active" ' : '') + (team.unlocked ? 'onclick="setTrafficWarActiveTeam(\'' + teamId + '\')"' : 'disabled') + '>' + trafficWarEsc(team.team_name || trafficWarTeamSlotName(team.team_slot)) + '｜' + (team.unlocked ? (Number(team.slot_limit || 0) + '槽') : '發展解鎖') + '</button>';
       }).join('') + '</div>';
+      header += '<div class="tw-team-vital-card"><div class="tw-team-vital-head"><span>' + trafficWarEsc(activeName) + ' 體力</span><b>' + activeHp.toLocaleString() + ' / ' + activeMaxHp.toLocaleString() + '</b></div><span class="tw-team-hp-meter" style="--tw-team-hp:' + activeHpPct + '%"><i></i></span><small>狀態：' + trafficWarEsc(activeStatus) + '｜體力低於 10 會返回總部或已設定的分部休息。</small></div>';
       var lockedTeams = teams.filter(function(team) { return Number(team.team_slot || 1) > 1 && !team.unlocked; });
       if (lockedTeams.length) header += '<div class="tw-team-lock-list">' + lockedTeams.map(function(team) {
         return '<span>' + trafficWarEsc(team.team_name || trafficWarTeamSlotName(team.team_slot)) + '：' + trafficWarEsc(team.lock_reason || '需科技「新團出道」解鎖') + '</span>';
@@ -13542,6 +13576,7 @@ function showCollectionHistory() {
       var branchDone = action === 'branch' && phase === 'success';
       var tileActionFailed = (action === 'gather' || action === 'branch') && phase === 'failed';
       var phaseTitle = ({ moving:'移動中', performing:'表演中', returning_home:'返回總部中', returning_branch:'返回分部中', resting:'休息恢復中', stationed:'入駐分部', abandoning:'撤離中', success:'佔領成功', failed:'佔領失敗' })[phase] || '';
+      var autoReturnReason = result.autoReturnReason || result.reason || '體力不足';
       if (sub) sub.textContent = result.collectOnly ? '資源領取' : (gatherDone ? '快閃完成' : (branchDone ? '分公司建造完成' : (tileActionFailed ? actionLabel + '失敗' : (result.abandonOnly ? '放棄持有' : (phaseTitle || (result.success ? '攻佔成功' : '挑戰失敗'))))));
       if (result.collectOnly) {
         var collectBody = '';
@@ -13576,7 +13611,7 @@ function showCollectionHistory() {
           + '<div>預計完成：<b>' + trafficWarDurationText(result.durationMs || 0) + '</b></div>';
       } else if (phase === 'moving' || phase === 'returning_home' || phase === 'returning_branch') {
         body.innerHTML = '<span class="traffic-war-result-badge win">MOVE</span>'
-          + (result.autoReturn ? '<div>自動返程：<b>' + trafficWarEsc(result.reason || '體力不足') + '</b></div>' : '')
+          + (result.autoReturn ? '<div>自動返程：<b>' + trafficWarEsc(autoReturnReason) + '</b></div>' : '')
           + (actionLabel ? '<div>抵達後：<b>' + trafficWarEsc(actionLabel) + '</b></div>' : '')
           + '<div>' + trafficWarEsc(phaseTitle || '移動中') + '：<b>' + trafficWarDurationText(result.moveMs || 0) + '</b></div>'
           + (Array.isArray(result.pathTileIds) && result.pathTileIds.length > 1 ? '<div>路徑距離：<b>' + Number(result.pathTileIds.length - 1).toLocaleString() + ' 格</b></div>' : '')
@@ -13584,7 +13619,7 @@ function showCollectionHistory() {
           + '<div>目標格：<b>' + trafficWarEsc(result.toTileId || '') + '</b></div>';
       } else if (phase === 'performing' || phase === 'resting' || phase === 'stationed') {
         body.innerHTML = '<span class="traffic-war-result-badge win">' + trafficWarEsc(phase === 'performing' ? 'LIVE' : 'OK') + '</span>'
-          + (result.autoReturn ? '<div>自動返程：<b>' + trafficWarEsc(result.reason || '體力不足') + '</b></div>' : '')
+          + (result.autoReturn ? '<div>自動返程：<b>' + trafficWarEsc(autoReturnReason) + '</b></div>' : '')
           + '<div>' + trafficWarEsc(phaseTitle || '隊伍狀態更新') + '</div>';
       } else {
         var progressLine = Number(result.progressPercent || 0) > 0
@@ -13593,11 +13628,13 @@ function showCollectionHistory() {
         var progressKeepLine = !result.success && result.progressExpiresAt
           ? '<div>進度保留：<b>5 分鐘</b>' + (result.progressShared ? '｜陣營共鬥' : '｜個人進度') + '</div>'
           : '';
+        var autoReturnLine = result.autoReturn ? '<div>自動返程：<b>' + trafficWarEsc(autoReturnReason) + '</b></div>' : '';
         body.innerHTML = '<span class="traffic-war-result-badge ' + (result.success ? 'win' : 'fail') + '">' + (result.success ? 'WIN' : 'TRY') + '</span>'
           + '<div>巡演粉絲：<b>' + Number(result.teamPower || 0).toLocaleString() + '</b></div>'
           + '<div>表演分數：<b>' + Number(result.challengeScore || 0).toLocaleString() + '</b> / 剩餘防守 ' + Number(result.remainingPower || result.enemyPower || (result.region && result.region.required_power) || 0).toLocaleString() + '</div>'
           + progressLine
           + progressKeepLine
+          + autoReturnLine
           + '<div>隊伍體力：<b>-' + Number(result.hpLoss || 0).toLocaleString() + '</b></div>'
           + '<div>取得資源：<b>' + trafficWarEsc(trafficWarRewardLabel(result.rewardType)) + ' +' + Number(result.rewardAmount || 0).toLocaleString() + '</b></div>'
           + '<div>個人貢獻：<b>+' + Number(result.contributionGain || 0).toLocaleString() + '</b></div>';
