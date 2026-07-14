@@ -3147,7 +3147,7 @@
             <small>能量商店、訓練總分商店與儲值商品</small>
           </button>
         </div>
-        <div class="premium-home-actions" aria-label="付費與通行證功能">
+        <div class="premium-home-actions" aria-label="月卡與通行證功能">
           <button class="premium-home-btn" type="button" onclick="openMonthlyCardModal()"><span>🌙</span><b>月卡</b><small>30 天每日領抽卡、遠征與競技場次數</small></button>
           <button class="premium-home-btn" type="button" onclick="openBattlePassModal()"><span>🎫</span><b>星域通行證</b><small>夏日系列 50 階累積分數獎勵</small></button>
         </div>
@@ -3271,22 +3271,22 @@
 
 
       <div class="lobby-modal" id="paid-notice-modal" aria-hidden="true">
-        <div class="lobby-modal-card paid-notice-card" role="dialog" aria-modal="true" aria-label="付費功能通知">
-          <div class="lobby-modal-head"><div><h3>🔔 付費功能通知</h3><p id="paid-notice-text">此付費功能尚未開通，請聯絡管理員協助開通。</p></div><button type="button" class="lobby-modal-close" onclick="closePaidNoticeModal()">×</button></div>
+        <div class="lobby-modal-card paid-notice-card" role="dialog" aria-modal="true" aria-label="功能通知">
+          <div class="lobby-modal-head"><div><h3>🔔 功能通知</h3><p id="paid-notice-text">此功能目前請先聯絡管理員協助確認。</p></div><button type="button" class="lobby-modal-close" onclick="closePaidNoticeModal()">×</button></div>
           <button class="premium-action-btn" type="button" onclick="closePaidNoticeModal()">我知道了</button>
         </div>
       </div>
 
       <div class="lobby-modal" id="monthly-card-modal" aria-hidden="true">
         <div class="lobby-modal-card" role="dialog" aria-modal="true" aria-label="月卡">
-          <div class="lobby-modal-head"><div><h3>🌙 月卡</h3><p>售價 300 元，有效 30 天。付款尚未開通時，請聯絡管理員協助開通。</p></div><button type="button" class="lobby-modal-close" onclick="closeMonthlyCardModal()">×</button></div>
+          <div class="lobby-modal-head"><div><h3>🌙 月卡</h3><p>月卡功能目前採管理員協助確認與開通；如需了解內容或開通方式，請先聯絡管理員。</p></div><button type="button" class="lobby-modal-close" onclick="closeMonthlyCardModal()">×</button></div>
           <div id="monthly-card-content" class="premium-panel">正在讀取月卡狀態...</div>
         </div>
       </div>
 
       <div class="lobby-modal" id="battle-pass-modal" aria-hidden="true">
         <div class="lobby-modal-card" role="dialog" aria-modal="true" aria-label="星域通行證" style="max-width:820px;">
-          <div class="lobby-modal-head"><div><h3>🎫 星域通行證｜夏日系列</h3><p>通關主線任務累積分數，50 階普通 / 高級獎勵。高級通行證 350 元，付款尚未開通時請聯絡管理員。</p></div><button type="button" class="lobby-modal-close" onclick="closeBattlePassModal()">×</button></div>
+          <div class="lobby-modal-head"><div><h3>🎫 星域通行證｜夏日系列</h3><p>通關主線任務累積分數，50 階普通 / 高級獎勵。高級通行證目前採管理員協助確認與開通。</p></div><button type="button" class="lobby-modal-close" onclick="closeBattlePassModal()">×</button></div>
           <div id="battle-pass-content" class="premium-panel">正在讀取通行證...</div>
         </div>
       </div>
@@ -3516,13 +3516,13 @@
       <div class="screen-head">
         <div>
           <h2 class="screen-title">商城</h2>
-          <div class="screen-sub">兌換玩法補給、查看儲值商品。儲值付款可依後端 ECPAY_ENABLED 與 GM 商品付款開關控制。</div>
+          <div class="screen-sub">兌換玩法補給、查看可洽詢的儲值項目。儲值商城目前請先聯絡管理員。</div>
         </div>
         <button class="desktop-back-btn" onclick="showGameScreen('home')">返回主介面</button>
       </div>
 
       <div class="game-card">
-        <div class="shop-note" id="shop-payment-notice">儲值商城會依後端設定顯示付款狀態；付款方式限定信用卡一次付清 / ATM / 超商代碼 / 超商條碼。</div>
+        <div class="shop-note" id="shop-payment-notice">儲值商城目前不提供線上付款；如需儲值或開通商品，請先聯絡管理員。</div>
       </div>
 
       <div class="game-card">
@@ -7314,7 +7314,7 @@ function showCollectionHistory() {
 
     function showPaidFeatureNotice(message) {
       var text = document.getElementById('paid-notice-text');
-      if (text) text.innerText = message || '此付費功能尚未開通，請聯絡管理員協助開通。';
+      if (text) text.innerText = message || '此功能目前請先聯絡管理員協助確認。';
       var modal = document.getElementById('paid-notice-modal');
       if (modal) modal.style.display = 'flex';
     }
@@ -7351,7 +7351,7 @@ function showCollectionHistory() {
         + '<div class="premium-panel-row"><span>售價 / 期間</span><b>NT$' + Number(res.priceNtd || 300) + ' / ' + Number(res.durationDays || 30) + '天</b></div>'
         + '<div class="premium-panel-row"><span>每日福利</span><b>抽卡 +' + Number(daily.drawTimes || 1) + '｜遠征 +' + Number(daily.rpgTickets || 5) + '｜競技場 +' + Number(daily.pvpTickets || 5) + '</b></div>'
         + claimBtn
-        + '<button class="premium-action-btn" onclick="showPaidFeatureNotice(\'此付費功能尚未開通，請聯絡管理員協助開通。\')">聯絡管理員開通月卡</button>';
+        + '<button class="premium-action-btn" onclick="showPaidFeatureNotice(\'月卡目前請先聯絡管理員協助確認。\')">聯絡管理員開通月卡</button>';
     }
 
     function loadMonthlyCardStatus() {
@@ -7417,7 +7417,7 @@ function showCollectionHistory() {
       var maxPoints = Math.max(1, Number(res.maxPoints || 5000));
       var premiumUnlockBtn = res.premiumUnlocked
         ? '<button class="premium-action-btn" disabled>高級通行證已解鎖</button>'
-        : '<button class="premium-action-btn" onclick="showPaidFeatureNotice(\'高級通行證尚未開放線上付款，請聯絡管理員協助開通。\')">解鎖高級通行證 NT$' + Number(res.premiumPriceNtd || 350) + '</button>';
+        : '<button class="premium-action-btn" onclick="showPaidFeatureNotice(\'高級通行證目前請先聯絡管理員協助確認。\')">聯絡管理員解鎖高級通行證</button>';
       var html = '<div class="premium-panel-row"><span>' + escapeHtml(res.seasonName || '星域通行證') + '</span><b>' + points.toLocaleString() + ' / ' + maxPoints.toLocaleString() + '</b></div>'
         + '<div class="battle-pass-progress"><i style="width:' + Math.min(100, Math.floor(points / maxPoints * 100)) + '%"></i></div>'
         + premiumUnlockBtn
@@ -7491,7 +7491,7 @@ function showCollectionHistory() {
         latestShopDashboard = res;
         updateAssetDisplaysFromShopAssets(res.assets || {});
         var notice = document.getElementById('shop-payment-notice');
-        if (notice) notice.innerText = res.paymentNotice || '儲值商城目前尚未開放正式付款。';
+        if (notice) notice.innerText = res.paymentNotice || '儲值商城目前請先聯絡管理員。';
         renderShopDashboard();
       }).catch(function(err) {
         if (msg) msg.innerHTML = '<span style="color:#ff7777;">商城資料讀取失敗：' + escapeHtml(err && err.message ? err.message : err) + '</span>';
@@ -7511,15 +7511,15 @@ function showCollectionHistory() {
         return;
       }
       grid.innerHTML = items.map(function(item) {
-        var price = item.priceType === 'CASH'
-          ? 'NT$ ' + Number(item.priceAmount || 0).toLocaleString()
-          : Number(item.priceAmount || 0).toLocaleString() + ' ' + escapeHtml(item.priceLabel || item.priceType || '');
-        var limitText = item.limitType === 'NONE' ? '不限購' : (escapeHtml(item.limitLabel || '') + ' ' + Number(item.purchaseUsed || 0) + ' / ' + Number(item.limitCount || 0));
         var isCash = item.priceType === 'CASH';
         var isRecharge = item.category === 'TOPUP' || isCash;
+        var price = isRecharge
+          ? '請聯絡管理員確認'
+          : Number(item.priceAmount || 0).toLocaleString() + ' ' + escapeHtml(item.priceLabel || item.priceType || '');
+        var limitText = item.limitType === 'NONE' ? '不限購' : (escapeHtml(item.limitLabel || '') + ' ' + Number(item.purchaseUsed || 0) + ' / ' + Number(item.limitCount || 0));
         var disabled = !item.canBuy && !isRecharge;
         var note = item.paymentNote ? '<div class="shop-note">' + escapeHtml(item.paymentNote || '') + '</div>' : '';
-        var btnText = item.requiresLogin ? '登入後購買' : (isRecharge ? '聯絡管理員開通' : (disabled ? '已達限購 / 無法購買' : '購買'));
+        var btnText = isRecharge ? '先聯絡管理員' : (item.requiresLogin ? '登入後購買' : (disabled ? '已達限購 / 無法購買' : '購買'));
         return `<div class="shop-item-card ${disabled ? 'off' : ''}">
           <div class="shop-item-head"><div class="shop-item-name">${escapeHtml(item.name || '')}</div><span class="shop-tag">${escapeHtml(item.tag || limitText)}</span></div>
           <div class="shop-desc">${escapeHtml(item.description || '')}</div>
@@ -7531,35 +7531,10 @@ function showCollectionHistory() {
       }).join('');
     }
 
-    function submitEcpayAioForm(formAction, fields) {
-      if (!formAction || !fields) {
-        var msg = document.getElementById('shop-msg');
-        if (msg) msg.innerHTML = '<span style="color:#ff7777;font-weight:bold;">綠界 AIO 表單資料不完整。</span>';
-        return;
-      }
-      var old = document.getElementById('ecpay-aio-submit-form');
-      if (old && old.parentNode) old.parentNode.removeChild(old);
-      var form = document.createElement('form');
-      form.id = 'ecpay-aio-submit-form';
-      form.method = 'POST';
-      form.action = formAction;
-      form.acceptCharset = 'UTF-8';
-      form.style.display = 'none';
-      Object.keys(fields || {}).forEach(function(key) {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = fields[key] == null ? '' : String(fields[key]);
-        form.appendChild(input);
-      });
-      document.body.appendChild(form);
-      form.submit();
-    }
-
     function buyShopItem(productKey) {
       var msg = document.getElementById('shop-msg');
       if (window.TLO_IS_GUEST) {
-        if (window.TLO_SHOW_LOGIN) window.TLO_SHOW_LOGIN('訪客可查看商城；建立訂單或購買商品前請先登入玩家帳號。');
+        if (window.TLO_SHOW_LOGIN) window.TLO_SHOW_LOGIN('訪客可查看商城；如需儲值或開通商品，請先登入玩家帳號並聯絡管理員。');
         return;
       }
       var item = null;
@@ -7567,8 +7542,8 @@ function showCollectionHistory() {
         item = latestShopDashboard.items.find(function(x){ return x.productKey === productKey; });
       }
       if (item && (item.category === 'TOPUP' || item.priceType === 'CASH')) {
-        showPaidFeatureNotice('儲值商城尚未開放線上付款，請聯絡管理員協助開通。');
-        if (msg) msg.innerHTML = '<span style="color:#ffdd77;font-weight:bold;">儲值商城尚未開放線上付款，請聯絡管理員協助開通。</span>';
+        showPaidFeatureNotice('儲值商城目前請先聯絡管理員協助確認。');
+        if (msg) msg.innerHTML = '<span style="color:#ffdd77;font-weight:bold;">儲值商城目前請先聯絡管理員協助確認。</span>';
         return;
       }
       if (msg) msg.innerHTML = '<span style="color:#aaa;">處理購買中...</span>';

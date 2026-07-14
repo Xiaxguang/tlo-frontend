@@ -522,7 +522,7 @@
 
       <div id="tab-shop" class="hide panel">
         <h2>🛒 商城管理</h2>
-        <div class="muted">可管理能量商店、訓練總分商店、儲值商城。儲值商城目前仍不真正串接綠界；CASH 商品可先設定價格與獎勵，玩家端不可付款，GM 可測試發獎。</div>
+        <div class="muted">可管理能量商店、訓練總分商店、儲值商城。儲值商城目前採聯絡管理員確認；玩家端不提供線上付款，GM 可依實際情況協助發獎。</div>
         <div class="split">
           <div class="panel" style="box-shadow:none">
             <h3>新增 / 編輯商品</h3>
@@ -542,7 +542,7 @@
             </div>
             <div class="row3">
               <div><label>狀態</label><select id="shopActive"><option value="1">上架</option><option value="0">下架</option></select></div>
-              <div><label>正式付款</label><select id="shopPaymentEnabled"><option value="0">未啟用</option><option value="1">啟用（目前仍後端保護）</option></select></div>
+              <div><label>線上付款</label><select id="shopPaymentEnabled"><option value="0">固定關閉</option><option value="1">保留欄位（玩家端仍關閉）</option></select></div>
               <div><label>標籤</label><input id="shopTag" placeholder="每日限購"></div>
             </div>
             <label>商品描述</label><textarea id="shopDescription" placeholder="商品說明"></textarea>
@@ -558,7 +558,7 @@
             <label>玩家 UID</label><input id="shopGrantUid" placeholder="例如 guang">
             <label>商品 Key</label><input id="shopGrantProduct" placeholder="例如 cash_daily_33">
             <button class="warn" onclick="testGrantShopItem()" style="width:100%;margin-top:10px">測試發放商品獎勵</button>
-            <div class="muted">測試發獎不串付款、不扣資源，只驗證商品獎勵是否正確。</div>
+            <div class="muted">測試發獎不啟動線上付款、不扣資源，只驗證商品獎勵是否正確。</div>
           </div>
           <div class="panel" style="box-shadow:none">
             <h3>月卡 / 星域通行證開通</h3>
@@ -569,7 +569,7 @@
             </div>
             <button class="primary" onclick="grantMonthlyCardByAdmin()" style="width:100%;margin-top:10px">開通 / 延長月卡</button>
             <button class="warn" onclick="unlockPremiumPassByAdmin()" style="width:100%;margin-top:8px">解鎖高級通行證</button>
-            <div class="muted">目前線上付款未開通，玩家端會提示聯絡管理員；GM 可在這裡手動開通。</div>
+            <div class="muted">目前儲值商城採聯絡管理員確認；GM 可在這裡依實際情況手動開通。</div>
           </div>
         </div>
         <h3>商品列表</h3>
@@ -2378,7 +2378,7 @@ function renderShopItems(){
       <td>${esc(it.categoryLabel || it.category)}<br>${fmt(it.priceAmount)} ${esc(it.priceLabel || it.priceType)}</td>
       <td>${esc(it.limitLabel || it.limitType)} ${fmt(it.limitCount)}</td>
       <td>${esc(it.rewardText || '')}</td>
-      <td>${it.isActive ? '上架' : '下架'}<br><span class="muted">付款：${it.isPaymentEnabled ? '已啟用' : '未啟用'}</span></td>
+      <td>${it.isActive ? '上架' : '下架'}<br><span class="muted">線上付款：固定關閉</span></td>
       <td><button class="primary" onclick="editShopItem(${i})">載入編輯</button><br><button class="${it.isActive?'danger':'primary'}" style="margin-top:6px" onclick="toggleShopItem(${i})">${it.isActive?'下架':'上架'}</button></td>
     </tr>`; }).join('') + `</tbody></table>`;
 }

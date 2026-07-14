@@ -14,7 +14,7 @@
 <body>
 <div class="wrap">
   <h1>🛒 T-LO GM 商城管理</h1>
-  <div class="muted">此頁管理能量商店、訓練總分商店、儲值商城的商品與獎勵。儲值付款目前不會真正串接綠界；儲值商品預設只展示，不讓玩家付款。</div>
+  <div class="muted">此頁管理能量商店、訓練總分商店、儲值商城的商品與獎勵。儲值商城目前採聯絡管理員確認，玩家端不提供線上付款。</div>
 
   <div class="panel" id="login-panel">
     <h2>GM 登入</h2>
@@ -37,7 +37,7 @@
         <div><label>限購次數</label><input id="limit-count" type="number" value="1"></div>
         <div><label>排序</label><input id="sort-order" type="number" value="10"></div>
         <div><label>狀態</label><select id="is-active"><option value="1">上架</option><option value="0">下架</option></select></div>
-        <div><label>正式付款</label><select id="payment-enabled"><option value="0">未啟用</option><option value="1">啟用（保留欄位，現階段不建議）</option></select></div>
+        <div><label>線上付款</label><select id="payment-enabled"><option value="0">固定關閉</option><option value="1">保留欄位（玩家端仍關閉）</option></select></div>
         <div><label>標籤</label><input id="tag" placeholder="每日限購"></div>
       </div>
       <label>商品描述</label><textarea id="description" placeholder="消耗能量，今日爭霸戰挑戰券額外 +5。"></textarea>
@@ -54,7 +54,7 @@
 
     <div class="panel">
       <h2>GM 測試發獎</h2>
-      <div class="muted">用來測試商品獎勵是否正確，不會真的串付款，也不會扣玩家資源。</div>
+      <div class="muted">用來測試商品獎勵是否正確，不會啟動線上付款，也不會扣玩家資源。</div>
       <div class="grid"><div><label>玩家 UID</label><input id="grant-uid" placeholder="玩家 UID"></div><div><label>商品 Key</label><input id="grant-product" placeholder="cash_daily_33"></div></div>
       <button onclick="testGrant()">測試發放商品獎勵</button>
     </div>
@@ -69,7 +69,7 @@ async function login(){try{const res=await rpc('adminLogin',[val('gm-user'),val(
 async function logout(){localStorage.removeItem('tlo_gm_token');token='';location.reload();}
 async function loadAll(){try{const res=await rpc('adminListShopItems');items=res.rows||[];renderList();setMsg('商城資料已同步');}catch(e){setMsg(e.message,false);}}
 function setFilter(v){filter=v;document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+v).classList.add('active');renderList();}
-function renderList(){const rows=items.filter(x=>filter==='ALL'||x.category===filter);document.getElementById('item-list').innerHTML=`<table><thead><tr><th>商品</th><th>分類/價格</th><th>限購</th><th>獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows.map((it)=>{const idx=items.indexOf(it);return `<tr><td><b>${esc(it.name)}</b><br><span class="tag">${esc(it.productKey)}</span><br><span class="small">${esc(it.description)}</span></td><td>${esc(it.categoryLabel||it.category)}<br>${Number(it.priceAmount||0).toLocaleString()} ${esc(it.priceLabel||it.priceType)}</td><td>${esc(it.limitLabel||it.limitType)} ${Number(it.limitCount||0)}</td><td>${esc(it.rewardText||'')}</td><td><span class="${it.isActive?'ok':'off'}">${it.isActive?'上架':'下架'}</span><br><span class="small">付款：${it.isPaymentEnabled?'已啟用':'未啟用'}</span></td><td><button onclick="editItem(${idx})">編輯</button><button class="${it.isActive?'danger':'gray'}" onclick="toggleItem('${esc(it.productKey)}',${it.isActive?0:1})">${it.isActive?'下架':'上架'}</button></td></tr>`}).join('')}</tbody></table>`;}
+function renderList(){const rows=items.filter(x=>filter==='ALL'||x.category===filter);document.getElementById('item-list').innerHTML=`<table><thead><tr><th>商品</th><th>分類/價格</th><th>限購</th><th>獎勵</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows.map((it)=>{const idx=items.indexOf(it);return `<tr><td><b>${esc(it.name)}</b><br><span class="tag">${esc(it.productKey)}</span><br><span class="small">${esc(it.description)}</span></td><td>${esc(it.categoryLabel||it.category)}<br>${Number(it.priceAmount||0).toLocaleString()} ${esc(it.priceLabel||it.priceType)}</td><td>${esc(it.limitLabel||it.limitType)} ${Number(it.limitCount||0)}</td><td>${esc(it.rewardText||'')}</td><td><span class="${it.isActive?'ok':'off'}">${it.isActive?'上架':'下架'}</span><br><span class="small">線上付款：固定關閉</span></td><td><button onclick="editItem(${idx})">編輯</button><button class="${it.isActive?'danger':'gray'}" onclick="toggleItem('${esc(it.productKey)}',${it.isActive?0:1})">${it.isActive?'下架':'上架'}</button></td></tr>`}).join('')}</tbody></table>`;}
 function editItem(idx){const it=items[idx];if(!it)return;set('product-key',it.productKey);set('product-name',it.name);set('category',it.category);set('price-type',it.priceType);set('price-amount',it.priceAmount);set('limit-type',it.limitType);set('limit-count',it.limitCount);set('sort-order',it.sortOrder);set('is-active',it.isActive?'1':'0');set('payment-enabled',it.isPaymentEnabled?'1':'0');set('tag',it.tag||'');set('description',it.description||'');set('rewards',JSON.stringify((it.rewards||[]).map(r=>({rewardType:r.rewardType,rewardValue:r.rewardValue,cardName:r.rewardType==='ITEM'?'':(r.cardName||''),itemKey:r.rewardType==='ITEM'?(r.itemKey||r.cardName||'CARD_RESET_TICKET'):''})),null,2));document.getElementById('product-name').scrollIntoView({behavior:'smooth',block:'center'});}
 function clearForm(){['product-key','product-name','description','tag'].forEach(id=>set(id,''));set('category','ENERGY');set('price-type','ENERGY');set('price-amount',100);set('limit-type','DAILY');set('limit-count',1);set('sort-order',10);set('is-active','1');set('payment-enabled','0');set('rewards','[{"rewardType":"BATTLE_TICKET","rewardValue":5}]');}
 async function saveItem(){try{let rewards;try{rewards=JSON.parse(val('rewards')||'[]')}catch(e){throw new Error('獎勵 JSON 格式錯誤：'+e.message)}await rpc('adminUpsertShopItem',[{productKey:val('product-key'),name:val('product-name'),category:val('category'),description:val('description'),priceType:val('price-type'),priceAmount:num('price-amount'),limitType:val('limit-type'),limitCount:num('limit-count'),isActive:val('is-active')==='1',isPaymentEnabled:val('payment-enabled')==='1',sortOrder:num('sort-order'),tag:val('tag'),rewards}]);await loadAll();setMsg('商品已儲存');}catch(e){setMsg(e.message,false);}}
