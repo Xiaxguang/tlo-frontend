@@ -2257,13 +2257,23 @@
     .traffic-war-window .tw-map-card-stack.single em{bottom:0!important;left:2px!important;right:2px!important;font-size:9px!important;padding:1px 2px!important;}
     .traffic-war-window .tw-map-enemy-card{top:18px!important;width:44px!important;height:58px!important;margin-left:-22px!important;}
     .traffic-war-window .tw-map-enemy-card.card img{width:34px!important;height:48px!important;object-fit:cover;border:2px solid #ff5d7e;border-radius:7px;box-shadow:0 0 10px rgba(255,93,126,.42),0 7px 10px rgba(0,0,0,.42);}
+    .traffic-war-window .tw-public-presence-stack{position:absolute;left:50%;top:4px;width:92px;margin-left:-46px;z-index:46;display:flex;flex-wrap:wrap;gap:2px;align-items:center;justify-content:center;pointer-events:none;filter:drop-shadow(0 5px 7px rgba(0,0,0,.5));}
+    .traffic-war-window .tw-public-marker{display:grid;place-items:center;width:18px;height:18px;border-radius:999px;border:1px solid rgba(255,255,255,.26);background:rgba(9,14,33,.9);color:#f5fbff;font-size:10px;font-style:normal;font-weight:1000;line-height:1;box-shadow:0 0 10px rgba(255,255,255,.1);}
+    .traffic-war-window .tw-public-marker.self{border-color:rgba(103,255,235,.88);background:linear-gradient(135deg,#07323d,#10244b);color:#aafff6;box-shadow:0 0 12px rgba(103,255,235,.42);}
+    .traffic-war-window .tw-public-marker.other{border-color:rgba(255,104,139,.78);background:linear-gradient(135deg,#3a1021,#190713);color:#ffd9e4;box-shadow:0 0 10px rgba(255,104,139,.32);}
+    .traffic-war-window .tw-public-marker.hq{border-radius:5px;color:#1d1400;background:linear-gradient(135deg,#fff0a8,#ffb84d);border-color:rgba(255,238,164,.92);}
+    .traffic-war-window .tw-public-marker.branch{border-radius:6px;color:#071d12;background:linear-gradient(135deg,#9fffd0,#4ae0ff);border-color:rgba(157,255,208,.88);}
+    .traffic-war-window .tw-public-marker.moving{animation:twPresencePulse 1.05s ease-in-out infinite;}
+    .traffic-war-window .tw-public-marker.more{width:auto;min-width:22px;padding:0 4px;background:rgba(255,255,255,.16);color:#fff;}
+    .traffic-war-window .traffic-war-tile.has-other-presence .tw-tile-state-ring{opacity:1;border-color:rgba(255,104,139,.42);box-shadow:0 0 16px rgba(255,104,139,.18),inset 0 0 12px rgba(255,104,139,.08);}
+    @keyframes twPresencePulse{0%,100%{transform:translateY(0);filter:brightness(1)}50%{transform:translateY(-2px);filter:brightness(1.24)}}
     .traffic-war-window .tw-selected-popover{z-index:80!important;pointer-events:auto!important;}
     .traffic-war-window .traffic-war-map-grid{backface-visibility:hidden;}
     .traffic-war-window .tw-tile-art img{pointer-events:none;user-select:none;-webkit-user-drag:none;}
     .tw-skill-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.tw-skill-tags i{font-style:normal;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.07);padding:2px 6px;color:#dce5ff;font-size:10px;font-weight:900}.tw-skill-tags i.awaken{border-color:rgba(255,223,138,.45);color:#fff1a8;background:rgba(255,223,138,.1)}
     .tw-skill-upgrade-btn{margin-top:6px;border:0;border-radius:10px;background:linear-gradient(135deg,#8cffd7,#ffdf8a);color:#101018;padding:6px 8px;font-size:11px;font-weight:1000;cursor:pointer}.tw-skill-upgrade-btn:disabled{opacity:.45;filter:grayscale(.35);cursor:not-allowed}
     .traffic-war-tech-card .tw-tech-level{color:#fff1a8;font-size:12px;font-weight:1000}.traffic-war-tech-card .tw-tech-actions{display:flex;gap:6px;align-items:center;justify-content:space-between}.traffic-war-tech-card .tw-tech-actions button{flex:1}
-    @media(max-width:720px){.traffic-war-window .tw-map-card-stack.single{top:20px!important;transform:scale(.9)!important;transform-origin:center top!important}.traffic-war-window .tw-resource-badge{transform:scale(.82);transform-origin:center center}.traffic-war-window .traffic-war-tile{contain:layout paint!important}.traffic-war-window .tw-selected-popover{transform:scale(.9);transform-origin:bottom center}}
+    @media(max-width:720px){.traffic-war-window .tw-map-card-stack.single{top:20px!important;transform:scale(.9)!important;transform-origin:center top!important}.traffic-war-window .tw-public-presence-stack{top:2px!important;transform:scale(.86);transform-origin:center top}.traffic-war-window .tw-public-marker{width:17px;height:17px;font-size:9px}.traffic-war-window .tw-resource-badge{transform:scale(.82);transform-origin:center center}.traffic-war-window .traffic-war-tile{contain:layout paint!important}.traffic-war-window .tw-selected-popover{transform:scale(.9);transform-origin:bottom center}}
 
     #traffic-war-result-modal{z-index:10050;}
     #traffic-war-dispatch-modal{z-index:10060;}
@@ -9851,6 +9861,7 @@ function showCollectionHistory() {
     var trafficWarRenderState = null;
     var trafficWarRenderMetrics = null;
     var trafficWarRenderSelectedCards = [];
+    var trafficWarRenderPresenceByTile = null;
     var trafficWarVisualCache = { key: '', cards: [], paths: [], countdowns: [] };
     var trafficWarMotionBootKeys = {};
     var trafficWarCardOptionsRef = null;
@@ -10233,6 +10244,7 @@ function showCollectionHistory() {
         return true;
       }).slice(0, 30);
       state.personal_ranking = Array.isArray(state.personal_ranking) ? state.personal_ranking : [];
+      state.map_markers = Array.isArray(state.map_markers) ? state.map_markers : (Array.isArray(state.mapMarkers) ? state.mapMarkers : []);
       state.tech_levels = Object.assign({}, state.tech_levels || {});
       state.tech_pending = Object.assign({}, state.tech_pending || {});
       state.skill_levels = Object.assign({}, state.skill_levels || {});
@@ -10516,6 +10528,15 @@ function showCollectionHistory() {
         add(p.moving_from_tile_id);
         add(p.moving_to_tile_id);
         add(p.branch_tile_id);
+        if (!st) return;
+        trafficWarMapPresenceMarkers(st).forEach(function(marker) {
+          add(marker.tile_id);
+          add(marker.current_tile_id);
+          add(marker.home_tile_id);
+          add(marker.branch_tile_id);
+          add(marker.moving_from_tile_id);
+          add(marker.moving_to_tile_id);
+        });
       });
       if (trafficWarSelectedTileId) add(trafficWarSelectedTileId);
       if (state && state.result) {
@@ -10535,6 +10556,7 @@ function showCollectionHistory() {
       trafficWarRenderState = state;
       trafficWarRenderMetrics = metrics;
       trafficWarRenderSelectedCards = getTrafficWarSelectedCards(state);
+      trafficWarRenderPresenceByTile = trafficWarBuildPresenceByTile(state);
       Object.keys(ids).forEach(function(tileId) {
         var tile = findTrafficWarTile(state, tileId);
         var oldNode = document.getElementById('tw-' + tileId);
@@ -10553,6 +10575,7 @@ function showCollectionHistory() {
       trafficWarRenderState = null;
       trafficWarRenderMetrics = null;
       trafficWarRenderSelectedCards = [];
+      trafficWarRenderPresenceByTile = null;
       trafficWarVisualCache.key = '';
     }
 
@@ -10917,13 +10940,19 @@ function showCollectionHistory() {
       return url || TRAFFIC_WAR_CARD_BACK;
     }
 
-    function getTrafficWarSelectedCards(state) {
-      var selected = (state && state.player_season && state.player_season.selected_team_card_ids) || [];
+    function getTrafficWarCardsByIds(ids, limit) {
+      ids = Array.isArray(ids) ? ids : [];
       var selectedSet = {};
-      selected.forEach(function(id) { selectedSet[String(id)] = true; });
+      ids.forEach(function(id) { selectedSet[String(id)] = true; });
+      var max = Math.max(1, Number(limit || ids.length || 3));
       return getTrafficWarCards().filter(function(card) {
         return selectedSet[String(card.card_id)] || selectedSet[String(card.name)] || selectedSet[String(card.card_name)];
-      }).slice(0, trafficWarActiveSlotLimit(state));
+      }).slice(0, max);
+    }
+
+    function getTrafficWarSelectedCards(state) {
+      var selected = (state && state.player_season && state.player_season.selected_team_card_ids) || [];
+      return getTrafficWarCardsByIds(selected, trafficWarActiveSlotLimit(state));
     }
 
     function getTrafficWarTeamPower(state) {
@@ -11295,6 +11324,184 @@ function showCollectionHistory() {
       }).join('') + '</span>';
     }
 
+    function trafficWarMarkerType(marker) {
+      var type = String(marker && (marker.marker_type || marker.type || '') || '').toLowerCase();
+      if (type === 'headquarters') return 'hq';
+      if (type === 'tour' || type === 'squad') return 'team';
+      if (type === 'branch_office') return 'branch';
+      return ['hq','branch','team'].indexOf(type) >= 0 ? type : 'team';
+    }
+
+    function trafficWarMarkerTileId(marker) {
+      if (!marker) return '';
+      return String(marker.tile_id || marker.current_tile_id || marker.branch_tile_id || marker.home_tile_id || marker.moving_from_tile_id || '').trim();
+    }
+
+    function trafficWarNormalizePresenceMarker(marker, fallback) {
+      marker = marker || {};
+      fallback = fallback || {};
+      var type = trafficWarMarkerType(marker);
+      var teamId = type === 'team' ? normalizeTrafficWarTeamId(marker.team_id || marker.team_slot || fallback.team_id || 'team_1') : '';
+      var slot = type === 'team' ? Number(String(teamId).replace('team_', '') || marker.team_slot || fallback.team_slot || 1) : 0;
+      var tileId = trafficWarMarkerTileId(marker);
+      var uid = String(marker.uid || marker.owner_uid || marker.player_uid || fallback.uid || '').trim();
+      var selfUid = String(fallback.self_uid || fallback.uid || trafficWarPlayerUid(fallback.state || loadTrafficWarState()) || '');
+      return {
+        marker_type: type,
+        tile_id: tileId,
+        uid: uid,
+        display_name: marker.display_name || marker.owner_name || fallback.display_name || uid || '玩家',
+        faction: marker.faction || fallback.faction || '',
+        is_self: marker.is_self === true || (!!uid && uid === selfUid),
+        team_id: teamId,
+        team_slot: slot,
+        team_name: marker.team_name || fallback.team_name || (slot ? trafficWarTeamSlotName(slot) : ''),
+        team_status: marker.team_status || fallback.team_status || '',
+        status_remaining_ms: Math.max(0, Number(marker.status_remaining_ms || fallback.status_remaining_ms || 0)),
+        moving_from_tile_id: marker.moving_from_tile_id || fallback.moving_from_tile_id || '',
+        moving_to_tile_id: marker.moving_to_tile_id || fallback.moving_to_tile_id || '',
+        home_tile_id: marker.home_tile_id || fallback.home_tile_id || '',
+        branch_tile_id: marker.branch_tile_id || fallback.branch_tile_id || '',
+        branch_id: marker.branch_id || fallback.branch_id || '',
+        branch_name: marker.branch_name || fallback.branch_name || '',
+        leader_image_url: marker.leader_image_url || fallback.leader_image_url || ''
+      };
+    }
+
+    function trafficWarPresenceDedupeKey(marker) {
+      var type = trafficWarMarkerType(marker);
+      var uid = String(marker && (marker.uid || marker.display_name) || '');
+      var team = type === 'team' ? normalizeTrafficWarTeamId(marker && (marker.team_id || marker.team_slot) || 'team_1') : '';
+      return [type, uid, team, trafficWarMarkerTileId(marker)].join('|');
+    }
+
+    function trafficWarMapPresenceMarkers(state) {
+      state = state || loadTrafficWarState();
+      var player = state.player_season || {};
+      var selfUid = trafficWarPlayerUid(state);
+      var base = { state: state, uid: selfUid, self_uid: selfUid, display_name: player.display_name || selfUid, faction: player.faction || '' };
+      var list = [];
+      var seen = {};
+      function add(marker, fallback) {
+        marker = trafficWarNormalizePresenceMarker(marker, Object.assign({}, base, fallback || {}));
+        if (!marker.tile_id) return;
+        var key = trafficWarPresenceDedupeKey(marker);
+        if (seen[key]) return;
+        seen[key] = true;
+        list.push(marker);
+      }
+      trafficWarTeams(state).forEach(function(team) {
+        if (!team || !team.unlocked || String(team.team_status || '') === 'locked') return;
+        var teamId = normalizeTrafficWarTeamId(team.team_id || team.team_slot);
+        var cards = getTrafficWarCardsByIds(team.selected_team_card_ids || [], 1);
+        var leader = cards[0] || null;
+        add({
+          marker_type: 'team',
+          tile_id: team.current_tile_id || team.moving_from_tile_id || team.home_tile_id || '',
+          team_id: teamId,
+          team_slot: team.team_slot,
+          team_name: team.team_name || trafficWarTeamSlotName(team.team_slot),
+          team_status: team.team_status || 'idle',
+          status_remaining_ms: team.status_remaining_ms || 0,
+          moving_from_tile_id: team.moving_from_tile_id || '',
+          moving_to_tile_id: team.moving_to_tile_id || '',
+          home_tile_id: team.home_tile_id || '',
+          branch_tile_id: team.branch_tile_id || '',
+          leader_image_url: leader ? getTrafficWarCardImage(leader) : ''
+        });
+        add({
+          marker_type: 'hq',
+          tile_id: team.home_tile_id || '',
+          team_id: teamId
+        });
+      });
+      (state.tiles || []).forEach(function(tile) {
+        if (!tile || !tile.has_branch) return;
+        if (tile.branch_is_self || String(tile.branch_owner_uid || '') === selfUid) {
+          add({
+            marker_type: 'branch',
+            tile_id: tile.tile_id,
+            display_name: tile.branch_owner_name || player.display_name || selfUid,
+            faction: tile.owner_faction || player.faction || ''
+          });
+        }
+      });
+      (Array.isArray(state.map_markers) ? state.map_markers : []).forEach(function(marker) { add(marker); });
+      list.sort(function(a, b) {
+        var typeOrder = { hq: 0, branch: 1, team: 2 };
+        return Number(!a.is_self) - Number(!b.is_self)
+          || (typeOrder[a.marker_type] || 9) - (typeOrder[b.marker_type] || 9)
+          || String(a.display_name || '').localeCompare(String(b.display_name || ''))
+          || String(a.team_id || '').localeCompare(String(b.team_id || ''));
+      });
+      return list;
+    }
+
+    function trafficWarBuildPresenceByTile(state) {
+      var grouped = {};
+      trafficWarMapPresenceMarkers(state).forEach(function(marker) {
+        var tileId = trafficWarMarkerTileId(marker);
+        if (!tileId) return;
+        if (!grouped[tileId]) grouped[tileId] = [];
+        grouped[tileId].push(marker);
+      });
+      return grouped;
+    }
+
+    function trafficWarPresenceMarkersForTile(state, tile) {
+      if (!tile) return [];
+      var grouped = trafficWarRenderPresenceByTile || trafficWarBuildPresenceByTile(state || loadTrafficWarState());
+      return grouped[String(tile.tile_id || '')] || [];
+    }
+
+    function trafficWarPresenceMarkerText(marker) {
+      if (!marker) return '';
+      if (marker.marker_type === 'hq') return '總';
+      if (marker.marker_type === 'branch') return '分';
+      var slot = Number(marker.team_slot || String(marker.team_id || '').replace('team_', '') || 1);
+      return String(Math.max(1, Math.min(3, slot)));
+    }
+
+    function trafficWarPresenceMarkerTitle(marker) {
+      var owner = marker.is_self ? '我的' : (marker.display_name || '玩家');
+      if (marker.marker_type === 'hq') return owner + '總部';
+      if (marker.marker_type === 'branch') return owner + '分部' + (marker.branch_name ? '｜' + marker.branch_name : '');
+      var status = marker.team_status ? trafficWarStatusText(marker.team_status) : '待命中';
+      var target = marker.moving_to_tile_id ? ' → ' + marker.moving_to_tile_id : '';
+      return owner + (marker.team_name ? '｜' + marker.team_name : '巡演團體') + '｜' + status + target;
+    }
+
+    function trafficWarTilePresenceHtml(state, tile) {
+      var markers = trafficWarPresenceMarkersForTile(state, tile);
+      if (!markers.length) return '';
+      var visible = markers.slice(0, 6);
+      var overflow = markers.length - visible.length;
+      return '<span class="tw-public-presence-stack" aria-hidden="true">' + visible.map(function(marker) {
+        var cls = ['tw-public-marker', marker.marker_type || 'team', marker.is_self ? 'self' : 'other'];
+        if (marker.faction) cls.push(marker.faction);
+        if (marker.team_status && trafficWarMovingStatus(marker.team_status) && Number(marker.status_remaining_ms || 0) > 0) cls.push('moving');
+        return '<i class="' + cls.map(trafficWarEsc).join(' ') + '" title="' + trafficWarEsc(trafficWarPresenceMarkerTitle(marker)) + '">' + trafficWarEsc(trafficWarPresenceMarkerText(marker)) + '</i>';
+      }).join('') + (overflow > 0 ? '<i class="tw-public-marker more">+' + overflow + '</i>' : '') + '</span>';
+    }
+
+    function trafficWarTilePresenceSummaryHtml(state, tile) {
+      var markers = trafficWarPresenceMarkersForTile(state, tile);
+      if (!markers.length) return '';
+      return '<div class="tw-multiplayer-note"><b>現場標記</b><br>' + markers.slice(0, 8).map(function(marker) {
+        return trafficWarEsc(trafficWarPresenceMarkerText(marker) + '｜' + trafficWarPresenceMarkerTitle(marker));
+      }).join('<br>') + (markers.length > 8 ? '<br>另有 ' + (markers.length - 8) + ' 個標記' : '') + '</div>';
+    }
+
+    function trafficWarTilePresenceInlineHtml(state, tile) {
+      var markers = trafficWarPresenceMarkersForTile(state, tile);
+      if (!markers.length) return '';
+      var text = markers.slice(0, 4).map(function(marker) {
+        return trafficWarPresenceMarkerText(marker) + ' ' + (marker.is_self ? '我方' : (marker.display_name || '玩家'));
+      }).join('、');
+      if (markers.length > 4) text += '、+' + (markers.length - 4);
+      return '<small>現場：' + trafficWarEsc(text) + '</small>';
+    }
+
     function trafficWarTileCards(state, tile) {
       var html = '';
       var selectedCards = trafficWarRenderSelectedCards && trafficWarRenderSelectedCards.length ? trafficWarRenderSelectedCards : getTrafficWarSelectedCards(state);
@@ -11328,6 +11535,7 @@ function showCollectionHistory() {
 
     function renderTrafficWarTileButton(tile) {
       var state = trafficWarRenderState || loadTrafficWarState();
+      var presenceMarkers = trafficWarPresenceMarkersForTile(state, tile);
       var classes = ['traffic-war-tile', tile.tile_type || 'normal'];
       var level = Math.max(1, Math.min(10, Number(tile.level || 1)));
       var statusClass = trafficWarTileStatusClass(state, tile);
@@ -11345,6 +11553,9 @@ function showCollectionHistory() {
       if ((tile.is_current_team_tile || tile.is_action_from_tile || tile.is_action_target_tile) && tile.team_status && tile.team_status !== 'idle') classes.push('team-' + String(tile.team_status).replace(/[^a-z_]/g, ''));
       if (trafficWarSelectedTileId === tile.tile_id) classes.push('selected');
       if (trafficWarTileOwnedBySelf(state, tile)) classes.push('owned-by-me');
+      if (presenceMarkers.length) classes.push('has-presence');
+      if (presenceMarkers.some(function(marker) { return marker && marker.is_self && marker.marker_type === 'team'; })) classes.push('has-self-team');
+      if (presenceMarkers.some(function(marker) { return marker && !marker.is_self; })) classes.push('has-other-presence');
       var buildingType = trafficWarTileBuildingType(state, tile);
       if (buildingType) classes.push(buildingType === 'hq' ? 'player-hq' : 'player-branch');
       var label = tile.is_center_city ? '年度盛典' : '';
@@ -11367,6 +11578,7 @@ function showCollectionHistory() {
         + trafficWarTileMarkers(state, tile)
         + spark
         + actionPath
+        + trafficWarTilePresenceHtml(state, tile)
         + trafficWarTileCards(state, tile)
         + detailBubble
         + '</div>';
@@ -11386,10 +11598,12 @@ function showCollectionHistory() {
       trafficWarRenderState = state;
       trafficWarRenderMetrics = metrics;
       trafficWarRenderSelectedCards = selectedCards;
+      trafficWarRenderPresenceByTile = trafficWarBuildPresenceByTile(state);
       var tileHtml = tiles.map(renderTrafficWarTileButton).join('');
       trafficWarRenderState = null;
       trafficWarRenderMetrics = null;
       trafficWarRenderSelectedCards = [];
+      trafficWarRenderPresenceByTile = null;
       var currentZoom = Number(trafficWarMapZoom || 1);
       var layoutW = Math.ceil(metrics.width * currentZoom);
       var layoutH = Math.ceil(metrics.height * currentZoom);
@@ -12370,6 +12584,8 @@ function showCollectionHistory() {
       var uid = String(player.uid || getTrafficWarUid() || '');
       if (player.home_tile_id && tile.tile_id === player.home_tile_id) return '主城';
       if (trafficWarHasBranch(tile, state)) return '分部';
+      if (tile.has_branch) return '他人分部';
+      if (trafficWarPresenceMarkersForTile(state, tile).some(function(marker) { return marker.marker_type === 'hq' && !marker.is_self; })) return '他人總部';
       if (tile.is_unknown || tile.hidden || tile.fog) return '未知';
       if (trafficWarTileOwnedBySelf(state, tile)) return '我方佔領';
       if (tile.owner_uid || tile.owner_faction) return '敵方佔領';
@@ -12474,11 +12690,10 @@ function showCollectionHistory() {
     function trafficWarBranchDisabledReason(state, tile) {
       if (!tile) return '不可建造：尚未選擇地塊';
       var player = state.player_season || {};
-      var uid = String(player.uid || getTrafficWarUid() || '');
       if (trafficWarTeamBusyState(player)) return '不可建造：隊伍' + trafficWarStatusText(player.team_status) + '，剩餘 ' + trafficWarDurationText(player.status_remaining_ms);
       if (tile.is_center_city) return '不可建造：年度盛典不能建造分公司';
       if (player.home_tile_id && tile.tile_id === player.home_tile_id) return '不可建造：總部地塊不需要分公司';
-      if (trafficWarHasBranch(tile, state)) return '不可建造：此格已建造分公司';
+      if (tile.has_branch) return '不可建造：此格已建造分公司';
       if (!trafficWarTileOwnedBySelf(state, tile)) return '不可建造：需先佔領此格';
       var expansionLv = Number((state.tech_levels && state.tech_levels.company_expansion) || player.tech_company_expansion || 0);
       if (expansionLv < 1) return '不可建造：需要發展「公司擴編」LV1';
@@ -12491,6 +12706,7 @@ function showCollectionHistory() {
     function trafficWarBranchLine(state, tile) {
       if (!tile) return '無';
       if (trafficWarHasBranch(tile, state)) return '已建造';
+      if (tile.has_branch) return '已有其他玩家分公司';
       var reason = trafficWarBranchDisabledReason(state, tile);
       if (reason) return reason.replace('不可建造：', '');
       var cost = trafficWarBranchCost(tile);
@@ -12607,6 +12823,7 @@ function showCollectionHistory() {
         + '<span>快閃</span><b>' + trafficWarEsc(trafficWarGatherPreviewLine(state, tile)) + '</b>'
         + '<span>放棄持有</span><b>' + (abandonReason ? trafficWarEsc(abandonReason) : trafficWarAbandonCountdownHtml(tile)) + '</b>'
         + '</div>'
+        + trafficWarTilePresenceSummaryHtml(state, tile)
         + trafficWarMultiplayerNoteHtml(state, tile)
         + (tile.is_center_city ? trafficWarFestivalProgressHtml(state) : '')
         + trafficWarTileStrategyHtml(state, tile)
@@ -12668,6 +12885,7 @@ function showCollectionHistory() {
         + '<small>等級：LV' + Number(tile.level || 1).toLocaleString() + '</small>'
         + '<small>種類：' + trafficWarEsc(typeText) + '</small>'
         + '<small>狀態：' + trafficWarEsc(owner) + '</small>'
+        + trafficWarTilePresenceInlineHtml(state, tile)
         + '<small>佔領者：' + trafficWarEsc(trafficWarTileOwnerText(state, tile)) + '</small>'
         + '<small>陣營：' + trafficWarEsc(trafficWarTileOwnerFactionText(tile)) + '</small>'
         + '<small>進攻類型：' + trafficWarEsc(trafficWarAttackTypeText(state, tile)) + '</small>'
@@ -12726,6 +12944,7 @@ function showCollectionHistory() {
         + '<div class="traffic-war-detail-row"><span>快閃</span><b>' + trafficWarEsc(trafficWarGatherPreviewLine(state, tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>放棄持有</span><b>' + (abandonReason ? trafficWarEsc(abandonReason) : trafficWarAbandonCountdownHtml(tile)) + '</b></div>'
         + '<div class="traffic-war-detail-row"><span>戰略定位</span><b>' + trafficWarEsc(trafficWarTileStrategicRole(state, tile)) + '</b></div>'
+        + trafficWarTilePresenceSummaryHtml(state, tile)
         + trafficWarMultiplayerNoteHtml(state, tile)
         + (tile.is_center_city ? trafficWarFestivalProgressHtml(state) : '')
         + '<div class="tw-detail-note">' + trafficWarEsc(reason || '可攻打：此格鄰接我方已佔領地塊') + '</div>'
