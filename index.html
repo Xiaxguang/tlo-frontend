@@ -9852,6 +9852,7 @@ function showCollectionHistory() {
     var trafficWarLoading = false;
     var trafficWarLastError = '';
     var trafficWarLastServerSync = 0;
+    var trafficWarLastServerSyncTeamId = '';
     var trafficWarSelectedTileId = null;
     var trafficWarSortieCollapsed = false;
     var trafficWarActiveDrawer = null;
@@ -9871,6 +9872,7 @@ function showCollectionHistory() {
     var trafficWarVisualFrame = null;
     var trafficWarPollRequestInFlight = false;
     var trafficWarDashboardRequestSeq = 0;
+    var trafficWarTeamSwitchRequestSeq = 0;
     var trafficWarAbandonCountdownTimer = null;
     var trafficWarProgressCountdownTimer = null;
     var trafficWarLocalLogs = [];
@@ -10313,7 +10315,10 @@ function showCollectionHistory() {
       state = normalizeTrafficWarState(state);
       state.updated_at = new Date().toISOString();
       trafficWarState = state;
-      if (markFresh) trafficWarLastServerSync = Date.now();
+      if (markFresh) {
+        trafficWarLastServerSync = Date.now();
+        trafficWarLastServerSyncTeamId = normalizeTrafficWarTeamId(state.active_team_id || (state.player_season && state.player_season.active_team_id) || trafficWarActiveTeamId);
+      }
       return state;
     }
 
@@ -10361,6 +10366,32 @@ function showCollectionHistory() {
       return Math.max(1, Number(team && team.slot_limit || 3));
     }
 
+    async function refreshTrafficWarDashboardForTeam(teamIdInput, options) {
+      var teamId = normalizeTrafficWarTeamId(teamIdInput || trafficWarActiveTeamId);
+      var requestSeq = ++trafficWarTeamSwitchRequestSeq;
+      try {
+        var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid(), teamId]);
+        if (requestSeq !== trafficWarTeamSwitchRequestSeq) return false;
+        if (normalizeTrafficWarTeamId(trafficWarActiveTeamId) !== teamId) return false;
+        var nextState = normalizeTrafficWarState(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard);
+        nextState.active_team_id = teamId;
+        if (nextState.player_season) nextState.player_season.active_team_id = teamId;
+        if (!applyTrafficWarDashboard(nextState, options || { refreshMap: true })) renderTrafficWar(true);
+        return true;
+      } catch (err) {
+        console.warn('traffic war team dashboard refresh failed', err);
+        return false;
+      }
+    }
+
+    async function loadTrafficWarActionStateForTeam(teamIdInput) {
+      var teamId = normalizeTrafficWarTeamId(teamIdInput || trafficWarActiveTeamId);
+      if (trafficWarLastServerSyncTeamId !== teamId || !trafficWarHasFreshDashboard()) {
+        await refreshTrafficWarDashboardForTeam(teamId, { refreshMap: false });
+      }
+      return applyTrafficWarActiveTeam(loadTrafficWarState(), teamId);
+    }
+
     function setTrafficWarActiveTeam(teamIdInput) {
       var state = loadTrafficWarState();
       var teamId = normalizeTrafficWarTeamId(teamIdInput);
@@ -10375,6 +10406,8 @@ function showCollectionHistory() {
       var previousState = normalizeTrafficWarState(state);
       state.teams = trafficWarTeams(state);
       state = applyTrafficWarActiveTeam(state, teamId);
+      trafficWarDashboardRequestSeq += 1;
+      trafficWarLoading = false;
       saveTrafficWarState(state);
       patchTrafficWarMapTiles(state, previousState);
       renderTrafficWarStats(state);
@@ -10382,6 +10415,7 @@ function showCollectionHistory() {
       renderTrafficWarDrawer(state);
       updateTrafficWarMapInfoPanel(state, findTrafficWarTile(state, trafficWarSelectedTileId));
       scheduleTrafficWarActionPoll(state);
+      refreshTrafficWarDashboardForTeam(teamId, { refreshMap: true });
     }
 
     function trafficWarTeams(state) {
@@ -10428,7 +10462,10 @@ function showCollectionHistory() {
     }
 
     function trafficWarHasFreshDashboard() {
-      return !!(trafficWarState && trafficWarLastServerSync && (Date.now() - trafficWarLastServerSync < TRAFFIC_WAR_DASHBOARD_CACHE_MS));
+      return !!(trafficWarState
+        && trafficWarLastServerSync
+        && trafficWarLastServerSyncTeamId === normalizeTrafficWarTeamId(trafficWarActiveTeamId)
+        && (Date.now() - trafficWarLastServerSync < TRAFFIC_WAR_DASHBOARD_CACHE_MS));
     }
 
     function trafficWarMarkupSignature(text) {
@@ -10967,12 +11004,14 @@ function showCollectionHistory() {
       trafficWarLastError = '';
       if (forceReload || !trafficWarHasFreshDashboard()) {
         var requestSeq = ++trafficWarDashboardRequestSeq;
+        var requestTeamId = normalizeTrafficWarTeamId(trafficWarActiveTeamId);
         trafficWarLoading = true;
         var loadingBox = document.getElementById('traffic-war-player-stats');
         if (loadingBox) loadingBox.innerHTML = '<div class="traffic-war-stat tw-hud-card"><span>狀態</span><b>讀取沙盤中</b></div>';
         try {
-          var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid(), trafficWarActiveTeamId]);
+          var dashboard = await trafficWarRpc('getTrafficWarDashboard', [getTrafficWarUid(), requestTeamId]);
           if (requestSeq !== trafficWarDashboardRequestSeq) return;
+          if (normalizeTrafficWarTeamId(trafficWarActiveTeamId) !== requestTeamId) return;
           var nextState = normalizeTrafficWarState(dashboard && dashboard.dashboard ? dashboard.dashboard : dashboard);
           saveTrafficWarState(nextState, true);
         } catch (err) {
@@ -13626,7 +13665,7 @@ function showCollectionHistory() {
     }
 
     async function challengeTrafficWarRegion(tileId) {
-      var state = applyTrafficWarActiveTeam(loadTrafficWarState(), trafficWarActiveTeamId);
+      var state = await loadTrafficWarActionStateForTeam(trafficWarActiveTeamId);
       var teamId = normalizeTrafficWarTeamId(state.active_team_id || trafficWarActiveTeamId);
       var tile = findTrafficWarTile(state, tileId);
       if (!tile) return;
@@ -13669,7 +13708,7 @@ function showCollectionHistory() {
     }
 
     async function gatherTrafficWarTileResource(tileId) {
-      var state = applyTrafficWarActiveTeam(loadTrafficWarState(), trafficWarActiveTeamId);
+      var state = await loadTrafficWarActionStateForTeam(trafficWarActiveTeamId);
       var teamId = normalizeTrafficWarTeamId(state.active_team_id || trafficWarActiveTeamId);
       var tile = findTrafficWarTile(state, tileId);
       if (!tile) return;
@@ -13708,7 +13747,7 @@ function showCollectionHistory() {
     }
 
     async function buildTrafficWarBranch(tileId) {
-      var state = applyTrafficWarActiveTeam(loadTrafficWarState(), trafficWarActiveTeamId);
+      var state = await loadTrafficWarActionStateForTeam(trafficWarActiveTeamId);
       var teamId = normalizeTrafficWarTeamId(state.active_team_id || trafficWarActiveTeamId);
       var tile = findTrafficWarTile(state, tileId);
       if (!tile) return;
