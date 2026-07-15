@@ -10268,6 +10268,7 @@ function showCollectionHistory() {
           team_status: slot === 1 ? 'idle' : 'locked',
           status_ends_at: '',
           status_remaining_ms: 0,
+          display_tile_id: '',
           current_tile_id: state.player_season.current_tile_id || state.player_season.home_tile_id || '',
           home_tile_id: state.player_season.home_tile_id || '',
           moving_from_tile_id: '',
@@ -10285,7 +10286,7 @@ function showCollectionHistory() {
       if (normalizedActiveTeam && normalizedActiveTeam.unlocked) {
         state.teams.forEach(function(team) { team.active = normalizeTrafficWarTeamId(team.team_id || team.team_slot) === state.active_team_id; });
         state.player_season.active_team_id = state.active_team_id;
-        ['team_name','team_hp','team_max_hp','team_level','team_status','status_ends_at','status_remaining_ms','current_tile_id','home_tile_id','moving_from_tile_id','moving_to_tile_id','moving_path_tile_ids','pending_action','pending_action_tile_id','branch_tile_id','assigned_branch_id','selected_team_card_ids'].forEach(function(key) {
+        ['team_name','team_hp','team_max_hp','team_level','team_status','status_ends_at','status_remaining_ms','display_tile_id','current_tile_id','home_tile_id','moving_from_tile_id','moving_to_tile_id','moving_path_tile_ids','pending_action','pending_action_tile_id','branch_tile_id','assigned_branch_id','selected_team_card_ids'].forEach(function(key) {
           if (Object.prototype.hasOwnProperty.call(normalizedActiveTeam, key)) state.player_season[key] = normalizedActiveTeam[key];
         });
         state.team_power = Number(normalizedActiveTeam.team_power || state.team_power || 0);
@@ -10347,7 +10348,7 @@ function showCollectionHistory() {
           return row;
         });
         state.player_season.active_team_id = teamId;
-        ['team_name','team_hp','team_max_hp','team_level','team_status','status_ends_at','status_remaining_ms','current_tile_id','home_tile_id','moving_from_tile_id','moving_to_tile_id','moving_path_tile_ids','pending_action','pending_action_tile_id','branch_tile_id','assigned_branch_id','selected_team_card_ids'].forEach(function(key) {
+        ['team_name','team_hp','team_max_hp','team_level','team_status','status_ends_at','status_remaining_ms','display_tile_id','current_tile_id','home_tile_id','moving_from_tile_id','moving_to_tile_id','moving_path_tile_ids','pending_action','pending_action_tile_id','branch_tile_id','assigned_branch_id','selected_team_card_ids'].forEach(function(key) {
           if (Object.prototype.hasOwnProperty.call(team, key)) state.player_season[key] = team[key];
         });
         state.team_power = Number(team.team_power || state.team_power || 0);
@@ -10411,6 +10412,7 @@ function showCollectionHistory() {
           team_status: slot === 1 ? (player.team_status || 'idle') : (unlocked ? 'idle' : 'locked'),
           status_ends_at: slot === 1 ? (player.status_ends_at || '') : '',
           status_remaining_ms: slot === 1 ? Number(player.status_remaining_ms || 0) : 0,
+          display_tile_id: slot === 1 ? (player.display_tile_id || player.current_tile_id || player.home_tile_id || '') : (player.home_tile_id || ''),
           current_tile_id: slot === 1 ? (player.current_tile_id || player.home_tile_id || '') : (player.home_tile_id || ''),
           home_tile_id: player.home_tile_id || '',
           moving_from_tile_id: slot === 1 ? (player.moving_from_tile_id || '') : '',
@@ -11332,9 +11334,37 @@ function showCollectionHistory() {
       return ['hq','branch','team'].indexOf(type) >= 0 ? type : 'team';
     }
 
+    function trafficWarTeamMarkerRemainingMs(team) {
+      var endMs = Date.parse(team && team.status_ends_at || '');
+      if (endMs) return Math.max(0, endMs - Date.now());
+      return Math.max(0, Number(team && team.status_remaining_ms || 0));
+    }
+
+    function trafficWarTeamDisplayTileId(team) {
+      team = team || {};
+      var status = String(team.team_status || 'idle');
+      var remainingMs = trafficWarTeamMarkerRemainingMs(team);
+      var fromTileId = String(team.moving_from_tile_id || team.current_tile_id || team.home_tile_id || '');
+      var toTileId = String(team.moving_to_tile_id || team.pending_action_tile_id || '');
+      var path = Array.isArray(team.moving_path_tile_ids) ? team.moving_path_tile_ids.filter(Boolean) : [];
+      if (trafficWarMovingStatus(status) && remainingMs > 0) {
+        if (path.length > 1) {
+          var totalMs = Math.max(15000, (path.length - 1) * 15000);
+          var progress = Math.max(0, Math.min(1, 1 - remainingMs / totalMs));
+          var index = Math.max(0, Math.min(path.length - 1, Math.floor(progress * (path.length - 1) + 0.5)));
+          return path[index] || fromTileId || toTileId;
+        }
+        return fromTileId || toTileId;
+      }
+      if (status === 'performing') return toTileId || String(team.current_tile_id || team.home_tile_id || '');
+      if ((status === 'success' || status === 'failed') && remainingMs > 0) return String(team.current_tile_id || toTileId || fromTileId || team.home_tile_id || '');
+      return String(team.current_tile_id || team.branch_tile_id || team.home_tile_id || fromTileId || toTileId || '');
+    }
+
     function trafficWarMarkerTileId(marker) {
       if (!marker) return '';
-      return String(marker.tile_id || marker.current_tile_id || marker.branch_tile_id || marker.home_tile_id || marker.moving_from_tile_id || '').trim();
+      if (trafficWarMarkerType(marker) === 'team') return String(marker.display_tile_id || trafficWarTeamDisplayTileId(marker) || marker.tile_id || '').trim();
+      return String(marker.display_tile_id || marker.tile_id || marker.current_tile_id || marker.branch_tile_id || marker.home_tile_id || marker.moving_from_tile_id || '').trim();
     }
 
     function trafficWarNormalizePresenceMarker(marker, fallback) {
@@ -11343,12 +11373,10 @@ function showCollectionHistory() {
       var type = trafficWarMarkerType(marker);
       var teamId = type === 'team' ? normalizeTrafficWarTeamId(marker.team_id || marker.team_slot || fallback.team_id || 'team_1') : '';
       var slot = type === 'team' ? Number(String(teamId).replace('team_', '') || marker.team_slot || fallback.team_slot || 1) : 0;
-      var tileId = trafficWarMarkerTileId(marker);
       var uid = String(marker.uid || marker.owner_uid || marker.player_uid || fallback.uid || '').trim();
       var selfUid = String(fallback.self_uid || fallback.uid || trafficWarPlayerUid(fallback.state || loadTrafficWarState()) || '');
-      return {
+      var normalized = {
         marker_type: type,
-        tile_id: tileId,
         uid: uid,
         display_name: marker.display_name || marker.owner_name || fallback.display_name || uid || '玩家',
         faction: marker.faction || fallback.faction || '',
@@ -11357,6 +11385,7 @@ function showCollectionHistory() {
         team_slot: slot,
         team_name: marker.team_name || fallback.team_name || (slot ? trafficWarTeamSlotName(slot) : ''),
         team_status: marker.team_status || fallback.team_status || '',
+        status_ends_at: marker.status_ends_at || fallback.status_ends_at || '',
         status_remaining_ms: Math.max(0, Number(marker.status_remaining_ms || fallback.status_remaining_ms || 0)),
         moving_from_tile_id: marker.moving_from_tile_id || fallback.moving_from_tile_id || '',
         moving_to_tile_id: marker.moving_to_tile_id || fallback.moving_to_tile_id || '',
@@ -11366,6 +11395,12 @@ function showCollectionHistory() {
         branch_name: marker.branch_name || fallback.branch_name || '',
         leader_image_url: marker.leader_image_url || fallback.leader_image_url || ''
       };
+      normalized.moving_path_tile_ids = Array.isArray(marker.moving_path_tile_ids)
+        ? marker.moving_path_tile_ids.filter(Boolean)
+        : (Array.isArray(fallback.moving_path_tile_ids) ? fallback.moving_path_tile_ids.filter(Boolean) : []);
+      normalized.display_tile_id = marker.display_tile_id || fallback.display_tile_id || (type === 'team' ? trafficWarTeamDisplayTileId(normalized) : '');
+      normalized.tile_id = normalized.display_tile_id || trafficWarMarkerTileId(marker) || trafficWarMarkerTileId(fallback);
+      return normalized;
     }
 
     function trafficWarPresenceDedupeKey(marker) {
@@ -11397,14 +11432,17 @@ function showCollectionHistory() {
         var leader = cards[0] || null;
         add({
           marker_type: 'team',
-          tile_id: team.current_tile_id || team.moving_from_tile_id || team.home_tile_id || '',
+          tile_id: team.display_tile_id || trafficWarTeamDisplayTileId(team),
+          display_tile_id: team.display_tile_id || trafficWarTeamDisplayTileId(team),
           team_id: teamId,
           team_slot: team.team_slot,
           team_name: team.team_name || trafficWarTeamSlotName(team.team_slot),
           team_status: team.team_status || 'idle',
+          status_ends_at: team.status_ends_at || '',
           status_remaining_ms: team.status_remaining_ms || 0,
           moving_from_tile_id: team.moving_from_tile_id || '',
           moving_to_tile_id: team.moving_to_tile_id || '',
+          moving_path_tile_ids: Array.isArray(team.moving_path_tile_ids) ? team.moving_path_tile_ids : [],
           home_tile_id: team.home_tile_id || '',
           branch_tile_id: team.branch_tile_id || '',
           leader_image_url: leader ? getTrafficWarCardImage(leader) : ''
@@ -11426,7 +11464,12 @@ function showCollectionHistory() {
           });
         }
       });
-      (Array.isArray(state.map_markers) ? state.map_markers : []).forEach(function(marker) { add(marker); });
+      (Array.isArray(state.map_markers) ? state.map_markers : []).forEach(function(marker) {
+        var markerUid = String(marker && (marker.uid || marker.owner_uid || marker.player_uid) || '');
+        var markerType = trafficWarMarkerType(marker);
+        if (markerUid && markerUid === selfUid && ['team','hq','branch'].indexOf(markerType) >= 0) return;
+        add(marker);
+      });
       list.sort(function(a, b) {
         var typeOrder = { hq: 0, branch: 1, team: 2 };
         return Number(!a.is_self) - Number(!b.is_self)
