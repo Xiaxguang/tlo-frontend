@@ -64,7 +64,7 @@
     getBattleDashboard: 15000,
     getCardProbabilityTable: 180000,
     getRpgDashboard: 15000,
-    getTrafficWarDashboard: 8000,
+    getTrafficWarDashboard: 2500,
     getShopDashboard: 8000,
     getGuestShopCatalog: 8000,
     getPersonalDashboard: 8000,
